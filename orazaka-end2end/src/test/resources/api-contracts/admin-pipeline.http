@@ -1,0 +1,151 @@
+### ─────────────────────────────────────────────────────────────────────────
+### admin-pipeline.http — Admin Pipeline Configuration Contract (ADR-040)
+### Validates pipeline interceptor listing, reordering, toggle, and reset.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate (Admin)
+# @name loginAdmin
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### List Pipeline Interceptors
+# @name listPipeline
+GET {{$dotenv ROUTER_URL}}/api/v1/pipeline/interceptors
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Reset Pipeline to Defaults
+# @name resetPipeline
+POST {{$dotenv ROUTER_URL}}/api/v1/pipeline/interceptors/reset
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### List After Reset (verify defaults applied)
+# @name listAfterReset
+GET {{$dotenv ROUTER_URL}}/api/v1/pipeline/interceptors
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Feature Flags — List
+# @name listFeatures
+GET {{$dotenv ROUTER_URL}}/api/v1/features/all
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Feature Flags — Toggle Feature
+# Capability keys are namespaced blueprints (e.g. orazaka.core.media.image); unknown keys 404 by
+# design (AdminFeatureController only flips a known capability, never creates one).
+# @name toggleFeature
+PUT {{$dotenv ROUTER_URL}}/api/v1/features/orazaka.core.media.image
+Authorization: Bearer {{loginAdmin.token}}
+Content-Type: application/json
+
+{
+  "isEnabled": true
+}
+
+?? status == 200
+
+###
+
+### Admin Models — List Catalog
+# @name listCatalog
+GET {{$dotenv ROUTER_URL}}/api/v1/models/catalog
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Models — List Providers
+# @name listProviders
+GET {{$dotenv ROUTER_URL}}/api/v1/models/providers
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Models — Create Model
+# @name createModel
+POST {{$dotenv ROUTER_URL}}/api/v1/models
+Authorization: Bearer {{loginAdmin.token}}
+Content-Type: application/json
+
+{
+  "modelName": "e2e-test-model",
+  "modelLabel": "E2E Test Model",
+  "category": "theme",
+  "options": "",
+  "isDefault": false,
+  "providerName": "local"
+}
+
+?? status >= 200
+
+###
+
+### Admin Jobs — Active Connections
+# @name activeConnections
+GET {{$dotenv ROUTER_URL}}/api/v1/jobs/active-connections
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Jobs — Purge Test Data
+# @name purgeJobs
+POST {{$dotenv ROUTER_URL}}/api/v1/jobs/purge
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Pipeline — Unauthenticated Access (401)
+# @name pipelineUnauth
+GET {{$dotenv ROUTER_URL}}/api/v1/pipeline/interceptors
+
+?? status == 401
+
+###
+
+### List Jobs — admin job inventory (paged)
+# @name listJobs
+GET {{$dotenv ROUTER_URL}}/api/v1/jobs?page=0&size=10
+Accept: application/json
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Validation Pipeline Config — 4-tier matrix
+# @name validationPipeline
+GET {{$dotenv ROUTER_URL}}/api/v1/pipeline/validation
+Accept: application/json
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200

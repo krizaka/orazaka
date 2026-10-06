@@ -1,0 +1,98 @@
+### ─────────────────────────────────────────────────────────────────────────
+### studio-runs.http — the one door (ADR-068 §5)
+### Was media-generation.http, which POSTed the three generation endpoints directly.
+### Those endpoints are deleted: a capability is invoked by starting a RUN of the Studio
+### that ships it, and there is no other way in. This contract therefore reads the
+### composer row — what this deployment can launch from a single input — and starts a run
+### from it, which is exactly what the chat bar's buttons do.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate
+# @name login
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### The composer's button row — Studios launchable from one input
+# Each entry carries what a client needs and nothing more: no uriPath, no httpMethod and
+# no payloadTemplate, because the client no longer composes a call.
+#
+# Written in httpyac's own grammar, which is `?? [js] <selector> <operator> [value]` with the
+# operator LAST. Two shapes were measured against it before this one was kept:
+#
+#   s.inputKind === "TEXT"              → SyntaxError: the `==` inside `===` is taken for the
+#                                          operator and the expression reaches the evaluator as
+#                                          `s.inputKind == = "TEXT"`.
+#   ["TEXT","ASSET"].includes(s.inputKind) → NO ASSERTION AT ALL. No tick, no cross, the line simply
+#                                          does not appear in the output. Worse than failing: an
+#                                          assertion that silently does not run.
+#
+# So the predicate counts the entries that would be WRONG and compares that to zero, which puts the
+# only `==` where httpyac expects it. Nothing here guards the next person; see ADR-069 §6.12.
+# @name composer
+GET {{$dotenv ROUTER_URL}}/api/v1/studios/composer?locale=fr
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+?? js response.parsedBody.length > 0
+?? js response.parsedBody.filter(s => !s.studioKey || !s.inputKey || !"TEXT ASSET".includes(s.inputKind)).length == 0
+?? js response.parsedBody.filter(s => Object.hasOwn(s, "uriPath") || Object.hasOwn(s, "payloadTemplate")).length == 0
+
+###
+
+### Start a run of the first text-input Studio the row offers
+# 202 with a run — the same acknowledgement a button gets. Accepted up to 409, which is how
+# a Studio the account is not entitled to refuses (and carries the pack to open).
+#
+# `{{composer.$.[0].studioKey}}` was not valid JavaScript, so this request ERRORED on every run
+# since it was written: httpyac evaluates `{{…}}` as an expression and `$.[0]` parses as nothing.
+# It never reached the server once. A named request's parsed body is indexable directly, and the
+# filter is what the heading above has always claimed this request does.
+# @name startRun
+POST {{$dotenv ROUTER_URL}}/api/v1/studios/{{composer.filter(s => s.inputKind == "TEXT")[0].studioKey}}/runs
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "inputs": {
+    "{{composer.filter(s => s.inputKind == "TEXT")[0].inputKey}}": "A futuristic cityscape at sunset with neon lights"
+  }
+}
+
+?? status >= 200
+?? status < 500
+
+###
+
+### The run is readable, and it is the run that knows about the job it dispatched
+# @name runDetail
+GET {{$dotenv ROUTER_URL}}/api/v1/studios/runs/{{startRun.id}}
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status >= 200
+?? status < 500
+
+###
+
+### Starting a run unauthenticated is refused
+# 401, or 403 where the availability gate answers first in the hermetic stack.
+# @name runUnauth
+POST {{$dotenv ROUTER_URL}}/api/v1/studios/image-generation/runs
+Content-Type: application/json
+
+{
+  "inputs": { "prompt": "test" }
+}
+
+?? status >= 401
+?? status < 404

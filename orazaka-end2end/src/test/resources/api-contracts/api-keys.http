@@ -1,0 +1,66 @@
+### ─────────────────────────────────────────────────────────────────────────
+### api-keys.http — Inbound API Key (Personal Access Token) Contract
+### Validates create / list / authenticate-with / revoke for user-owned API keys.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate (session token — the bearer the BFF forwards)
+# @name login
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### REST — Create an API key (plaintext secret returned exactly once)
+# @name createKey
+POST {{$dotenv ROUTER_URL}}/api/v1/api-keys
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "name": "e2e-contract-key"
+}
+
+?? status == 201
+
+###
+
+### REST — List API keys (metadata only, never the secret)
+# @name listKeys
+GET {{$dotenv ROUTER_URL}}/api/v1/api-keys
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### REST — Authenticate a protected endpoint with the API key itself
+# @name callWithKey
+GET {{$dotenv ROUTER_URL}}/api/v1/features
+Authorization: Bearer {{createKey.key}}
+
+?? status == 200
+
+###
+
+### REST — Revoke the API key
+# @name revokeKey
+DELETE {{$dotenv ROUTER_URL}}/api/v1/api-keys/{{createKey.id}}
+Authorization: Bearer {{login.token}}
+
+?? status == 204
+
+###
+
+### REST — The revoked key is now rejected
+# @name callAfterRevoke
+GET {{$dotenv ROUTER_URL}}/api/v1/features
+Authorization: Bearer {{createKey.key}}
+
+?? status == 401

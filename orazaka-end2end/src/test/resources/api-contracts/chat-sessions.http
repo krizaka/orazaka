@@ -1,0 +1,105 @@
+### ─────────────────────────────────────────────────────────────────────────
+### chat-sessions.http — Chat Session Lifecycle Contract (ADR-040)
+### Validates CRUD operations on chat sessions (memory blocks).
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate
+# @name login
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### List Sessions (initial)
+# @name listSessions
+GET {{$dotenv ROUTER_URL}}/api/v1/chat/sessions
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### Create Session
+# @name createSession
+POST {{$dotenv ROUTER_URL}}/api/v1/chat/sessions
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "title": "E2E Test Session"
+}
+
+?? status == 200
+?? body id isString
+
+###
+
+### Rename Session
+# @name renameSession
+PATCH {{$dotenv ROUTER_URL}}/api/v1/chat/sessions/{{createSession.id}}
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "title": "E2E Renamed Session"
+}
+
+?? status == 200
+
+###
+
+### Delete Session
+# @name deleteSession
+DELETE {{$dotenv ROUTER_URL}}/api/v1/chat/sessions/{{createSession.id}}
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### Rename Non-Existent Session (404)
+# @name renameGhost
+PATCH {{$dotenv ROUTER_URL}}/api/v1/chat/sessions/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "title": "Ghost"
+}
+
+?? status == 404
+
+###
+
+### Create Session for Empty Title Test
+# @name createForBadRename
+POST {{$dotenv ROUTER_URL}}/api/v1/chat/sessions
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "title": "Temp Session"
+}
+
+?? status == 200
+
+###
+
+### Rename With Empty Title (400)
+# @name renameBadTitle
+PATCH {{$dotenv ROUTER_URL}}/api/v1/chat/sessions/{{createForBadRename.id}}
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "title": ""
+}
+
+?? status == 400

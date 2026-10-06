@@ -1,0 +1,81 @@
+# Reusable pipeline of every Orazaka repository (each one's .github/workflows/ci.yml calls it).
+#
+# A component is always verified INSIDE the workspace: this repository is checked out, every other
+# repository is cloned at its workspace path from its default branch, the calling repository is put
+# at its own path at the commit being tested, and `node scripts/workspace.mjs ci <component>` builds
+# its upstream repositories from source before verifying it. The cross-repository governance rules
+# therefore run in CI exactly as they do in a local workspace — nothing is skipped.
+#
+# On a v* tag the component is published to GitHub Packages (AGENTS.md §0): Maven artifacts to
+# maven.pkg.github.com/krizaka/<repository>, @krizaka/* npm packages to npm.pkg.github.com.
+name: component
+
+on:
+  workflow_call:
+    inputs:
+      component:
+        description: "Repository name, as listed in orazaka.workspace.json"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out the Orazaka workspace
+        uses: actions/checkout@v4
+        with:
+          repository: krizaka/orazaka
+          path: workspace
+
+      - name: Check out ${{ inputs.component }} at the commit under test
+        uses: actions/checkout@v4
+        with:
+          path: incoming
+
+      - name: Place the component at its workspace path
+        working-directory: workspace
+        run: |
+          target=$(node -e "const m=require('./orazaka.workspace.json');const r=m.repositories.find(x=>x.name==='${{ inputs.component }}');if(!r){process.exit(2)}console.log(r.path)")
+          mkdir -p "$(dirname "$target")"
+          mv ../incoming "$target"
+
+      - name: Clone every other repository
+        working-directory: workspace
+        run: node scripts/workspace.mjs clone --depth 1
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://npm.pkg.github.com
+          scope: "@krizaka"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify ${{ inputs.component }} against its upstreams
+        working-directory: workspace
+        run: node scripts/workspace.mjs ci "${{ inputs.component }}"
+
+      - name: Publish to GitHub Packages
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: workspace
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/workspace.mjs publish "${{ inputs.component }}"

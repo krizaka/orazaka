@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- The Orazaka workspace reactor. Each module below is the root of its own repository
+         (cloned by `node scripts/workspace.mjs clone`, listed in orazaka.workspace.json), so one
+         `./mvnw install` builds and tests the whole platform from source — cross-repository
+         changes are verified together, and the cross-repository governance rules see every
+         repository. The build conventions live in orazaka-parent (krizaka/orazaka-build). -->
+    <parent>
+        <groupId>com.orazaka</groupId>
+        <artifactId>orazaka-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>orazaka-libs/orazaka-build/orazaka-parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>orazaka-workspace</artifactId>
+    <packaging>pom</packaging>
+    <name>orazaka-workspace</name>
+    <description>Orazaka platform workspace — reactor over every Orazaka repository</description>
+    <url>https://github.com/krizaka/orazaka</url>
+
+    <properties>
+        <orazaka.repository>orazaka</orazaka.repository>
+        <!-- The workspace reactor is never published. -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+
+        <!-- Python interpreter used to validate the media worker. Defaults to the
+             worker's virtualenv (which carries Pillow/torch/coverage). Override with
+             -Dpython.executable=... on hosts that provision Python differently. -->
+        <python.executable>${project.basedir}/orazaka-apps/workers/orazaka-worker-media/.venv/bin/python</python.executable>
+
+        <!-- Python and TS/JS Coverage -->
+        <sonar.python.coverage.reportPaths>orazaka-apps/workers/orazaka-worker-media/coverage.xml</sonar.python.coverage.reportPaths>
+        <sonar.javascript.lcov.reportPaths>
+            orazaka-apps/ui/orazaka-web-client/coverage/lcov.info,orazaka-apps/ui/orazaka-cli/coverage/lcov.info</sonar.javascript.lcov.reportPaths>
+        <sonar.typescript.lcov.reportPaths>
+            orazaka-apps/ui/orazaka-web-client/coverage/lcov.info,orazaka-apps/ui/orazaka-cli/coverage/lcov.info</sonar.typescript.lcov.reportPaths>
+    </properties>
+
+    <modules>
+        <module>orazaka-libs/orazaka-build</module>
+        <module>orazaka-libs/orazaka-contracts</module>
+        <module>orazaka-apps/services/orazaka-users</module>
+        <module>orazaka-apps/services/orazaka-notifications</module>
+        <module>orazaka-apps/services/orazaka-billing</module>
+        <module>orazaka-apps/services/orazaka-studio</module>
+        <module>orazaka-libs/orazaka-ai-engine</module>
+        <module>orazaka-apps/services/orazaka-conversation-service</module>
+        <module>orazaka-apps/services/orazaka-job-service</module>
+        <module>orazaka-apps/services/orazaka-knowledge-service</module>
+        <module>orazaka-apps/services/orazaka-automation-service</module>
+        <module>orazaka-apps/services/orazaka-edge</module>
+        <module>orazaka-end2end</module>
+    </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <!-- Honour -DskipTests for polyglot test executions -->
+                    <skip>${skipTests}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>validate-ui</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>npm</executable>
+                            <workingDirectory>${project.basedir}/orazaka-apps/ui/orazaka-web-client</workingDirectory>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>validate</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>validate-cli</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>npm</executable>
+                            <workingDirectory>${project.basedir}/orazaka-apps/ui/orazaka-cli</workingDirectory>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>validate</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Docs gate: the code-derived docs under docs/_generated/ must be
+                             in sync with the code (AGENTS.md §10). Fails the build if stale;
+                             run `orazaka docs build` to refresh. -->
+                        <id>docs-check</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>node</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>scripts/generate-docs.mjs</argument>
+                                <argument>--check</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Environment readiness gate: delegate to the CLI doctor.
+                             Fails the build only on missing build-critical tools
+                             (Node/Docker/Java/mvn); Ollama, LocalAI, models and the
+                             web UI are reported as advisory (never fatal), and the
+                             CLI prints install guidance. Runs after validate-cli so
+                             the compiled dist/ exists. CI=true keeps it headless. -->
+                        <id>verify-env</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>node</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <environmentVariables>
+                                <CI>true</CI>
+                            </environmentVariables>
+                            <arguments>
+                                <argument>orazaka-apps/ui/orazaka-cli/dist/index.js</argument>
+                                <argument>doctor</argument>
+                                <argument>--quiet</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>validate-video</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${python.executable}</executable>
+                            <workingDirectory>${project.basedir}/orazaka-apps/workers/orazaka-worker-media</workingDirectory>
+                            <arguments>
+                                <argument>-m</argument>
+                                <argument>coverage</argument>
+                                <argument>run</argument>
+                                <argument>test_main.py</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>validate-capability-contract</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${python.executable}</executable>
+                            <workingDirectory>${project.basedir}/orazaka-apps/workers/orazaka-worker-media</workingDirectory>
+                            <arguments>
+                                <argument>-m</argument>
+                                <argument>pytest</argument>
+                                <argument>-q</argument>
+                                <argument>test_capability_contract.py</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- The document-validation pack's rule engine: 17 tests written and never run by any
+                             build until ADR-064. Its sibling test_authenticity.py cannot run here (pypdf is
+                             declared nowhere); the worker suite's collection guard names it and checks why. -->
+                        <id>validate-pack-document-validation</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${python.executable}</executable>
+                            <workingDirectory>${project.basedir}/orazaka-packs/document-validation/worker</workingDirectory>
+                            <arguments>
+                                <argument>test_rules.py</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>coverage-report-video</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${python.executable}</executable>
+                            <workingDirectory>${project.basedir}/orazaka-apps/workers/orazaka-worker-media</workingDirectory>
+                            <arguments>
+                                <argument>-m</argument>
+                                <argument>coverage</argument>
+                                <argument>xml</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <properties>
+                        <sonar.sources>pom.xml,orazaka-apps/ui/orazaka-web-client,orazaka-apps/ui/orazaka-cli,orazaka-apps/workers/orazaka-worker-media</sonar.sources>
+                        <sonar.test.inclusions>
+                            **/__tests__/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx,**/test_main.py</sonar.test.inclusions>
+                        <sonar.exclusions>${sonar.exclusions}</sonar.exclusions>
+                        <sonar.coverage.exclusions>${sonar.coverage.exclusions}</sonar.coverage.exclusions>
+                        <sonar.javascript.lcov.reportPaths>${sonar.javascript.lcov.reportPaths}</sonar.javascript.lcov.reportPaths>
+                        <sonar.typescript.lcov.reportPaths>${sonar.typescript.lcov.reportPaths}</sonar.typescript.lcov.reportPaths>
+                        <sonar.python.coverage.reportPaths>${sonar.python.coverage.reportPaths}</sonar.python.coverage.reportPaths>
+                    </properties>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend-maven-plugin.version}</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <workingDirectory>${project.basedir}/orazaka-apps/ui</workingDirectory>
+                    <installDirectory>${project.build.directory}/node</installDirectory>
+                    <skip>${skipTests}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>${node.version}</nodeVersion>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-install-workspace</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>ci --legacy-peer-deps</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-build-web</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Build web targets only: explicit workspace list (ignore flag is deprecated in npm) -->
+                            <arguments>run build --workspace=@krizaka/orazaka-shared --workspace=orazaka-web-client --workspace=orazaka-web-admin --workspace=orazaka-cli --if-present</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

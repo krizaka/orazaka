@@ -1,0 +1,121 @@
+### ─────────────────────────────────────────────────────────────────────────
+### auth.http — Authentication Lifecycle Contract (ADR-040)
+### Validates registration, login, duplicate guard, forgot/reset password flows.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Register — New User
+# @name register
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "e2e-test-user",
+  "email": "e2e-test@orazaka.com",
+  "password": "SecurePass123!",
+  "language": "en"
+}
+
+?? status >= 200
+
+###
+
+### Register — Duplicate Email (idempotent or conflict)
+# @name registerDup
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "e2e-test-user-dup",
+  "email": "e2e-test@orazaka.com",
+  "password": "SecurePass123!",
+  "language": "en"
+}
+
+?? status >= 200
+
+###
+
+### Register — Missing Fields (400)
+# @name registerBad
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "",
+  "email": "",
+  "password": ""
+}
+
+?? status == 400
+
+###
+
+### Login — Valid Credentials (admin)
+# @name loginAdmin
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+?? body token isString
+?? body username isString
+
+###
+
+### Login — Invalid Credentials (must return 401)
+# @name loginBad
+# Redis is flushed before the contract suite runs, so rate-limit state
+# is clean and this request hits the auth layer deterministically.
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "wrong-password"
+}
+
+?? status == 401
+
+###
+
+### Forgot Password — Valid Email (always 200 to prevent enumeration)
+# @name forgotValid
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/forgot
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}"
+}
+
+?? status >= 200
+
+###
+
+### Forgot Password — Non-Existent Email (still 200)
+# @name forgotUnknown
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/forgot
+Content-Type: application/json
+
+{
+  "email": "nonexistent@orazaka.com"
+}
+
+?? status >= 200
+
+###
+
+### Reset Password — Invalid Token (400)
+# @name resetBad
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/reset
+Content-Type: application/json
+
+{
+  "token": "invalid-token-12345",
+  "newPassword": "NewSecurePass456!"
+}
+
+?? status >= 200

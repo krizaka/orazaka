@@ -1,0 +1,33 @@
+# Dockerfile for RunPod Serverless GPU Worker
+# Configured for image synthesis and LTX-Video rendering
+
+FROM pytorch/pytorch:2.2.1-cuda12.1-cudnn8-runtime
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    ffmpeg \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python dependencies for serverless API routing
+RUN pip install --no-cache-dir \
+    runpod \
+    diffusers \
+    transformers \
+    accelerate \
+    sentencepiece
+
+# Create app directory
+WORKDIR /app
+
+# Copy custom handler script (handlers are provider-specific wrappers)
+COPY worker_handler.py /app/worker_handler.py
+
+# Warm model caches (Stable Diffusion / LTX-Video weights can be baked in or mounted)
+# ENV HF_HOME=/model_cache
+
+CMD [ "python", "-u", "/app/worker_handler.py" ]

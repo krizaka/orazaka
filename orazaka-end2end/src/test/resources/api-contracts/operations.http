@@ -1,0 +1,38 @@
+### ─────────────────────────────────────────────────────────────────────────
+### operations.http — Operations Graph Contract (ADR-040)
+### Validates the operations graph endpoint for system introspection.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate
+# @name login
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### Operations Graph — System Topology
+# @name operationsGraph
+GET {{$dotenv ROUTER_URL}}/api/v1/status/graph
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+
+
+###
+
+### Infrastructure Status — background prober snapshot
+# @name infraStatus
+GET {{$dotenv ROUTER_URL}}/api/v1/status/infrastructure
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200

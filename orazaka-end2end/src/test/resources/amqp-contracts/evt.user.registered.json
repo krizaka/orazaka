@@ -1,0 +1,10 @@
+{
+  "_contract": "Canonical UserRegisteredEvent published on orazaka.events with key evt.user.registered (AGENTS.md §6). Consumed by the integrations worker's notification listener — the AmqpContractIT captures a live registration and asserts every key below is present.",
+  "user": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "username": "sample",
+    "email": "sample@orazaka.com",
+    "enabled": true
+  },
+  "plaintextToken": "sample-verification-token"
+}

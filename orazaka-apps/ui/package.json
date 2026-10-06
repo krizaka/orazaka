@@ -1,0 +1,34 @@
+{
+  "name": "orazaka-ui-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "orazaka-ui-kit/orazaka-shared",
+    "orazaka-ui-kit/orazaka-design-system",
+    "orazaka-web-client",
+    "orazaka-web-admin",
+    "orazaka-mobile-client",
+    "orazaka-cli"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=orazaka-web-client",
+    "dev:web": "npm run dev --workspace=orazaka-web-client",
+    "dev:admin": "npm run dev --workspace=orazaka-web-admin",
+    "dev:mobile": "npm run start --workspace=orazaka-mobile-client",
+    "dev:core": "npx orazaka dev --only core",
+    "build:shared": "npm run build --workspace=@krizaka/orazaka-shared",
+    "validate:cli": "npm run validate --workspace=orazaka-cli",
+    "validate:ds": "npm run validate --workspace=@krizaka/orazaka-design-system",
+    "validate:web": "npm run validate --workspace=orazaka-web-client",
+    "validate:mobile": "npm run validate --workspace=orazaka-mobile-client",
+    "validate:admin": "npm run validate --workspace=orazaka-web-admin",
+    "validate": "npm run validate:cli && npm run validate:ds && npm run validate:web && npm run validate:mobile"
+  },
+  "overrides": {
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "jest-mock": "^30.4.1",
+    "jest-environment-node": "^30.4.1"
+  },
+  "description": "npm workspace of the Orazaka workspace: links every cloned UI repository (@krizaka/* packages from source)."
+}

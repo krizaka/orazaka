@@ -1,0 +1,48 @@
+### ─────────────────────────────────────────────────────────────────────────
+### mcp.http — MCP Tooling Contract (ADR-040)
+### Validates the MCP tool-discovery and MCP-server listing endpoints respond.
+### (Mutations — POST /servers/*, DELETE, POST /tools/{name}/execute — need fixtures
+###  + teardown and live tool execution; cover them once the MCP stack is provisioned.)
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate
+# @name login
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### List MCP Tools — discovery surface
+# @name listMcpTools
+GET {{$dotenv ROUTER_URL}}/api/v1/mcp/tools
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### List User MCP Servers
+# @name listUserMcpServers
+GET {{$dotenv ROUTER_URL}}/api/v1/mcp/servers/user
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### List Platform MCP Servers
+# @name listPlatformMcpServers
+GET {{$dotenv ROUTER_URL}}/api/v1/mcp/servers/platform
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200

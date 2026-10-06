@@ -1,0 +1,8 @@
+{
+  "_contract": "Canonical JobCommand published on orazaka.jobs with job.{capability}.{action} keys (AGENTS.md §6). Consumers copy this shape — the AmqpContractIT captures a live submission and asserts every key below is present.",
+  "jobId": "00000000-0000-0000-0000-000000000000",
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "featureKey": "orazaka.core.media.image",
+  "model": "default",
+  "payload": {}
+}

@@ -1,0 +1,22 @@
+### ─────────────────────────────────────────────────────────────────────────
+### health.http — Actuator Health Contract (ADR-040)
+### Validates the gateway boot and infrastructure readiness.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Health Check — Actuator Endpoint
+# @name healthCheck
+GET {{$dotenv ROUTER_URL}}/actuator/health
+Accept: application/json
+
+?? status == 200
+?? body status == UP
+
+###
+
+### Health Check — Detailed Components
+# @name healthCheckDetails
+GET {{$dotenv ROUTER_URL}}/actuator/health
+Accept: application/json
+
+?? status == 200
+?? body status isString

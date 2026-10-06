@@ -1,0 +1,115 @@
+### ─────────────────────────────────────────────────────────────────────────
+### user-settings.http — User Settings & Preferences Contract (ADR-040)
+### Validates theme, persona, language, credential management via REST
+### (the GraphQL transport was removed — REST-only).
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate
+# @name login
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### REST — Get Current User (me)
+# @name getMe
+GET {{$dotenv ROUTER_URL}}/api/v1/profile
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+?? js response.parsedBody.username isString
+
+###
+
+### REST — Update Preferences (theme, language, persona)
+# @name updatePrefs
+PUT {{$dotenv ROUTER_URL}}/api/v1/profile/preferences
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "language": "fr",
+  "theme": "dark",
+  "themeAccent": "violet",
+  "aiPersona": "creative"
+}
+
+?? status == 200
+
+###
+
+### REST — Verify Updated Preferences
+# @name verifyPrefs
+GET {{$dotenv ROUTER_URL}}/api/v1/profile
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+?? js response.parsedBody.preferences.language == fr
+
+###
+
+### REST — List User Credentials
+# @name listCreds
+GET {{$dotenv ROUTER_URL}}/api/v1/credentials
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### REST — Save User Credential (API key)
+# @name saveCred
+POST {{$dotenv ROUTER_URL}}/api/v1/credentials
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "providerName": "openai",
+  "apiKey": "sk-e2e-test-key-12345"
+}
+
+?? status == 200
+
+###
+
+### REST — List Credentials After Save
+# @name listCredsAfter
+GET {{$dotenv ROUTER_URL}}/api/v1/credentials
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### REST — Delete User Credential
+# @name deleteCred
+DELETE {{$dotenv ROUTER_URL}}/api/v1/credentials/openai
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### Bootstrap — Feature Registry
+# @name bootstrapFeatures
+GET {{$dotenv ROUTER_URL}}/api/v1/features
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### Profile — current authenticated user's profile
+# @name currentProfile
+GET {{$dotenv ROUTER_URL}}/api/v1/profile
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200

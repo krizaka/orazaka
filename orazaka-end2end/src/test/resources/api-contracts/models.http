@@ -1,0 +1,48 @@
+### ─────────────────────────────────────────────────────────────────────────
+### models.http — Model Catalog Contract (ADR-040)
+### Validates the gateway model discovery endpoints respond correctly.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate
+# @name login
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### List Supported Models
+# @name listSupportedModels
+GET {{$dotenv ROUTER_URL}}/api/v1/models/supported
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### List All Providers
+# @name listProviders
+GET {{$dotenv ROUTER_URL}}/api/v1/models/providers
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+###
+
+### List Model Catalog
+# @name listModelCatalog
+GET {{$dotenv ROUTER_URL}}/api/v1/models/catalog
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200
+
+

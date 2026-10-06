@@ -1,0 +1,30 @@
+### ─────────────────────────────────────────────────────────────────────────
+### media-analysis.http — what is left on the media resource (ADR-068 §5)
+### Validates the RAG search endpoint. The analyze endpoints
+### (POST /media/analyze/{image,audio,video}) are DELETED: analysis is a run of the
+### matching orazaka-media Studio, covered by studio-runs.http. POST /media/upload
+### stays — uploading an asset is not a capability invocation — and is exercised by
+### StudioLifecycleIT, which uploads before running an analysis Studio.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate
+# @name login
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### RAG Search — knowledge retrieval surface
+# @name ragSearch
+GET {{$dotenv ROUTER_URL}}/api/v1/media/search?q=orazaka
+Accept: application/json
+Authorization: Bearer {{login.token}}
+
+?? status == 200

@@ -1,0 +1,14 @@
+# Advisories are an input, not an order (AGENTS.md §11): pull requests are opened weekly and
+# reviewed against the BOM, never merged reflexively.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # The npm workspace this repository owns (it links every cloned UI repository).
+  - package-ecosystem: "npm"
+    directory: "/orazaka-apps/ui"
+    schedule:
+      interval: "weekly"

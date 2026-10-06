@@ -1,0 +1,69 @@
+# The workspace pipeline: clones every repository and builds the whole platform in one reactor —
+# unit and Testcontainers integration tests, cross-repository governance rules, the UI workspace
+# and the docs freshness gate. A change in any repository is only finished when this is green.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *" # nightly: the default branches of every repository, together
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone every repository
+        run: node scripts/workspace.mjs clone --depth 1
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Worker test dependencies
+        run: python -m pip install --quiet pytest pyyaml pika Pillow psutil coverage
+
+      - name: Media worker contract
+        working-directory: orazaka-apps/workers/orazaka-worker-media
+        run: python -m pytest -q test_capability_contract.py
+
+      - name: Build and test the platform
+        run: >
+          ./mvnw -B -ntp install
+          -Dpython.executable=python
+          -Dexec.skip=true
+          -Dskip.npm=true
+          -Dskip.installnodenpm=true
+
+      - name: UI workspace
+        working-directory: orazaka-apps/ui
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build:shared
+          npm run validate
+          npm run validate:admin
+
+      - name: Docs are generated from this code
+        run: node scripts/generate-docs.mjs --check

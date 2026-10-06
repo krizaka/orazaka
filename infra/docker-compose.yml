@@ -1,0 +1,256 @@
+# ==============================================================================
+# ORAZAKA — Local stateful infrastructure (AGENTS.md §1 / §0, local_dev.md §1)
+# ------------------------------------------------------------------------------
+# Docker hosts ONLY stateful infra: PostgreSQL+pgvector, Redis, RabbitMQ.
+#   • AI inference (Ollama / stable-diffusion / media MLX) runs NATIVELY on macOS
+#     (Metal) — never in Docker (CPU fallback destroys DevX).
+#   • Apps (router, workers, web, admin) run as NATIVE processes via `orazaka dev`
+#     — they are not services here.
+# Brought up by `orazaka start`. Ports bound to loopback for host-run E2E.
+# ==============================================================================
+
+services:
+  # ── PostgreSQL with pgvector (write model + read projections + outbox) ──────
+  db-vector:
+    image: ankane/pgvector:latest
+    container_name: orazaka-db-vector
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-orazaka_db}
+      POSTGRES_USER: ${DB_USERNAME:-orazaka_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-orazaka_pass}
+    # Bound to loopback only: reachable by host-run E2E integration tests
+    # (E2eJdbcClient → localhost:5432) without exposing the DB externally.
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+      # Bootstrap files (one per bounded context, run alphabetically on a fresh
+      # volume). Flyway is disabled and spring.sql.init.mode=never, so the apps rely
+      # on these scripts for DDL. Each context's file lives in the repository that
+      # owns the context (<repo>/infra/initdb/NN-*.sql, AGENTS.md §5); the workspace
+      # only owns the reset and the dev fixtures. Every repository must be cloned
+      # (`node scripts/workspace.mjs clone`) before the first `orazaka start`.
+      - ./initdb/00-reset.sql:/docker-entrypoint-initdb.d/00-reset.sql:ro
+      - ../orazaka-apps/services/orazaka-users/infra/initdb/10-identity.sql:/docker-entrypoint-initdb.d/10-identity.sql:ro
+      - ../orazaka-apps/services/orazaka-conversation-service/infra/initdb/20-conversation.sql:/docker-entrypoint-initdb.d/20-conversation.sql:ro
+      - ../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql:/docker-entrypoint-initdb.d/30-jobs-config.sql:ro
+      - ../orazaka-apps/services/orazaka-knowledge-service/infra/initdb/40-knowledge.sql:/docker-entrypoint-initdb.d/40-knowledge.sql:ro
+      - ../orazaka-apps/services/orazaka-automation-service/infra/initdb/50-automation.sql:/docker-entrypoint-initdb.d/50-automation.sql:ro
+      - ../orazaka-libs/orazaka-ai-engine/infra/initdb/60-governance.sql:/docker-entrypoint-initdb.d/60-governance.sql:ro
+      - ../orazaka-apps/services/orazaka-billing/infra/initdb/70-billing.sql:/docker-entrypoint-initdb.d/70-billing.sql:ro
+      - ../orazaka-apps/services/orazaka-studio/infra/initdb/80-studio.sql:/docker-entrypoint-initdb.d/80-studio.sql:ro
+      - ./initdb/90-dev-fixtures.sql:/docker-entrypoint-initdb.d/90-dev-fixtures.sql:ro
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-orazaka_app} -d ${DB_NAME:-orazaka_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      # Grace window for first-boot initdb: it now provisions the app DB plus the
+      # per-service databases (identity/automation/knowledge) + extensions/seeds,
+      # and `up --wait` runs right after an 18-module build when the host is under
+      # heavy load — a slow cold start must not exhaust the retry budget. A success
+      # during this window marks healthy immediately, so a wider grace only helps the
+      # slow case and never delays a fast start. (Observed: full-reactor run raced 60s.)
+      start_period: 120s
+    networks:
+      - orazaka-isolated
+
+  # ── Redis (cache / read projections / rate-limit counters) ──────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: orazaka-redis
+    restart: always
+    # Loopback-only publish for host-run E2E tests (E2eRedisClient → localhost:6379).
+    ports:
+      - "127.0.0.1:6379:6379"
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orazaka-isolated
+
+  # ── RabbitMQ (decoupling buffer — jobs + domain events) ─────────────────────
+  rabbitmq:
+    # 4.x, not 3.x: Spring AMQP 4.0 (shipped by Spring Boot 4.0) declares every AnonymousQueue
+    # with `x-queue-leader-locator`, and RabbitMQ only accepts that argument on a *classic* queue
+    # from 4.0 onward — 3.13 answers PRECONDITION_FAILED and the consumer never starts. Pinning
+    # the broker below the framework is not a conservative choice here, it is a broken one.
+    image: rabbitmq:4-management-alpine
+    container_name: orazaka-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    # Loopback-only publish for host-run E2E tests (E2eAmqpClient → localhost:5672)
+    # and the management UI at http://localhost:15672 (guest/guest by default).
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - orazaka-isolated
+
+  # ── Jaeger (distributed tracing backend — Phase 0 observability baseline) ───
+  # Apps export OTLP/HTTP spans to :4318; traces are browsed at http://localhost:16686.
+  # Single-purpose all-in-one (in-memory storage): traces are dev-disposable.
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    container_name: orazaka-jaeger
+    restart: always
+    # Loopback-only publish: host-run apps export to localhost:4318 (OTLP/HTTP);
+    # UI at http://localhost:16686.
+    ports:
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:4318:4318"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - orazaka-isolated
+
+  # ── Mailpit (local SMTP sink for the notification service) ─────────────────
+  # orazaka-notification-service sends e-mail over SMTP (MAIL_HOST/MAIL_PORT,
+  # default localhost:1025). Locally every message lands here instead of a real
+  # inbox: verification and password-reset links are read at http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.21
+    container_name: orazaka-mailpit
+    restart: always
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - orazaka-isolated
+
+  # ── Lago (invoicing & money engine — ADR-033 phase 4, OPT-IN) ───────────────
+  # Every service below carries `profiles: [billing]`, so `orazaka start` — which
+  # names db-vector/redis/rabbitmq explicitly — never selects them and the default
+  # local loop is unchanged. Bring them up from the repo root with:
+  #   COMPOSE_PROFILES=billing docker compose -p orazaka --env-file .env \
+  #     -f infra/docker-compose.yml up -d
+  # `--env-file .env` is required: compose's project directory is infra/, so the
+  # root .env (the single source of truth) is NOT picked up automatically. The two
+  # Lago secrets below therefore carry an explicit empty default so the DEFAULT
+  # (non-billing) path stays warning-free.
+  # Lago gets its OWN Postgres and its OWN volume, never a database inside
+  # orazaka-db-vector: `orazaka stop --purge` must not be able to delete financial
+  # records with disposable dev data, and Lago's Rails migrations must not land in
+  # infra/initdb/ (an Orazaka-bounded-context-only directory scanned by SqlBoundaryRules).
+  # ⚠ PHASE-4 PREREQUISITE (ADR-033 §16, not tranche 1): Lago v1.45.1's `db:migrate`
+  # loads a structure.sql that requires the pg_partman extension, which stock
+  # postgres:16-alpine does not ship — the API boots but has no schema. Plugging Lago
+  # in for real needs a partman-capable pinned image here; until then these services
+  # exist only to prove the seam is wired and stays inert.
+  lago-db:
+    image: postgres:16-alpine
+    container_name: orazaka-lago-db
+    profiles: [billing]
+    restart: always
+    environment:
+      POSTGRES_DB: lago
+      POSTGRES_USER: lago
+      POSTGRES_PASSWORD: ${LAGO_DB_PASSWORD:-lago}
+    volumes:
+      - lago_data:/var/lib/postgresql/data
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lago -d lago"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - orazaka-isolated
+
+  lago-redis:
+    image: redis:7-alpine
+    container_name: orazaka-lago-redis
+    profiles: [billing]
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orazaka-isolated
+
+  lago-api:
+    image: getlago/api:v1.45.1
+    container_name: orazaka-lago-api
+    profiles: [billing]
+    restart: always
+    depends_on:
+      - lago-db
+      - lago-redis
+    environment: &lago-api-env
+      # Without this the image boots Rails in `development`, whose gem group
+      # (annotate_rb…) is not bundled into the published image — both api and
+      # worker crash-loop on LoadError. Not optional.
+      RAILS_ENV: production
+      DATABASE_URL: postgresql://lago:${LAGO_DB_PASSWORD:-lago}@lago-db:5432/lago
+      REDIS_URL: redis://lago-redis:6379
+      SECRET_KEY_BASE: ${LAGO_SECRET_KEY_BASE:-}
+      LAGO_RSA_PRIVATE_KEY: ${LAGO_RSA_PRIVATE_KEY:-}
+      LAGO_API_URL: http://localhost:${LAGO_API_PORT:-8098}
+      LAGO_FRONT_URL: http://localhost:${LAGO_FRONT_PORT:-8097}
+    # Lago listens on 3000 internally — remapped on the host because 3000 is
+    # orazaka-web-client. Loopback-bound like every other service in this file.
+    ports:
+      - "127.0.0.1:${LAGO_API_PORT:-8098}:3000"
+    networks:
+      - orazaka-isolated
+
+  lago-worker:
+    image: getlago/api:v1.45.1
+    container_name: orazaka-lago-worker
+    profiles: [billing]
+    restart: always
+    command: ["./scripts/start.worker.sh"]
+    depends_on:
+      - lago-db
+      - lago-redis
+    environment: *lago-api-env
+    networks:
+      - orazaka-isolated
+
+  lago-front:
+    image: getlago/front:v1.45.1
+    container_name: orazaka-lago-front
+    profiles: [billing]
+    restart: always
+    environment:
+      API_URL: http://localhost:${LAGO_API_PORT:-8098}
+      APP_ENV: production
+    # 80 internally; 8080 on the host would collide with the conversation-service.
+    ports:
+      - "127.0.0.1:${LAGO_FRONT_PORT:-8097}:80"
+    networks:
+      - orazaka-isolated
+
+# ── Volumes and Isolated Networking ──────────────────────────────────────────
+volumes:
+  pgvector_data:
+  # Deliberately NOT pgvector_data: financial records have their own lifecycle.
+  lago_data:
+
+networks:
+  orazaka-isolated:
+    driver: bridge
+    internal: false

@@ -1,0 +1,17 @@
+# RunPod Serverless Deployment Configuration
+
+[worker]
+name = "orazaka-video-worker"
+image = "orazaka/runpod-worker-ltx:latest"
+gpu_type = "NVIDIA A100-SXM4-80GB"
+
+[autoscale]
+min_workers = 0
+max_workers = 10
+idle_timeout_seconds = 300
+
+[environment]
+# Model cache directory for Hugging Face
+HF_HOME = "/workspace/model_cache"
+# Custom timeout for LTX-Video generation workloads
+GENERATION_TIMEOUT_SEC = "300"

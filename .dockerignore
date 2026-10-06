@@ -1,0 +1,25 @@
+# Build artifacts & dependencies — never needed inside the image build context.
+# Keeps the router image build lean and fast (context is the repo root).
+**/node_modules
+**/.venv
+**/venv
+**/target
+**/dist
+**/.next
+**/__pycache__
+**/*.pyc
+**/.scannerwork
+**/.sonarlint
+
+# VCS & IDE
+.git
+.github
+.idea
+.vscode
+
+# Logs, coverage, local state
+**/*.log
+**/coverage
+**/.coverage
+**/coverage.xml
+var
