@@ -403,7 +403,13 @@ function extractUseCases() {
       const name = basename(f, ".java");
       const capability = src.match(/Capability\.([A-Z]+)/)?.[1] ?? "—";
       const domain = relative(dir, f).split(/[/\\]/)[0];
-      const javadoc = src.match(/\/\*\*\s*\n\s*\*\s*([^\n@]+)/)?.[1]?.trim() ?? "";
+      // The first javadoc line, with inline tags ({@code X}, {@link X}) rendered as code — stopping
+      // at the first "@" truncated "a first-class {@code Intention}" to an unclosed "{", which is
+      // not valid MDX on the site.
+      const javadoc = (src.match(/\/\*\*\s*\n\s*\*\s*([^\n]+)/)?.[1] ?? "")
+        .replace(/\{@\w+\s+([^}]*)\}/g, "`$1`")
+        .replace(/[{}]/g, "")
+        .trim();
       return { name, capability, domain, summary: javadoc };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -548,7 +554,7 @@ function summaryAbove(src, index) {
     .filter((l) => l && !l.startsWith("@"))
     .join(" ");
   const sentence = text.split(/(?<=\.)\s/)[0] ?? "";
-  return sentence.replace(/\{@\w+\s+([^}]*)\}/g, "$1").replace(/\|/g, "\\|").trim();
+  return sentence.replace(/\{@\w+\s+([^}]*)\}/g, "$1").replace(/[{}]/g, "").replace(/\|/g, "\\|").trim();
 }
 
 /**
@@ -1018,7 +1024,7 @@ const mdGovernance = (rows) => {
       holder = r.holder;
       lines.push("", `## ${holder}`, "", "| Rule | Enforced by | Summary |", "|:---|:---|:---|");
     }
-    const suites = r.suites.length ? r.suites.map((x) => `\`${x}\``).join("<br>") : "**none**";
+    const suites = r.suites.length ? r.suites.map((x) => `\`${x}\``).join("<br/>") : "**none**";
     lines.push(`| \`${r.name}\` | ${suites} | ${r.summary} |`);
   }
   return lines.join("\n") + "\n";
