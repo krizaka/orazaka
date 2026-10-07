@@ -32,6 +32,11 @@
              -Dpython.executable=... on hosts that provision Python differently. -->
         <python.executable>${project.basedir}/orazaka-apps/workers/orazaka-worker-media/.venv/bin/python</python.executable>
 
+        <!-- Polyglot (npm / python) test executions follow -DskipTests; CI, which runs the UI and
+             worker suites in their own steps, turns them off alone with -Dexec.skip=true. -->
+        <skipTests>false</skipTests>
+        <exec.skip>${skipTests}</exec.skip>
+
         <!-- Python and TS/JS Coverage -->
         <sonar.python.coverage.reportPaths>orazaka-apps/workers/orazaka-worker-media/coverage.xml</sonar.python.coverage.reportPaths>
         <sonar.javascript.lcov.reportPaths>
@@ -64,8 +69,7 @@
                 <version>3.5.0</version>
                 <inherited>false</inherited>
                 <configuration>
-                    <!-- Honour -DskipTests for polyglot test executions -->
-                    <skip>${skipTests}</skip>
+                    <skip>${exec.skip}</skip>
                 </configuration>
                 <executions>
                     <execution>
