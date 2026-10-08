@@ -11,7 +11,7 @@
  *   node scripts/workspace.mjs pull                     fast-forward every clean repository
  *   node scripts/workspace.mjs deps <repository>        its upstream repositories, in build order
  *   node scripts/workspace.mjs ci <repository>          build its upstreams, then verify it
- *   node scripts/workspace.mjs publish <repository>     deploy it to GitHub Packages (CI, on a v* tag)
+ *   node scripts/workspace.mjs publish <repository>     publish it (CI, on a v* tag): Maven → GitHub Packages, npm → npmjs
  *
  * `ci` is what every repository's GitHub Actions workflow runs (.github/workflows/component.yml):
  * a component is always verified inside the workspace, against its upstreams built from source.
@@ -198,10 +198,10 @@ function ci(name) {
 }
 
 /**
- * Publishes a component to GitHub Packages: its Maven modules to maven.pkg.github.com/<org>/<repo>
- * (orazaka-parent's distributionManagement), the @krizaka/* packages of the UI kit to
- * npm.pkg.github.com. Applications, workers and packs are not libraries: nothing to publish.
- * Expects the credentials CI provides (settings.xml server "github", NODE_AUTH_TOKEN).
+ * Publishes a component: its Maven modules to GitHub Packages (maven.pkg.github.com/<org>/<repo>,
+ * orazaka-parent's distributionManagement), the @krizaka/* packages of the UI kit to the public npm registry with
+ * provenance (installable by anyone without a token). Applications, workers and packs are not libraries: nothing to
+ * publish. Expects the credentials CI provides (settings.xml server "github"; npm trusted publishing over OIDC).
  */
 function publish(name) {
   const target = repo(name);
@@ -211,7 +211,7 @@ function publish(name) {
   }
   if (target.name === "orazaka-ui-kit") {
     run("npm", ["install", "--no-audit", "--no-fund"], { cwd: UI });
-    for (const ws of npmWorkspaces(target)) run("npm", ["publish", `--workspace=${ws}`], { cwd: UI });
+    for (const ws of npmWorkspaces(target)) run("npm", ["publish", `--workspace=${ws}`, "--access", "public", "--provenance"], { cwd: UI });
     return;
   }
   console.log(`${name} is a ${target.kind} application — nothing to publish.`);

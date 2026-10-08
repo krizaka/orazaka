@@ -11,7 +11,7 @@
 ## 0. Current phase — **LOCAL runtime, GitHub multi-repository**
 
 - The platform is **one GitHub repository per component** in the [`krizaka`](https://github.com/krizaka) organisation, assembled by this **workspace** (§2.1). The runtime cycle (run, e2e, docs) still runs **on the dev machine (macOS 64 GB)**.
-- **Allowed on GitHub**: GitHub Actions that **build and test** (every repository runs the shared `component.yml` of this workspace; the workspace runs the full reactor), and that **publish artifacts to GitHub Packages on a `v*` tag** (Maven `com.orazaka:*`, npm `@krizaka/*`). Nothing else.
+- **Allowed on GitHub**: GitHub Actions that **build and test** (every repository runs the shared `component.yml` of this workspace; the workspace runs the full reactor), and that **publish artifacts on a `v*` tag** — Maven `com.orazaka:*` to GitHub Packages, npm `@krizaka/*` to the public npm registry with provenance. Nothing else.
 - **Forbidden for now**: cloud deployment, images pushed to a registry, cloud provisioning, remote secrets beyond `GITHUB_TOKEN`, remote Terraform `apply`.
 - **Allowed locally**: `docker-compose` (stateful infra), **native macOS** AI runtimes (Metal), running apps via the `orazaka` CLI, **hermetic** tests (Testcontainers), docs generation.
 - The code stays **ready** for staging/prod (hexagonal + config-per-profile), but those environments are **deferred**: do not implement them until explicitly requested.
@@ -228,7 +228,7 @@ One module, packs by concern: `security/` `token/` `context/` `translation/` `en
 
 ## 8. Frontend · Mobile · CLI
 
-All clients live under `orazaka-apps/ui/` — one repository each, linked by the npm workspace this repository owns (`orazaka-apps/ui/package.json`). **No client outside this folder.** Shared packages are published as `@krizaka/*` on GitHub Packages.
+All clients live under `orazaka-apps/ui/` — one repository each, linked by the npm workspace this repository owns (`orazaka-apps/ui/package.json`). **No client outside this folder.** Shared packages are published as `@krizaka/*` on npm (public, with provenance); inside the workspace the apps link them from source. The Krizaka brand layer (marks, motion signature) is [`@krizaka/ui`](https://github.com/krizaka/krizaka-ui).
 
 | Package | Role | Port |
 |:---|:---|:---:|
