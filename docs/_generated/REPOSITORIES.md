@@ -10,7 +10,7 @@ generated: true
 
 > 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
 
-Orazaka is published as **20 repositories** in the [`krizaka`](https://github.com/krizaka) organisation: one per component, plus the workspace [`orazaka`](https://github.com/krizaka/orazaka) that assembles them (governance contract, `orazaka.workspace.json`, local infrastructure, end-to-end tests, these docs).
+Orazaka is published as **22 repositories** in the [`krizaka`](https://github.com/krizaka) organisation: one per component, plus the workspace [`orazaka`](https://github.com/krizaka/orazaka) that assembles them (governance contract, `orazaka.workspace.json`, local infrastructure, end-to-end tests, these docs).
 
 ```bash
 git clone https://github.com/krizaka/orazaka.git && cd orazaka
@@ -22,7 +22,7 @@ node scripts/workspace.mjs clone   # every repository at its workspace path
 
 | Repository | Kind | What it holds | Depends on |
 |:---|:---|:---|:---|
-| [`orazaka-build`](https://github.com/krizaka/orazaka-build) | maven | Parent POM (Spring Boot / Spring AI BOMs, plugin management, Orazaka BOM) and the shared governance test kit (ArchUnit rules, Testcontainers base) for every Orazaka JVM repository. | — |
+| [`orazaka-build`](https://github.com/krizaka/orazaka-build) | maven | Parent POM (Spring Boot / Spring AI BOMs, plugin management, Orazaka BOM) and the shared governance test kit (ArchUnit rules, Testcontainers base) for every Orazaka JVM repository. | `krizaka-build` |
 | [`orazaka-contracts`](https://github.com/krizaka/orazaka-contracts) | maven | Tier-1 platform contracts shared by every Orazaka service: the job plane (jobs-api) and the application-persistence ports (persistence-app-api). Pure interfaces and records, zero implementation. | `orazaka-build` |
 | [`orazaka-edge`](https://github.com/krizaka/orazaka-edge) | maven | Transparent HTTP edge in front of every Orazaka service: routing, API-key → JWT exchange, CORS and tracing. Spring MVC + virtual threads. Modules: `orazaka-edge`. | `orazaka-build` |
 | [`orazaka-ui-kit`](https://github.com/krizaka/orazaka-ui-kit) | npm | @krizaka/orazaka-shared (TypeScript types, Zod schemas, design tokens) and @krizaka/orazaka-design-system (React components, Tailwind preset, theme, icon registry) for Next.js and React Native apps. | — |

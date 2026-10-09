@@ -180,6 +180,7 @@ result/
 # Orazaka workspace — cloned repositories (each is its own git repository;
 # list in orazaka.workspace.json, cloned by: node scripts/workspace.mjs clone)
 # ─────────────────────────────────────────────────────────────────────
+/krizaka/
 /orazaka-libs/orazaka-build/
 /orazaka-libs/orazaka-contracts/
 /orazaka-apps/services/orazaka-users/

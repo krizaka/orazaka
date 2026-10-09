@@ -3,13 +3,35 @@
   "source": "generated from code by scripts/generate-docs.mjs — do not hand-edit",
   "repositories": [
     {
+      "name": "krizaka-build",
+      "url": "https://github.com/krizaka/krizaka-build",
+      "path": "krizaka/krizaka-build",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Parent POM (Maven Central metadata, Java 21 build conventions, signed release) and BOM of every Krizaka JVM artifact (com.krizaka).",
+      "dependsOn": []
+    },
+    {
+      "name": "krizaka-platform-kit",
+      "url": "https://github.com/krizaka/krizaka-platform-kit",
+      "path": "krizaka/krizaka-platform-kit",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Cross-cutting building blocks for Spring Boot services: stateless JWT security with one baseline, service-to-service tokens, idempotent message consumption and a transactional outbox relay.",
+      "dependsOn": [
+        "krizaka-build"
+      ]
+    },
+    {
       "name": "orazaka-build",
       "url": "https://github.com/krizaka/orazaka-build",
       "path": "orazaka-libs/orazaka-build",
       "kind": "maven",
       "layer": "foundation",
       "description": "Parent POM (Spring Boot / Spring AI BOMs, plugin management, Orazaka BOM) and the shared governance test kit (ArchUnit rules, Testcontainers base) for every Orazaka JVM repository.",
-      "dependsOn": []
+      "dependsOn": [
+        "krizaka-build"
+      ]
     },
     {
       "name": "orazaka-contracts",

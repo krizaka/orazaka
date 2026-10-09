@@ -480,6 +480,17 @@ function accessRules(serviceDir) {
   for (const f of javaFiles(serviceDir)) {
     if (!f.endsWith("SecurityConfig.java")) continue;
     const code = read(f).replace(/^\s*(\/\/|\*|\/\*).*$/gm, "");
+    // krizaka-security's SecurityBaseline.apply(http, serviceRules) declares the shared rules
+    // first and `anyRequest().authenticated()` last, around the service's own: the same order
+    // Spring Security will evaluate them in (krizaka/krizaka-platform-kit, ADR-073).
+    const baseline = code.includes("SecurityBaseline.apply(");
+    if (baseline) {
+      rules.push({ pattern: "/**", label: "public", httpMethod: "OPTIONS" });
+      for (const pattern of ["/actuator/health", "/actuator/info", "/error"]) {
+        rules.push({ pattern, label: "public", httpMethod: null });
+      }
+      rules.push({ pattern: "/internal/v1/**", label: "SERVICE", httpMethod: null });
+    }
     for (const m of code.matchAll(
       /requestMatchers\(\s*(?:HttpMethod\.(\w+)\s*,\s*)?((?:"[^"]*"\s*,?\s*)+)\)\s*\.\s*(permitAll|authenticated|hasAuthority|hasAnyAuthority)\(([^)]*)\)/g,
     )) {
@@ -497,7 +508,9 @@ function accessRules(serviceDir) {
             : args.join(" + ") || verb;
       for (const pattern of patterns) rules.push({ pattern, label, httpMethod });
     }
-    const anyRequest = code.match(/anyRequest\(\)\s*\.\s*(permitAll|authenticated)\(\)/);
+    const anyRequest = baseline
+      ? [null, "authenticated"]
+      : code.match(/anyRequest\(\)\s*\.\s*(permitAll|authenticated)\(\)/);
     if (anyRequest) {
       rules.push({
         pattern: "/**",

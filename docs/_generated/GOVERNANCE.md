@@ -34,7 +34,7 @@ build fails when it is violated. Treat an empty cell as a defect, not as a gap.
 | Rule | Enforced by | Summary |
 |:---|:---|:---|
 | `assertCollectionFieldsPrivateFinal` | `BusinessGovernanceTest`<br/>`IdentityGovernanceTest`<br/>`InterceptorsGovernanceTest`<br/>`ToolsGovernanceTest` | Asserts collection fields (List, Map, Set) in non-record classes are private final. |
-| `assertDedupIsAtomic` | `JobServiceGovernanceTest` | [KIT-002] Message deduplication is a claim, never a check followed by an act. |
+| `assertDedupIsAtomic` | `JobServiceGovernanceTest` | [KIT-002] Message deduplication has one author: krizaka-messaging. |
 | `assertDomainHasNoTransportDtos` | `BillingServiceGovernanceTest`<br/>`BusinessGovernanceTest`<br/>`IdentityGovernanceTest`<br/>`StudioServiceGovernanceTest` | Asserts the domain package holds no transport DTOs (*Request/*Response). |
 | `assertDomainPurity` | `IdentityGovernanceTest`<br/>`ToolsGovernanceTest` | [HEX-002] Prohibits domain classes from depending on framework packs. |
 | `assertEndpointRuleHasOneAuthor` | `JobServiceGovernanceTest` | [CAP-002] The endpoint rule has one author. |
@@ -59,13 +59,13 @@ build fails when it is violated. Treat an empty cell as a defect, not as a gap.
 | `assertOneDeclarationAuthor` | `StudioServiceGovernanceTest` | [SAGA-002] One author resolves what a dispatched step carries from its pack. |
 | `assertOneSettlementAuthor` | `StudioServiceGovernanceTest` | [SAGA-001] One author closes a run's credit hold. |
 | `assertOneTopLevelClassPerFile` | `BillingServiceGovernanceTest`<br/>`BusinessGovernanceTest`<br/>`IdentityGovernanceTest`<br/>`InterceptorsGovernanceTest`<br/>`JobServiceGovernanceTest`<br/>`PersistenceBridgeGovernanceTest`<br/>`PersistenceGovernanceTest`<br/>`PersistenceIdentityGovernanceTest`<br/>`StudioServiceGovernanceTest`<br/>`ToolsGovernanceTest` | Asserts every top-level class resides in a dedicated file matching its simple name. |
-| `assertOutboxRelaysClaim` | `JobServiceGovernanceTest` | [KIT-003] An outbox relay claims the rows it publishes. |
+| `assertOutboxRelaysClaim` | `JobServiceGovernanceTest` | [KIT-003] An outbox store claims the rows the relay publishes, and the relay has one author. |
 | `assertPersistenceAdapterPackageKind` | `IdentityGovernanceTest` | Asserts the exact infrastructure.adapter.persistence package (excluding its entity/repository/converter sub-packs) holds only *Adapter/*Mapper — one package, one component kind [ERR-130]. |
 | `assertPersistencePackageHygiene` | `PersistenceGovernanceTest`<br/>`PersistenceIdentityGovernanceTest` | Asserts JPA components reside in correct sub-packs. |
 | `assertSagaReadersDoNotWrite` | `StudioServiceGovernanceTest` | [SAGA-003] The saga's read-only invariants stay read-only. |
-| `assertSecurityBaselineIsUniform` | `JobServiceGovernanceTest` | [KIT-001] Every service's security baseline says the same four things. |
+| `assertSecurityBaselineIsUniform` | `JobServiceGovernanceTest` | [KIT-001] Every service's filter chain starts from the one security baseline. |
 | `assertServicePackageOnlyServices` | `BillingServiceGovernanceTest`<br/>`JobServiceGovernanceTest`<br/>`StudioServiceGovernanceTest`<br/>`ToolsGovernanceTest` | Asserts every top-level class in servicePackage is named *Service (capability-oriented). |
-| `assertSessionSecretMinimumIsUniform` | `JobServiceGovernanceTest` | [KIT-004] The session JWT minimum is one number with five authors, and they agree. |
+| `assertSessionSecurityHasOneAuthor` | `JobServiceGovernanceTest` | [KIT-004] Session-token security has one author: krizaka-security. |
 | `assertStrictHexagonalBoundaries` | `ToolsGovernanceTest` | [HEX-001] Enforces strict hexagonal layer dependencies using ArchUnit's layeredArchitecture. |
 | `assertSupportPackageHygiene` | **none** | Asserts infrastructure.support holds only cross-cutting helpers / shared plumbing — never a use-case *Service, a *Controller/*Adapter, or config [ERR-130]. |
 | `assertVirtualThreadsEnabled` | `AutomationServiceGovernanceTest`<br/>`BillingServiceGovernanceTest`<br/>`EdgeGovernanceTest`<br/>`JobServiceGovernanceTest`<br/>`KnowledgeServiceGovernanceTest`<br/>`NotificationServiceGovernanceTest`<br/>`RouterGovernanceTest`<br/>`StudioServiceGovernanceTest` | Fails when a service that serves HTTP does not run its requests on virtual threads. |
