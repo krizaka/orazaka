@@ -1,4 +1,4 @@
-package com.orazaka.e2e;
+package com.krizaka.orazaka.e2e;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

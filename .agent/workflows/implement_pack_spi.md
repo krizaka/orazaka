@@ -53,7 +53,7 @@ budget left, **stop and report**.
 | AGENTS.md §0 | 100% local. No CI, no cloud, no new network dependency. |
 | AGENTS.md §4 — config vs data | Routing keys are **rows** in `orazaka_capabilities`. Not a `switch`, not a `Map` literal, not a `application.yml` block. That is the entire point of phase A. |
 | AGENTS.md §6 | Exchange and routing-key conventions unchanged: `orazaka.jobs`, `job.{capability}.{action}`. You are changing *where the mapping is stored*, never the wire format. |
-| AGENTS.md §2 — tier purity | `orazaka-jobs-api` is Tier-1: pure JDK + JUnit. No Spring, no Jackson, no JPA. It must not import `com.orazaka.business.*`, `com.orazaka.studio.*` or `com.krizaka.billing.*`. |
+| AGENTS.md §2 — tier purity | `orazaka-jobs-api` is Tier-1: pure JDK + JUnit. No Spring, no Jackson, no JPA. It must not import `com.krizaka.orazaka.business.*`, `com.krizaka.orazaka.studio.*` or `com.krizaka.billing.*`. |
 | AGENTS.md §3 | `CapabilityRoutingClient` is a Tier-1 port (`<Thing>Client`). Its HTTP implementation is an `*Adapter`. No `*Manager`, `*Resolver` doing I/O, no `*Util`. |
 | ERR-103 | One top-level type per `.java` file **+ one mirroring test file**. |
 | ERR-106/116 | Records validate in the compact constructor. |

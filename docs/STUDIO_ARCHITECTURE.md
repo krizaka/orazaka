@@ -56,7 +56,7 @@ generation": `realestate-reels` → *"Reels Immobilier"*; `trade-showcase` → *
 `Mes Studios` / `Explorer`.
 
 > **If you ever want to rename `Studio`**, it is a mechanical change confined to: the
-> `com.orazaka.studio*` packs, `infra/initdb/80-studio.sql`, `/api/v1/studios`, the
+> `com.krizaka.orazaka.studio*` packs, `infra/initdb/80-studio.sql`, `/api/v1/studios`, the
 > `features/studio/` UI folder and the `studio.*` entitlement-key prefix. Nothing else references it.
 
 ---
@@ -105,7 +105,7 @@ retrofitting a boundary is strictly harder than drawing it now.
 in `orazaka-business`.
 
 The original reasoning (*layer ≠ process*; workflow orchestration is `business`'s responsibility) is
-sound but unbuildable here: SEAM-002 lists `com.orazaka.business..` as a foreign Tier-3
+sound but unbuildable here: SEAM-002 lists `com.krizaka.orazaka.business..` as a foreign Tier-3
 implementation, and §15 below requires `StudioServiceGovernanceTest` to enforce SEAM-002 — the
 service cannot both host `business` and pass its own governance test. AGENTS.md wins. Hosting
 `business` here would also give that library a second owner, which is the distributed monolith

@@ -79,7 +79,7 @@ baseline's rules, in Spring Security's evaluation order, so the API reference do
 
 - Krizaka artifacts: `com.krizaka:*`, one version for all (`krizaka-bom`), starting at `0.1.0`.
 - Orazaka artifacts: `com.krizaka.orazaka:*` (`com.orazaka` is not a namespace Krizaka can publish under on Maven
-  Central). Java packages are unchanged — a package is not a coordinate.
+  Central), and — amended 2026-10-09 — Orazaka's Java packages follow: `com.krizaka.orazaka.*`.
 - `orazaka-parent` inherits `krizaka-parent`: the Maven Central metadata, the toolchain enforcement and the `release`
   profile are Krizaka's; Spring AI, the Orazaka BOM, the `.env` profiles and SonarCloud stay Orazaka's.
 - Configuration keys: `orazaka.identity.jwt.secret` → `krizaka.security.jwt.secret` (same `IDENTITY_JWT_SECRET`);
@@ -92,3 +92,18 @@ baseline's rules, in Spring Security's evaluation order, so the API reference do
   nothing waits for a Central release during development; Central is for everyone else.
 - AGENTS.md §0 changes: publishing to Maven Central needs secrets beyond `GITHUB_TOKEN` (a Central Portal token and a
   signing key), held as organisation secrets.
+
+## 7. Amendment — 2026-10-09: wire names, the users profile, packages
+
+- **Wire names.** A building block never names the bus it runs on: `MessagingExchanges`
+  (`krizaka.messaging.exchanges.events` / `.dead-letter`, defaults `krizaka.events` / `krizaka.dlx`) is set by the
+  hosting platform — Orazaka keeps `orazaka.events` / `orazaka.dlx` through `EVENTS_EXCHANGE` / `DLX_EXCHANGE`. The
+  queues a block owns are `krizaka.*`. Databases and roles are `krizaka_users_db` / `krizaka_users` and
+  `krizaka_billing_db` / `krizaka_billing`; users tables lose the `orazaka_` prefix.
+  `infra/migrations/2026-10-09-krizaka-building-blocks.sql` moves an existing local database in place.
+- **The users profile is the application's.** `UserProfile` is `(userId, theme, attributes)`; Orazaka's assistant fields
+  (`voiceModel`, `primaryIndustry`, `aiBehavior`) are its onboarding answers, stored as attributes, and its onboarding
+  and feedback forms live in this workspace (`infra/users/`). Reserved preference namespaces are declared by the
+  application (`orazaka.`). `user_model_prefs` had no reader and is gone.
+- **Packages.** Every Orazaka Java package moves from `com.orazaka` to `com.krizaka.orazaka`, so coordinates and packages
+  name the same owner. Historical ADRs keep the names they were written with.

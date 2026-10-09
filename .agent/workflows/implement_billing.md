@@ -46,7 +46,7 @@ continue.
 | ERR-103 | One top-level type per `.java` file **+ one mirroring test file**. |
 | ERR-106/116 | Records validate in the **compact constructor**. No service-side null guards. |
 | ERR-104 | No `Orazaka` class prefix. |
-| Tier-1 purity | `krizaka-billing-api` has **zero** implementation dependencies — no Spring, no Jackson, no JPA. Pure JDK + JUnit (test scope). It must **not** import `com.orazaka.business.*` (Tier-3): `BillableCapability` is a deliberate contract-copy of `business.api.Capability`. |
+| Tier-1 purity | `krizaka-billing-api` has **zero** implementation dependencies — no Spring, no Jackson, no JPA. Pure JDK + JUnit (test scope). It must **not** import `com.krizaka.orazaka.business.*` (Tier-3): `BillableCapability` is a deliberate contract-copy of `business.api.Capability`. |
 
 ## §3 File manifest — tranche 1
 
@@ -286,7 +286,7 @@ the trigger is missing and the ledger is not append-only.
 
 - **Do not** create `krizaka-billing-service` in this tranche.
 - **Do not** add any Spring dependency to `krizaka-billing-api`.
-- **Do not** import `com.orazaka.business.*` from the contract module (Tier-1 ↛ Tier-3).
+- **Do not** import `com.krizaka.orazaka.business.*` from the contract module (Tier-1 ↛ Tier-3).
 - **Do not** add a foreign key from a billing table to any table outside `70-billing.sql`.
 - **Do not** put a plan, price, credit rate or enforcement flag in any `application.yml`.
 - **Do not** touch the user's uncommitted working-tree changes (there are modified files on `main`).

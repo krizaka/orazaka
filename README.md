@@ -144,7 +144,7 @@ Cloned directories are ignored by this repository's git; each is its own reposit
 
 ## Building a new application from Orazaka components
 
-1. Inherit `com.orazaka:orazaka-parent` (from [orazaka-build](https://github.com/krizaka/orazaka-build)) — same stack,
+1. Inherit `com.krizaka.orazaka:orazaka-parent` (from [orazaka-build](https://github.com/krizaka/orazaka-build)) — same stack,
    versions and quality gates.
 2. Run the services you need — e.g. [krizaka-users](https://github.com/krizaka/krizaka-users) for
    registration / login / forgot password / profile, [krizaka-notifications](https://github.com/krizaka/krizaka-notifications)

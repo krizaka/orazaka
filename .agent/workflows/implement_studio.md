@@ -44,7 +44,7 @@ continue.
 | AGENTS.md §5 — own DB, no cross-context FK | `80-studio.sql` creates its own role + database. **Every `REFERENCES` must target a table created in the same file.** `actor_id`, `pack_key`, `feature_key`, `job_id`, `hold_id`, `asset_id` are opaque `VARCHAR`, never FKs. `SqlBoundaryRules` [SEAM-001] fails the build otherwise. |
 | AGENTS.md §5 — own dedup copy | The studio DB carries its **own** `processed_messages` (contract-copy), not a shared one. |
 | AGENTS.md §4 — config vs data | Studios, blueprints, limits are **rows**. Nothing about a Studio in any `application.yml`. |
-| AGENTS.md §2 — tier purity | `orazaka-studio-api` is Tier-1: **zero** implementation dependencies — no Spring, no Jackson, no JPA, no Lombok. Pure JDK + JUnit (test scope). It must **not** import `com.orazaka.business.*` or `com.krizaka.billing.*`. |
+| AGENTS.md §2 — tier purity | `orazaka-studio-api` is Tier-1: **zero** implementation dependencies — no Spring, no Jackson, no JPA, no Lombok. Pure JDK + JUnit (test scope). It must **not** import `com.krizaka.orazaka.business.*` or `com.krizaka.billing.*`. |
 | ERR-103 | One top-level type per `.java` file **+ one mirroring test file**. |
 | ERR-106/116 | Records validate in the **compact constructor**. No service-side null guards. |
 | ERR-104 | No `Orazaka` class prefix. |
@@ -169,7 +169,7 @@ Also add the `80-studio.sql` line to the file-inventory comment at the top.
 `pom.xml`: copy `krizaka/krizaka-billing/krizaka-billing-api/pom.xml` verbatim, change
 `artifactId`/`name`/`description`. **No dependency beyond `junit-jupiter` (test scope).**
 
-Package root `com.orazaka.studio.domain`. Implement design §4 exactly, with compact-constructor
+Package root `com.krizaka.orazaka.studio.domain`. Implement design §4 exactly, with compact-constructor
 validation (ERR-106) and Javadoc on every public type. The validation that matters:
 
 - **`Studio`** — `studioKey`/`label`/`profession`/`entitlementKey` non-blank;
@@ -290,7 +290,7 @@ succeeds, the trigger is missing and a published blueprint is not immutable.
 
 - **Do not** create `orazaka-studio-service` in this phase.
 - **Do not** add any Spring, Jackson or JPA dependency to `orazaka-studio-api`.
-- **Do not** import `com.orazaka.business.*` or `com.krizaka.billing.*` from the contract module.
+- **Do not** import `com.krizaka.orazaka.business.*` or `com.krizaka.billing.*` from the contract module.
 - **Do not** add a foreign key from a studio table to any table outside `80-studio.sql`.
 - **Do not** enable `orazaka.studio.media.compose` or publish `realestate-reels`.
 - **Do not** put a Studio, a blueprint, a limit or a price in any `application.yml`.

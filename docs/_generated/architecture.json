@@ -877,130 +877,29 @@
     }
   ],
   "messaging": {
-    "exchanges": [
-      {
-        "name": "orazaka.jobs",
-        "type": "topic"
-      },
-      {
-        "name": "orazaka.events",
-        "type": "topic"
-      },
-      {
-        "name": "orazaka.dlx",
-        "type": "direct"
-      }
-    ],
+    "exchanges": [],
     "queues": [
       {
         "name": "krizaka.notifications.password-events",
-        "exchange": "orazaka.events",
         "binding": "evt.password.*",
         "dlq": "krizaka.notifications.password-events.dlq"
       },
       {
         "name": "krizaka.notifications.requests",
-        "exchange": "orazaka.events",
         "binding": "evt.notification.requested",
         "dlq": "krizaka.notifications.requests.dlq"
       },
       {
         "name": "krizaka.notifications.user-events",
-        "exchange": "orazaka.events",
         "binding": "evt.user.*",
         "dlq": "krizaka.notifications.user-events.dlq"
-      },
-      {
-        "name": "orazaka.events.job-relay",
-        "exchange": "orazaka.events",
-        "binding": "job.#",
-        "dlq": "orazaka.events.job-relay.dlq"
-      },
-      {
-        "name": "orazaka.jobs.automation",
-        "exchange": "orazaka.jobs",
-        "binding": "job.automation.*",
-        "dlq": "orazaka.jobs.automation.dlq"
-      },
-      {
-        "name": "orazaka.jobs.batch",
-        "exchange": "orazaka.jobs",
-        "binding": "job.media.generate",
-        "dlq": "orazaka.jobs.batch.dlq"
-      },
-      {
-        "name": "orazaka.jobs.interactive",
-        "exchange": "orazaka.jobs",
-        "binding": "job.text.*, job.media.analyze",
-        "dlq": "orazaka.jobs.interactive.dlq"
-      },
-      {
-        "name": "orazaka.jobs.video",
-        "exchange": "orazaka.jobs",
-        "binding": "job.video.*",
-        "dlq": "orazaka.jobs.video.dlq"
       }
     ],
     "producers": [
       {
-        "module": "krizaka-billing-service",
-        "exchange": "orazaka.events",
-        "routingKey": "(dynamic)"
-      },
-      {
-        "module": "orazaka-automation-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.automation.telemetry"
-      },
-      {
-        "module": "orazaka-automation-service",
-        "exchange": "orazaka.jobs",
-        "routingKey": "job.agent.dispatch.{…}"
-      },
-      {
-        "module": "orazaka-conversation-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.agent.presence"
-      },
-      {
-        "module": "orazaka-conversation-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.agent.result.{…}"
-      },
-      {
-        "module": "orazaka-conversation-service",
-        "exchange": "orazaka.jobs",
-        "routingKey": "job.automation.approved"
-      },
-      {
-        "module": "orazaka-job-service",
-        "exchange": "orazaka.events",
-        "routingKey": "(dynamic)"
-      },
-      {
-        "module": "orazaka-job-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.capability.changed"
-      },
-      {
         "module": "orazaka-studio-service",
         "exchange": "orazaka.jobs",
         "routingKey": "(dynamic)"
-      },
-      {
-        "module": "orazaka-studio-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.studio.run.failed"
-      },
-      {
-        "module": "orazaka-studio-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.studio.run.started"
-      },
-      {
-        "module": "orazaka-studio-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.studio.run.succeeded"
       },
       {
         "module": "orazaka-studio-service",
@@ -1034,32 +933,8 @@
         "queue": "krizaka.notifications.user-events"
       },
       {
-        "module": "orazaka-automation-service",
-        "queue": "orazaka.jobs.automation"
-      },
-      {
         "module": "orazaka-conversation-service",
         "queue": "#walletEventsQueue.name"
-      },
-      {
-        "module": "orazaka-conversation-service",
-        "queue": "orazaka.events.job-relay"
-      },
-      {
-        "module": "orazaka-job-service",
-        "queue": "orazaka.jobs.batch"
-      },
-      {
-        "module": "orazaka-job-service",
-        "queue": "orazaka.jobs.batch.dlq"
-      },
-      {
-        "module": "orazaka-job-service",
-        "queue": "orazaka.jobs.interactive"
-      },
-      {
-        "module": "orazaka-job-service",
-        "queue": "orazaka.jobs.interactive.dlq"
       },
       {
         "module": "orazaka-knowledge-service",

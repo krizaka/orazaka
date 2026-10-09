@@ -1,4 +1,4 @@
-package com.orazaka.e2e;
+package com.krizaka.orazaka.e2e;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;

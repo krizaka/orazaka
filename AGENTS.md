@@ -46,7 +46,7 @@ Hexagonal (Ports & Adapters), enforced by **ArchUnit** at build time. Dependenci
 
 ### Absolute invariants
 
-- `business` **never** imports `com.orazaka.core.*` as internal state; it invokes the core **inbound ports** (`AiClient`, etc.).
+- `business` **never** imports `com.krizaka.orazaka.core.*` as internal state; it invokes the core **inbound ports** (`AiClient`, etc.).
 - `core` contains **no** business logic or product-domain rules.
 - `interceptors`: `orazaka-core/.../application/interceptor/` contains **only** the `PromptContextInterceptor` interface. All implementations live in `orazaka-interceptors/` (AutoConfiguration SPI) **[ERR-122]**.
 - A **port** is defined in the module that needs it (the core) and **implemented** in an outer module (package-private adapter).
@@ -112,7 +112,7 @@ The workspace places repositories on **one axis: you *run* apps, you *import* li
 
 ## 3. Naming conventions
 
-- Module: `orazaka-<bounded-context>`. Package: `com.orazaka.<module>.{domain,application,infrastructure}`.
+- Module: `orazaka-<bounded-context>`. Package: `com.krizaka.orazaka.<module>.{domain,application,infrastructure}`.
 - **Folder taxonomy — the `orazaka-` prefix is for artifacts, not organizational folders.** Two roots: `orazaka-libs/` (imported) and `orazaka-apps/` (run) — see §2. The **group folders** inside them are **bare** (`orazaka-libs/orazaka-contracts/`, `orazaka-apps/{services,workers,ui}/`) because they namespace nothing publishable; only Maven modules / npm packs carry the `orazaka-` prefix (`orazaka-apps/services/orazaka-edge`, `krizaka/krizaka-users/krizaka-users-api`). Never nest the prefix on a container (no `orazaka-apps/orazaka-services/`).
 - **Zero `Orazaka` prefix** on classes **[ERR-104]** (`Engine`, not `OrazakaEngine`).
 - Suffixes: `*Service` (interface) / `*ServiceImpl` (package-private), `*Interceptor`, `*Resolver`, `*Controller`, `*Mapper` (final, static, package-private), `*Repository`, `*Config`, `*Properties`, `*Adapter`.
@@ -124,7 +124,7 @@ The workspace places repositories on **one axis: you *run* apps, you *import* li
 - Use cases: `<Domain><Action>UseCase`. Interceptors: `<Concern>Interceptor` (in the `<concern>` package).
 - **Pipeline module = `orazaka-interceptors`** (decided), **not** `orazaka-hooks`: it is an ordered, transforming, short-circuitable pipeline, not lifecycle callbacks; and "hooks" collides with React hooks.
 - **Functional naming, not marketing** (de-marketing decided): `ClosedLoopValidationInterceptor` (ex-`QuantumValidationAdvisor`), `SemanticRouterInterceptor` (ex-`SimDagRouterInterceptor`), `PolicyConfigCache` (ex-`ConfigMeshCache`).
-- **Never `gateway`**: fix any `gateway` drift found. The former `orazaka-router` app dissolved in the microservices split — its interactive surface is `orazaka-conversation-service` (`com.orazaka.conversationservice`, still :8080 behind the edge), its async executor is `orazaka-job-service` (`com.orazaka.jobservice`, :8090), and the transport facade is `orazaka-edge` (:8088). Config identifiers `orazaka.router.*` / `ROUTER_*` env / `ROUTER_INTERNAL_URL` are retained as the conversation-service's wiring keys (renaming them is deferred cosmetic churn).
+- **Never `gateway`**: fix any `gateway` drift found. The former `orazaka-router` app dissolved in the microservices split — its interactive surface is `orazaka-conversation-service` (`com.krizaka.orazaka.conversationservice`, still :8080 behind the edge), its async executor is `orazaka-job-service` (`com.krizaka.orazaka.jobservice`, :8090), and the transport facade is `orazaka-edge` (:8088). Config identifiers `orazaka.router.*` / `ROUTER_*` env / `ROUTER_INTERNAL_URL` are retained as the conversation-service's wiring keys (renaming them is deferred cosmetic churn).
 - Multi-language detail (TS/Python/SQL/Terraform): see [`.agent/rules/naming_conventions.md`](.agent/rules/naming_conventions.md).
 
 ---

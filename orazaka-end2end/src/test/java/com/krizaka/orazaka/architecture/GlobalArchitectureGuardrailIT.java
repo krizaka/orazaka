@@ -1,4 +1,4 @@
-package com.orazaka.architecture;
+package com.krizaka.orazaka.architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -15,7 +15,7 @@ import com.tngtech.archunit.library.GeneralCodingRules;
  * Domain purity, port/adapter naming conventions, and prevents any framework ecosystem leakage into
  * the core.
  */
-@AnalyzeClasses(packages = "com.orazaka")
+@AnalyzeClasses(packages = "com.krizaka.orazaka")
 class GlobalArchitectureGuardrailIT {
 
   // =========================================================================
@@ -168,7 +168,7 @@ class GlobalArchitectureGuardrailIT {
   @ArchTest
   static final ArchRule cyclical_dependency_breaker =
       slices()
-          .matching("com.orazaka.(*)..")
+          .matching("com.krizaka.orazaka.(*)..")
           .should()
           .beFreeOfCycles()
           .as(
@@ -182,7 +182,7 @@ class GlobalArchitectureGuardrailIT {
   static final ArchRule no_mocking_allowed_in_e2e =
       noClasses()
           .that()
-          .resideInAPackage("com.orazaka.e2e..")
+          .resideInAPackage("com.krizaka.orazaka.e2e..")
           .should()
           .dependOnClassesThat()
           .resideInAPackage("org.mockito..")
@@ -195,7 +195,7 @@ class GlobalArchitectureGuardrailIT {
   static final ArchRule no_spring_boot_test_in_e2e =
       noClasses()
           .that()
-          .resideInAPackage("com.orazaka.e2e..")
+          .resideInAPackage("com.krizaka.orazaka.e2e..")
           .should()
           .beAnnotatedWith("org.springframework.boot.test.context.SpringBootTest")
           .as(
@@ -209,7 +209,7 @@ class GlobalArchitectureGuardrailIT {
   static final ArchRule tools_must_not_import_identity =
       noClasses()
           .that()
-          .resideInAPackage("com.orazaka.tools..")
+          .resideInAPackage("com.krizaka.orazaka.tools..")
           .should()
           .dependOnClassesThat()
           .resideInAPackage("com.krizaka.users..")
@@ -220,12 +220,12 @@ class GlobalArchitectureGuardrailIT {
   static final ArchRule business_must_not_import_conversation_infrastructure =
       noClasses()
           .that()
-          .resideInAPackage("com.orazaka.business..")
+          .resideInAPackage("com.krizaka.orazaka.business..")
           .should()
           .dependOnClassesThat()
-          .resideInAPackage("com.orazaka.conversationservice.infrastructure.client..")
+          .resideInAPackage("com.krizaka.orazaka.conversationservice.infrastructure.client..")
           .as(
-              "orazaka-business must have absolutely zero compile dependencies on classes located inside com.orazaka.conversationservice.infrastructure.client.");
+              "orazaka-business must have absolutely zero compile dependencies on classes located inside com.krizaka.orazaka.conversationservice.infrastructure.client.");
 
   @ArchTest
   static final ArchRule interceptors_naming_convention =

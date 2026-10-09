@@ -321,7 +321,7 @@ Adding a new product must require **minimal effort**: implement a contract, decl
 ### Internal split (packs)
 
 ```
-com.orazaka.business
+com.krizaka.orazaka.business
 ├── api/            # CONTRACTS — Intention, UseCase, UseCaseDescriptor, Capability (inbound ports), DTO
 ├── core/           # DISPATCH — UseCaseDispatcher, UseCaseRegistry, Intention→UseCase resolution, capability composition
 ├── usecases/       # IMPLEMENTATIONS — one self-contained package per use case (chat-assistant, image-studio, cine-video, agent-runner, …)
@@ -368,7 +368,7 @@ Do not conflate two "orchestrations". There are in fact **three**, at different 
 We **collapse the 7 Maven submodules** into **a single module**, with an **internal split by concern**:
 
 ```
-com.orazaka.interceptors
+com.krizaka.orazaka.interceptors
 ├── security/      ──► SecOpsInterceptor            (RBAC, rate-limit, kill-switch)
 ├── token/         ──► CostShieldInterceptor        (budget / cloud failover)
 ├── context/       ──► ContextEnrichmentInterceptor (user + system + env)
@@ -397,7 +397,7 @@ Benefits: a single artifact to version, a single `AutoConfiguration`, boundaries
 | Element | Rule | Example |
 | :--- | :--- | :--- |
 | Maven module | `orazaka-<bounded-context>` | `orazaka-core` |
-| Root package | `com.orazaka.<module>.{domain,application,infrastructure}` | `com.orazaka.business.core` |
+| Root package | `com.krizaka.orazaka.<module>.{domain,application,infrastructure}` | `com.krizaka.orazaka.business.core` |
 | Inbound port | capability/service name (no technical suffix) | `AiClient`, `UseCaseDispatcher`, `IntentionGateway` |
 | Outbound port | `<Capability>Client` · `<Thing>Provider` · `<Thing>Repository` | `ChatGeneratorClient`, `ModelCatalogProvider` |
 | Adapter | `<Tech><Port>Adapter` | `OllamaChatClientAdapter`, `RabbitUserEventAdapter` |
