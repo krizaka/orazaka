@@ -66,7 +66,7 @@ Conflating these is the single most common way a credit system rots. Each has on
 | **Package** | Which curated bundle of workflows does a *métier* get? | Entitlement bundle, sellable standalone or with a plan | Product |
 | **Rate limit** | How fast may they call? | Requests/minute, concurrent jobs — an **abuse** control, not a **billing** control | Identity context |
 
-**Rate limit stays in `orazaka-identity`** (`orazaka_rate_limits`, already implemented). Billing does
+**Rate limit stays in `krizaka-users-core`** (`orazaka_rate_limits`, already implemented). Billing does
 not absorb it; billing *drives* it by publishing a subscription-change event that identity consumes to
 update `orazaka_users.rate_limit_tier`. No cross-context FK — SEAM-001 holds.
 
@@ -1285,7 +1285,7 @@ instructions live in [`.agent/workflows/implement_billing.md`](../.agent/workflo
 | create | `…/orazaka-billing-api/src/main/java/com/orazaka/billing/domain/port/` — `CreditAuthorizationClient`, `EntitlementProvider` |
 | create | `…/orazaka-billing-api/src/main/java/com/orazaka/billing/domain/exception/InsufficientCreditsException.java` |
 | create | one mirroring `*Test.java` per record (ERR-103) |
-| modify | `pom.xml` — register the module next to `orazaka-identity-api` |
+| modify | `pom.xml` — register the module next to `krizaka-users-api` |
 | modify | `.env`, `exemple.env.txt` — §13.8 blocks 10 & 11 |
 | modify | `infra/docker-compose.yml` — §13.7 Lago services under `profiles: [billing]` + `lago_data` volume |
 

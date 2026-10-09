@@ -66,7 +66,7 @@ CREATE  .../src/test/java/.../AssetControllerIT.java      (the IDOR test — see
 # ── #3 internal surface ────────────────────────────────────────────────────
 MODIFY  orazaka-apps/services/orazaka-billing/orazaka-billing-service/.../config/SecurityConfig.java
 MODIFY  orazaka-apps/services/orazaka-studio/orazaka-studio-service/.../config/SecurityConfig.java
-MODIFY  orazaka-apps/services/orazaka-users/orazaka-identity-service/.../config/SecurityConfig.java
+MODIFY  krizaka/krizaka-users/krizaka-users-service/.../config/SecurityConfig.java
 MODIFY  orazaka-apps/services/orazaka-billing/orazaka-billing-client/.../HttpCreditAuthorizationClient.java  (send the M2M token)
 MODIFY  orazaka-apps/services/orazaka-billing/orazaka-billing-client/.../HttpEntitlementProvider.java
 MODIFY  orazaka-apps/services/orazaka-studio/orazaka-studio-client/.../<the HTTP adapter>

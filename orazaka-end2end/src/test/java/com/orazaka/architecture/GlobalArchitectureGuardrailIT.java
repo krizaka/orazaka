@@ -148,17 +148,17 @@ class GlobalArchitectureGuardrailIT {
   static final ArchRule identity_tier3_impl_is_owned_only_by_identity_service =
       noClasses()
           .that()
-          .resideOutsideOfPackages("com.orazaka.identity..")
+          .resideOutsideOfPackages("com.krizaka.users..")
           .should()
           .dependOnClassesThat()
           .resideInAnyPackage(
-              "com.orazaka.identity.application..",
-              "com.orazaka.identity.infrastructure..",
-              "com.orazaka.identity.domain.ports..")
+              "com.krizaka.users.application..",
+              "com.krizaka.users.infrastructure..",
+              "com.krizaka.users.domain.ports..")
           .as(
-              "[SEAM-002] Only orazaka-identity-service owns the identity Tier-3 impl. Every other"
-                  + " bounded context reaches identity through the orazaka-identity-api contract"
-                  + " (com.orazaka.identity.domain.{model,exception}), never the implementation.");
+              "[SEAM-002] Only krizaka-users-service owns the identity Tier-3 impl. Every other"
+                  + " bounded context reaches identity through the krizaka-users-api contract"
+                  + " (com.krizaka.users.domain.{model,exception}), never the implementation.");
 
   @ArchTest
   static final ArchRule enforce_constructor_injection_only =
@@ -212,9 +212,9 @@ class GlobalArchitectureGuardrailIT {
           .resideInAPackage("com.orazaka.tools..")
           .should()
           .dependOnClassesThat()
-          .resideInAPackage("com.orazaka.identity..")
+          .resideInAPackage("com.krizaka.users..")
           .as(
-              "orazaka-tools must never import orazaka-identity (ERR-102). Pass String userId from gateway.");
+              "orazaka-tools must never import krizaka-users-core (ERR-102). Pass String userId from gateway.");
 
   @ArchTest
   static final ArchRule business_must_not_import_conversation_infrastructure =

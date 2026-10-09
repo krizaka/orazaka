@@ -23,6 +23,20 @@
       ]
     },
     {
+      "name": "krizaka-users",
+      "path": "krizaka/krizaka-users",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Reusable user management for any application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance — with its contract (krizaka-users-api) and HTTP client (krizaka-users-client).",
+      "dependsOn": [
+        "krizaka-build",
+        "krizaka-platform-kit"
+      ],
+      "initdb": [
+        "10-identity.sql"
+      ]
+    },
+    {
       "name": "orazaka-build",
       "path": "orazaka-libs/orazaka-build",
       "kind": "maven",
@@ -40,19 +54,6 @@
       "description": "Tier-1 platform contracts shared by every Orazaka service: the job plane (jobs-api) and the application-persistence ports (persistence-app-api). Pure interfaces and records, zero implementation.",
       "dependsOn": [
         "orazaka-build"
-      ]
-    },
-    {
-      "name": "orazaka-users",
-      "path": "orazaka-apps/services/orazaka-users",
-      "kind": "maven",
-      "layer": "domain",
-      "description": "Reusable user management for any Krizaka application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance.",
-      "dependsOn": [
-        "orazaka-build"
-      ],
-      "initdb": [
-        "10-identity.sql"
       ]
     },
     {
@@ -118,7 +119,7 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-users",
+        "krizaka-users",
         "orazaka-billing",
         "orazaka-ai-engine"
       ],
@@ -135,7 +136,7 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-users",
+        "krizaka-users",
         "orazaka-billing",
         "orazaka-ai-engine"
       ],

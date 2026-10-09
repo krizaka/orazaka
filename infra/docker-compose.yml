@@ -32,7 +32,7 @@ services:
       # only owns the reset and the dev fixtures. Every repository must be cloned
       # (`node scripts/workspace.mjs clone`) before the first `orazaka start`.
       - ./initdb/00-reset.sql:/docker-entrypoint-initdb.d/00-reset.sql:ro
-      - ../orazaka-apps/services/orazaka-users/infra/initdb/10-identity.sql:/docker-entrypoint-initdb.d/10-identity.sql:ro
+      - ../krizaka/krizaka-users/infra/initdb/10-identity.sql:/docker-entrypoint-initdb.d/10-identity.sql:ro
       - ../orazaka-apps/services/orazaka-conversation-service/infra/initdb/20-conversation.sql:/docker-entrypoint-initdb.d/20-conversation.sql:ro
       - ../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql:/docker-entrypoint-initdb.d/30-jobs-config.sql:ro
       - ../orazaka-apps/services/orazaka-knowledge-service/infra/initdb/40-knowledge.sql:/docker-entrypoint-initdb.d/40-knowledge.sql:ro

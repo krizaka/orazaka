@@ -23,7 +23,7 @@ CinePulse is a multi-modal entertainment discovery platform:
 | **Recognition** | Visual/Audio media matching | `Vision` + `Audio` pre-processor pipeline |
 | **Watchlist** | Saved watchlist tracking | JPA persistence (Postgres) |
 | **Studio** | Generates teaser video trailers | `VideoEngine` (AnimateDiff-Lightning) |
-| **Settings** | Streaming preferences and filter flags | `orazaka-identity` preference profile |
+| **Settings** | Streaming preferences and filter flags | `krizaka-users-core` preference profile |
 
 ---
 
@@ -151,7 +151,7 @@ public class CinePulseController {
 ### Build Sequence
 ```bash
 # 1. Build identity logic
-mvn clean install -pl orazaka-apps/services/orazaka-users/orazaka-identity
+mvn clean install -pl krizaka/krizaka-users/krizaka-users-core
 
 # 2. Compile gateway API with dependencies
 mvn clean compile -pl orazaka-apps/services/orazaka-conversation-service -am

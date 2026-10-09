@@ -3,7 +3,7 @@
 ## §1 Secrets & Cryptography
 - Secrets: No hardcoding. Inject via properties/env. No `System.getenv()` in beans [ERR-113].
 - URLs: No `localhost` or `127.0.0.1` in production code. No dummy/placeholder keys.
-- Isolation: Hashing (`BCryptPasswordEncoder`) in `orazaka-identity` only. Banned: web/security starter dependencies in identity layer. Run hashing outside `@Transactional`.
+- Isolation: Hashing (`BCryptPasswordEncoder`) in `krizaka-users-core` only. Banned: web/security starter dependencies in identity layer. Run hashing outside `@Transactional`.
 - Scrubbing: Mask/sanitize logger outputs (no keys, tokens, prompts). Hide internal package paths in external stack traces.
 
 ## §2 BFF & Network

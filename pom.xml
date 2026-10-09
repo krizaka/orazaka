@@ -50,7 +50,7 @@
         <module>krizaka/krizaka-platform-kit</module>
         <module>orazaka-libs/orazaka-build</module>
         <module>orazaka-libs/orazaka-contracts</module>
-        <module>orazaka-apps/services/orazaka-users</module>
+        <module>krizaka/krizaka-users</module>
         <module>orazaka-apps/services/orazaka-notifications</module>
         <module>orazaka-apps/services/orazaka-billing</module>
         <module>orazaka-apps/services/orazaka-studio</module>

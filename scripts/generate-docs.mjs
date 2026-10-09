@@ -128,11 +128,11 @@ function extractArchitecture() {
   const moduleDefs = [
     // Framework
     { id: "orazaka-persistence-app", path: "orazaka-libs/orazaka-ai-engine/orazaka-persistence-app", layer: "framework", type: "maven" },
-    { id: "orazaka-persistence-identity", path: "orazaka-apps/services/orazaka-users/orazaka-persistence-identity", layer: "framework", type: "maven" },
+    { id: "krizaka-users-persistence", path: "krizaka/krizaka-users/krizaka-users-persistence", layer: "framework", type: "maven" },
     { id: "orazaka-core", path: "orazaka-libs/orazaka-ai-engine/orazaka-core", layer: "framework", type: "maven" },
     { id: "orazaka-interceptors", path: "orazaka-libs/orazaka-ai-engine/orazaka-interceptors", layer: "framework", type: "maven" },
     { id: "orazaka-business", path: "orazaka-libs/orazaka-ai-engine/orazaka-business", layer: "framework", type: "maven" },
-    { id: "orazaka-identity", path: "orazaka-apps/services/orazaka-users/orazaka-identity", layer: "framework", type: "maven" },
+    { id: "krizaka-users-core", path: "krizaka/krizaka-users/krizaka-users-core", layer: "framework", type: "maven" },
     { id: "orazaka-tools", path: "orazaka-libs/orazaka-ai-engine/orazaka-tools", layer: "framework", type: "maven" },
     { id: "orazaka-billing-client", path: "orazaka-apps/services/orazaka-billing/orazaka-billing-client", layer: "framework", type: "maven" },
     { id: "orazaka-studio-client", path: "orazaka-apps/services/orazaka-studio/orazaka-studio-client", layer: "framework", type: "maven" },
@@ -140,7 +140,7 @@ function extractArchitecture() {
     // Apps & Workers
     { id: "orazaka-conversation-service", path: "orazaka-apps/services/orazaka-conversation-service", layer: "app", type: "maven" },
     { id: "orazaka-edge", path: "orazaka-apps/services/orazaka-edge", layer: "app", type: "maven" },
-    { id: "orazaka-identity-service", path: "orazaka-apps/services/orazaka-users/orazaka-identity-service", layer: "app", type: "maven" },
+    { id: "krizaka-users-service", path: "krizaka/krizaka-users/krizaka-users-service", layer: "app", type: "maven" },
     { id: "orazaka-automation-service", path: "orazaka-apps/services/orazaka-automation-service", layer: "app", type: "maven" },
     { id: "orazaka-knowledge-service", path: "orazaka-apps/services/orazaka-knowledge-service", layer: "app", type: "maven" },
     { id: "orazaka-job-service", path: "orazaka-apps/services/orazaka-job-service", layer: "app", type: "maven" },
@@ -594,7 +594,7 @@ function extractApi() {
     if (!existsSync(dir)) continue;
     const rules = accessRules(dir);
     // A service's REST surface is not only what sits in its own module: identity hosts seven
-    // controllers from `orazaka-apps/services/orazaka-users/orazaka-identity`, its owned Tier-3 (AGENTS.md §2). Scanning
+    // controllers from `krizaka/krizaka-users/krizaka-users-core`, its owned Tier-3 (AGENTS.md §2). Scanning
     // the service directory alone dropped `/api/v1/auth/**` — the login endpoint — from the
     // reference entirely. The libs are read from the pom, so a future move needs no edit here.
     const sources = [dir, ...hostedTier3Dirs(root)];

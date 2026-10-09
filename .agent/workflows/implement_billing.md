@@ -18,7 +18,7 @@ Decision record: [`docs/adr/ADR-033-credit-metering-and-billing.md`](../../docs/
    §13 (configuration), §15 (fitness functions), §19 (manifest).
 4. Read for pattern-matching **before writing anything**:
    - `infra/initdb/10-identity.sql` and `50-automation.sql` — the own-database initdb shape
-   - `orazaka-apps/services/orazaka-users/orazaka-identity-api/` — the Tier-1 contract module shape
+   - `krizaka/krizaka-users/krizaka-users-api/` — the Tier-1 contract module shape
    - `orazaka-apps/services/orazaka-knowledge-service/` — the smallest complete service shape
    **Mirror these. Do not invent a new structure.**
 
@@ -66,7 +66,7 @@ CREATE  …/domain/port/CreditAuthorizationClient.java
 CREATE  …/domain/port/EntitlementProvider.java
 CREATE  …/domain/exception/InsufficientCreditsException.java
 CREATE  …/src/test/java/com/orazaka/billing/domain/model/*Test.java   (one per record — ERR-103)
-MODIFY  pom.xml                                          (+ <module> next to orazaka-identity-api)
+MODIFY  pom.xml                                          (+ <module> next to krizaka-users-api)
 MODIFY  .env                                             (+ §6 blocks)
 MODIFY  exemple.env.txt                                  (+ §6 blocks, secrets = CHANGE_ME)
 MODIFY  infra/docker-compose.yml                         (+ Lago services, profiles: [billing])
@@ -147,7 +147,7 @@ Also add the `70-billing.sql` line to the file-inventory comment at the top.
 
 ## §5 `orazaka-billing-api` — the Tier-1 contract
 
-`pom.xml`: copy `orazaka-apps/services/orazaka-users/orazaka-identity-api/pom.xml` verbatim, change
+`pom.xml`: copy `krizaka/krizaka-users/krizaka-users-api/pom.xml` verbatim, change
 `artifactId`/`name`/`description`. **No dependency beyond `junit-jupiter` (test scope).**
 
 Package root `com.orazaka.billing.domain`. Signatures — implement exactly these, with compact-

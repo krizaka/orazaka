@@ -2,7 +2,7 @@
 
 ## §1 Java Package Map
 - **orazaka-core**: `domain.ports.[inbound|outbound]`, `domain.model` *(VOs + per-concern DTO subpackages: chat/job/audio/image/video/mcp)*, `application.[engine|pipeline|routing|processing|service]` *(service = `*Impl` only; routing = model/provider routing concern)*, `infrastructure.[config|adapter.[ai|processor]|provider(.model)|host|support]`
-- **orazaka-identity**: `domain`, `application.service`, `infrastructure.[config|persistence.entity|persistence.repository|persistence.converter]`
+- **krizaka-users-core**: `domain`, `application.service`, `infrastructure.[config|persistence.entity|persistence.repository|persistence.converter]`
 - **orazaka-router** *(use `router` everywhere)*: `domain.model.[gate|intent]`, `application.service` *(only `*Service`)*, `infrastructure.[config(.filter)|adapter.rest(.dto)|adapter.amqp(.dto)|adapter.persistence|adapter.workflow|support]`
 - **orazaka-business**: `api` *(public contract: payloads, use-case model, dispatcher/registry)*, `application`, `domain.[model|port]`, `usecases.[useCase]`, `prompt`
 - **orazaka-interceptors**: `context`, `translation`, `enrichment`, `reformulation`, `tooling`, `validation`, `governance` *(single module, packs by concern)* — a concern that owns JPA isolates it in a `<concern>.persistence` sub-package (entities/repository/mapper package-private) exposed via a public `*Store` facade returning domain types (e.g. `governance.persistence.InterceptorPolicyStore`)

@@ -67,7 +67,7 @@ flowchart TB
 
     subgraph SUPPORT["Support modules"]
         TOOLS["orazaka-tools — MCP · RAG · sandbox"]
-        IDN["orazaka-identity — RBAC · OAuth2 · crypto"]
+        IDN["krizaka-users-core — RBAC · OAuth2 · crypto"]
         ICEPT["orazaka-interceptors — security · token · context · translation · enrichment · reformulation · tooling · validation · governance"]
     end
     PIPE -. ports .- ICEPT
@@ -224,11 +224,11 @@ The **only** difference between the two is the **inbound adapter**. So "the work
 | **orazaka-core** | *Cognitive Core.* Primitive capabilities (chat/image/audio/video), interceptor pipeline, Provider Mesh, model routing, vector routines. Stateless, web/DB-agnostic. | Spring AI, capabilities | use-cases, web, database |
 | **orazaka-interceptors** | *Cross-cutting filters* of the pipeline (one module, packs by concern). | the `PromptContext` | business orchestration |
 | **orazaka-tools** | *The hands.* Outbound adapters: MCP, RAG, web search, sandboxed execution. | external systems | business logic |
-| **orazaka-identity** | *Security bounded context.* Users, credentials, RBAC, OAuth2, crypto. | identity | AI, transport |
+| **krizaka-users-core** | *Security bounded context.* Users, credentials, RBAC, OAuth2, crypto. | identity | AI, transport |
 | **orazaka-persistence** | *State.* Write models (aggregates) and read models (projections) + cache. | JPA, SQL, Redis | business logic |
 | **orazaka-workers** | *Asynchronous.* Consumes events, builds projections, runs heavy jobs (native media). | AMQP, projections | synchronous transport |
 
-> **Decision — `orazaka-identity` is kept** as a full module (it is a *bounded context*, not a mere aspect). The example tree omitted it; we keep it. The per-request **enforcement** of security lives in `interceptors/security` + the router filters, which rely on the **ports** of identity.
+> **Decision — `krizaka-users-core` is kept** as a full module (it is a *bounded context*, not a mere aspect). The example tree omitted it; we keep it. The per-request **enforcement** of security lives in `interceptors/security` + the router filters, which rely on the **ports** of identity.
 
 ### Layered view (modules & dependencies)
 
@@ -261,7 +261,7 @@ flowchart TB
   CORE -. SPI .- ICEPT
   CORE -. ports .-> TOOLS
 
-  IDN["orazaka-identity · cross-cutting security — RBAC · OAuth2 · crypto"]
+  IDN["krizaka-users-core · cross-cutting security — RBAC · OAuth2 · crypto"]
   IDN -. auth .-> RT
   IDN -. UserContext .-> CORE
 
@@ -475,7 +475,7 @@ orazaka/
 │   │   ├── orazaka-edge/         #   transport facade (:8088)
 │   │   ├── orazaka-conversation-service/  # headless ingress, ex-router (:8080)
 │   │   ├── orazaka-job-service/  #   async executor (:8090)
-│   │   ├── orazaka-identity-service/      # auth + profile (owns orazaka-identity + DB)
+│   │   ├── krizaka-users-service/      # auth + profile (owns krizaka-users-core + DB)
 │   │   ├── orazaka-automation-service/    # automation context (autonomous)
 │   │   └── orazaka-knowledge-service/     # RAG / knowledge context (autonomous)
 │   ├── workers/                  # native / polyglot async executors
@@ -489,7 +489,7 @@ orazaka/
 │       └── orazaka-design-system/
 └── orazaka-libs/                 # IMPORTED, never run — grouped by sharing tier (§2)
     ├── contracts/                # Tier 1 — pure *-api contracts (semver, zero impl deps)
-    │   ├── orazaka-identity-api/ #   identity contract (domain.model / domain.exception)
+    │   ├── krizaka-users-api/ #   identity contract (domain.model / domain.exception)
     │   └── orazaka-persistence-app-api/  # persistence contract (inbound ports + DTOs, no JPA)
     ├── orazaka-core/             # Tier 2 (SDK) — Cognitive Core / Provider Mesh
     ├── orazaka-interceptors/     # Tier 2 (SDK) — SINGLE MODULE, packs: security/token/context/
@@ -497,7 +497,7 @@ orazaka/
     ├── orazaka-tools/            # Tier 2 (SDK) — MCP / RAG / sandbox
     ├── orazaka-test-support/     # Tier 2 (SDK) — shared test infra
     ├── orazaka-business/         # Tier 3 (owned) — App Factory: api / usecases / personas
-    ├── orazaka-identity/         # Tier 3 (owned) — security bounded context
+    ├── krizaka-users-core/         # Tier 3 (owned) — security bounded context
     └── orazaka-persistence/      # Tier 3 (owned) — command/ + query/ + cache (CQRS)
 ```
 
