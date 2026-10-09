@@ -30,13 +30,13 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Check out the Orazaka workspace
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: krizaka/orazaka
           path: workspace
 
       - name: Check out ${{ inputs.component }} at the commit under test
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: incoming
 
