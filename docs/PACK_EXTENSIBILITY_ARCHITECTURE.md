@@ -511,13 +511,13 @@ MODIFY  orazaka-apps/workers/orazaka-worker-media/app/{consumer,main}.py  (+ wor
 CREATE  orazaka-packs/{README.md, pack.schema.json}
 CREATE  orazaka-packs/{realestate-studio,trade-showcase,outbound-prospection}/**
 CREATE  orazaka-apps/services/orazaka-studio/orazaka-studio-api/.../model/PackBundle.java + 8 records
-CREATE  orazaka-apps/services/orazaka-billing/orazaka-billing-api/.../{PackProvision,EntitlementGrant,PackProvisioningClient}
+CREATE  krizaka/krizaka-billing/krizaka-billing-api/.../{PackProvision,EntitlementGrant,PackProvisioningClient}
 CREATE  orazaka-libs/orazaka-contracts/orazaka-jobs-api/.../{CapabilityDeclaration,CapabilityRegistrationClient}
-CREATE  orazaka-apps/services/orazaka-billing/orazaka-billing-client/.../{Http,NoOp}PackProvisioningClient.java
+CREATE  krizaka/krizaka-billing/krizaka-billing-client/.../{Http,NoOp}PackProvisioningClient.java
 CREATE  orazaka-apps/services/orazaka-studio/orazaka-studio-service/.../application/service/PackInstallerService.java
 CREATE  orazaka-apps/services/orazaka-studio/orazaka-studio-service/.../{PackInstallRepository,JdbcPackInstallRepositoryAdapter,PackBundleController}
 CREATE  orazaka-apps/services/orazaka-job-service/.../application/service/CapabilityRegistryService.java
-CREATE  orazaka-apps/services/orazaka-billing/orazaka-billing-service/.../rest/PackProvisioningController.java
+CREATE  krizaka/krizaka-billing/krizaka-billing-service/.../rest/PackProvisioningController.java
 CREATE  orazaka-apps/ui/orazaka-cli/src/{commands/pack.command.ts,services/pack.{api,bundle}.ts}
 MODIFY  infra/initdb/80-studio.sql               (− 288 lines of catalogue content, → bundles)
 MODIFY  infra/initdb/70-billing.sql              (− billing_pack seed, → bundles)

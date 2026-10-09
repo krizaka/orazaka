@@ -83,7 +83,7 @@ it, and says so rather than degrading to plaintext.
 
 ```bash
 CP="orazaka-libs/orazaka-ai-engine/orazaka-assets/target/classes:$(ls ~/.m2/repository/org/slf4j/slf4j-api/*/slf4j-api-*.jar | tail -1)"
-TOOL=com.orazaka.assets.infrastructure.tool.AssetEncryptionTool
+TOOL=com.krizaka.orazaka.assets.infrastructure.tool.AssetEncryptionTool
 
 java -cp "$CP" $TOOL keygen  ~/.orazaka/master.key k1              # create, or rotate: keygen … k2
 java -cp "$CP" $TOOL migrate ~/.orazaka/master.key var/orazaka-uploads

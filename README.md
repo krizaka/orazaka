@@ -45,9 +45,9 @@ Krizaka application can pick only what it needs.
 
 | Repository | What it is |
 |:---|:---|
-| [`orazaka-users`](https://github.com/krizaka/orazaka-users) | Reusable user management for any Krizaka application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance. |
-| [`orazaka-notifications`](https://github.com/krizaka/orazaka-notifications) | Channel-based notification delivery for any Krizaka application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP. |
-| [`orazaka-billing`](https://github.com/krizaka/orazaka-billing) | Credits, wallets, plans, subscriptions, pricebook and metering (hold → settle → release) as a reusable billing service, with its contract (billing-api) and a typed HTTP client (billing-client). |
+| [`krizaka-users`](https://github.com/krizaka/krizaka-users) | Reusable user management for any Krizaka application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance. |
+| [`krizaka-notifications`](https://github.com/krizaka/krizaka-notifications) | Channel-based notification delivery for any Krizaka application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP. |
+| [`krizaka-billing`](https://github.com/krizaka/krizaka-billing) | Credits, wallets, plans, subscriptions, pricebook and metering (hold → settle → release) as a reusable billing service, with its contract (billing-api) and a typed HTTP client (billing-client). |
 
 ### Orazaka AI engine
 
@@ -76,29 +76,29 @@ Krizaka application can pick only what it needs.
 ```mermaid
 graph LR
   orazaka_build --> orazaka_contracts
-  orazaka_build --> orazaka_users
+  orazaka_build --> users
   orazaka_build --> orazaka_notifications
-  orazaka_build --> orazaka_billing
+  orazaka_build --> krizaka_billing
   orazaka_build --> orazaka_studio
   orazaka_contracts --> orazaka_studio
-  orazaka_billing --> orazaka_studio
+  krizaka_billing --> orazaka_studio
   orazaka_build --> orazaka_ai_engine
   orazaka_contracts --> orazaka_ai_engine
-  orazaka_billing --> orazaka_ai_engine
+  krizaka_billing --> orazaka_ai_engine
   orazaka_studio --> orazaka_ai_engine
   orazaka_build --> orazaka_conversation_service
   orazaka_contracts --> orazaka_conversation_service
-  orazaka_users --> orazaka_conversation_service
-  orazaka_billing --> orazaka_conversation_service
+  users --> orazaka_conversation_service
+  krizaka_billing --> orazaka_conversation_service
   orazaka_ai_engine --> orazaka_conversation_service
   orazaka_build --> orazaka_job_service
   orazaka_contracts --> orazaka_job_service
-  orazaka_users --> orazaka_job_service
-  orazaka_billing --> orazaka_job_service
+  users --> orazaka_job_service
+  krizaka_billing --> orazaka_job_service
   orazaka_ai_engine --> orazaka_job_service
   orazaka_build --> orazaka_knowledge_service
   orazaka_build --> orazaka_automation_service
-  orazaka_billing --> orazaka_automation_service
+  krizaka_billing --> orazaka_automation_service
   orazaka_build --> orazaka_edge
   orazaka_ui_kit --> orazaka_web_client
   orazaka_ui_kit --> orazaka_web_admin
@@ -134,7 +134,7 @@ orazaka/                               ← this repository
 ├── docs/         architecture, ADRs, generated references
 ├── orazaka-end2end/                   hermetic E2E
 ├── orazaka-libs/                      ← cloned: orazaka-build, orazaka-contracts, orazaka-ai-engine
-├── orazaka-apps/services/             ← cloned: orazaka-users, orazaka-notifications, orazaka-billing, …
+├── orazaka-apps/services/             ← cloned: krizaka-users, krizaka-notifications, krizaka-billing, …
 ├── orazaka-apps/workers/              ← cloned: orazaka-worker-media
 ├── orazaka-apps/ui/                   ← npm workspace root; cloned: orazaka-ui-kit, web, mobile, cli
 └── orazaka-packs/                     ← cloned: orazaka-packs
@@ -144,14 +144,14 @@ Cloned directories are ignored by this repository's git; each is its own reposit
 
 ## Building a new application from Orazaka components
 
-1. Inherit `com.orazaka:orazaka-parent` (from [orazaka-build](https://github.com/krizaka/orazaka-build)) — same stack,
+1. Inherit `com.krizaka.orazaka:orazaka-parent` (from [orazaka-build](https://github.com/krizaka/orazaka-build)) — same stack,
    versions and quality gates.
-2. Run the services you need — e.g. [orazaka-users](https://github.com/krizaka/orazaka-users) for
-   registration / login / forgot password / profile, [orazaka-notifications](https://github.com/krizaka/orazaka-notifications)
-   for e-mail / SMS / webhook delivery, [orazaka-billing](https://github.com/krizaka/orazaka-billing) for credits and
+2. Run the services you need — e.g. [krizaka-users](https://github.com/krizaka/krizaka-users) for
+   registration / login / forgot password / profile, [krizaka-notifications](https://github.com/krizaka/krizaka-notifications)
+   for e-mail / SMS / webhook delivery, [krizaka-billing](https://github.com/krizaka/krizaka-billing) for credits and
    subscriptions, [orazaka-edge](https://github.com/krizaka/orazaka-edge) in front of them.
-3. Depend only on their contracts (`orazaka-identity-api`, `orazaka-notification-api`,
-   `orazaka-billing-api`) or clients.
+3. Depend only on their contracts (`krizaka-users-api`, `krizaka-notifications-api`,
+   `krizaka-billing-api`) or clients.
 4. Build the UI with [@krizaka/orazaka-design-system](https://github.com/krizaka/orazaka-ui-kit).
 
 ## Consuming packages

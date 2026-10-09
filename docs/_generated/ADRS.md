@@ -66,3 +66,4 @@ generated: true
 | ADR-070 | ADR-070 — The run surface is sealed | `adr/ADR-070-the-run-surface-is-sealed.md` |
 | ADR-071 | ADR-071 — Repair the instruments | `adr/ADR-071-repair-the-instruments.md` |
 | ADR-072 | ADR-072 — A ruleset is a test suite pointed at the user's document | `adr/ADR-072-a-ruleset-is-a-test-suite.md` |
+| ADR-073 | ADR-073 — The kit is a product | `adr/ADR-073-the-kit-is-a-product.md` |

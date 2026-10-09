@@ -18,7 +18,7 @@ Decision record: [`docs/adr/ADR-033-credit-metering-and-billing.md`](../../docs/
    §13 (configuration), §15 (fitness functions), §19 (manifest).
 4. Read for pattern-matching **before writing anything**:
    - `infra/initdb/10-identity.sql` and `50-automation.sql` — the own-database initdb shape
-   - `orazaka-apps/services/orazaka-users/orazaka-identity-api/` — the Tier-1 contract module shape
+   - `krizaka/krizaka-users/krizaka-users-api/` — the Tier-1 contract module shape
    - `orazaka-apps/services/orazaka-knowledge-service/` — the smallest complete service shape
    **Mirror these. Do not invent a new structure.**
 
@@ -29,7 +29,7 @@ module, no controller, no consumer wiring**. It is deliberately the slice with z
 because everything else depends on it.
 
 **In scope** — exactly the file manifest of §3.
-**Out of scope, do NOT start** — `orazaka-billing-service`, entities, repositories, controllers,
+**Out of scope, do NOT start** — `krizaka-billing-service`, entities, repositories, controllers,
 `EntitlementInterceptor`, the NoOp/HTTP client adapters, admin UI, Lago adapter. Those are tranches
 2–3 (design §19). If tranche 1 is green and you have budget left, **stop and report**, do not
 continue.
@@ -46,15 +46,15 @@ continue.
 | ERR-103 | One top-level type per `.java` file **+ one mirroring test file**. |
 | ERR-106/116 | Records validate in the **compact constructor**. No service-side null guards. |
 | ERR-104 | No `Orazaka` class prefix. |
-| Tier-1 purity | `orazaka-billing-api` has **zero** implementation dependencies — no Spring, no Jackson, no JPA. Pure JDK + JUnit (test scope). It must **not** import `com.orazaka.business.*` (Tier-3): `BillableCapability` is a deliberate contract-copy of `business.api.Capability`. |
+| Tier-1 purity | `krizaka-billing-api` has **zero** implementation dependencies — no Spring, no Jackson, no JPA. Pure JDK + JUnit (test scope). It must **not** import `com.krizaka.orazaka.business.*` (Tier-3): `BillableCapability` is a deliberate contract-copy of `business.api.Capability`. |
 
 ## §3 File manifest — tranche 1
 
 ```
 CREATE  infra/initdb/70-billing.sql
 MODIFY  infra/initdb/00-reset.sql                       (+ billing drop block)
-CREATE  orazaka-apps/services/orazaka-billing/orazaka-billing-api/pom.xml
-CREATE  orazaka-apps/services/orazaka-billing/orazaka-billing-api/src/main/java/com/orazaka/billing/domain/model/BillableCapability.java
+CREATE  krizaka/krizaka-billing/krizaka-billing-api/pom.xml
+CREATE  krizaka/krizaka-billing/krizaka-billing-api/src/main/java/com/krizaka/billing/domain/model/BillableCapability.java
 CREATE  …/domain/model/BillableUnit.java
 CREATE  …/domain/model/EnforcementMode.java
 CREATE  …/domain/model/HoldStatus.java
@@ -65,8 +65,8 @@ CREATE  …/domain/model/EntitlementSnapshot.java
 CREATE  …/domain/port/CreditAuthorizationClient.java
 CREATE  …/domain/port/EntitlementProvider.java
 CREATE  …/domain/exception/InsufficientCreditsException.java
-CREATE  …/src/test/java/com/orazaka/billing/domain/model/*Test.java   (one per record — ERR-103)
-MODIFY  pom.xml                                          (+ <module> next to orazaka-identity-api)
+CREATE  …/src/test/java/com/krizaka/billing/domain/model/*Test.java   (one per record — ERR-103)
+MODIFY  pom.xml                                          (+ <module> next to krizaka-users-api)
 MODIFY  .env                                             (+ §6 blocks)
 MODIFY  exemple.env.txt                                  (+ §6 blocks, secrets = CHANGE_ME)
 MODIFY  infra/docker-compose.yml                         (+ Lago services, profiles: [billing])
@@ -78,10 +78,10 @@ Header comment must follow the house style of `10-identity.sql` (owner, purpose,
 note). Then, in this order:
 
 ```sql
-CREATE ROLE orazaka_billing LOGIN PASSWORD 'orazaka_billing_pass';
-CREATE DATABASE orazaka_billing_db OWNER orazaka_billing;
-\c orazaka_billing_db
-SET ROLE orazaka_billing;
+CREATE ROLE krizaka_billing LOGIN PASSWORD 'krizaka_billing_pass';
+CREATE DATABASE krizaka_billing_db OWNER krizaka_billing;
+\c krizaka_billing_db
+SET ROLE krizaka_billing;
 ```
 
 Then the tables **exactly as specified in `docs/BILLING_ARCHITECTURE.md`**:
@@ -139,18 +139,18 @@ Add, next to the existing identity/automation/knowledge blocks and in the same c
 
 ```sql
 -- Billing context: its own database — dropped wholesale.
-DROP DATABASE IF EXISTS orazaka_billing_db WITH (FORCE);
-DROP ROLE IF EXISTS orazaka_billing;
+DROP DATABASE IF EXISTS krizaka_billing_db WITH (FORCE);
+DROP ROLE IF EXISTS krizaka_billing;
 ```
 
 Also add the `70-billing.sql` line to the file-inventory comment at the top.
 
-## §5 `orazaka-billing-api` — the Tier-1 contract
+## §5 `krizaka-billing-api` — the Tier-1 contract
 
-`pom.xml`: copy `orazaka-apps/services/orazaka-users/orazaka-identity-api/pom.xml` verbatim, change
+`pom.xml`: copy `krizaka/krizaka-users/krizaka-users-api/pom.xml` verbatim, change
 `artifactId`/`name`/`description`. **No dependency beyond `junit-jupiter` (test scope).**
 
-Package root `com.orazaka.billing.domain`. Signatures — implement exactly these, with compact-
+Package root `com.krizaka.billing.domain`. Signatures — implement exactly these, with compact-
 constructor validation (ERR-106) and a Javadoc on every public type:
 
 ```java
@@ -245,7 +245,7 @@ Six things that are easy to get wrong — 4–6 were found the hard way on the f
 
 ```bash
 # 1. The contract module compiles and its tests pass
-./mvnw -q -pl orazaka-apps/services/orazaka-billing/orazaka-billing-api test
+./mvnw -q -pl krizaka/krizaka-billing/krizaka-billing-api test
 
 # 2. The whole reactor still builds (module registration is correct)
 ./mvnw -q -DskipTests install
@@ -262,10 +262,10 @@ orazaka stop --purge && orazaka start
 docker ps --format '{{.Names}}'          # expect NO orazaka-lago-*
 
 # 5. The billing database exists, is seeded, and the ledger is immutable
-psql -h localhost -U orazaka_billing -d orazaka_billing_db -c "\dt"
-psql -h localhost -U orazaka_billing -d orazaka_billing_db \
+psql -h localhost -U krizaka_billing -d krizaka_billing_db -c "\dt"
+psql -h localhost -U krizaka_billing -d krizaka_billing_db \
      -c "SELECT plan_key, monthly_credit_grant FROM billing_plan ORDER BY tier_rank;"
-psql -h localhost -U orazaka_billing -d orazaka_billing_db \
+psql -h localhost -U krizaka_billing -d krizaka_billing_db \
      -c "UPDATE credit_ledger_entry SET amount = 999;"   # MUST fail with the trigger's exception
 
 # 6. Lago starts only when asked. NOT via the CLI: `orazaka start` passes explicit service names,
@@ -284,9 +284,9 @@ the trigger is missing and the ledger is not append-only.
 
 ## §9 Do NOT
 
-- **Do not** create `orazaka-billing-service` in this tranche.
-- **Do not** add any Spring dependency to `orazaka-billing-api`.
-- **Do not** import `com.orazaka.business.*` from the contract module (Tier-1 ↛ Tier-3).
+- **Do not** create `krizaka-billing-service` in this tranche.
+- **Do not** add any Spring dependency to `krizaka-billing-api`.
+- **Do not** import `com.krizaka.orazaka.business.*` from the contract module (Tier-1 ↛ Tier-3).
 - **Do not** add a foreign key from a billing table to any table outside `70-billing.sql`.
 - **Do not** put a plan, price, credit rate or enforcement flag in any `application.yml`.
 - **Do not** touch the user's uncommitted working-tree changes (there are modified files on `main`).
@@ -303,6 +303,6 @@ the trigger is missing and the ledger is not append-only.
 
 ## §11 Next tranches (do not start without an explicit go)
 
-- **Tranche 2** — `orazaka-billing-service` :8095. See design §19 and §5/§6/§10/§12.
+- **Tranche 2** — `krizaka-billing-service` :8095. See design §19 and §5/§6/§10/§12.
 - **Tranche 3** — consumer wiring, `NoOp`/HTTP adapters, `EntitlementInterceptor`, mode `DRY_RUN`
   end-to-end. See design §19 and §6.2/§6.3/§13.4.

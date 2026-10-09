@@ -1,4 +1,4 @@
-package com.orazaka.architecture;
+package com.krizaka.orazaka.architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -15,7 +15,7 @@ import com.tngtech.archunit.library.GeneralCodingRules;
  * Domain purity, port/adapter naming conventions, and prevents any framework ecosystem leakage into
  * the core.
  */
-@AnalyzeClasses(packages = "com.orazaka")
+@AnalyzeClasses(packages = "com.krizaka.orazaka")
 class GlobalArchitectureGuardrailIT {
 
   // =========================================================================
@@ -148,17 +148,17 @@ class GlobalArchitectureGuardrailIT {
   static final ArchRule identity_tier3_impl_is_owned_only_by_identity_service =
       noClasses()
           .that()
-          .resideOutsideOfPackages("com.orazaka.identity..")
+          .resideOutsideOfPackages("com.krizaka.users..")
           .should()
           .dependOnClassesThat()
           .resideInAnyPackage(
-              "com.orazaka.identity.application..",
-              "com.orazaka.identity.infrastructure..",
-              "com.orazaka.identity.domain.ports..")
+              "com.krizaka.users.application..",
+              "com.krizaka.users.infrastructure..",
+              "com.krizaka.users.domain.ports..")
           .as(
-              "[SEAM-002] Only orazaka-identity-service owns the identity Tier-3 impl. Every other"
-                  + " bounded context reaches identity through the orazaka-identity-api contract"
-                  + " (com.orazaka.identity.domain.{model,exception}), never the implementation.");
+              "[SEAM-002] Only krizaka-users-service owns the identity Tier-3 impl. Every other"
+                  + " bounded context reaches identity through the krizaka-users-api contract"
+                  + " (com.krizaka.users.domain.{model,exception}), never the implementation.");
 
   @ArchTest
   static final ArchRule enforce_constructor_injection_only =
@@ -168,7 +168,7 @@ class GlobalArchitectureGuardrailIT {
   @ArchTest
   static final ArchRule cyclical_dependency_breaker =
       slices()
-          .matching("com.orazaka.(*)..")
+          .matching("com.krizaka.orazaka.(*)..")
           .should()
           .beFreeOfCycles()
           .as(
@@ -182,7 +182,7 @@ class GlobalArchitectureGuardrailIT {
   static final ArchRule no_mocking_allowed_in_e2e =
       noClasses()
           .that()
-          .resideInAPackage("com.orazaka.e2e..")
+          .resideInAPackage("com.krizaka.orazaka.e2e..")
           .should()
           .dependOnClassesThat()
           .resideInAPackage("org.mockito..")
@@ -195,7 +195,7 @@ class GlobalArchitectureGuardrailIT {
   static final ArchRule no_spring_boot_test_in_e2e =
       noClasses()
           .that()
-          .resideInAPackage("com.orazaka.e2e..")
+          .resideInAPackage("com.krizaka.orazaka.e2e..")
           .should()
           .beAnnotatedWith("org.springframework.boot.test.context.SpringBootTest")
           .as(
@@ -209,23 +209,23 @@ class GlobalArchitectureGuardrailIT {
   static final ArchRule tools_must_not_import_identity =
       noClasses()
           .that()
-          .resideInAPackage("com.orazaka.tools..")
+          .resideInAPackage("com.krizaka.orazaka.tools..")
           .should()
           .dependOnClassesThat()
-          .resideInAPackage("com.orazaka.identity..")
+          .resideInAPackage("com.krizaka.users..")
           .as(
-              "orazaka-tools must never import orazaka-identity (ERR-102). Pass String userId from gateway.");
+              "orazaka-tools must never import krizaka-users-core (ERR-102). Pass String userId from gateway.");
 
   @ArchTest
   static final ArchRule business_must_not_import_conversation_infrastructure =
       noClasses()
           .that()
-          .resideInAPackage("com.orazaka.business..")
+          .resideInAPackage("com.krizaka.orazaka.business..")
           .should()
           .dependOnClassesThat()
-          .resideInAPackage("com.orazaka.conversationservice.infrastructure.client..")
+          .resideInAPackage("com.krizaka.orazaka.conversationservice.infrastructure.client..")
           .as(
-              "orazaka-business must have absolutely zero compile dependencies on classes located inside com.orazaka.conversationservice.infrastructure.client.");
+              "orazaka-business must have absolutely zero compile dependencies on classes located inside com.krizaka.orazaka.conversationservice.infrastructure.client.");
 
   @ArchTest
   static final ArchRule interceptors_naming_convention =

@@ -21,7 +21,7 @@ Design context: [`docs/UNIFIED_PACK_SURFACE.md`](../../docs/UNIFIED_PACK_SURFACE
      found — **side by side. What they share is the anchor for §3.**
    - `orazaka-libs/orazaka-build/orazaka-test-support/.../architecture/{GovernanceRules,SourceFileScanner,MeteringMarkerRules,PackCoherenceRules}.java`
      — the scanner you reuse and never rewrite
-   - `orazaka-apps/services/orazaka-billing/orazaka-billing-api/.../model/ConsumptionReport.java` — `quantityFor`,
+   - `krizaka/krizaka-billing/krizaka-billing-api/.../model/ConsumptionReport.java` — `quantityFor`,
      `megapixelSteps`, and **every caller that constructs a report**
 
 ## §1 Scope of THIS run — four items

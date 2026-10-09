@@ -42,7 +42,7 @@ failure `CatalogPack`'s javadoc warns against.
 | **Blueprint** | Studio context | One immutable, semver'd version of a Studio's DAG (steps, prompts, schema) | A running instance |
 | **Installation** | Studio context | One actor's copy of a Studio: pinned blueprint version + their configuration | Ownership of the Studio itself |
 | **Run** | Studio context | One execution of an Installation, fanned out into `orazaka_jobs` | A job |
-| **Package** | `orazaka-billing-service` | The *priced* bundle that grants entitlement to one or more Studios | The workflow |
+| **Package** | `krizaka-billing-service` | The *priced* bundle that grants entitlement to one or more Studios | The workflow |
 | **Capability / feature_key** | Conversation/Job context | An atomic AI operation (`orazaka.core.media.video`) | A workflow |
 
 **Rejected alternatives**: `Playbook` (collides with `docs/BUSINESS_IMPLEMENTATION.md`, "the CinePulse
@@ -56,7 +56,7 @@ generation": `realestate-reels` → *"Reels Immobilier"*; `trade-showcase` → *
 `Mes Studios` / `Explorer`.
 
 > **If you ever want to rename `Studio`**, it is a mechanical change confined to: the
-> `com.orazaka.studio*` packs, `infra/initdb/80-studio.sql`, `/api/v1/studios`, the
+> `com.krizaka.orazaka.studio*` packs, `infra/initdb/80-studio.sql`, `/api/v1/studios`, the
 > `features/studio/` UI folder and the `studio.*` entitlement-key prefix. Nothing else references it.
 
 ---
@@ -105,7 +105,7 @@ retrofitting a boundary is strictly harder than drawing it now.
 in `orazaka-business`.
 
 The original reasoning (*layer ≠ process*; workflow orchestration is `business`'s responsibility) is
-sound but unbuildable here: SEAM-002 lists `com.orazaka.business..` as a foreign Tier-3
+sound but unbuildable here: SEAM-002 lists `com.krizaka.orazaka.business..` as a foreign Tier-3
 implementation, and §15 below requires `StudioServiceGovernanceTest` to enforce SEAM-002 — the
 service cannot both host `business` and pass its own governance test. AGENTS.md wins. Hosting
 `business` here would also give that library a second owner, which is the distributed monolith
@@ -115,7 +115,7 @@ AGENTS.md §2 names as the primary health gauge.
 (`BlueprintRepository`, `StepExecutionClient`) and can be re-hosted without moving code. And a Studio
 run is still a first-class `Intention` — `StudioRunUseCase` lives in `orazaka-business` and depends
 on the **Tier-1 `StudioRunClient` port**, whose HTTP adapter is `orazaka-studio-client`. That is the
-same arrangement `orazaka-billing-client` already uses for `CreditAuthorizationClient`.
+same arrangement `krizaka-billing-client` already uses for `CreditAuthorizationClient`.
 
 **Ports** (existing: 8080 conversation · 8082 automation · 8083 identity · 8084 knowledge ·
 8088/8089 edge · 8090 job · 8095 billing). Studio takes **`STUDIO_PORT:8096`**.
@@ -127,7 +127,7 @@ graph LR
   UI["web-client :3000<br/>features/studio"] -->|BFF| EDGE["orazaka-edge :8088"]
   ADMIN["web-admin :3001<br/>Studio Builder"] -->|BFF| EDGE
   EDGE -->|/api/v1/studios| STU["orazaka-studio-service :8096"]
-  EDGE -->|/api/v1/billing| BIL["orazaka-billing-service :8095"]
+  EDGE -->|/api/v1/billing| BIL["krizaka-billing-service :8095"]
   STU -->|Tier-1 CreditAuthorizationClient| BIL
   STU -->|Tier-1 EntitlementProvider| BIL
   STU -->|publish JobCommand| MQ(("orazaka.jobs"))

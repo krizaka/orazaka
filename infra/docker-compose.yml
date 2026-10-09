@@ -32,13 +32,13 @@ services:
       # only owns the reset and the dev fixtures. Every repository must be cloned
       # (`node scripts/workspace.mjs clone`) before the first `orazaka start`.
       - ./initdb/00-reset.sql:/docker-entrypoint-initdb.d/00-reset.sql:ro
-      - ../orazaka-apps/services/orazaka-users/infra/initdb/10-identity.sql:/docker-entrypoint-initdb.d/10-identity.sql:ro
+      - ../krizaka/krizaka-users/infra/initdb/10-identity.sql:/docker-entrypoint-initdb.d/10-identity.sql:ro
       - ../orazaka-apps/services/orazaka-conversation-service/infra/initdb/20-conversation.sql:/docker-entrypoint-initdb.d/20-conversation.sql:ro
       - ../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql:/docker-entrypoint-initdb.d/30-jobs-config.sql:ro
       - ../orazaka-apps/services/orazaka-knowledge-service/infra/initdb/40-knowledge.sql:/docker-entrypoint-initdb.d/40-knowledge.sql:ro
       - ../orazaka-apps/services/orazaka-automation-service/infra/initdb/50-automation.sql:/docker-entrypoint-initdb.d/50-automation.sql:ro
       - ../orazaka-libs/orazaka-ai-engine/infra/initdb/60-governance.sql:/docker-entrypoint-initdb.d/60-governance.sql:ro
-      - ../orazaka-apps/services/orazaka-billing/infra/initdb/70-billing.sql:/docker-entrypoint-initdb.d/70-billing.sql:ro
+      - ../krizaka/krizaka-billing/infra/initdb/70-billing.sql:/docker-entrypoint-initdb.d/70-billing.sql:ro
       - ../orazaka-apps/services/orazaka-studio/infra/initdb/80-studio.sql:/docker-entrypoint-initdb.d/80-studio.sql:ro
       - ./initdb/90-dev-fixtures.sql:/docker-entrypoint-initdb.d/90-dev-fixtures.sql:ro
     security_opt:
@@ -121,7 +121,7 @@ services:
       - orazaka-isolated
 
   # ── Mailpit (local SMTP sink for the notification service) ─────────────────
-  # orazaka-notification-service sends e-mail over SMTP (MAIL_HOST/MAIL_PORT,
+  # krizaka-notifications-service sends e-mail over SMTP (MAIL_HOST/MAIL_PORT,
   # default localhost:1025). Locally every message lands here instead of a real
   # inbox: verification and password-reset links are read at http://localhost:8025.
   mailpit:

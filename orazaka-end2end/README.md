@@ -57,7 +57,7 @@ the java pid.
 
 ## 4. `infra/initdb` creates every context role with no password
 
-`CREATE ROLE orazaka_identity LOGIN;` — and nothing else. psql 15 cannot read the environment
+`CREATE ROLE krizaka_users LOGIN;` — and nothing else. psql 15 cannot read the environment
 (`\getenv` arrived in 16), ERR-125 bans a shell script in the initdb directory, and a committed
 literal was audit #5. The seeds' own comments say the password is applied afterwards, from
 `<CONTEXT>_DB_PASSWORD`, **by `orazaka start`**.

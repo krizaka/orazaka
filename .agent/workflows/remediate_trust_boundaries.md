@@ -20,7 +20,7 @@ Findings being closed: `PRODUCTION_READINESS_AUDIT.md` **#23, #24, #25, #26**.
 2. Read audit findings #23–#26 and ADR-063.
 3. Read, **before writing anything**:
    - `orazaka-libs/orazaka-ai-engine/orazaka-core/.../pipeline/DynamicPipelineExecutor.java` lines ~176–181
-   - `orazaka-apps/services/orazaka-users/orazaka-identity/.../IdentityServiceImpl.mergeAndSavePreferences`
+   - `krizaka/krizaka-users/krizaka-users-core/.../IdentityServiceImpl.mergeAndSavePreferences`
    - `orazaka-apps/services/orazaka-job-service/.../amqp/JobListener.java` lines ~290–300 — the
      **namespacing discipline that already exists in this repository**
    - the worker test file whose tail sits after `unittest.main()`

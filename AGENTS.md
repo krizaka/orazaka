@@ -11,8 +11,8 @@
 ## 0. Current phase — **LOCAL runtime, GitHub multi-repository**
 
 - The platform is **one GitHub repository per component** in the [`krizaka`](https://github.com/krizaka) organisation, assembled by this **workspace** (§2.1). The runtime cycle (run, e2e, docs) still runs **on the dev machine (macOS 64 GB)**.
-- **Allowed on GitHub**: GitHub Actions that **build and test** (every repository runs the shared `component.yml` of this workspace; the workspace runs the full reactor), and that **publish artifacts on a `v*` tag** — Maven `com.orazaka:*` to GitHub Packages, npm `@krizaka/*` to the public npm registry with provenance. Nothing else.
-- **Forbidden for now**: cloud deployment, images pushed to a registry, cloud provisioning, remote secrets beyond `GITHUB_TOKEN`, remote Terraform `apply`.
+- **Allowed on GitHub**: GitHub Actions that **build and test** (every repository runs the shared `component.yml` of this workspace; the workspace runs the full reactor), and that **publish artifacts on a `v*` tag** — the Krizaka building blocks `com.krizaka:*` to **Maven Central** (signed, through the organisation pipeline `krizaka/.github/.github/workflows/maven.yml`, manual *Publish* in the Central Portal), the Orazaka artifacts `com.krizaka.orazaka:*` to GitHub Packages, npm `@krizaka/*` to the public npm registry with provenance. Nothing else (ADR-073).
+- **Forbidden for now**: cloud deployment, images pushed to a registry, cloud provisioning, remote Terraform `apply`, remote secrets beyond `GITHUB_TOKEN` — **except** the four organisation secrets of the Maven Central release (`MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `MAVEN_GPG_KEY`, `MAVEN_GPG_PASSPHRASE`), held by the organisation, never by a repository.
 - **Allowed locally**: `docker-compose` (stateful infra), **native macOS** AI runtimes (Metal), running apps via the `orazaka` CLI, **hermetic** tests (Testcontainers), docs generation.
 - The code stays **ready** for staging/prod (hexagonal + config-per-profile), but those environments are **deferred**: do not implement them until explicitly requested.
 
@@ -40,13 +40,13 @@ Hexagonal (Ports & Adapters), enforced by **ArchUnit** at build time. Dependenci
 | Cognition (micro) | `orazaka-core` | Cognitive engine: `AiClient`, interceptor pipeline, `agent` capability, Provider Mesh. Web/DB-agnostic. |
 | Pipeline | `orazaka-interceptors` | Cross-cutting filters (one module, packs by concern). |
 | Outbound capabilities | `orazaka-tools` | MCP · RAG · sandbox. |
-| Security (cross-cutting) | `orazaka-identity` | RBAC · OAuth2 · crypto · **user profile**. |
+| Security (cross-cutting) | `krizaka-users-core` | RBAC · OAuth2 · crypto · **user profile**. |
 | State | `orazaka-persistence` | CQRS: write+outbox / read models / cache. |
 | Async | `orazaka-apps/workers/` | Consume RabbitMQ, build projections, heavy jobs (native media). |
 
 ### Absolute invariants
 
-- `business` **never** imports `com.orazaka.core.*` as internal state; it invokes the core **inbound ports** (`AiClient`, etc.).
+- `business` **never** imports `com.krizaka.orazaka.core.*` as internal state; it invokes the core **inbound ports** (`AiClient`, etc.).
 - `core` contains **no** business logic or product-domain rules.
 - `interceptors`: `orazaka-core/.../application/interceptor/` contains **only** the `PromptContextInterceptor` interface. All implementations live in `orazaka-interceptors/` (AutoConfiguration SPI) **[ERR-122]**.
 - A **port** is defined in the module that needs it (the core) and **implemented** in an outer module (package-private adapter).
@@ -68,20 +68,25 @@ Every component is its **own GitHub repository** so that any Krizaka application
 
 | Layer | Repositories |
 |:---|:---|
-| Foundation (reusable by any app) | `orazaka-build` (parent POM + BOM + governance kit) · `orazaka-contracts` (platform Tier-1) · `orazaka-edge` · `orazaka-ui-kit` (`@krizaka/orazaka-shared`, `@krizaka/orazaka-design-system`) |
-| Domain services (reusable by any app) | `orazaka-users` (register, verify, login, OAuth, forgot/reset password, profile, API keys) · `orazaka-notifications` (e-mail · SMS · webhook per channel) · `orazaka-billing` |
+| **Krizaka building blocks** (`krizaka/`, `com.krizaka:*` on Maven Central — Orazaka consumes them, does not own them) | `krizaka-build` (parent POM, BOM, generic test kit) · `krizaka-platform-kit` (`krizaka-security`, `krizaka-messaging`) · `krizaka-users` (register, verify, login, OAuth, forgot/reset password, profile, API keys; `-api`, `-client`) · `krizaka-notifications` (e-mail · SMS · webhook per channel) · `krizaka-billing` (credits, plans, metering; `-api`, `-client`) |
+| Foundation (Orazaka) | `orazaka-build` (parent POM + BOM + governance kit) · `orazaka-contracts` (platform Tier-1) · `orazaka-edge` · `orazaka-ui-kit` (`@krizaka/orazaka-shared`, `@krizaka/orazaka-design-system`) |
 | AI engine | `orazaka-ai-engine` (core, interceptors, tools, business, persistence) · `orazaka-studio` · `orazaka-conversation-service` · `orazaka-job-service` · `orazaka-knowledge-service` · `orazaka-automation-service` · `orazaka-worker-media` |
 | Apps & content | `orazaka-web-client` · `orazaka-web-admin` · `orazaka-mobile-client` · `orazaka-cli` · `orazaka-packs` |
 
 **Repository rules** (build-enforced where a rule can see them):
 
 - A repository depends only on repositories **listed before it** in the manifest — no cycle, ever.
-- A **domain repository** holds its contract, its client and its service together (`orazaka-users` = `orazaka-identity-api` + `orazaka-persistence-identity` + `orazaka-identity` + `orazaka-identity-service`). Other repositories depend on the **contract or client**, never on the implementation ([SEAM-002]).
+- A **domain repository** holds its contract, its client and its service together (`krizaka-users` = `krizaka-users-api` + `krizaka-users-persistence` + `krizaka-users-core` + `krizaka-users-service`). Other repositories depend on the **contract or client**, never on the implementation ([SEAM-002]).
 - A repository owns **its context's bootstrap SQL** (`<repo>/infra/initdb/NN-*.sql`, §5) and its tests read it locally.
 - **Cross-repository rules** (pack purity, executor coherence, one settlement author…) run inside the workspace and are **skipped — never passed — in a standalone clone** (`Workspace.require`, orazaka-test-support). CI always builds inside the workspace, so nothing is skipped there.
-- Versions move together: every repository is at the platform version of `orazaka-parent` (the Orazaka BOM).
+- Versions move together: every Orazaka repository is at the platform version of `orazaka-parent` (the Orazaka BOM); every Krizaka repository at the version of `krizaka-bom` (`krizaka.version` in `orazaka-parent`).
+- **Cross-cutting code has one author** (ADR-073): the security baseline, session JWT, service tokens, message dedup and the outbox relay come from `krizaka-platform-kit`; `[KIT-001]`…`[KIT-004]` fail on a local copy. A Krizaka repository never depends on an Orazaka one.
 
-### Physical layout — `orazaka-libs/` (import) vs `orazaka-apps/` (run)
+### Physical layout — `krizaka/` (building blocks) · `orazaka-libs/` (import) · `orazaka-apps/` (run)
+
+`krizaka/` holds the Krizaka repositories the platform is built on, cloned like every other repository; they are not
+Orazaka's and follow their own `AGENTS.md`.
+
 
 The workspace places repositories on **one axis: you *run* apps, you *import* libs.** A lib is `packaging jar`, has no entrypoint, and exists only compiled into an app; an app has a `main()` + a port and is deployed. Nothing else distinguishes the two roots.
 
@@ -101,14 +106,14 @@ The workspace places repositories on **one axis: you *run* apps, you *import* li
 | **2 — Platform SDK** | `core` (AiClient, provider mesh, agent), `interceptors`, `tools`, `test-support` | shared with **SDK discipline** — stable, backward-compatible, changes rarely |
 | **3 — Owned domain** | `business`, `identity`, `persistence` | owned by **one** service (or one service-family); each owns its schema + DB |
 
-**Exemplar**: every service depends on `orazaka-identity-api` (Tier-1 contract), never on `orazaka-identity` (Tier-3 impl, owned by `orazaka-identity-service`). An `orazaka-libs/` that **shrinks** as domain code migrates into its owning service is healthy; one that **grows** is a distributed monolith forming — treat that as the primary health gauge.
+**Exemplar**: every service depends on `krizaka-users-api` (Tier-1 contract), never on `krizaka-users-core` (Tier-3 impl, owned by `krizaka-users-service`). An `orazaka-libs/` that **shrinks** as domain code migrates into its owning service is healthy; one that **grows** is a distributed monolith forming — treat that as the primary health gauge.
 
 ---
 
 ## 3. Naming conventions
 
-- Module: `orazaka-<bounded-context>`. Package: `com.orazaka.<module>.{domain,application,infrastructure}`.
-- **Folder taxonomy — the `orazaka-` prefix is for artifacts, not organizational folders.** Two roots: `orazaka-libs/` (imported) and `orazaka-apps/` (run) — see §2. The **group folders** inside them are **bare** (`orazaka-libs/orazaka-contracts/`, `orazaka-apps/{services,workers,ui}/`) because they namespace nothing publishable; only Maven modules / npm packs carry the `orazaka-` prefix (`orazaka-apps/services/orazaka-edge`, `orazaka-apps/services/orazaka-users/orazaka-identity-api`). Never nest the prefix on a container (no `orazaka-apps/orazaka-services/`).
+- Module: `orazaka-<bounded-context>`. Package: `com.krizaka.orazaka.<module>.{domain,application,infrastructure}`.
+- **Folder taxonomy — the `orazaka-` prefix is for artifacts, not organizational folders.** Two roots: `orazaka-libs/` (imported) and `orazaka-apps/` (run) — see §2. The **group folders** inside them are **bare** (`orazaka-libs/orazaka-contracts/`, `orazaka-apps/{services,workers,ui}/`) because they namespace nothing publishable; only Maven modules / npm packs carry the `orazaka-` prefix (`orazaka-apps/services/orazaka-edge`, `krizaka/krizaka-users/krizaka-users-api`). Never nest the prefix on a container (no `orazaka-apps/orazaka-services/`).
 - **Zero `Orazaka` prefix** on classes **[ERR-104]** (`Engine`, not `OrazakaEngine`).
 - Suffixes: `*Service` (interface) / `*ServiceImpl` (package-private), `*Interceptor`, `*Resolver`, `*Controller`, `*Mapper` (final, static, package-private), `*Repository`, `*Config`, `*Properties`, `*Adapter`.
 - **Controllers are resource-oriented [ERR-128]**: name a controller `<Resource>Controller` after the noun it manages (`FeatureController`, `JobController`), **never** after an actor or flow — no `Admin*`, no `Bootstrap*`. Access control is a security concern (method-level `@PreAuthorize` + SecurityConfig URL rules), not the class name. One controller per resource with a single `@RequestMapping("/api/v1/<resource>")` base; split only by genuine sub-resource (`<Resource><SubResource>Controller`, e.g. `MediaGenerationController` vs `MediaAnalysisController`). Do not scatter one resource across several controllers.
@@ -119,7 +124,7 @@ The workspace places repositories on **one axis: you *run* apps, you *import* li
 - Use cases: `<Domain><Action>UseCase`. Interceptors: `<Concern>Interceptor` (in the `<concern>` package).
 - **Pipeline module = `orazaka-interceptors`** (decided), **not** `orazaka-hooks`: it is an ordered, transforming, short-circuitable pipeline, not lifecycle callbacks; and "hooks" collides with React hooks.
 - **Functional naming, not marketing** (de-marketing decided): `ClosedLoopValidationInterceptor` (ex-`QuantumValidationAdvisor`), `SemanticRouterInterceptor` (ex-`SimDagRouterInterceptor`), `PolicyConfigCache` (ex-`ConfigMeshCache`).
-- **Never `gateway`**: fix any `gateway` drift found. The former `orazaka-router` app dissolved in the microservices split — its interactive surface is `orazaka-conversation-service` (`com.orazaka.conversationservice`, still :8080 behind the edge), its async executor is `orazaka-job-service` (`com.orazaka.jobservice`, :8090), and the transport facade is `orazaka-edge` (:8088). Config identifiers `orazaka.router.*` / `ROUTER_*` env / `ROUTER_INTERNAL_URL` are retained as the conversation-service's wiring keys (renaming them is deferred cosmetic churn).
+- **Never `gateway`**: fix any `gateway` drift found. The former `orazaka-router` app dissolved in the microservices split — its interactive surface is `orazaka-conversation-service` (`com.krizaka.orazaka.conversationservice`, still :8080 behind the edge), its async executor is `orazaka-job-service` (`com.krizaka.orazaka.jobservice`, :8090), and the transport facade is `orazaka-edge` (:8088). Config identifiers `orazaka.router.*` / `ROUTER_*` env / `ROUTER_INTERNAL_URL` are retained as the conversation-service's wiring keys (renaming them is deferred cosmetic churn).
 - Multi-language detail (TS/Python/SQL/Terraform): see [`.agent/rules/naming_conventions.md`](.agent/rules/naming_conventions.md).
 
 ---
@@ -158,7 +163,7 @@ Two bounded contexts, **no JPA entity outside `orazaka-persistence`**:
 
 DB invariants **[ERR-109]**: no raw SQL (parameterized Repos or `@Query`); no read-before-write (catch `DataIntegrityViolationException`); hash/crypto **outside** `@Transactional`; write methods return domain records; no N+1 (`LEFT JOIN FETCH` / `@EntityGraph`).
 
-**DB bootstrap (local phase)**: **one file per bounded context, in the repository that owns the context** — `orazaka-users/infra/initdb/10-identity.sql`, `orazaka-conversation-service/…/20-conversation.sql`, `orazaka-job-service/…/30-jobs-config.sql`, `orazaka-knowledge-service/…/40-knowledge.sql`, `orazaka-automation-service/…/50-automation.sql`, `orazaka-ai-engine/…/60-governance.sql`, `orazaka-billing/…/70-billing.sql`, `orazaka-studio/…/80-studio.sql`; this workspace keeps only `infra/initdb/00-reset.sql` and `90-dev-fixtures.sql`. Schema + tables + **dev seed data**, applied alphabetically via psql: `infra/docker-compose.yml` mounts each file into the ONE Postgres container. Contexts already cut over run in their **own database with their own role**, created by their initdb file (`10-identity.sql` → `orazaka_identity_db` / role `orazaka_identity`); the rest still share `orazaka_db` until their phase. **Cross-context FKs are banned** (opaque ids only), enforced on every build by `SqlBoundaryRules` [SEAM-001]; cross-context seeds are banned too (each context seeds only its own database). `infra/init-prod.sql` is **deferred** (nothing in prod for now) — we do it once the product is finished.
+**DB bootstrap (local phase)**: **one file per bounded context, in the repository that owns the context** — `krizaka-users/infra/initdb/10-identity.sql`, `orazaka-conversation-service/…/20-conversation.sql`, `orazaka-job-service/…/30-jobs-config.sql`, `orazaka-knowledge-service/…/40-knowledge.sql`, `orazaka-automation-service/…/50-automation.sql`, `orazaka-ai-engine/…/60-governance.sql`, `krizaka-billing/…/70-billing.sql`, `orazaka-studio/…/80-studio.sql`; this workspace keeps only `infra/initdb/00-reset.sql` and `90-dev-fixtures.sql`. Schema + tables + **dev seed data**, applied alphabetically via psql: `infra/docker-compose.yml` mounts each file into the ONE Postgres container. Contexts already cut over run in their **own database with their own role**, created by their initdb file (`10-identity.sql` → `krizaka_users_db` / role `krizaka_users`); the rest still share `orazaka_db` until their phase. **Cross-context FKs are banned** (opaque ids only), enforced on every build by `SqlBoundaryRules` [SEAM-001]; cross-context seeds are banned too (each context seeds only its own database). `infra/init-prod.sql` is **deferred** (nothing in prod for now) — we do it once the product is finished.
 
 ---
 
@@ -190,7 +195,7 @@ RabbitMQ is the **decoupling buffer**, not a database appendage.
   consumes settlements and unmetered turns; the **conversation service** relays job events to the
   client over **SSE** (`JobEventListener` on `orazaka.events.job-relay`, bound `job.#`) and consumes
   wallet events; **automation** consumes its own queue; **notifications** consumes the two identity
-  notification queues (`evt.user.*`, `evt.password.*`) and `orazaka.notifications.requests`
+  notification queues (`evt.user.*`, `evt.password.*`) and `krizaka.notifications.requests`
   (`evt.notification.requested`) and delivers per channel (e-mail, SMS, webhook);
   **knowledge** consumes RAG indexing. **No one calls a worker directly.**
 - **Two lanes, not priorities** (ADR-067): `orazaka.jobs.interactive` (`job.text.*`,
@@ -275,7 +280,7 @@ All clients live under `orazaka-apps/ui/` — one repository each, linked by the
 ## 11. Security
 
 - Secrets in local `.env` (never committed). Verification/reset tokens **SHA-256 hashed**, single-use, 15-min expiry. Passwords: BCrypt.
-- M2M JWT on the router; RBAC resolved in `interceptors/security` via the `orazaka-identity` ports.
+- M2M JWT on the router; RBAC resolved in `interceptors/security` via the `krizaka-users-core` ports.
 - **Pinned upstream versions**: no `-SNAPSHOT` dependency as a rule (Spring Boot is pinned to the `4.0` GA line; Spring AI to `2.0.0` — see ADR-030 for the migration off the former `3.5.0` line). **Pinning a line means tracking its patches, not freezing on `.0`**: take `4.0.x` as it ships and leave `4.1` alone. One property bump also moves everything the BOM manages (JDBC driver, JUnit, Mockito, Lettuce, Micrometer…) to versions Spring tested together, which is why those must never be bumped individually — doing so overrides the BOM and is the churn this rule exists to prevent.
 - **Audit, don't upgrade reflexively.** `npm audit` and `versions:display-property-updates` are the inputs; "a newer version exists" is not a reason. Never run `npm audit fix --force` in this repo: it proposes `react-native@0.72` (older than what is installed) and `expo@57` as "fixes", either of which would break the mobile client. Advisories reachable at runtime come first; build-time tooling can wait for the SDK migration that carries it.
 - Detail: [`.agent/rules/security_standards.md`](.agent/rules/security_standards.md), [`.agent/rules/performance_standards.md`](.agent/rules/performance_standards.md).

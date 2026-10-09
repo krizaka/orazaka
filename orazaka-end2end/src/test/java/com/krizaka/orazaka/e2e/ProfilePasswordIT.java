@@ -1,4 +1,4 @@
-package com.orazaka.e2e;
+package com.krizaka.orazaka.e2e;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -121,7 +121,7 @@ class ProfilePasswordIT extends AbstractUiE2eTest {
   void shouldVerifyAdminPasswordInDatabase() throws SQLException {
     Map<String, Object> user =
         E2eJdbcClient.queryOneIdentity(
-            "SELECT id, email, password_hash, password_changed_at FROM orazaka_users WHERE email = ?",
+            "SELECT id, email, password_hash, password_changed_at FROM users WHERE email = ?",
             ADMIN_EMAIL);
 
     assertNotNull(user, "Admin user must exist in the live database");

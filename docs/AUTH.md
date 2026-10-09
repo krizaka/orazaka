@@ -14,9 +14,9 @@ order: 7
 
 | Strategy | Module | Configuration | Description |
 |:---|:---|:---|:---|
-| **Local Credentials** | `orazaka-identity` | `orazaka.identity.auth.local` | Email + password hashed with BCrypt |
-| **OAuth2 Exchange** | `orazaka-identity` | `orazaka.identity.auth.oauth2.*` | NextAuth verifies -> Gateway reconciles |
-| **Password Reset** | `orazaka-identity` | — | Token-based reset with zero-enumeration |
+| **Local Credentials** | `krizaka-users-core` | `orazaka.identity.auth.local` | Email + password hashed with BCrypt |
+| **OAuth2 Exchange** | `krizaka-users-core` | `orazaka.identity.auth.oauth2.*` | NextAuth verifies -> Gateway reconciles |
+| **Password Reset** | `krizaka-users-core` | — | Token-based reset with zero-enumeration |
 
 > [!IMPORTANT]
 > The backend **never** performs OAuth2 redirects or protocol negotiations. This is handled by NextAuth (BFF). The backend only validates tokens.
@@ -31,7 +31,7 @@ sequenceDiagram
     participant BFF as Next.js BFF
     participant GW as orazaka-conversation-service
     participant IS as IdentityService
-    participant IP as orazaka-persistence-identity
+    participant IP as krizaka-users-persistence
     participant DB as PostgreSQL
 
     Browser->>BFF: POST /api/auth/login {email, password}
@@ -62,7 +62,7 @@ sequenceDiagram
     participant GW as orazaka-conversation-service
     participant RS as IdentityReconciliationService
     participant PV as OAuth2ProviderVerifier
-    participant IP as orazaka-persistence-identity
+    participant IP as krizaka-users-persistence
     participant DB as PostgreSQL
 
     Browser->>Provider: OAuth2 Authorization Flow
@@ -98,7 +98,7 @@ sequenceDiagram
     participant BFF as Next.js BFF
     participant GW as orazaka-conversation-service
     participant PRS as PasswordRecoveryService
-    participant IP as orazaka-persistence-identity
+    participant IP as krizaka-users-persistence
     participant DB as PostgreSQL
 
     Note over Client,DB: Request Reset

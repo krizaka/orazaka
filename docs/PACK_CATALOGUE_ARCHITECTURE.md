@@ -425,7 +425,7 @@ CREATE  orazaka-apps/services/orazaka-studio/orazaka-studio-api/.../domain/model
 CREATE  orazaka-apps/services/orazaka-studio/orazaka-studio-service/.../application/service/PackCatalogService.java
 CREATE  .../infrastructure/adapter/rest/PackCatalogController.java          (/api/v1/studios/packs)
 CREATE  .../infrastructure/adapter/persistence/JdbcPackRepositoryAdapter.java
-MODIFY  orazaka-apps/services/orazaka-billing/orazaka-billing-service/.../PackController.java  (narrow to price + entitlements)
+MODIFY  krizaka/krizaka-billing/krizaka-billing-service/.../PackController.java  (narrow to price + entitlements)
 MODIFY  orazaka-libs/orazaka-build/orazaka-test-support/.../GovernanceRules.java          (+ pack/entitlement coherence rule)
 MODIFY  <8 services> .../<Service>GovernanceTest.java
 

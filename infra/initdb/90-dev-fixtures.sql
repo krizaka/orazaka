@@ -21,10 +21,10 @@
 -- the directory without this file.
 -- ============================================================================
 
--- ── orazaka_identity_db ─────────────────────────────────────────────────────────────
-\c orazaka_identity_db
+-- ── krizaka_users_db ─────────────────────────────────────────────────────────────
+\c krizaka_users_db
 
-INSERT INTO orazaka_users (id, username, password_hash, email, enabled, preferences, rate_limit_tier) VALUES
+INSERT INTO users (id, username, password_hash, email, enabled, preferences, rate_limit_tier) VALUES
 -- Dev seed credentials (local phase): admin@orazaka.com / Admin123!  ·  user@orazaka.com / User1234!
 -- BCrypt hashes (>= 8-char passwords, valid emails). Change for any non-local environment.
 ('550e8400-e29b-41d4-a716-446655440001', 'admin', '$2y$10$KlFGQfaa2F1XK23eTyfb/ehPhEIuiitO7AUCINMKax094yGWFWz1a', 'admin@orazaka.com', true, '{"language":"en", "tts-voice":"alloy", "image-aspect-ratio":"16:9", "chat-temperature":0.7}', 'admin'),
@@ -37,14 +37,16 @@ ON CONFLICT (username) DO UPDATE SET
   enabled         = EXCLUDED.enabled,
   rate_limit_tier = EXCLUDED.rate_limit_tier;
 
-INSERT INTO orazaka_authorities (user_id, authority_name) VALUES
+INSERT INTO authorities (user_id, authority_name) VALUES
 ('550e8400-e29b-41d4-a716-446655440001', 'ROLE_ADMIN'),
 ('550e8400-e29b-41d4-a716-446655440002', 'ROLE_USER')
 ON CONFLICT ON CONSTRAINT unique_user_authority DO NOTHING;
 
-INSERT INTO orazaka_user_profiles (user_id, theme, voice_model, primary_industry, ai_behavior, raw_preferences) VALUES
-('550e8400-e29b-41d4-a716-446655440001', 'emerald', 'alloy', 'tech', 'professional', '{"language":"en","tts-voice":"alloy"}'),
-('550e8400-e29b-41d4-a716-446655440002', 'emerald', 'nova', 'tech', 'friendly', '{"language":"en","tts-voice":"nova"}')
+-- Orazaka's profile attributes (voiceModel, primaryIndustry, aiBehavior) are its onboarding answers:
+-- the users service stores them as attributes and never interprets them.
+INSERT INTO user_profiles (user_id, theme, raw_preferences) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'emerald', '{"language":"en","tts-voice":"alloy","voiceModel":"alloy","primaryIndustry":"tech","aiBehavior":"professional"}'),
+('550e8400-e29b-41d4-a716-446655440002', 'emerald', '{"language":"en","tts-voice":"nova","voiceModel":"nova","primaryIndustry":"tech","aiBehavior":"friendly"}')
 ON CONFLICT (user_id) DO NOTHING;
 
 -- ── orazaka_knowledge_db ─────────────────────────────────────────────────────────────
@@ -56,8 +58,8 @@ INSERT INTO orazaka_tools_rag_source (tool_id, content, metadata) VALUES
 ('searchWeb', 'The BFF proxy routes incoming frontend requests from Next.js to the Orazaka Gateway at http://localhost:8080.', '{"source":"bff_proxy"}')
 ON CONFLICT ON CONSTRAINT unique_tool_content DO NOTHING;
 
--- ── orazaka_billing_db ─────────────────────────────────────────────────────────────
-\c orazaka_billing_db
+-- ── krizaka_billing_db ─────────────────────────────────────────────────────────────
+\c krizaka_billing_db
 
 -- Dev wallets + their opening GRANT. The actor ids are OPAQUE ActorIds copied by value
 -- from the identity seed — no FK, no cross-context read; this seeds only this context's

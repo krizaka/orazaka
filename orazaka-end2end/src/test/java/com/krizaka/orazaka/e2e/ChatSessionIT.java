@@ -1,4 +1,4 @@
-package com.orazaka.e2e;
+package com.krizaka.orazaka.e2e;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -166,7 +166,7 @@ class ChatSessionIT extends AbstractUiE2eTest {
   void shouldVerifyChatSessionInDatabase() throws SQLException {
     // Get admin user ID
     Map<String, Object> user =
-        E2eJdbcClient.queryOneIdentity("SELECT id FROM orazaka_users WHERE email = ?", ADMIN_EMAIL);
+        E2eJdbcClient.queryOneIdentity("SELECT id FROM users WHERE email = ?", ADMIN_EMAIL);
     assertNotNull(user, "Admin user must exist in the database");
 
     String userId = user.get("id").toString();

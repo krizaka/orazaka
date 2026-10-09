@@ -18,7 +18,7 @@ The operational boundary between the **Business** and **Core** layers is non-neg
 
 **Banned**:
 - Constructing `ChatRequest`, `Context`, or `PromptContext` directly from business code.
-- Importing `com.orazaka.core.*` types into `orazaka-business` source code.
+- Importing `com.krizaka.orazaka.core.*` types into `orazaka-business` source code.
 - Bypassing the interceptor pipeline by calling `AiClient` directly from business logic.
 
 ## §3 Prompt Template Segregation

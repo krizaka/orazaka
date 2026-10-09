@@ -5,12 +5,71 @@
   "umbrella": "orazaka",
   "repositories": [
     {
+      "name": "krizaka-build",
+      "path": "krizaka/krizaka-build",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Parent POM (Maven Central metadata, Java 21 build conventions, signed release) and BOM of every Krizaka JVM artifact (com.krizaka).",
+      "dependsOn": []
+    },
+    {
+      "name": "krizaka-platform-kit",
+      "path": "krizaka/krizaka-platform-kit",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Cross-cutting building blocks for Spring Boot services: stateless JWT security with one baseline, service-to-service tokens, idempotent message consumption and a transactional outbox relay.",
+      "dependsOn": [
+        "krizaka-build"
+      ]
+    },
+    {
+      "name": "krizaka-users",
+      "path": "krizaka/krizaka-users",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Reusable user management for any application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance — with its contract (krizaka-users-api) and HTTP client (krizaka-users-client).",
+      "dependsOn": [
+        "krizaka-build",
+        "krizaka-platform-kit"
+      ],
+      "initdb": [
+        "10-identity.sql"
+      ]
+    },
+    {
+      "name": "krizaka-notifications",
+      "path": "krizaka/krizaka-notifications",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Channel-based notification delivery for any application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP.",
+      "dependsOn": [
+        "krizaka-build",
+        "krizaka-platform-kit"
+      ]
+    },
+    {
+      "name": "krizaka-billing",
+      "path": "krizaka/krizaka-billing",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Credits, wallets, plans, subscriptions, a price book and metering (hold → settle → release) as a reusable billing service, with its contract (krizaka-billing-api) and a typed HTTP client (krizaka-billing-client).",
+      "dependsOn": [
+        "krizaka-build",
+        "krizaka-platform-kit"
+      ],
+      "initdb": [
+        "70-billing.sql"
+      ]
+    },
+    {
       "name": "orazaka-build",
       "path": "orazaka-libs/orazaka-build",
       "kind": "maven",
       "layer": "foundation",
       "description": "Parent POM (Spring Boot / Spring AI BOMs, plugin management, Orazaka BOM) and the shared governance test kit (ArchUnit rules, Testcontainers base) for every Orazaka JVM repository.",
-      "dependsOn": []
+      "dependsOn": [
+        "krizaka-build"
+      ]
     },
     {
       "name": "orazaka-contracts",
@@ -23,42 +82,6 @@
       ]
     },
     {
-      "name": "orazaka-users",
-      "path": "orazaka-apps/services/orazaka-users",
-      "kind": "maven",
-      "layer": "domain",
-      "description": "Reusable user management for any Krizaka application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance.",
-      "dependsOn": [
-        "orazaka-build"
-      ],
-      "initdb": [
-        "10-identity.sql"
-      ]
-    },
-    {
-      "name": "orazaka-notifications",
-      "path": "orazaka-apps/services/orazaka-notifications",
-      "kind": "maven",
-      "layer": "domain",
-      "description": "Channel-based notification delivery for any Krizaka application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP.",
-      "dependsOn": [
-        "orazaka-build"
-      ]
-    },
-    {
-      "name": "orazaka-billing",
-      "path": "orazaka-apps/services/orazaka-billing",
-      "kind": "maven",
-      "layer": "domain",
-      "description": "Credits, wallets, plans, subscriptions, pricebook and metering (hold → settle → release) as a reusable billing service, with its contract (billing-api) and a typed HTTP client (billing-client).",
-      "dependsOn": [
-        "orazaka-build"
-      ],
-      "initdb": [
-        "70-billing.sql"
-      ]
-    },
-    {
       "name": "orazaka-studio",
       "path": "orazaka-apps/services/orazaka-studio",
       "kind": "maven",
@@ -67,7 +90,7 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-billing"
+        "krizaka-billing"
       ],
       "initdb": [
         "80-studio.sql"
@@ -82,7 +105,7 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-billing",
+        "krizaka-billing",
         "orazaka-studio"
       ],
       "initdb": [
@@ -98,8 +121,8 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-users",
-        "orazaka-billing",
+        "krizaka-users",
+        "krizaka-billing",
         "orazaka-ai-engine"
       ],
       "initdb": [
@@ -115,8 +138,8 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-users",
-        "orazaka-billing",
+        "krizaka-users",
+        "krizaka-billing",
         "orazaka-ai-engine"
       ],
       "initdb": [
@@ -144,7 +167,7 @@
       "description": "Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry.",
       "dependsOn": [
         "orazaka-build",
-        "orazaka-billing"
+        "krizaka-billing"
       ],
       "initdb": [
         "50-automation.sql"

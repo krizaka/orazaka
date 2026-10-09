@@ -47,7 +47,7 @@ Strategy: **Strangler Fig** at the edge + **queue-by-queue consumer migration** 
 
 Identity is the cleanest seam in the codebase: its own persistence context (`persistence-identity`), an opaque `ActorId` with **no cross-context FK** (mandated by `AGENTS.md` §5), and its own inbound ports (`AuthenticationService`, `ProfileService`, `AuthorizationService`).
 
-1. Extract `orazaka-identity` + `persistence-identity` into a deployable service with its **own database** (move `orazaka_users`, `user_credentials`, `orazaka_authorities`, `orazaka_user_profiles`, token & rate-limit-tier tables).
+1. Extract `krizaka-users-core` + `persistence-identity` into a deployable service with its **own database** (move `users`, `user_credentials`, `authorities`, `user_profiles`, token & rate-limit-tier tables).
 2. Replace in-process `UserContextProvider` calls with **claims-enriched JWT**: identity issues tokens carrying RBAC/tier claims so the hot path needs **no synchronous hop**. Fallback sync REST for profile reads.
 3. Publish `evt.user.*` domain events (already the convention — `UserRegistered`, `PasswordReset` consumed by `worker-integrations` notification listeners).
 4. Dual-run: monolith validates tokens issued by the new service for one full cycle before its identity code is deleted.
@@ -140,7 +140,7 @@ flowchart TB
 - **Communication**: sync HTTP in; consumes job events from `orazaka.events` for SSE relay.
 - **Data**: none (stateless; rate-limit counters in Redis).
 
-### 2. Identity Service (from `orazaka-identity` + `persistence-identity`)
+### 2. Identity Service (from `krizaka-users-core` + `persistence-identity`)
 - **Boundary**: authentication, RBAC, user profile, credentials, API keys, rate-limit tiers.
 - **Business value owned**: "who is the actor and what may they do" — the trust root of the platform.
 - **Communication**: sync REST via edge (`/v1/auth/**`, `/v1/profile/**`); **issues claims-enriched JWTs** so downstream services authorize locally (no per-request hop); publishes `evt.user.*` (outbox).

@@ -1,4 +1,4 @@
-package com.orazaka.e2e;
+package com.krizaka.orazaka.e2e;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;

@@ -3,13 +3,71 @@
   "source": "generated from code by scripts/generate-docs.mjs — do not hand-edit",
   "repositories": [
     {
+      "name": "krizaka-build",
+      "url": "https://github.com/krizaka/krizaka-build",
+      "path": "krizaka/krizaka-build",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Parent POM (Maven Central metadata, Java 21 build conventions, signed release) and BOM of every Krizaka JVM artifact (com.krizaka).",
+      "dependsOn": []
+    },
+    {
+      "name": "krizaka-platform-kit",
+      "url": "https://github.com/krizaka/krizaka-platform-kit",
+      "path": "krizaka/krizaka-platform-kit",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Cross-cutting building blocks for Spring Boot services: stateless JWT security with one baseline, service-to-service tokens, idempotent message consumption and a transactional outbox relay.",
+      "dependsOn": [
+        "krizaka-build"
+      ]
+    },
+    {
+      "name": "krizaka-users",
+      "url": "https://github.com/krizaka/krizaka-users",
+      "path": "krizaka/krizaka-users",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Reusable user management for any application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance — with its contract (krizaka-users-api) and HTTP client (krizaka-users-client).",
+      "dependsOn": [
+        "krizaka-build",
+        "krizaka-platform-kit"
+      ]
+    },
+    {
+      "name": "krizaka-notifications",
+      "url": "https://github.com/krizaka/krizaka-notifications",
+      "path": "krizaka/krizaka-notifications",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Channel-based notification delivery for any application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP.",
+      "dependsOn": [
+        "krizaka-build",
+        "krizaka-platform-kit"
+      ]
+    },
+    {
+      "name": "krizaka-billing",
+      "url": "https://github.com/krizaka/krizaka-billing",
+      "path": "krizaka/krizaka-billing",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Credits, wallets, plans, subscriptions, a price book and metering (hold → settle → release) as a reusable billing service, with its contract (krizaka-billing-api) and a typed HTTP client (krizaka-billing-client).",
+      "dependsOn": [
+        "krizaka-build",
+        "krizaka-platform-kit"
+      ]
+    },
+    {
       "name": "orazaka-build",
       "url": "https://github.com/krizaka/orazaka-build",
       "path": "orazaka-libs/orazaka-build",
       "kind": "maven",
       "layer": "foundation",
       "description": "Parent POM (Spring Boot / Spring AI BOMs, plugin management, Orazaka BOM) and the shared governance test kit (ArchUnit rules, Testcontainers base) for every Orazaka JVM repository.",
-      "dependsOn": []
+      "dependsOn": [
+        "krizaka-build"
+      ]
     },
     {
       "name": "orazaka-contracts",
@@ -18,39 +76,6 @@
       "kind": "maven",
       "layer": "foundation",
       "description": "Tier-1 platform contracts shared by every Orazaka service: the job plane (jobs-api) and the application-persistence ports (persistence-app-api). Pure interfaces and records, zero implementation.",
-      "dependsOn": [
-        "orazaka-build"
-      ]
-    },
-    {
-      "name": "orazaka-users",
-      "url": "https://github.com/krizaka/orazaka-users",
-      "path": "orazaka-apps/services/orazaka-users",
-      "kind": "maven",
-      "layer": "domain",
-      "description": "Reusable user management for any Krizaka application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance.",
-      "dependsOn": [
-        "orazaka-build"
-      ]
-    },
-    {
-      "name": "orazaka-notifications",
-      "url": "https://github.com/krizaka/orazaka-notifications",
-      "path": "orazaka-apps/services/orazaka-notifications",
-      "kind": "maven",
-      "layer": "domain",
-      "description": "Channel-based notification delivery for any Krizaka application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP.",
-      "dependsOn": [
-        "orazaka-build"
-      ]
-    },
-    {
-      "name": "orazaka-billing",
-      "url": "https://github.com/krizaka/orazaka-billing",
-      "path": "orazaka-apps/services/orazaka-billing",
-      "kind": "maven",
-      "layer": "domain",
-      "description": "Credits, wallets, plans, subscriptions, pricebook and metering (hold → settle → release) as a reusable billing service, with its contract (billing-api) and a typed HTTP client (billing-client).",
       "dependsOn": [
         "orazaka-build"
       ]
@@ -65,7 +90,7 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-billing"
+        "krizaka-billing"
       ]
     },
     {
@@ -78,7 +103,7 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-billing",
+        "krizaka-billing",
         "orazaka-studio"
       ]
     },
@@ -92,8 +117,8 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-users",
-        "orazaka-billing",
+        "krizaka-users",
+        "krizaka-billing",
         "orazaka-ai-engine"
       ]
     },
@@ -107,8 +132,8 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-users",
-        "orazaka-billing",
+        "krizaka-users",
+        "krizaka-billing",
         "orazaka-ai-engine"
       ]
     },
@@ -132,7 +157,7 @@
       "description": "Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry.",
       "dependsOn": [
         "orazaka-build",
-        "orazaka-billing"
+        "krizaka-billing"
       ]
     },
     {
@@ -228,9 +253,9 @@
       }
     },
     {
-      "id": "orazaka-persistence-identity",
-      "path": "orazaka-apps/services/orazaka-users/orazaka-persistence-identity",
-      "repository": "orazaka-users",
+      "id": "krizaka-users-persistence",
+      "path": "krizaka/krizaka-users/krizaka-users-persistence",
+      "repository": "krizaka-users",
       "layer": "framework",
       "ports": {
         "inbound": [],
@@ -294,9 +319,9 @@
       }
     },
     {
-      "id": "orazaka-identity",
-      "path": "orazaka-apps/services/orazaka-users/orazaka-identity",
-      "repository": "orazaka-users",
+      "id": "krizaka-users-core",
+      "path": "krizaka/krizaka-users/krizaka-users-core",
+      "repository": "krizaka-users",
       "layer": "framework",
       "ports": {
         "inbound": [
@@ -335,9 +360,9 @@
       }
     },
     {
-      "id": "orazaka-billing-client",
-      "path": "orazaka-apps/services/orazaka-billing/orazaka-billing-client",
-      "repository": "orazaka-billing",
+      "id": "krizaka-billing-client",
+      "path": "krizaka/krizaka-billing/krizaka-billing-client",
+      "repository": "krizaka-billing",
       "layer": "framework",
       "ports": {
         "inbound": [],
@@ -375,9 +400,9 @@
       }
     },
     {
-      "id": "orazaka-identity-service",
-      "path": "orazaka-apps/services/orazaka-users/orazaka-identity-service",
-      "repository": "orazaka-users",
+      "id": "krizaka-users-service",
+      "path": "krizaka/krizaka-users/krizaka-users-service",
+      "repository": "krizaka-users",
       "layer": "app",
       "ports": {
         "inbound": [],
@@ -415,9 +440,9 @@
       }
     },
     {
-      "id": "orazaka-billing-service",
-      "path": "orazaka-apps/services/orazaka-billing/orazaka-billing-service",
-      "repository": "orazaka-billing",
+      "id": "krizaka-billing-service",
+      "path": "krizaka/krizaka-billing/krizaka-billing-service",
+      "repository": "krizaka-billing",
       "layer": "app",
       "ports": {
         "inbound": [],
@@ -435,9 +460,9 @@
       }
     },
     {
-      "id": "orazaka-notification-service",
-      "path": "orazaka-apps/services/orazaka-notifications/orazaka-notification-service",
-      "repository": "orazaka-notifications",
+      "id": "krizaka-notifications-service",
+      "path": "krizaka/krizaka-notifications/krizaka-notifications-service",
+      "repository": "krizaka-notifications",
       "layer": "app",
       "ports": {
         "inbound": [],
@@ -498,11 +523,27 @@
   "dependencies": [
     {
       "from": "orazaka-persistence-app",
+      "to": "krizaka-messaging"
+    },
+    {
+      "from": "orazaka-persistence-app",
       "to": "orazaka-persistence-app-api"
     },
     {
       "from": "orazaka-persistence-app",
       "to": "orazaka-jobs-api"
+    },
+    {
+      "from": "krizaka-users-persistence",
+      "to": "krizaka-messaging"
+    },
+    {
+      "from": "krizaka-users-persistence",
+      "to": "krizaka-test-support"
+    },
+    {
+      "from": "orazaka-core",
+      "to": "krizaka-security"
     },
     {
       "from": "orazaka-core",
@@ -514,7 +555,7 @@
     },
     {
       "from": "orazaka-interceptors",
-      "to": "orazaka-billing-api"
+      "to": "krizaka-billing-api"
     },
     {
       "from": "orazaka-interceptors",
@@ -533,20 +574,32 @@
       "to": "orazaka-studio-client"
     },
     {
-      "from": "orazaka-identity",
-      "to": "orazaka-identity-api"
+      "from": "krizaka-users-core",
+      "to": "krizaka-users-api"
     },
     {
-      "from": "orazaka-identity",
-      "to": "orazaka-persistence-identity"
+      "from": "krizaka-users-core",
+      "to": "krizaka-users-persistence"
+    },
+    {
+      "from": "krizaka-users-core",
+      "to": "krizaka-test-support"
     },
     {
       "from": "orazaka-tools",
       "to": "orazaka-core"
     },
     {
-      "from": "orazaka-billing-client",
-      "to": "orazaka-billing-api"
+      "from": "krizaka-billing-client",
+      "to": "krizaka-security"
+    },
+    {
+      "from": "krizaka-billing-client",
+      "to": "krizaka-billing-api"
+    },
+    {
+      "from": "orazaka-studio-client",
+      "to": "krizaka-security"
     },
     {
       "from": "orazaka-studio-client",
@@ -554,11 +607,19 @@
     },
     {
       "from": "orazaka-conversation-service",
+      "to": "krizaka-security"
+    },
+    {
+      "from": "orazaka-conversation-service",
+      "to": "krizaka-users-client"
+    },
+    {
+      "from": "orazaka-conversation-service",
       "to": "orazaka-assets"
     },
     {
       "from": "orazaka-conversation-service",
-      "to": "orazaka-billing-client"
+      "to": "krizaka-billing-client"
     },
     {
       "from": "orazaka-conversation-service",
@@ -566,7 +627,7 @@
     },
     {
       "from": "orazaka-conversation-service",
-      "to": "orazaka-identity-api"
+      "to": "krizaka-users-api"
     },
     {
       "from": "orazaka-conversation-service",
@@ -593,12 +654,48 @@
       "to": "orazaka-interceptors"
     },
     {
-      "from": "orazaka-identity-service",
-      "to": "orazaka-identity"
+      "from": "orazaka-edge",
+      "to": "krizaka-security"
+    },
+    {
+      "from": "krizaka-users-service",
+      "to": "krizaka-security"
+    },
+    {
+      "from": "krizaka-users-service",
+      "to": "krizaka-users-core"
+    },
+    {
+      "from": "krizaka-users-service",
+      "to": "krizaka-test-support"
     },
     {
       "from": "orazaka-automation-service",
-      "to": "orazaka-billing-client"
+      "to": "krizaka-messaging"
+    },
+    {
+      "from": "orazaka-automation-service",
+      "to": "krizaka-billing-client"
+    },
+    {
+      "from": "orazaka-knowledge-service",
+      "to": "krizaka-messaging"
+    },
+    {
+      "from": "orazaka-knowledge-service",
+      "to": "krizaka-security"
+    },
+    {
+      "from": "orazaka-job-service",
+      "to": "krizaka-messaging"
+    },
+    {
+      "from": "orazaka-job-service",
+      "to": "krizaka-security"
+    },
+    {
+      "from": "orazaka-job-service",
+      "to": "krizaka-users-client"
     },
     {
       "from": "orazaka-job-service",
@@ -606,7 +703,7 @@
     },
     {
       "from": "orazaka-job-service",
-      "to": "orazaka-billing-client"
+      "to": "krizaka-billing-client"
     },
     {
       "from": "orazaka-job-service",
@@ -614,7 +711,7 @@
     },
     {
       "from": "orazaka-job-service",
-      "to": "orazaka-identity-api"
+      "to": "krizaka-users-api"
     },
     {
       "from": "orazaka-job-service",
@@ -641,8 +738,28 @@
       "to": "orazaka-interceptors"
     },
     {
-      "from": "orazaka-billing-service",
-      "to": "orazaka-billing-api"
+      "from": "krizaka-billing-service",
+      "to": "krizaka-messaging"
+    },
+    {
+      "from": "krizaka-billing-service",
+      "to": "krizaka-security"
+    },
+    {
+      "from": "krizaka-billing-service",
+      "to": "krizaka-billing-api"
+    },
+    {
+      "from": "krizaka-billing-service",
+      "to": "krizaka-test-support"
+    },
+    {
+      "from": "orazaka-studio-service",
+      "to": "krizaka-messaging"
+    },
+    {
+      "from": "orazaka-studio-service",
+      "to": "krizaka-security"
     },
     {
       "from": "orazaka-studio-service",
@@ -654,15 +771,23 @@
     },
     {
       "from": "orazaka-studio-service",
-      "to": "orazaka-billing-api"
+      "to": "krizaka-billing-api"
     },
     {
       "from": "orazaka-studio-service",
-      "to": "orazaka-billing-client"
+      "to": "krizaka-billing-client"
     },
     {
-      "from": "orazaka-notification-service",
-      "to": "orazaka-notification-api"
+      "from": "krizaka-notifications-service",
+      "to": "krizaka-messaging"
+    },
+    {
+      "from": "krizaka-notifications-service",
+      "to": "krizaka-notifications-api"
+    },
+    {
+      "from": "krizaka-notifications-service",
+      "to": "krizaka-test-support"
     },
     {
       "from": "orazaka-web-client",
@@ -752,130 +877,29 @@
     }
   ],
   "messaging": {
-    "exchanges": [
-      {
-        "name": "orazaka.jobs",
-        "type": "topic"
-      },
-      {
-        "name": "orazaka.events",
-        "type": "topic"
-      },
-      {
-        "name": "orazaka.dlx",
-        "type": "direct"
-      }
-    ],
+    "exchanges": [],
     "queues": [
       {
-        "name": "orazaka.events.job-relay",
-        "exchange": "orazaka.events",
-        "binding": "job.#",
-        "dlq": "orazaka.events.job-relay.dlq"
-      },
-      {
-        "name": "orazaka.events.password.notifications",
-        "exchange": "orazaka.events",
+        "name": "krizaka.notifications.password-events",
         "binding": "evt.password.*",
-        "dlq": "orazaka.events.password.notifications.dlq"
+        "dlq": "krizaka.notifications.password-events.dlq"
       },
       {
-        "name": "orazaka.events.user.notifications",
-        "exchange": "orazaka.events",
-        "binding": "evt.user.*",
-        "dlq": "orazaka.events.user.notifications.dlq"
-      },
-      {
-        "name": "orazaka.jobs.automation",
-        "exchange": "orazaka.jobs",
-        "binding": "job.automation.*",
-        "dlq": "orazaka.jobs.automation.dlq"
-      },
-      {
-        "name": "orazaka.jobs.batch",
-        "exchange": "orazaka.jobs",
-        "binding": "job.media.generate",
-        "dlq": "orazaka.jobs.batch.dlq"
-      },
-      {
-        "name": "orazaka.jobs.interactive",
-        "exchange": "orazaka.jobs",
-        "binding": "job.text.*, job.media.analyze",
-        "dlq": "orazaka.jobs.interactive.dlq"
-      },
-      {
-        "name": "orazaka.jobs.video",
-        "exchange": "orazaka.jobs",
-        "binding": "job.video.*",
-        "dlq": "orazaka.jobs.video.dlq"
-      },
-      {
-        "name": "orazaka.notifications.requests",
-        "exchange": "orazaka.events",
+        "name": "krizaka.notifications.requests",
         "binding": "evt.notification.requested",
-        "dlq": "orazaka.notifications.requests.dlq"
+        "dlq": "krizaka.notifications.requests.dlq"
+      },
+      {
+        "name": "krizaka.notifications.user-events",
+        "binding": "evt.user.*",
+        "dlq": "krizaka.notifications.user-events.dlq"
       }
     ],
     "producers": [
       {
-        "module": "orazaka-automation-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.automation.telemetry"
-      },
-      {
-        "module": "orazaka-automation-service",
-        "exchange": "orazaka.jobs",
-        "routingKey": "job.agent.dispatch.{…}"
-      },
-      {
-        "module": "orazaka-billing-service",
-        "exchange": "orazaka.events",
-        "routingKey": "(dynamic)"
-      },
-      {
-        "module": "orazaka-conversation-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.agent.presence"
-      },
-      {
-        "module": "orazaka-conversation-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.agent.result.{…}"
-      },
-      {
-        "module": "orazaka-conversation-service",
-        "exchange": "orazaka.jobs",
-        "routingKey": "job.automation.approved"
-      },
-      {
-        "module": "orazaka-job-service",
-        "exchange": "orazaka.events",
-        "routingKey": "(dynamic)"
-      },
-      {
-        "module": "orazaka-job-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.capability.changed"
-      },
-      {
         "module": "orazaka-studio-service",
         "exchange": "orazaka.jobs",
         "routingKey": "(dynamic)"
-      },
-      {
-        "module": "orazaka-studio-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.studio.run.failed"
-      },
-      {
-        "module": "orazaka-studio-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.studio.run.started"
-      },
-      {
-        "module": "orazaka-studio-service",
-        "exchange": "orazaka.events",
-        "routingKey": "evt.studio.run.succeeded"
       },
       {
         "module": "orazaka-studio-service",
@@ -885,60 +909,36 @@
     ],
     "consumers": [
       {
-        "module": "orazaka-automation-service",
-        "queue": "orazaka.jobs.automation"
-      },
-      {
-        "module": "orazaka-billing-client",
+        "module": "krizaka-billing-client",
         "queue": "#entitlementInvalidationQueue.name"
       },
       {
-        "module": "orazaka-billing-service",
+        "module": "krizaka-billing-service",
         "queue": "#settlementQueue.name"
       },
       {
-        "module": "orazaka-billing-service",
+        "module": "krizaka-billing-service",
         "queue": "#unmeteredTurnQueue.name"
+      },
+      {
+        "module": "krizaka-notifications-service",
+        "queue": "krizaka.notifications.password-events"
+      },
+      {
+        "module": "krizaka-notifications-service",
+        "queue": "krizaka.notifications.requests"
+      },
+      {
+        "module": "krizaka-notifications-service",
+        "queue": "krizaka.notifications.user-events"
       },
       {
         "module": "orazaka-conversation-service",
         "queue": "#walletEventsQueue.name"
       },
       {
-        "module": "orazaka-conversation-service",
-        "queue": "orazaka.events.job-relay"
-      },
-      {
-        "module": "orazaka-job-service",
-        "queue": "orazaka.jobs.batch"
-      },
-      {
-        "module": "orazaka-job-service",
-        "queue": "orazaka.jobs.batch.dlq"
-      },
-      {
-        "module": "orazaka-job-service",
-        "queue": "orazaka.jobs.interactive"
-      },
-      {
-        "module": "orazaka-job-service",
-        "queue": "orazaka.jobs.interactive.dlq"
-      },
-      {
         "module": "orazaka-knowledge-service",
         "queue": "orazaka.jobs.rag"
-      },
-      {
-        "module": "orazaka-notification-service",
-        "queue": "orazaka.events.password.notifications"
-      },
-      {
-        "module": "orazaka-notification-service",
-        "queue": "orazaka.events.user.notifications"
-      },
-      {
-        "module": "orazaka-notification-service",
-        "queue": "orazaka.notifications.requests"
       },
       {
         "module": "orazaka-studio-service",

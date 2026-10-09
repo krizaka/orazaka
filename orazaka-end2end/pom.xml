@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.orazaka</groupId>
+        <groupId>com.krizaka.orazaka</groupId>
         <artifactId>orazaka-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../orazaka-libs/orazaka-build/orazaka-parent/pom.xml</relativePath>
@@ -26,7 +26,7 @@
          ==================================================================== -->
     <dependencies>
         <dependency>
-            <groupId>com.orazaka</groupId>
+            <groupId>com.krizaka.orazaka</groupId>
             <artifactId>orazaka-conversation-service</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -34,33 +34,33 @@
 
         <!-- ArchUnit Monorepo Scan: pull all internal modules onto the test classpath -->
         <dependency>
-            <groupId>com.orazaka</groupId>
+            <groupId>com.krizaka.orazaka</groupId>
             <artifactId>orazaka-core</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.orazaka</groupId>
-            <artifactId>orazaka-identity</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.krizaka</groupId>
+            <artifactId>krizaka-users-core</artifactId>
+            <version>${krizaka.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.orazaka</groupId>
+            <groupId>com.krizaka.orazaka</groupId>
             <artifactId>orazaka-business</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.orazaka</groupId>
+            <groupId>com.krizaka.orazaka</groupId>
             <artifactId>orazaka-persistence-app</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.orazaka</groupId>
-            <artifactId>orazaka-persistence-identity</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.krizaka</groupId>
+            <artifactId>krizaka-users-persistence</artifactId>
+            <version>${krizaka.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -302,7 +302,7 @@
                                          surviving volume the roles already had one, so the step was
                                          invisible; the first run from a genuinely empty volume dies
                                          with "password authentication failed for user
-                                         orazaka_identity". That is what "not hermetic" was hiding.
+                                         krizaka_users". That is what "not hermetic" was hiding.
                                          The contexts are read out of the seeds rather than listed. -->
                                     <executable>node</executable>
                                     <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
@@ -465,7 +465,7 @@
                                     <goal>start</goal>
                                 </goals>
                                 <configuration>
-                                    <name>orazaka-notification-service</name>
+                                    <name>krizaka-notifications-service</name>
                                     <workingDir>${maven.multiModuleProjectDirectory}</workingDir>
                                     <healthcheckUrl>http://localhost:8097/actuator/health</healthcheckUrl>
                                     <waitAfterLaunch>5</waitAfterLaunch>
@@ -477,7 +477,7 @@
                                              (orazaka.events.{user,password}.notifications) and
                                              orazaka.notifications.requests, each with its DLQ — asserted by
                                              AmqpContractIT. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-notifications/orazaka-notification-service/target/orazaka-notification-service-${project.version}.jar --server.port=8097</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-notifications/krizaka-notifications-service/target/orazaka-notification-service-${project.version}.jar --server.port=8097</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -511,7 +511,7 @@
                                     <goal>start</goal>
                                 </goals>
                                 <configuration>
-                                    <name>orazaka-identity-service</name>
+                                    <name>krizaka-users-service</name>
                                     <workingDir>${maven.multiModuleProjectDirectory}</workingDir>
                                     <healthcheckUrl>http://localhost:8083/actuator/health</healthcheckUrl>
                                     <waitAfterLaunch>3</waitAfterLaunch>
@@ -522,7 +522,7 @@
                                         <!-- Dual-run window: the identity service boots in the constellation
                                              (smoked by its healthcheck) while the router still serves the
                                              identity routes; the Phase 2f cutover flips the edge route table. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-users/orazaka-identity-service/target/orazaka-identity-service-${project.version}.jar</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-users/krizaka-users-service/target/krizaka-users-service-${krizaka.version}.jar</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -578,7 +578,7 @@
                                     <goal>start</goal>
                                 </goals>
                                 <configuration>
-                                    <name>orazaka-billing-service</name>
+                                    <name>krizaka-billing-service</name>
                                     <workingDir>${maven.multiModuleProjectDirectory}</workingDir>
                                     <healthcheckUrl>http://localhost:8095/actuator/health</healthcheckUrl>
                                     <waitAfterLaunch>5</waitAfterLaunch>
@@ -595,7 +595,7 @@
                                              allowing through" on every request, so the gate had never once
                                              exercised the check it is supposed to protect. Started BEFORE the
                                              studio service, which provisions into it during pack bootstrap. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-billing/orazaka-billing-service/target/orazaka-billing-service-${project.version}.jar</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-billing/krizaka-billing-service/target/orazaka-billing-service-${project.version}.jar</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -709,13 +709,13 @@
                                             <arg value="scripts/verify-stack-identity.mjs" />
                                             <arg value="orazaka-apps/services/orazaka-conversation-service=http://localhost:8080" />
                                             <arg value="orazaka-apps/services/orazaka-automation-service=http://localhost:8082" />
-                                            <arg value="orazaka-apps/services/orazaka-users/orazaka-identity-service=http://localhost:8083" />
+                                            <arg value="krizaka/krizaka-users/krizaka-users-service=http://localhost:8083" />
                                             <arg value="orazaka-apps/services/orazaka-knowledge-service=http://localhost:8084" />
-                                            <arg value="orazaka-apps/services/orazaka-billing/orazaka-billing-service=http://localhost:8095" />
+                                            <arg value="krizaka/krizaka-billing/krizaka-billing-service=http://localhost:8095" />
                                             <arg value="orazaka-apps/services/orazaka-job-service=http://localhost:8090" />
                                             <arg value="orazaka-apps/services/orazaka-studio/orazaka-studio-service=http://localhost:8096" />
                                             <arg value="orazaka-apps/services/orazaka-edge=http://localhost:8089" />
-                                            <arg value="orazaka-apps/services/orazaka-notifications/orazaka-notification-service=http://localhost:8097" />
+                                            <arg value="krizaka/krizaka-notifications/krizaka-notifications-service=http://localhost:8097" />
                                         </exec>
                                     </target>
                                 </configuration>
@@ -804,9 +804,9 @@
                                 <db.url>jdbc:postgresql://localhost:5432/orazaka_db</db.url>
                                 <db.username>orazaka_app</db.username>
                                 <db.password>orazaka_pass</db.password>
-                                <identity.db.url>jdbc:postgresql://localhost:5432/orazaka_identity_db</identity.db.url>
-                                <identity.db.username>orazaka_identity</identity.db.username>
-                                <identity.db.password>orazaka_identity_pass</identity.db.password>
+                                <identity.db.url>jdbc:postgresql://localhost:5432/krizaka_users_db</identity.db.url>
+                                <identity.db.username>krizaka_users</identity.db.username>
+                                <identity.db.password>krizaka_users_pass</identity.db.password>
                                 <!-- Redis live infrastructure -->
                                 <redis.url>redis://localhost:6379</redis.url>
                                 <!-- AMQP live infrastructure -->
