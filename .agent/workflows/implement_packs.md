@@ -95,14 +95,14 @@ CREATE  .../infrastructure/adapter/persistence/JdbcPackRepositoryAdapter.java
 CREATE  .../domain/port/PackRepository.java
 
 # ── price, read across the context boundary ────────────────────────────────
-CREATE  orazaka-apps/services/orazaka-billing/orazaka-billing-client/.../HttpPackPricingClient.java
-CREATE  orazaka-apps/services/orazaka-billing/orazaka-billing-client/.../NoOpPackPricingClient.java
-CREATE  orazaka-apps/services/orazaka-billing/orazaka-billing-api/.../domain/port/PackPricingClient.java
-CREATE  orazaka-apps/services/orazaka-billing/orazaka-billing-api/.../domain/model/PackPrice.java
-MODIFY  orazaka-apps/services/orazaka-billing/orazaka-billing-client/.../BillingClientAutoConfiguration.java
+CREATE  krizaka/krizaka-billing/krizaka-billing-client/.../HttpPackPricingClient.java
+CREATE  krizaka/krizaka-billing/krizaka-billing-client/.../NoOpPackPricingClient.java
+CREATE  krizaka/krizaka-billing/krizaka-billing-api/.../domain/port/PackPricingClient.java
+CREATE  krizaka/krizaka-billing/krizaka-billing-api/.../domain/model/PackPrice.java
+MODIFY  krizaka/krizaka-billing/krizaka-billing-client/.../BillingClientAutoConfiguration.java
 
 # ── billing: narrow ────────────────────────────────────────────────────────
-MODIFY  orazaka-apps/services/orazaka-billing/orazaka-billing-service/.../domain/model/CatalogPack.java
+MODIFY  krizaka/krizaka-billing/krizaka-billing-service/.../domain/model/CatalogPack.java
 MODIFY  .../application/service/PackCatalogService.java                   (rename → PackPricingService)
 MODIFY  .../infrastructure/adapter/rest/PackController.java
 MODIFY  .../infrastructure/adapter/rest/dto/*                             (whatever carries label/category)
@@ -177,8 +177,8 @@ The browse page needs `price_cents`, which lives in billing. **Do not duplicate 
 studio database** — a stale price is a billing dispute.
 
 Use the pattern the codebase already established for entitlements: a Tier-1 port
-(`PackPricingClient`) in `orazaka-billing-api`, an HTTP adapter and a `NoOp` fallback in
-`orazaka-billing-client`, wired by `BillingClientAutoConfiguration`. Copy `HttpEntitlementProvider`
+(`PackPricingClient`) in `krizaka-billing-api`, an HTTP adapter and a `NoOp` fallback in
+`krizaka-billing-client`, wired by `BillingClientAutoConfiguration`. Copy `HttpEntitlementProvider`
 and `NoOpEntitlementProvider` — same timeouts, same caching discipline, same degraded behaviour.
 
 **Degrade, never fail.** One call for the whole catalogue (`prices(Set<String> packKeys)`), not one

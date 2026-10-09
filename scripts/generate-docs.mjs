@@ -134,7 +134,7 @@ function extractArchitecture() {
     { id: "orazaka-business", path: "orazaka-libs/orazaka-ai-engine/orazaka-business", layer: "framework", type: "maven" },
     { id: "krizaka-users-core", path: "krizaka/krizaka-users/krizaka-users-core", layer: "framework", type: "maven" },
     { id: "orazaka-tools", path: "orazaka-libs/orazaka-ai-engine/orazaka-tools", layer: "framework", type: "maven" },
-    { id: "orazaka-billing-client", path: "orazaka-apps/services/orazaka-billing/orazaka-billing-client", layer: "framework", type: "maven" },
+    { id: "krizaka-billing-client", path: "krizaka/krizaka-billing/krizaka-billing-client", layer: "framework", type: "maven" },
     { id: "orazaka-studio-client", path: "orazaka-apps/services/orazaka-studio/orazaka-studio-client", layer: "framework", type: "maven" },
 
     // Apps & Workers
@@ -144,9 +144,9 @@ function extractArchitecture() {
     { id: "orazaka-automation-service", path: "orazaka-apps/services/orazaka-automation-service", layer: "app", type: "maven" },
     { id: "orazaka-knowledge-service", path: "orazaka-apps/services/orazaka-knowledge-service", layer: "app", type: "maven" },
     { id: "orazaka-job-service", path: "orazaka-apps/services/orazaka-job-service", layer: "app", type: "maven" },
-    { id: "orazaka-billing-service", path: "orazaka-apps/services/orazaka-billing/orazaka-billing-service", layer: "app", type: "maven" },
+    { id: "krizaka-billing-service", path: "krizaka/krizaka-billing/krizaka-billing-service", layer: "app", type: "maven" },
     { id: "orazaka-studio-service", path: "orazaka-apps/services/orazaka-studio/orazaka-studio-service", layer: "app", type: "maven" },
-    { id: "orazaka-notification-service", path: "orazaka-apps/services/orazaka-notifications/orazaka-notification-service", layer: "app", type: "maven" },
+    { id: "krizaka-notifications-service", path: "krizaka/krizaka-notifications/krizaka-notifications-service", layer: "app", type: "maven" },
     { id: "orazaka-worker-media", path: "orazaka-apps/workers/orazaka-worker-media", layer: "app", type: "python" },
     
     // UI clients
@@ -168,7 +168,7 @@ function extractArchitecture() {
       const pomPath = join(moduleDir, "pom.xml");
       // The <parent> is the repository's aggregator (or orazaka-parent), never a dependency.
       const pom = read(pomPath).replace(/<parent>[\s\S]*?<\/parent>/, "");
-      for (const dep of pom.matchAll(/<artifactId>(orazaka-[\w-]+)<\/artifactId>/g)) {
+      for (const dep of pom.matchAll(/<artifactId>((?:orazaka|krizaka)-[\w-]+)<\/artifactId>/g)) {
         const to = dep[1];
         if (
           to !== m.id &&
@@ -243,8 +243,8 @@ function extractMessaging(moduleDefs) {
   const contractFiles = [
     join(ROOT, "orazaka-libs/orazaka-ai-engine/orazaka-persistence-app/src/main/java/com/orazaka/persistence/infrastructure/config/MessagingContract.java"),
     join(ROOT, "orazaka-apps/services/orazaka-automation-service/src/main/java/com/orazaka/automationservice/infrastructure/config/AmqpConstants.java"),
-    join(ROOT, "orazaka-apps/services/orazaka-notifications/orazaka-notification-api/src/main/java/com/orazaka/notification/domain/model/NotificationRouting.java"),
-    join(ROOT, "orazaka-apps/services/orazaka-notifications/orazaka-notification-service/src/main/java/com/orazaka/notificationservice/infrastructure/config/AmqpConstants.java"),
+    join(ROOT, "krizaka/krizaka-notifications/krizaka-notifications-api/src/main/java/com/krizaka/notifications/domain/model/NotificationRouting.java"),
+    join(ROOT, "krizaka/krizaka-notifications/krizaka-notifications-service/src/main/java/com/krizaka/notifications/service/infrastructure/config/AmqpConstants.java"),
   ];
   const constants = new Map();
   for (const f of contractFiles) {
@@ -460,7 +460,7 @@ function extractInterceptors(pipeline) {
 function hostedTier3Dirs(serviceRoot) {
   const pom = read(join(serviceRoot, "pom.xml"));
   const dirs = [];
-  for (const m of pom.matchAll(/<artifactId>(orazaka-(?:identity|business|persistence[\w-]*))<\/artifactId>/g)) {
+  for (const m of pom.matchAll(/<artifactId>(orazaka-(?:business|persistence[\w-]*)|krizaka-users-(?:core|persistence))<\/artifactId>/g)) {
     const moduleDir = MODULES.get(m[1]);
     const candidate = moduleDir && join(moduleDir, "src/main/java");
     if (candidate && existsSync(candidate) && !dirs.includes(candidate)) dirs.push(candidate);

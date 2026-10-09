@@ -17,53 +17,6 @@ order Spring Security applies. `SERVICE` is the machine-to-machine authority req
 no matcher covers the path — the service has no security on it whatsoever.
 
 
-## billing-service
-
-| Method | Path | Access | Controller | Summary |
-|:---|:---|:---|:---|:---|
-| GET | `/api/v1/billing/configuration` | authenticated | ConfigurationController | The declared key vocabulary — type, permitted domain and code default per key. |
-| PATCH | `/api/v1/billing/configuration` | authenticated | ConfigurationController | Applies one validated configuration change. |
-| GET | `/api/v1/billing/pack-subscriptions` | authenticated | PackSubscriptionController | Every live holder of a pack — what an admin checks before withdrawing one. |
-| GET | `/api/v1/billing/pack-subscriptions/{actorId}` | authenticated | PackSubscriptionController | The packs one actor holds. |
-| GET | `/api/v1/billing/pack-subscriptions/me` | authenticated | PackSubscriptionController | The packs the signed-in user holds. |
-| DELETE | `/api/v1/billing/pack-subscriptions/me/{packKey}` | authenticated | PackSubscriptionController | Removes a pack from the signed-in user. |
-| POST | `/api/v1/billing/pack-subscriptions/me/{packKey}` | authenticated | PackSubscriptionController | Adds a pack to the signed-in user. |
-| GET | `/api/v1/billing/packs` | authenticated | PackController | The priced catalogue. |
-| DELETE | `/api/v1/billing/packs/{packKey}` | authenticated | PackController | Withdraws a pack from sale. |
-| GET | `/api/v1/billing/packs/{packKey}` | authenticated | PackController | One pack with its entitlement matrix. |
-| PUT | `/api/v1/billing/packs/{packKey}` | authenticated | PackController | Creates or replaces a pack's price and entitlements. |
-| GET | `/api/v1/billing/packs/prices` | authenticated | PackController | The whole price table, for the Pack catalogue to render a marketplace page from. |
-| GET | `/api/v1/billing/plans` | authenticated | PlanController | The catalogue. |
-| DELETE | `/api/v1/billing/plans/{planKey}` | authenticated | PlanController | Retires a plan — deactivated, never deleted, because subscriptions reference it. |
-| GET | `/api/v1/billing/plans/{planKey}` | authenticated | PlanController | One plan with its entitlement matrix. |
-| PUT | `/api/v1/billing/plans/{planKey}` | authenticated | PlanController | Creates or replaces a plan. |
-| GET | `/api/v1/billing/pricebook` | authenticated | PricebookController |  |
-| POST | `/api/v1/billing/pricebook` | authenticated | PricebookController |  |
-| GET | `/api/v1/billing/pricebook/estimate` | authenticated | PricebookController | What an action would cost the signed-in user, and whether they can cover it. |
-| GET | `/api/v1/billing/pricebook/history` | authenticated | PricebookController |  |
-| POST | `/api/v1/billing/pricebook/preview` | authenticated | PricebookController |  |
-| GET | `/api/v1/billing/subscriptions` | authenticated | SubscriptionController | Every live subscriber of a plan — what an admin checks before retiring one. |
-| DELETE | `/api/v1/billing/subscriptions/{actorId}` | authenticated | SubscriptionController | Ends an actor's subscription. |
-| GET | `/api/v1/billing/subscriptions/{actorId}` | authenticated | SubscriptionController | The subscription in force for an actor. |
-| POST | `/api/v1/billing/subscriptions/{actorId}` | authenticated | SubscriptionController | Moves an actor onto a plan — upgrade, downgrade or trial. |
-| POST | `/api/v1/billing/subscriptions/{actorId}/rollover` | authenticated | SubscriptionController | Rolls a subscription into its next period, honouring a pending cancellation. |
-| GET | `/api/v1/billing/usage/capabilities` | authenticated | UsageController | Consumption and refusals per capability × model. |
-| GET | `/api/v1/billing/usage/top-consumers` | authenticated | UsageController | The heaviest consumers. |
-| GET | `/api/v1/billing/wallets/{actorId}` | authenticated | WalletController | Reads an actor's balances. |
-| POST | `/api/v1/billing/wallets/{actorId}/adjustments` | authenticated | WalletController | Issues a manual credit adjustment — support goodwill, or a claw-back. |
-| GET | `/api/v1/billing/wallets/{actorId}/entitlements` | authenticated | WalletController | Reads an actor's effective entitlements plus their balance summary. |
-| GET | `/api/v1/billing/wallets/adjustments/today` | authenticated | WalletController | What an admin has already adjusted today, against their ceiling. |
-| GET | `/api/v1/billing/wallets/me` | authenticated | WalletController | The signed-in user's own balances. |
-| GET | `/api/v1/billing/wallets/me/entitlements` | authenticated | WalletController | The signed-in user's own entitlements and available balance. |
-| POST | `/internal/v1/billing/credits/{holdId}/release` | SERVICE | CreditController | Closes a hold with no debit. |
-| POST | `/internal/v1/billing/credits/{holdId}/settle` | SERVICE | CreditController | Closes a hold against measured consumption. |
-| POST | `/internal/v1/billing/credits/{holdId}/settle-aggregate` | SERVICE | CreditController | Closes one hold against the measurements of the several steps it authorised. |
-| POST | `/internal/v1/billing/credits/{holdId}/settle-measured` | SERVICE | CreditController | Closes a hold against an executor's raw measurements, pricing them in the unit the hold's pinned rate uses. |
-| POST | `/internal/v1/billing/credits/holds` | SERVICE | CreditController | Reserves the estimated cost of a request. |
-| GET | `/internal/v1/billing/entitlements/{actorId}` | SERVICE | EntitlementController | Reads an actor's effective entitlements plus their balance summary. |
-| DELETE | `/internal/v1/billing/packs/{packKey}` | SERVICE | PackProvisioningController | Withdraws a pack from sale, so a failed install can undo the half it already applied. |
-| PUT | `/internal/v1/billing/packs/{packKey}` | SERVICE | PackProvisioningController | Creates or replaces a pack's price and entitlement matrix. |
-
 ## conversation-service
 
 | Method | Path | Access | Controller | Summary |
@@ -123,7 +76,71 @@ no matcher covers the path — the service has no security on it whatsoever.
 |:---|:---|:---|:---|:---|
 | ANY | `/**` | ⚠ no rule | ProxyController | Catch-all proxy entry point — everything not served by the edge itself is forwarded. |
 
-## identity-service
+## job-service
+
+| Method | Path | Access | Controller | Summary |
+|:---|:---|:---|:---|:---|
+| DELETE | `/internal/v1/capabilities/{featureKey}` | SERVICE | CapabilityController | Removes one capability. |
+| PUT | `/internal/v1/capabilities/{featureKey}` | SERVICE | CapabilityController | Registers or replaces one capability a pack contributes. |
+| GET | `/internal/v1/capabilities/{featureKey}/route` | SERVICE | CapabilityController | Resolves where one capability's work is executed. |
+| POST | `/internal/v1/workers` | SERVICE | WorkerController | Registers a worker, or refreshes what is known about it. |
+| POST | `/internal/v1/workers/{workerName}/heartbeat` | SERVICE | WorkerController | Records a heartbeat from an already-registered worker. |
+
+## knowledge-service
+
+| Method | Path | Access | Controller | Summary |
+|:---|:---|:---|:---|:---|
+| POST | `/internal/v1/knowledge/retrieve` | SERVICE | KnowledgeController | Semantic RAG retrieval over the vector store. |
+| POST | `/internal/v1/knowledge/sources/search` | SERVICE | KnowledgeController | Substring search over a tool's registered RAG sources. |
+
+## krizaka-billing-service
+
+| Method | Path | Access | Controller | Summary |
+|:---|:---|:---|:---|:---|
+| GET | `/api/v1/billing/configuration` | authenticated | ConfigurationController | The declared key vocabulary — type, permitted domain and code default per key. |
+| PATCH | `/api/v1/billing/configuration` | authenticated | ConfigurationController | Applies one validated configuration change. |
+| GET | `/api/v1/billing/pack-subscriptions` | authenticated | PackSubscriptionController | Every live holder of a pack — what an admin checks before withdrawing one. |
+| GET | `/api/v1/billing/pack-subscriptions/{actorId}` | authenticated | PackSubscriptionController | The packs one actor holds. |
+| GET | `/api/v1/billing/pack-subscriptions/me` | authenticated | PackSubscriptionController | The packs the signed-in user holds. |
+| DELETE | `/api/v1/billing/pack-subscriptions/me/{packKey}` | authenticated | PackSubscriptionController | Removes a pack from the signed-in user. |
+| POST | `/api/v1/billing/pack-subscriptions/me/{packKey}` | authenticated | PackSubscriptionController | Adds a pack to the signed-in user. |
+| GET | `/api/v1/billing/packs` | authenticated | PackController | The priced catalogue. |
+| DELETE | `/api/v1/billing/packs/{packKey}` | authenticated | PackController | Withdraws a pack from sale. |
+| GET | `/api/v1/billing/packs/{packKey}` | authenticated | PackController | One pack with its entitlement matrix. |
+| PUT | `/api/v1/billing/packs/{packKey}` | authenticated | PackController | Creates or replaces a pack's price and entitlements. |
+| GET | `/api/v1/billing/packs/prices` | authenticated | PackController | The whole price table, for the Pack catalogue to render a marketplace page from. |
+| GET | `/api/v1/billing/plans` | authenticated | PlanController | The catalogue. |
+| DELETE | `/api/v1/billing/plans/{planKey}` | authenticated | PlanController | Retires a plan — deactivated, never deleted, because subscriptions reference it. |
+| GET | `/api/v1/billing/plans/{planKey}` | authenticated | PlanController | One plan with its entitlement matrix. |
+| PUT | `/api/v1/billing/plans/{planKey}` | authenticated | PlanController | Creates or replaces a plan. |
+| GET | `/api/v1/billing/pricebook` | authenticated | PricebookController |  |
+| POST | `/api/v1/billing/pricebook` | authenticated | PricebookController |  |
+| GET | `/api/v1/billing/pricebook/estimate` | authenticated | PricebookController | What an action would cost the signed-in user, and whether they can cover it. |
+| GET | `/api/v1/billing/pricebook/history` | authenticated | PricebookController |  |
+| POST | `/api/v1/billing/pricebook/preview` | authenticated | PricebookController |  |
+| GET | `/api/v1/billing/subscriptions` | authenticated | SubscriptionController | Every live subscriber of a plan — what an admin checks before retiring one. |
+| DELETE | `/api/v1/billing/subscriptions/{actorId}` | authenticated | SubscriptionController | Ends an actor's subscription. |
+| GET | `/api/v1/billing/subscriptions/{actorId}` | authenticated | SubscriptionController | The subscription in force for an actor. |
+| POST | `/api/v1/billing/subscriptions/{actorId}` | authenticated | SubscriptionController | Moves an actor onto a plan — upgrade, downgrade or trial. |
+| POST | `/api/v1/billing/subscriptions/{actorId}/rollover` | authenticated | SubscriptionController | Rolls a subscription into its next period, honouring a pending cancellation. |
+| GET | `/api/v1/billing/usage/capabilities` | authenticated | UsageController | Consumption and refusals per capability × model. |
+| GET | `/api/v1/billing/usage/top-consumers` | authenticated | UsageController | The heaviest consumers. |
+| GET | `/api/v1/billing/wallets/{actorId}` | authenticated | WalletController | Reads an actor's balances. |
+| POST | `/api/v1/billing/wallets/{actorId}/adjustments` | authenticated | WalletController | Issues a manual credit adjustment — support goodwill, or a claw-back. |
+| GET | `/api/v1/billing/wallets/{actorId}/entitlements` | authenticated | WalletController | Reads an actor's effective entitlements plus their balance summary. |
+| GET | `/api/v1/billing/wallets/adjustments/today` | authenticated | WalletController | What an admin has already adjusted today, against their ceiling. |
+| GET | `/api/v1/billing/wallets/me` | authenticated | WalletController | The signed-in user's own balances. |
+| GET | `/api/v1/billing/wallets/me/entitlements` | authenticated | WalletController | The signed-in user's own entitlements and available balance. |
+| POST | `/internal/v1/billing/credits/{holdId}/release` | SERVICE | CreditController | Closes a hold with no debit. |
+| POST | `/internal/v1/billing/credits/{holdId}/settle` | SERVICE | CreditController | Closes a hold against measured consumption. |
+| POST | `/internal/v1/billing/credits/{holdId}/settle-aggregate` | SERVICE | CreditController | Closes one hold against the measurements of the several steps it authorised. |
+| POST | `/internal/v1/billing/credits/{holdId}/settle-measured` | SERVICE | CreditController | Closes a hold against an executor's raw measurements, pricing them in the unit the hold's pinned rate uses. |
+| POST | `/internal/v1/billing/credits/holds` | SERVICE | CreditController | Reserves the estimated cost of a request. |
+| GET | `/internal/v1/billing/entitlements/{actorId}` | SERVICE | EntitlementController | Reads an actor's effective entitlements plus their balance summary. |
+| DELETE | `/internal/v1/billing/packs/{packKey}` | SERVICE | PackProvisioningController | Withdraws a pack from sale, so a failed install can undo the half it already applied. |
+| PUT | `/internal/v1/billing/packs/{packKey}` | SERVICE | PackProvisioningController | Creates or replaces a pack's price and entitlement matrix. |
+
+## krizaka-users-service
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
@@ -149,23 +166,6 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/internal/v1/users/{id}` | SERVICE | InternalUserController | Full user snapshot for downstream principal hydration (404 via UserNotFoundException). |
 | GET | `/internal/v1/users/{id}/credentials/{provider}` | SERVICE | InternalUserController | The user's decrypted BYOK provider key (service-to-service only). |
 | GET | `/internal/v1/users/{id}/profile` | SERVICE | InternalUserController | The user's profile for pipeline context assembly. |
-
-## job-service
-
-| Method | Path | Access | Controller | Summary |
-|:---|:---|:---|:---|:---|
-| DELETE | `/internal/v1/capabilities/{featureKey}` | SERVICE | CapabilityController | Removes one capability. |
-| PUT | `/internal/v1/capabilities/{featureKey}` | SERVICE | CapabilityController | Registers or replaces one capability a pack contributes. |
-| GET | `/internal/v1/capabilities/{featureKey}/route` | SERVICE | CapabilityController | Resolves where one capability's work is executed. |
-| POST | `/internal/v1/workers` | SERVICE | WorkerController | Registers a worker, or refreshes what is known about it. |
-| POST | `/internal/v1/workers/{workerName}/heartbeat` | SERVICE | WorkerController | Records a heartbeat from an already-registered worker. |
-
-## knowledge-service
-
-| Method | Path | Access | Controller | Summary |
-|:---|:---|:---|:---|:---|
-| POST | `/internal/v1/knowledge/retrieve` | SERVICE | KnowledgeController | Semantic RAG retrieval over the vector store. |
-| POST | `/internal/v1/knowledge/sources/search` | SERVICE | KnowledgeController | Substring search over a tool's registered RAG sources. |
 
 ## studio-service
 

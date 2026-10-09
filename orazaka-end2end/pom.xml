@@ -465,7 +465,7 @@
                                     <goal>start</goal>
                                 </goals>
                                 <configuration>
-                                    <name>orazaka-notification-service</name>
+                                    <name>krizaka-notifications-service</name>
                                     <workingDir>${maven.multiModuleProjectDirectory}</workingDir>
                                     <healthcheckUrl>http://localhost:8097/actuator/health</healthcheckUrl>
                                     <waitAfterLaunch>5</waitAfterLaunch>
@@ -477,7 +477,7 @@
                                              (orazaka.events.{user,password}.notifications) and
                                              orazaka.notifications.requests, each with its DLQ — asserted by
                                              AmqpContractIT. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-notifications/orazaka-notification-service/target/orazaka-notification-service-${project.version}.jar --server.port=8097</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-notifications/krizaka-notifications-service/target/orazaka-notification-service-${project.version}.jar --server.port=8097</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -578,7 +578,7 @@
                                     <goal>start</goal>
                                 </goals>
                                 <configuration>
-                                    <name>orazaka-billing-service</name>
+                                    <name>krizaka-billing-service</name>
                                     <workingDir>${maven.multiModuleProjectDirectory}</workingDir>
                                     <healthcheckUrl>http://localhost:8095/actuator/health</healthcheckUrl>
                                     <waitAfterLaunch>5</waitAfterLaunch>
@@ -595,7 +595,7 @@
                                              allowing through" on every request, so the gate had never once
                                              exercised the check it is supposed to protect. Started BEFORE the
                                              studio service, which provisions into it during pack bootstrap. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-billing/orazaka-billing-service/target/orazaka-billing-service-${project.version}.jar</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-billing/krizaka-billing-service/target/orazaka-billing-service-${project.version}.jar</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -711,11 +711,11 @@
                                             <arg value="orazaka-apps/services/orazaka-automation-service=http://localhost:8082" />
                                             <arg value="krizaka/krizaka-users/krizaka-users-service=http://localhost:8083" />
                                             <arg value="orazaka-apps/services/orazaka-knowledge-service=http://localhost:8084" />
-                                            <arg value="orazaka-apps/services/orazaka-billing/orazaka-billing-service=http://localhost:8095" />
+                                            <arg value="krizaka/krizaka-billing/krizaka-billing-service=http://localhost:8095" />
                                             <arg value="orazaka-apps/services/orazaka-job-service=http://localhost:8090" />
                                             <arg value="orazaka-apps/services/orazaka-studio/orazaka-studio-service=http://localhost:8096" />
                                             <arg value="orazaka-apps/services/orazaka-edge=http://localhost:8089" />
-                                            <arg value="orazaka-apps/services/orazaka-notifications/orazaka-notification-service=http://localhost:8097" />
+                                            <arg value="krizaka/krizaka-notifications/krizaka-notifications-service=http://localhost:8097" />
                                         </exec>
                                     </target>
                                 </configuration>

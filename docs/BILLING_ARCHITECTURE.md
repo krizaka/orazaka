@@ -82,8 +82,8 @@ A new context, a new owned database, a new deployable — following exactly the 
 [ADR-032](adr/ADR-032-microservices-decomposition-strangler-fig.md).
 
 ```
-orazaka-apps/services/orazaka-billing/orazaka-billing-api/     Tier-1 · ports + DTOs, zero impl deps
-orazaka-apps/services/orazaka-billing/orazaka-billing-service/  :8095 · owns orazaka_billing_db (role orazaka_billing)
+krizaka/krizaka-billing/krizaka-billing-api/     Tier-1 · ports + DTOs, zero impl deps
+krizaka/krizaka-billing/krizaka-billing-service/  :8095 · owns orazaka_billing_db (role orazaka_billing)
 infra/initdb/70-billing.sql                     schema + dev seed, its own database
 ```
 
@@ -655,7 +655,7 @@ takes at most 60 seconds to bite, which is correct for a downgrade and irrelevan
 
 ## 10. Ports & adapters — naming-compliant contracts
 
-Tier-1 `orazaka-billing-api`. Self-validating records (ERR-106/116), one type per file (ERR-103),
+Tier-1 `krizaka-billing-api`. Self-validating records (ERR-106/116), one type per file (ERR-103),
 outbound ports as `<Capability>Client` / `<Thing>Provider`.
 
 ```java
@@ -692,7 +692,7 @@ public enum BillableUnit { KILOTOKEN, IMAGE_STEP, OUTPUT_SECOND, KILOCHAR, AUDIO
 public enum BillableCapability { CHAT, IMAGE, AUDIO, VIDEO, AGENT }
 ```
 
-Component placement inside `orazaka-billing-service` (ERR-128/129/130):
+Component placement inside `krizaka-billing-service` (ERR-128/129/130):
 
 | Class | Package | Note |
 |:---|:---|:---|
@@ -703,7 +703,7 @@ Component placement inside `orazaka-billing-service` (ERR-128/129/130):
 | `EntitlementInterceptor` | `orazaka-interceptors/governance/` | the sync gate; short-circuits (§6.2) |
 | `BillingProperties`, `PricebookProperties` | `infrastructure/config` | typed `@ConfigurationProperties`, infra wiring only |
 
-The consuming services depend on `orazaka-billing-api` (Tier-1) — **never** on the billing service's
+The consuming services depend on `krizaka-billing-api` (Tier-1) — **never** on the billing service's
 own domain (Tier-3). SEAM-002 holds.
 
 ---
@@ -1101,7 +1101,7 @@ workflow and phase 4 is gated.
 ### 13.8 Lago wiring belongs to the billing service **only**
 
 ```yaml
-# orazaka-apps/services/orazaka-billing/orazaka-billing-service/…/application.yml
+# krizaka/krizaka-billing/krizaka-billing-service/…/application.yml
 orazaka:
   billing:
     engine:
@@ -1280,18 +1280,18 @@ instructions live in [`.agent/workflows/implement_billing.md`](../.agent/workflo
 |:---|:---|
 | create | `infra/initdb/70-billing.sql` — §5 + §13.5 schema, immutability trigger, dev seed |
 | modify | `infra/initdb/00-reset.sql` — drop `orazaka_billing_db` / role `orazaka_billing` |
-| create | `orazaka-apps/services/orazaka-billing/orazaka-billing-api/pom.xml` — pure JDK, JUnit test scope only |
-| create | `…/orazaka-billing-api/src/main/java/com/orazaka/billing/domain/model/` — `BillableCapability`, `BillableUnit`, `CreditHoldCommand`, `CreditHoldResponse`, `SettleCreditCommand`, `EntitlementSnapshot`, `HoldStatus`, `EnforcementMode` |
-| create | `…/orazaka-billing-api/src/main/java/com/orazaka/billing/domain/port/` — `CreditAuthorizationClient`, `EntitlementProvider` |
-| create | `…/orazaka-billing-api/src/main/java/com/orazaka/billing/domain/exception/InsufficientCreditsException.java` |
+| create | `krizaka/krizaka-billing/krizaka-billing-api/pom.xml` — pure JDK, JUnit test scope only |
+| create | `…/krizaka-billing-api/src/main/java/com/krizaka/billing/domain/model/` — `BillableCapability`, `BillableUnit`, `CreditHoldCommand`, `CreditHoldResponse`, `SettleCreditCommand`, `EntitlementSnapshot`, `HoldStatus`, `EnforcementMode` |
+| create | `…/krizaka-billing-api/src/main/java/com/krizaka/billing/domain/port/` — `CreditAuthorizationClient`, `EntitlementProvider` |
+| create | `…/krizaka-billing-api/src/main/java/com/krizaka/billing/domain/exception/InsufficientCreditsException.java` |
 | create | one mirroring `*Test.java` per record (ERR-103) |
 | modify | `pom.xml` — register the module next to `krizaka-users-api` |
 | modify | `.env`, `exemple.env.txt` — §13.8 blocks 10 & 11 |
 | modify | `infra/docker-compose.yml` — §13.7 Lago services under `profiles: [billing]` + `lago_data` volume |
 
-Gate: `./mvnw -q -pl orazaka-apps/services/orazaka-billing/orazaka-billing-api test` green; `orazaka stop --purge && orazaka start` recreates every database including `orazaka_billing_db`; `SqlBoundaryRules` green; default `orazaka start` still starts exactly four containers.
+Gate: `./mvnw -q -pl krizaka/krizaka-billing/krizaka-billing-api test` green; `orazaka stop --purge && orazaka start` recreates every database including `orazaka_billing_db`; `SqlBoundaryRules` green; default `orazaka start` still starts exactly four containers.
 
-### Tranche 2 — `orazaka-billing-service` :8095
+### Tranche 2 — `krizaka-billing-service` :8095
 
 Entities/repositories for the §5 tables, `CreditLedgerService` (hold/settle/release, single-statement
 conditional `UPDATE`), `PricingService` (pricebook resolution + version pinning), `EntitlementService`

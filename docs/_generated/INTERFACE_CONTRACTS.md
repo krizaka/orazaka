@@ -42,7 +42,7 @@ generated: true
 - `UserMcpServerProvider`
 - `ValidationPipelineRepository`
 
-## `orazaka-identity`
+## `krizaka-users-core`
 
 **Inbound ports**
 

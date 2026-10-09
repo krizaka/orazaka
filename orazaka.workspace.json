@@ -37,6 +37,31 @@
       ]
     },
     {
+      "name": "krizaka-notifications",
+      "path": "krizaka/krizaka-notifications",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Channel-based notification delivery for any application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP.",
+      "dependsOn": [
+        "krizaka-build",
+        "krizaka-platform-kit"
+      ]
+    },
+    {
+      "name": "krizaka-billing",
+      "path": "krizaka/krizaka-billing",
+      "kind": "maven",
+      "layer": "krizaka",
+      "description": "Credits, wallets, plans, subscriptions, a price book and metering (hold → settle → release) as a reusable billing service, with its contract (krizaka-billing-api) and a typed HTTP client (krizaka-billing-client).",
+      "dependsOn": [
+        "krizaka-build",
+        "krizaka-platform-kit"
+      ],
+      "initdb": [
+        "70-billing.sql"
+      ]
+    },
+    {
       "name": "orazaka-build",
       "path": "orazaka-libs/orazaka-build",
       "kind": "maven",
@@ -57,29 +82,6 @@
       ]
     },
     {
-      "name": "orazaka-notifications",
-      "path": "orazaka-apps/services/orazaka-notifications",
-      "kind": "maven",
-      "layer": "domain",
-      "description": "Channel-based notification delivery for any Krizaka application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP.",
-      "dependsOn": [
-        "orazaka-build"
-      ]
-    },
-    {
-      "name": "orazaka-billing",
-      "path": "orazaka-apps/services/orazaka-billing",
-      "kind": "maven",
-      "layer": "domain",
-      "description": "Credits, wallets, plans, subscriptions, pricebook and metering (hold → settle → release) as a reusable billing service, with its contract (billing-api) and a typed HTTP client (billing-client).",
-      "dependsOn": [
-        "orazaka-build"
-      ],
-      "initdb": [
-        "70-billing.sql"
-      ]
-    },
-    {
       "name": "orazaka-studio",
       "path": "orazaka-apps/services/orazaka-studio",
       "kind": "maven",
@@ -88,7 +90,7 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-billing"
+        "krizaka-billing"
       ],
       "initdb": [
         "80-studio.sql"
@@ -103,7 +105,7 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "orazaka-billing",
+        "krizaka-billing",
         "orazaka-studio"
       ],
       "initdb": [
@@ -120,7 +122,7 @@
         "orazaka-build",
         "orazaka-contracts",
         "krizaka-users",
-        "orazaka-billing",
+        "krizaka-billing",
         "orazaka-ai-engine"
       ],
       "initdb": [
@@ -137,7 +139,7 @@
         "orazaka-build",
         "orazaka-contracts",
         "krizaka-users",
-        "orazaka-billing",
+        "krizaka-billing",
         "orazaka-ai-engine"
       ],
       "initdb": [
@@ -165,7 +167,7 @@
       "description": "Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry.",
       "dependsOn": [
         "orazaka-build",
-        "orazaka-billing"
+        "krizaka-billing"
       ],
       "initdb": [
         "50-automation.sql"

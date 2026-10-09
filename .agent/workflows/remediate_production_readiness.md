@@ -16,7 +16,7 @@ Findings, evidence and rationale: [`docs/PRODUCTION_READINESS_AUDIT.md`](../../d
 3. Read `docs/PRODUCTION_READINESS_AUDIT.md` §2 (blockers), §6 (index), §7 (plan), §8 (what was
    never verified).
 4. Read for pattern-matching **before writing anything**:
-   - `orazaka-apps/services/orazaka-billing/orazaka-billing-service/…/infrastructure/config/SecurityConfig.java` —
+   - `krizaka/krizaka-billing/krizaka-billing-service/…/infrastructure/config/SecurityConfig.java` —
      the correct shape (JWT resource server + `JwtAuthenticationConverter`)
    - `orazaka-apps/services/orazaka-conversation-service/…/adapter/rest/JobController.java` — how an
      authenticated, actor-scoped controller reads the principal in this codebase
@@ -64,11 +64,11 @@ MODIFY  orazaka-apps/ui/orazaka-web-client/src/services/media.api.ts   (new URL 
 CREATE  .../src/test/java/.../AssetControllerIT.java      (the IDOR test — see §5)
 
 # ── #3 internal surface ────────────────────────────────────────────────────
-MODIFY  orazaka-apps/services/orazaka-billing/orazaka-billing-service/.../config/SecurityConfig.java
+MODIFY  krizaka/krizaka-billing/krizaka-billing-service/.../config/SecurityConfig.java
 MODIFY  orazaka-apps/services/orazaka-studio/orazaka-studio-service/.../config/SecurityConfig.java
 MODIFY  krizaka/krizaka-users/krizaka-users-service/.../config/SecurityConfig.java
-MODIFY  orazaka-apps/services/orazaka-billing/orazaka-billing-client/.../HttpCreditAuthorizationClient.java  (send the M2M token)
-MODIFY  orazaka-apps/services/orazaka-billing/orazaka-billing-client/.../HttpEntitlementProvider.java
+MODIFY  krizaka/krizaka-billing/krizaka-billing-client/.../HttpCreditAuthorizationClient.java  (send the M2M token)
+MODIFY  krizaka/krizaka-billing/krizaka-billing-client/.../HttpEntitlementProvider.java
 MODIFY  orazaka-apps/services/orazaka-studio/orazaka-studio-client/.../<the HTTP adapter>
 CREATE  <per service> src/test/java/.../InternalSurfaceAuthIT.java
 
@@ -131,7 +131,7 @@ Decide once, write it in the ADR, apply everywhere: the M2M token carries `roles
 the rule is `.requestMatchers("/internal/v1/**").hasAuthority("SERVICE")`.
 
 - Replace `permitAll()` with that matcher in billing, studio and identity.
-- The callers — `orazaka-billing-client`, `orazaka-studio-client` — must mint and attach the M2M
+- The callers — `krizaka-billing-client`, `orazaka-studio-client` — must mint and attach the M2M
   token. The issuing machinery exists (`M2mJwtProperties`, `ApiKeyExchangeFilter`); reuse it, do not
   write a second one.
 - Keep the edge's non-routing of `/internal/**` as the **second** layer. Two layers, not one.
