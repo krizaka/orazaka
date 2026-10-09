@@ -275,7 +275,7 @@ psql -h localhost -U orazaka_studio -d orazaka_studio_db \
      # MUST succeed — the trigger is conditional, not a blanket ban
 
 # 6. The billing side grants the keys
-psql -h localhost -U orazaka_billing -d orazaka_billing_db \
+psql -h localhost -U krizaka_billing -d krizaka_billing_db \
      -c "SELECT * FROM billing_pack_entitlement WHERE entitlement_key LIKE 'studio.%';"
 
 # 7. Every featureKey in the seeded blueprint exists and is enabled (fitness function #2, by hand

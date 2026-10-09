@@ -13,7 +13,7 @@
  * invisible — **which is exactly what "not hermetic" was hiding**. The first run from a genuinely
  * empty volume ends with:
  *
- *   [krizaka-users-service] FATAL: password authentication failed for user "orazaka_identity"
+ *   [krizaka-users-service] FATAL: password authentication failed for user "krizaka_users"
  *
  * and the stack does not come up. So "the harness reaches a working stack from empty" was not true,
  * and no scripted path made it true. This is that path. It is deliberately **not** a migration

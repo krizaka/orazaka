@@ -302,7 +302,7 @@
                                          surviving volume the roles already had one, so the step was
                                          invisible; the first run from a genuinely empty volume dies
                                          with "password authentication failed for user
-                                         orazaka_identity". That is what "not hermetic" was hiding.
+                                         krizaka_users". That is what "not hermetic" was hiding.
                                          The contexts are read out of the seeds rather than listed. -->
                                     <executable>node</executable>
                                     <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
@@ -804,9 +804,9 @@
                                 <db.url>jdbc:postgresql://localhost:5432/orazaka_db</db.url>
                                 <db.username>orazaka_app</db.username>
                                 <db.password>orazaka_pass</db.password>
-                                <identity.db.url>jdbc:postgresql://localhost:5432/orazaka_identity_db</identity.db.url>
-                                <identity.db.username>orazaka_identity</identity.db.username>
-                                <identity.db.password>orazaka_identity_pass</identity.db.password>
+                                <identity.db.url>jdbc:postgresql://localhost:5432/krizaka_users_db</identity.db.url>
+                                <identity.db.username>krizaka_users</identity.db.username>
+                                <identity.db.password>krizaka_users_pass</identity.db.password>
                                 <!-- Redis live infrastructure -->
                                 <redis.url>redis://localhost:6379</redis.url>
                                 <!-- AMQP live infrastructure -->

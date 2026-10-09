@@ -76,29 +76,29 @@ Krizaka application can pick only what it needs.
 ```mermaid
 graph LR
   orazaka_build --> orazaka_contracts
-  orazaka_build --> orazaka_users
+  orazaka_build --> users
   orazaka_build --> orazaka_notifications
-  orazaka_build --> orazaka_billing
+  orazaka_build --> krizaka_billing
   orazaka_build --> orazaka_studio
   orazaka_contracts --> orazaka_studio
-  orazaka_billing --> orazaka_studio
+  krizaka_billing --> orazaka_studio
   orazaka_build --> orazaka_ai_engine
   orazaka_contracts --> orazaka_ai_engine
-  orazaka_billing --> orazaka_ai_engine
+  krizaka_billing --> orazaka_ai_engine
   orazaka_studio --> orazaka_ai_engine
   orazaka_build --> orazaka_conversation_service
   orazaka_contracts --> orazaka_conversation_service
-  orazaka_users --> orazaka_conversation_service
-  orazaka_billing --> orazaka_conversation_service
+  users --> orazaka_conversation_service
+  krizaka_billing --> orazaka_conversation_service
   orazaka_ai_engine --> orazaka_conversation_service
   orazaka_build --> orazaka_job_service
   orazaka_contracts --> orazaka_job_service
-  orazaka_users --> orazaka_job_service
-  orazaka_billing --> orazaka_job_service
+  users --> orazaka_job_service
+  krizaka_billing --> orazaka_job_service
   orazaka_ai_engine --> orazaka_job_service
   orazaka_build --> orazaka_knowledge_service
   orazaka_build --> orazaka_automation_service
-  orazaka_billing --> orazaka_automation_service
+  krizaka_billing --> orazaka_automation_service
   orazaka_build --> orazaka_edge
   orazaka_ui_kit --> orazaka_web_client
   orazaka_ui_kit --> orazaka_web_admin

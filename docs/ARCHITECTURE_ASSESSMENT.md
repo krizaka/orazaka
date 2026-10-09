@@ -84,8 +84,8 @@ seeds doivent sortir des `V*` », en bloc. C'est faux : ils sont de **deux natur
 
 | Nature | Tables | Destination en production |
 |:---|:---|:---|
-| **Données de référence** | `orazaka_models`, `ai_providers`, `orazaka_capabilities`, `billing_plan`, `billing_pack`, `credit_pricebook`, `studio` + `studio_blueprint`, `interceptor_policy`, `orazaka_rate_limit_tiers`, `orazaka_routing_rules`, les `*_runtime_config` | **Doivent y être.** C'est la configuration produit, délibérément donnée-et-non-code (AGENTS.md §4). |
-| **Fixtures de dev** | `orazaka_users`, `orazaka_user_profiles`, `credit_wallet`, `credit_ledger_entry`, `billing_subscription`, `orazaka_rate_limits`, `orazaka_tools_rag_source` | **Ne doivent jamais y être.** Un utilisateur admin factice, son portefeuille, une écriture de grand livre et un abonnement inventés. |
+| **Données de référence** | `orazaka_models`, `ai_providers`, `orazaka_capabilities`, `billing_plan`, `billing_pack`, `credit_pricebook`, `studio` + `studio_blueprint`, `interceptor_policy`, `rate_limit_tiers`, `orazaka_routing_rules`, les `*_runtime_config` | **Doivent y être.** C'est la configuration produit, délibérément donnée-et-non-code (AGENTS.md §4). |
+| **Fixtures de dev** | `users`, `user_profiles`, `credit_wallet`, `credit_ledger_entry`, `billing_subscription`, `rate_limits`, `orazaka_tools_rag_source` | **Ne doivent jamais y être.** Un utilisateur admin factice, son portefeuille, une écriture de grand livre et un abonnement inventés. |
 
 Aujourd'hui les deux sont dans les mêmes fichiers, exécutés ensemble. Conséquence immédiate, sans
 attendre la production : **on ne peut pas monter un environnement propre** — il vient toujours avec
@@ -132,7 +132,7 @@ limite sur `/auth/forgot`, on obtient un bombardement de mails doublé d'une én
 déclenche jusqu'à `run.fan-out-max` jobs d'inférence. Le plafond de concurrence existe, mais il ne
 borne pas le **débit d'arrivée**.
 
-La table `orazaka_rate_limit_tiers` existe déjà.
+La table `rate_limit_tiers` existe déjà.
 
 ### 3.3 🟠 L'edge n'a ni timeout de lecture ni disjoncteur
 
@@ -327,7 +327,7 @@ Elles sont formulées pour être confiées telles quelles.
       où le SQL déménage. *(~2 journées, à faire seule)*
 
 - [ ] **T3 — `RateLimitFilter` sur identity, billing et studio.** Lire les seuils depuis
-      `orazaka_rate_limit_tiers`. Commencer par `identity`, dont l'absence de limite sur
+      `rate_limit_tiers`. Commencer par `identity`, dont l'absence de limite sur
       `/auth/login` et `/auth/forgot` est la plus exposée. Un IT par service asserte le 429.
 
 - [ ] **T4 — Edge : timeout de lecture + disjoncteur.** Timeout par route, avec une dérogation

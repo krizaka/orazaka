@@ -66,9 +66,9 @@ Conflating these is the single most common way a credit system rots. Each has on
 | **Package** | Which curated bundle of workflows does a *métier* get? | Entitlement bundle, sellable standalone or with a plan | Product |
 | **Rate limit** | How fast may they call? | Requests/minute, concurrent jobs — an **abuse** control, not a **billing** control | Identity context |
 
-**Rate limit stays in `krizaka-users-core`** (`orazaka_rate_limits`, already implemented). Billing does
+**Rate limit stays in `krizaka-users-core`** (`rate_limits`, already implemented). Billing does
 not absorb it; billing *drives* it by publishing a subscription-change event that identity consumes to
-update `orazaka_users.rate_limit_tier`. No cross-context FK — SEAM-001 holds.
+update `users.rate_limit_tier`. No cross-context FK — SEAM-001 holds.
 
 **Entitlement gates access; credits gate volume.** A `free` user is *not entitled* to video at all
 (hard no, no amount of credits helps); a `premium` user *is* entitled but pays credits per second.
@@ -83,7 +83,7 @@ A new context, a new owned database, a new deployable — following exactly the 
 
 ```
 krizaka/krizaka-billing/krizaka-billing-api/     Tier-1 · ports + DTOs, zero impl deps
-krizaka/krizaka-billing/krizaka-billing-service/  :8095 · owns orazaka_billing_db (role orazaka_billing)
+krizaka/krizaka-billing/krizaka-billing-service/  :8095 · owns krizaka_billing_db (role krizaka_billing)
 infra/initdb/70-billing.sql                     schema + dev seed, its own database
 ```
 
@@ -580,7 +580,7 @@ billing.enforcement.mode         = DRY_RUN    -- OFF | DRY_RUN | ENFORCING  (§1
 ```
 
 Indicative plan shape (all editable in admin, none in code). `rate_limit_tier_key` is NOT NULL on
-`billing_plan` and is an **opaque** reference into identity's `orazaka_rate_limits` — it must be
+`billing_plan` and is an **opaque** reference into identity's `rate_limits` — it must be
 stated here or the table cannot be seeded. `ultimate` maps to `enterprise` rather than `admin`
 because `admin` is a *role* tier, not a purchasable one, and `enterprise` already carries the 20
 concurrent jobs this plan sells.
@@ -1136,9 +1136,9 @@ BILLING_ENABLED=false
 BILLING_PORT=8095
 BILLING_INTERNAL_URL=http://localhost:8095
 # Own database + role, created by infra/initdb/70-billing.sql (billing-service only).
-BILLING_DB_URL=jdbc:postgresql://localhost:5432/orazaka_billing_db
-BILLING_DB_USERNAME=orazaka_billing
-BILLING_DB_PASSWORD=orazaka_billing_pass
+BILLING_DB_URL=jdbc:postgresql://localhost:5432/krizaka_billing_db
+BILLING_DB_USERNAME=krizaka_billing
+BILLING_DB_PASSWORD=krizaka_billing_pass
 # ── 16. LAGO (opt-in: see the compose invocation in §13.7) ────────────────────
 LAGO_ENABLED=false
 LAGO_API_PORT=8098
@@ -1279,7 +1279,7 @@ instructions live in [`.agent/workflows/implement_billing.md`](../.agent/workflo
 | Action | Path |
 |:---|:---|
 | create | `infra/initdb/70-billing.sql` — §5 + §13.5 schema, immutability trigger, dev seed |
-| modify | `infra/initdb/00-reset.sql` — drop `orazaka_billing_db` / role `orazaka_billing` |
+| modify | `infra/initdb/00-reset.sql` — drop `krizaka_billing_db` / role `krizaka_billing` |
 | create | `krizaka/krizaka-billing/krizaka-billing-api/pom.xml` — pure JDK, JUnit test scope only |
 | create | `…/krizaka-billing-api/src/main/java/com/krizaka/billing/domain/model/` — `BillableCapability`, `BillableUnit`, `CreditHoldCommand`, `CreditHoldResponse`, `SettleCreditCommand`, `EntitlementSnapshot`, `HoldStatus`, `EnforcementMode` |
 | create | `…/krizaka-billing-api/src/main/java/com/krizaka/billing/domain/port/` — `CreditAuthorizationClient`, `EntitlementProvider` |
@@ -1289,7 +1289,7 @@ instructions live in [`.agent/workflows/implement_billing.md`](../.agent/workflo
 | modify | `.env`, `exemple.env.txt` — §13.8 blocks 10 & 11 |
 | modify | `infra/docker-compose.yml` — §13.7 Lago services under `profiles: [billing]` + `lago_data` volume |
 
-Gate: `./mvnw -q -pl krizaka/krizaka-billing/krizaka-billing-api test` green; `orazaka stop --purge && orazaka start` recreates every database including `orazaka_billing_db`; `SqlBoundaryRules` green; default `orazaka start` still starts exactly four containers.
+Gate: `./mvnw -q -pl krizaka/krizaka-billing/krizaka-billing-api test` green; `orazaka stop --purge && orazaka start` recreates every database including `krizaka_billing_db`; `SqlBoundaryRules` green; default `orazaka start` still starts exactly four containers.
 
 ### Tranche 2 — `krizaka-billing-service` :8095
 

@@ -135,7 +135,7 @@ class UserSettingsIT extends AbstractUiE2eTest {
   void shouldVerifyUserProfileInDatabase() throws SQLException {
     // Get the admin user's ID first
     Map<String, Object> user =
-        E2eJdbcClient.queryOneIdentity("SELECT id FROM orazaka_users WHERE email = ?", ADMIN_EMAIL);
+        E2eJdbcClient.queryOneIdentity("SELECT id FROM users WHERE email = ?", ADMIN_EMAIL);
 
     assertNotNull(user, "Admin user must exist in the live database");
     String userId = user.get("id").toString();
@@ -143,10 +143,10 @@ class UserSettingsIT extends AbstractUiE2eTest {
     // Query the user_profiles table for persisted settings
     Map<String, Object> profile =
         E2eJdbcClient.queryOneIdentity(
-            "SELECT theme, voice_model, primary_industry FROM orazaka_user_profiles WHERE user_id = ?",
+            "SELECT theme, voice_model, primary_industry FROM user_profiles WHERE user_id = ?",
             userId);
 
-    assertNotNull(profile, "User profile row must exist in orazaka_user_profiles for admin user");
+    assertNotNull(profile, "User profile row must exist in user_profiles for admin user");
     assertNotNull(profile.get("theme"), "Theme must be populated in the profile record");
   }
 
@@ -158,7 +158,7 @@ class UserSettingsIT extends AbstractUiE2eTest {
   void shouldVerifyUserPreferencesColumn() throws SQLException {
     Map<String, Object> user =
         E2eJdbcClient.queryOneIdentity(
-            "SELECT id, preferences FROM orazaka_users WHERE email = ?", ADMIN_EMAIL);
+            "SELECT id, preferences FROM users WHERE email = ?", ADMIN_EMAIL);
 
     assertNotNull(user, "Admin user must exist in the live database");
     // The preferences column stores JSON-like data for user settings

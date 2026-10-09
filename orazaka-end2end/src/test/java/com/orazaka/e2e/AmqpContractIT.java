@@ -46,9 +46,9 @@ class AmqpContractIT extends AbstractApiE2eTest {
           "orazaka.jobs.interactive",
           "orazaka.jobs.automation",
           "orazaka.events.job-relay",
-          "orazaka.events.user.notifications",
-          "orazaka.events.password.notifications",
-          "orazaka.notifications.requests");
+          "krizaka.notifications.user-events",
+          "krizaka.notifications.password-events",
+          "krizaka.notifications.requests");
 
   @Test
   @DisplayName("Exchanges match AGENTS.md §6: orazaka.jobs/events (topic) + orazaka.dlx (direct)")

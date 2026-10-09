@@ -78,10 +78,10 @@ Header comment must follow the house style of `10-identity.sql` (owner, purpose,
 note). Then, in this order:
 
 ```sql
-CREATE ROLE orazaka_billing LOGIN PASSWORD 'orazaka_billing_pass';
-CREATE DATABASE orazaka_billing_db OWNER orazaka_billing;
-\c orazaka_billing_db
-SET ROLE orazaka_billing;
+CREATE ROLE krizaka_billing LOGIN PASSWORD 'krizaka_billing_pass';
+CREATE DATABASE krizaka_billing_db OWNER krizaka_billing;
+\c krizaka_billing_db
+SET ROLE krizaka_billing;
 ```
 
 Then the tables **exactly as specified in `docs/BILLING_ARCHITECTURE.md`**:
@@ -139,8 +139,8 @@ Add, next to the existing identity/automation/knowledge blocks and in the same c
 
 ```sql
 -- Billing context: its own database — dropped wholesale.
-DROP DATABASE IF EXISTS orazaka_billing_db WITH (FORCE);
-DROP ROLE IF EXISTS orazaka_billing;
+DROP DATABASE IF EXISTS krizaka_billing_db WITH (FORCE);
+DROP ROLE IF EXISTS krizaka_billing;
 ```
 
 Also add the `70-billing.sql` line to the file-inventory comment at the top.
@@ -262,10 +262,10 @@ orazaka stop --purge && orazaka start
 docker ps --format '{{.Names}}'          # expect NO orazaka-lago-*
 
 # 5. The billing database exists, is seeded, and the ledger is immutable
-psql -h localhost -U orazaka_billing -d orazaka_billing_db -c "\dt"
-psql -h localhost -U orazaka_billing -d orazaka_billing_db \
+psql -h localhost -U krizaka_billing -d krizaka_billing_db -c "\dt"
+psql -h localhost -U krizaka_billing -d krizaka_billing_db \
      -c "SELECT plan_key, monthly_credit_grant FROM billing_plan ORDER BY tier_rank;"
-psql -h localhost -U orazaka_billing -d orazaka_billing_db \
+psql -h localhost -U krizaka_billing -d krizaka_billing_db \
      -c "UPDATE credit_ledger_entry SET amount = 999;"   # MUST fail with the trigger's exception
 
 # 6. Lago starts only when asked. NOT via the CLI: `orazaka start` passes explicit service names,

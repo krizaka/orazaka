@@ -145,14 +145,14 @@ orazaka-worker-media → orazaka-persistence-app
 
 | Queue | Exchange | Binding | DLQ |
 |:---|:---|:---|:---|
+| `krizaka.notifications.password-events` | `orazaka.events` | `evt.password.*` | `krizaka.notifications.password-events.dlq` |
+| `krizaka.notifications.requests` | `orazaka.events` | `evt.notification.requested` | `krizaka.notifications.requests.dlq` |
+| `krizaka.notifications.user-events` | `orazaka.events` | `evt.user.*` | `krizaka.notifications.user-events.dlq` |
 | `orazaka.events.job-relay` | `orazaka.events` | `job.#` | `orazaka.events.job-relay.dlq` |
-| `orazaka.events.password.notifications` | `orazaka.events` | `evt.password.*` | `orazaka.events.password.notifications.dlq` |
-| `orazaka.events.user.notifications` | `orazaka.events` | `evt.user.*` | `orazaka.events.user.notifications.dlq` |
 | `orazaka.jobs.automation` | `orazaka.jobs` | `job.automation.*` | `orazaka.jobs.automation.dlq` |
 | `orazaka.jobs.batch` | `orazaka.jobs` | `job.media.generate` | `orazaka.jobs.batch.dlq` |
 | `orazaka.jobs.interactive` | `orazaka.jobs` | `job.text.*, job.media.analyze` | `orazaka.jobs.interactive.dlq` |
 | `orazaka.jobs.video` | `orazaka.jobs` | `job.video.*` | `orazaka.jobs.video.dlq` |
-| `orazaka.notifications.requests` | `orazaka.events` | `evt.notification.requested` | `orazaka.notifications.requests.dlq` |
 
 **Producers**
 
@@ -179,9 +179,9 @@ orazaka-worker-media → orazaka-persistence-app
 | `krizaka-billing-client` | `#entitlementInvalidationQueue.name` |
 | `krizaka-billing-service` | `#settlementQueue.name` |
 | `krizaka-billing-service` | `#unmeteredTurnQueue.name` |
-| `krizaka-notifications-service` | `orazaka.events.password.notifications` |
-| `krizaka-notifications-service` | `orazaka.events.user.notifications` |
-| `krizaka-notifications-service` | `orazaka.notifications.requests` |
+| `krizaka-notifications-service` | `krizaka.notifications.password-events` |
+| `krizaka-notifications-service` | `krizaka.notifications.requests` |
+| `krizaka-notifications-service` | `krizaka.notifications.user-events` |
 | `orazaka-automation-service` | `orazaka.jobs.automation` |
 | `orazaka-conversation-service` | `#walletEventsQueue.name` |
 | `orazaka-conversation-service` | `orazaka.events.job-relay` |

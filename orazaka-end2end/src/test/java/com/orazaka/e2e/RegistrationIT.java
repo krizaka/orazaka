@@ -111,7 +111,7 @@ class RegistrationIT extends AbstractUiE2eTest {
     // Query live Postgres for the newly registered user
     Map<String, Object> user =
         E2eJdbcClient.queryOneIdentity(
-            "SELECT id, email, password_hash, enabled, provider FROM orazaka_users WHERE email = ?",
+            "SELECT id, email, password_hash, enabled, provider FROM users WHERE email = ?",
             TEST_EMAIL);
 
     // If registration succeeded, the user must exist
@@ -145,13 +145,12 @@ class RegistrationIT extends AbstractUiE2eTest {
   @DisplayName("JDBC: Verify default authority is assigned")
   void shouldVerifyDefaultAuthorityAssigned() throws SQLException {
     Map<String, Object> user =
-        E2eJdbcClient.queryOneIdentity("SELECT id FROM orazaka_users WHERE email = ?", TEST_EMAIL);
+        E2eJdbcClient.queryOneIdentity("SELECT id FROM users WHERE email = ?", TEST_EMAIL);
 
     if (user != null) {
       String userId = user.get("id").toString();
       long authorityCount =
-          E2eJdbcClient.countIdentity(
-              "SELECT COUNT(*) FROM orazaka_authorities WHERE user_id = ?", userId);
+          E2eJdbcClient.countIdentity("SELECT COUNT(*) FROM authorities WHERE user_id = ?", userId);
       assertTrue(
           authorityCount >= 1, "Newly registered user must have at least 1 authority (ROLE_USER)");
     }

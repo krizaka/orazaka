@@ -893,22 +893,28 @@
     ],
     "queues": [
       {
+        "name": "krizaka.notifications.password-events",
+        "exchange": "orazaka.events",
+        "binding": "evt.password.*",
+        "dlq": "krizaka.notifications.password-events.dlq"
+      },
+      {
+        "name": "krizaka.notifications.requests",
+        "exchange": "orazaka.events",
+        "binding": "evt.notification.requested",
+        "dlq": "krizaka.notifications.requests.dlq"
+      },
+      {
+        "name": "krizaka.notifications.user-events",
+        "exchange": "orazaka.events",
+        "binding": "evt.user.*",
+        "dlq": "krizaka.notifications.user-events.dlq"
+      },
+      {
         "name": "orazaka.events.job-relay",
         "exchange": "orazaka.events",
         "binding": "job.#",
         "dlq": "orazaka.events.job-relay.dlq"
-      },
-      {
-        "name": "orazaka.events.password.notifications",
-        "exchange": "orazaka.events",
-        "binding": "evt.password.*",
-        "dlq": "orazaka.events.password.notifications.dlq"
-      },
-      {
-        "name": "orazaka.events.user.notifications",
-        "exchange": "orazaka.events",
-        "binding": "evt.user.*",
-        "dlq": "orazaka.events.user.notifications.dlq"
       },
       {
         "name": "orazaka.jobs.automation",
@@ -933,12 +939,6 @@
         "exchange": "orazaka.jobs",
         "binding": "job.video.*",
         "dlq": "orazaka.jobs.video.dlq"
-      },
-      {
-        "name": "orazaka.notifications.requests",
-        "exchange": "orazaka.events",
-        "binding": "evt.notification.requested",
-        "dlq": "orazaka.notifications.requests.dlq"
       }
     ],
     "producers": [
@@ -1023,15 +1023,15 @@
       },
       {
         "module": "krizaka-notifications-service",
-        "queue": "orazaka.events.password.notifications"
+        "queue": "krizaka.notifications.password-events"
       },
       {
         "module": "krizaka-notifications-service",
-        "queue": "orazaka.events.user.notifications"
+        "queue": "krizaka.notifications.requests"
       },
       {
         "module": "krizaka-notifications-service",
-        "queue": "orazaka.notifications.requests"
+        "queue": "krizaka.notifications.user-events"
       },
       {
         "module": "orazaka-automation-service",
