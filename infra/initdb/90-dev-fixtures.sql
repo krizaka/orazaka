@@ -42,9 +42,11 @@ INSERT INTO authorities (user_id, authority_name) VALUES
 ('550e8400-e29b-41d4-a716-446655440002', 'ROLE_USER')
 ON CONFLICT ON CONSTRAINT unique_user_authority DO NOTHING;
 
-INSERT INTO user_profiles (user_id, theme, voice_model, primary_industry, ai_behavior, raw_preferences) VALUES
-('550e8400-e29b-41d4-a716-446655440001', 'emerald', 'alloy', 'tech', 'professional', '{"language":"en","tts-voice":"alloy"}'),
-('550e8400-e29b-41d4-a716-446655440002', 'emerald', 'nova', 'tech', 'friendly', '{"language":"en","tts-voice":"nova"}')
+-- Orazaka's profile attributes (voiceModel, primaryIndustry, aiBehavior) are its onboarding answers:
+-- the users service stores them as attributes and never interprets them.
+INSERT INTO user_profiles (user_id, theme, raw_preferences) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'emerald', '{"language":"en","tts-voice":"alloy","voiceModel":"alloy","primaryIndustry":"tech","aiBehavior":"professional"}'),
+('550e8400-e29b-41d4-a716-446655440002', 'emerald', '{"language":"en","tts-voice":"nova","voiceModel":"nova","primaryIndustry":"tech","aiBehavior":"friendly"}')
 ON CONFLICT (user_id) DO NOTHING;
 
 -- ── orazaka_knowledge_db ─────────────────────────────────────────────────────────────

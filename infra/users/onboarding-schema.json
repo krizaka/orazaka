@@ -1,0 +1,52 @@
+{
+  "title": "Onboarding Profile",
+  "description": "Please configure your primary AI assistant preferences.",
+  "fields": [
+    {
+      "name": "theme",
+      "label": "Interface Theme Accent",
+      "type": "select",
+      "required": true,
+      "options": [
+        {"label": "Emerald Green", "value": "emerald"},
+        {"label": "Rose Pink", "value": "rose"},
+        {"label": "Neon Cyan", "value": "cyan"},
+        {"label": "Amber Orange", "value": "amber"}
+      ],
+      "defaultValue": "emerald"
+    },
+    {
+      "name": "voiceModel",
+      "label": "Default TTS Voice Model",
+      "type": "select",
+      "required": true,
+      "options": [
+        {"label": "Alloy (Neutral)", "value": "alloy"},
+        {"label": "Echo (Warm)", "value": "echo"},
+        {"label": "Fable (British)", "value": "fable"},
+        {"label": "Nova (Femme)", "value": "nova"}
+      ],
+      "defaultValue": "alloy"
+    },
+    {
+      "name": "primaryIndustry",
+      "label": "Primary Industry / Domain",
+      "type": "select",
+      "required": true,
+      "options": [
+        {"label": "Software Engineering", "value": "tech"},
+        {"label": "Finance & Analytics", "value": "finance"},
+        {"label": "Creative Arts & Design", "value": "creative"},
+        {"label": "Healthcare & Life Sciences", "value": "healthcare"}
+      ],
+      "defaultValue": "tech"
+    },
+    {
+      "name": "aiBehavior",
+      "label": "AI Assistant Personality / Behavior",
+      "type": "textarea",
+      "placeholder": "e.g. Concisely provide direct technical answers, or be verbose and pedagogical.",
+      "required": false
+    }
+  ]
+}

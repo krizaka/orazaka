@@ -143,8 +143,7 @@ class UserSettingsIT extends AbstractUiE2eTest {
     // Query the user_profiles table for persisted settings
     Map<String, Object> profile =
         E2eJdbcClient.queryOneIdentity(
-            "SELECT theme, voice_model, primary_industry FROM user_profiles WHERE user_id = ?",
-            userId);
+            "SELECT theme, raw_preferences FROM user_profiles WHERE user_id = ?", userId);
 
     assertNotNull(profile, "User profile row must exist in user_profiles for admin user");
     assertNotNull(profile.get("theme"), "Theme must be populated in the profile record");

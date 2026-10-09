@@ -1,0 +1,40 @@
+{
+  "title": "System Feedback",
+  "description": "Please let us know how we can improve your AI workspace experience.",
+  "fields": [
+    {
+      "name": "satisfaction",
+      "label": "Overall Satisfaction",
+      "type": "select",
+      "required": true,
+      "options": [
+        {"label": "⭐⭐⭐⭐⭐ Excellent", "value": "5"},
+        {"label": "⭐⭐⭐⭐ Very Good", "value": "4"},
+        {"label": "⭐⭐⭐ Satisfactory", "value": "3"},
+        {"label": "⭐⭐ Fair", "value": "2"},
+        {"label": "⭐ Poor", "value": "1"}
+      ],
+      "defaultValue": "5"
+    },
+    {
+      "name": "primaryUsage",
+      "label": "Primary Usage Domain",
+      "type": "select",
+      "required": true,
+      "options": [
+        {"label": "Professional Work", "value": "professional"},
+        {"label": "Personal Projects", "value": "personal"},
+        {"label": "Academic Research", "value": "academic"},
+        {"label": "Exploration", "value": "exploration"}
+      ],
+      "defaultValue": "professional"
+    },
+    {
+      "name": "suggestions",
+      "label": "Improvement Suggestions",
+      "type": "textarea",
+      "placeholder": "What features or optimizations would you like to see next?",
+      "required": false
+    }
+  ]
+}

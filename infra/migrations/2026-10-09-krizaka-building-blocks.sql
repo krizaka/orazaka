@@ -32,6 +32,22 @@ ALTER TABLE orazaka_password_resets RENAME TO password_resets;
 ALTER TABLE orazaka_rate_limits RENAME TO rate_limits;
 ALTER TABLE orazaka_user_model_prefs RENAME TO user_model_prefs;
 ALTER INDEX idx_orazaka_rate_limits_default RENAME TO idx_rate_limits_default;
+
+-- Profiles: Orazaka's AI fields become application-defined attributes in raw_preferences.
+UPDATE user_profiles
+   SET raw_preferences = (
+         COALESCE(NULLIF(raw_preferences, ''), '{}')::jsonb
+         || jsonb_strip_nulls(jsonb_build_object(
+              'voiceModel', voice_model,
+              'primaryIndustry', primary_industry,
+              'aiBehavior', ai_behavior))
+       )::text;
+ALTER TABLE user_profiles DROP COLUMN voice_model;
+ALTER TABLE user_profiles DROP COLUMN primary_industry;
+ALTER TABLE user_profiles DROP COLUMN ai_behavior;
+
+-- Per-user model preferences: never read by any service (its persistence code had no caller).
+DROP TABLE user_model_prefs;
 COMMIT;
 
 -- RabbitMQ: the building blocks now own their queues under krizaka.* names
