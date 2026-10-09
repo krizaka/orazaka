@@ -197,6 +197,13 @@ function ci(name) {
   process.exit(2);
 }
 
+/** True when `<workspace>@<its package.json version>` is already on the npm registry (a re-run never fails on it). */
+function isPublished(ws) {
+  const version = capture("npm", ["pkg", "get", "version", `--workspace=${ws}`, "--json"], UI);
+  const local = version ? Object.values(JSON.parse(version))[0] : null;
+  return local !== null && capture("npm", ["view", `${ws}@${local}`, "version", "--prefer-online"], UI) === local;
+}
+
 /**
  * Publishes a component: its Maven modules to GitHub Packages (maven.pkg.github.com/<org>/<repo>,
  * orazaka-parent's distributionManagement), the @krizaka/* packages of the UI kit to the public npm registry with
@@ -211,7 +218,13 @@ function publish(name) {
   }
   if (target.name === "orazaka-ui-kit") {
     run("npm", ["install", "--no-audit", "--no-fund"], { cwd: UI });
-    for (const ws of npmWorkspaces(target)) run("npm", ["publish", `--workspace=${ws}`, "--access", "public", "--provenance"], { cwd: UI });
+    for (const ws of npmWorkspaces(target)) {
+      if (isPublished(ws)) {
+        console.log(`${ws} is already on npm at this version — skipped.`);
+        continue;
+      }
+      run("npm", ["publish", `--workspace=${ws}`, "--access", "public", "--provenance"], { cwd: UI });
+    }
     return;
   }
   console.log(`${name} is a ${target.kind} application — nothing to publish.`);
