@@ -67,3 +67,4 @@ generated: true
 | ADR-071 | ADR-071 — Repair the instruments | `adr/ADR-071-repair-the-instruments.md` |
 | ADR-072 | ADR-072 — A ruleset is a test suite pointed at the user's document | `adr/ADR-072-a-ruleset-is-a-test-suite.md` |
 | ADR-073 | ADR-073 — The kit is a product | `adr/ADR-073-the-kit-is-a-product.md` |
+| ADR-074 | ADR-074 — Krizaka starters and event contracts | `adr/ADR-074-krizaka-starters-and-event-contracts.md` |

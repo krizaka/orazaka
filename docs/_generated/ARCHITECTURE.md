@@ -60,9 +60,13 @@ krizaka-users-core → krizaka-test-support
 orazaka-tools → orazaka-core
 krizaka-billing-client → krizaka-security
 krizaka-billing-client → krizaka-billing-api
+krizaka-billing-client → krizaka-test-support
 orazaka-studio-client → krizaka-security
 orazaka-studio-client → orazaka-studio-api
-orazaka-conversation-service → krizaka-security
+orazaka-conversation-service → krizaka-spring-boot-starter-web
+orazaka-conversation-service → krizaka-spring-boot-starter-security
+orazaka-conversation-service → krizaka-spring-boot-starter-rabbitmq
+orazaka-conversation-service → krizaka-spring-boot-starter-observability
 orazaka-conversation-service → krizaka-users-client
 orazaka-conversation-service → orazaka-assets
 orazaka-conversation-service → krizaka-billing-client
@@ -73,6 +77,7 @@ orazaka-conversation-service → orazaka-tools
 orazaka-conversation-service → orazaka-business
 orazaka-conversation-service → orazaka-persistence-app
 orazaka-conversation-service → orazaka-persistence-bridge
+orazaka-conversation-service → krizaka-test-support
 orazaka-conversation-service → orazaka-interceptors
 orazaka-edge → krizaka-security
 krizaka-users-service → krizaka-security
@@ -108,6 +113,7 @@ orazaka-studio-service → krizaka-billing-client
 krizaka-notifications-service → krizaka-messaging
 krizaka-notifications-service → krizaka-notifications-api
 krizaka-notifications-service → krizaka-test-support
+krizaka-notifications-service → krizaka-users-api
 orazaka-web-client → orazaka-conversation-service
 orazaka-web-admin → orazaka-conversation-service
 orazaka-mobile-client → orazaka-conversation-service

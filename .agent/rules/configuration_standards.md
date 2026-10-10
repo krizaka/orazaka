@@ -20,6 +20,7 @@
 - All app properties under `orazaka.<module>.<concern>` (`orazaka.router.*`, `orazaka.core.*`, `orazaka.identity.*`, `orazaka.messaging.*`). No cross-module mixing (no `media`/`features` siblings duplicating `core`).
 - **Banned**: bracketed dotted map keys (`"[orazaka.core.media.video]"`), vague namespaces (`spring.ai.custom.*`), root-level domain keys (move `crypto` → `orazaka.identity.crypto`).
 - File layout, in order: `server` → `spring` (framework) → `management`/`resilience4j`/`logging` → `orazaka.*` (by module). Local phase = **single file**, no per-profile overlay.
+- **A service on the Krizaka starters** (ADR-074) splits by audience, never by profile: `application.yml` (≤ 20 lines) holds what a deployment decides; its operating defaults (Hikari, listener, timeouts, upload limits) live in `META-INF/orazaka/<service>-defaults.yml`, the lowest-priority source. Each value is still declared once.
 
 ## §4 Typed properties (no loose values)
 - Every `orazaka.*` group is backed by a **`@ConfigurationProperties` record** (immutable, validated in the compact constructor) — **no scattered `@Value`** injections.
