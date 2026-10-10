@@ -124,99 +124,274 @@ function portsIn(moduleDir, relPortDir) {
     .sort();
 }
 
+/**
+ * A source file found by name under a directory, or a loud failure. The model used to name its
+ * sources by full path; when the Java packages moved to com.krizaka.orazaka every one of those
+ * paths went dead, and the generator went on writing an empty messaging topology, an empty
+ * interceptor registry and an empty use-case catalogue as if nothing had happened. A source the
+ * model depends on is now looked up, and its absence stops the build.
+ */
+function sourceFile(relDir, name) {
+  const hit = walk(join(ROOT, relDir), (p) => basename(p) === name && p.includes(`${"/"}src${"/"}main${"/"}`))[0];
+  if (!hit) throw new Error(`generate-docs: ${name} not found under ${relDir} — the architecture model depends on it`);
+  return hit;
+}
+/** A source directory found by its trailing path segments (e.g. "business/usecases"), or a loud failure. */
+function sourceDir(relDir, tail) {
+  const found = [];
+  const visit = (dir) => {
+    if (!existsSync(dir)) return;
+    for (const name of readdirSync(dir)) {
+      if (name === "node_modules" || name === "target" || name === ".git" || name === "test") continue;
+      const p = join(dir, name);
+      if (!statSync(p).isDirectory()) continue;
+      if (p.replaceAll("\\", "/").endsWith(`/${tail}`)) found.push(p);
+      else visit(p);
+    }
+  };
+  visit(join(ROOT, relDir));
+  if (!found.length) throw new Error(`generate-docs: no ${tail}/ under ${relDir} — the architecture model depends on it`);
+  return found[0];
+}
+
+const xmlText = (s) => s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
+/** A pom without its <parent>, <build> and <dependencyManagement>: what the module itself declares. */
+const ownPom = (pom) =>
+  pom
+    .replace(/<parent>[\s\S]*?<\/parent>/, "")
+    .replace(/<build>[\s\S]*?<\/build>/g, "")
+    .replace(/<dependencyManagement>[\s\S]*?<\/dependencyManagement>/g, "")
+    .replace(/<profiles>[\s\S]*?<\/profiles>/g, "");
+
+/**
+ * Every Maven module of the platform, read the way Maven reads it: from each repository's root
+ * pom, down its <modules>. A module under examples/ is a sample, not part of the platform.
+ */
+function reactorModules() {
+  const out = [];
+  const visit = (dir, repo) => {
+    const pom = read(join(dir, "pom.xml"));
+    if (!pom) return;
+    const own = ownPom(pom);
+    const id = own.match(/<artifactId>([\w.-]+)<\/artifactId>/)?.[1];
+    if (/<packaging>pom<\/packaging>/.test(pom)) {
+      for (const m of pom.matchAll(/<module>([^<]+)<\/module>/g)) visit(join(dir, m[1].trim()), repo);
+      return;
+    }
+    const rel = relative(ROOT, dir).replaceAll("\\", "/");
+    if (!id || rel.split("/").includes("examples")) return;
+    // The project's own <version> (outside dependencies, properties and plugins), else its parent's.
+    const head = own.replace(/<(dependencies|properties|repositories|pluginRepositories|reporting)>[\s\S]*?<\/\1>/g, "");
+    const parentVersion = pom.match(/<parent>[\s\S]*?<version>([^<]+)<\/version>[\s\S]*?<\/parent>/)?.[1] ?? null;
+    let version = head.match(/<version>([^<]+)<\/version>/)?.[1] ?? parentVersion;
+    if (version?.startsWith("${")) version = parentVersion;
+    out.push({ id, dir, path: rel, repository: repo, pom, version, description: xmlText(own.match(/<description>([\s\S]*?)<\/description>/)?.[1] ?? "") || null });
+  };
+  for (const repo of REPOSITORIES.filter((r) => r.kind === "maven")) visit(join(ROOT, repo.path), repo);
+  return out;
+}
+
+/** The module's declared dependencies, without the test-scoped ones (they never ship). */
+function pomDependencies(pom) {
+  const block = ownPom(pom).match(/<dependencies>([\s\S]*?)<\/dependencies>/)?.[1] ?? "";
+  return [...block.matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)]
+    .map((m) => ({
+      artifactId: m[1].match(/<artifactId>([^<]+)<\/artifactId>/)?.[1]?.trim(),
+      scope: m[1].match(/<scope>([^<]+)<\/scope>/)?.[1]?.trim() ?? "compile",
+      optional: /<optional>\s*true\s*<\/optional>/.test(m[1]),
+    }))
+    .filter((d) => d.artifactId && d.scope !== "test");
+}
+
+/** The HTTP port a Spring Boot service listens on: server.port, or Spring's default 8080. */
+function servicePort(dir) {
+  const yml = read(join(dir, "src/main/resources/application.yml")) || read(join(dir, "src/main/resources/application.yaml"));
+  const m = yml.match(/^server:\s*\n(?:[ \t]+.*\n)*?[ \t]+port:\s*(?:\$\{[\w.-]+:)?(\d+)/m);
+  return m ? Number(m[1]) : 8080;
+}
+
+/**
+ * The role of a module in the hexagon (AGENTS.md §2) — one band of the module map, outermost
+ * first. Each rule reads a fact of the code or of the workspace manifest, never a list kept here.
+ */
+const ROLES = [
+  { id: "client", title: "Clients", rule: "a UI repository of the workspace manifest (layer app, kind npm)" },
+  { id: "service", title: "Services & workers", rule: "a module with a main (SpringApplication.run), or a native worker" },
+  { id: "adapter", title: "Adapters", rule: "an imported module that is none of the below: persistence, typed HTTP clients, asset store, bridge" },
+  { id: "application", title: "Application", rule: "the orchestration, pipeline and capability libraries around the core (AGENTS.md §2: business, interceptors, tools)" },
+  { id: "domain", title: "Domain core", rule: "a `*-core` module — the centre of its hexagon, depending on no outer layer" },
+  { id: "contract", title: "Contracts", rule: "a Tier-1 `*-api` module — pure interfaces and records" },
+  { id: "platform", title: "Krizaka platform kit", rule: "a module of krizaka-platform-kit — the cross-cutting code with one author (ADR-073), starters included" },
+];
+const APPLICATION_LIBRARIES = ["orazaka-business", "orazaka-interceptors", "orazaka-tools"];
+
+function roleOf(m) {
+  if (/SpringApplication\.run\(/.test(javaFiles(join(m.dir, "src/main/java")).map(read).join("\n"))) return "service";
+  if (m.repository.name === "krizaka-platform-kit") return "platform";
+  if (m.id.endsWith("-api")) return "contract";
+  if (m.id.endsWith("-core")) return "domain";
+  if (APPLICATION_LIBRARIES.includes(m.id)) return "application";
+  return "adapter";
+}
+
+/** Glob-free match of an AMQP topic binding ("job.*.done", "job.#") against a routing key. */
+function topicMatches(binding, key) {
+  const b = binding.split("."), k = key.split(".");
+  const go = (i, j) => {
+    if (i === b.length) return j === k.length;
+    if (b[i] === "#") return go(i + 1, j) || (j < k.length && go(i, j + 1));
+    if (j === k.length) return false;
+    return (b[i] === "*" || b[i] === k[j] || k[j] === "{…}") && go(i + 1, j + 1);
+  };
+  return go(0, 0);
+}
+
 function extractArchitecture() {
-  const moduleDefs = [
-    // Framework
-    { id: "orazaka-persistence-app", path: "orazaka-libs/orazaka-ai-engine/orazaka-persistence-app", layer: "framework", type: "maven" },
-    { id: "krizaka-users-persistence", path: "krizaka/krizaka-users/krizaka-users-persistence", layer: "framework", type: "maven" },
-    { id: "orazaka-core", path: "orazaka-libs/orazaka-ai-engine/orazaka-core", layer: "framework", type: "maven" },
-    { id: "orazaka-interceptors", path: "orazaka-libs/orazaka-ai-engine/orazaka-interceptors", layer: "framework", type: "maven" },
-    { id: "orazaka-business", path: "orazaka-libs/orazaka-ai-engine/orazaka-business", layer: "framework", type: "maven" },
-    { id: "krizaka-users-core", path: "krizaka/krizaka-users/krizaka-users-core", layer: "framework", type: "maven" },
-    { id: "orazaka-tools", path: "orazaka-libs/orazaka-ai-engine/orazaka-tools", layer: "framework", type: "maven" },
-    { id: "krizaka-billing-client", path: "krizaka/krizaka-billing/krizaka-billing-client", layer: "framework", type: "maven" },
-    { id: "orazaka-studio-client", path: "orazaka-apps/services/orazaka-studio/orazaka-studio-client", layer: "framework", type: "maven" },
-
-    // Apps & Workers
-    { id: "orazaka-conversation-service", path: "orazaka-apps/services/orazaka-conversation-service", layer: "app", type: "maven" },
-    { id: "orazaka-edge", path: "orazaka-apps/services/orazaka-edge", layer: "app", type: "maven" },
-    { id: "krizaka-users-service", path: "krizaka/krizaka-users/krizaka-users-service", layer: "app", type: "maven" },
-    { id: "orazaka-automation-service", path: "orazaka-apps/services/orazaka-automation-service", layer: "app", type: "maven" },
-    { id: "orazaka-knowledge-service", path: "orazaka-apps/services/orazaka-knowledge-service", layer: "app", type: "maven" },
-    { id: "orazaka-job-service", path: "orazaka-apps/services/orazaka-job-service", layer: "app", type: "maven" },
-    { id: "krizaka-billing-service", path: "krizaka/krizaka-billing/krizaka-billing-service", layer: "app", type: "maven" },
-    { id: "orazaka-studio-service", path: "orazaka-apps/services/orazaka-studio/orazaka-studio-service", layer: "app", type: "maven" },
-    { id: "krizaka-notifications-service", path: "krizaka/krizaka-notifications/krizaka-notifications-service", layer: "app", type: "maven" },
-    { id: "orazaka-worker-media", path: "orazaka-apps/workers/orazaka-worker-media", layer: "app", type: "python" },
-    
-    // UI clients
-    { id: "orazaka-web-client", path: "orazaka-apps/ui/orazaka-web-client", layer: "app", type: "ui" },
-    { id: "orazaka-web-admin", path: "orazaka-apps/ui/orazaka-web-admin", layer: "app", type: "ui" },
-    { id: "orazaka-mobile-client", path: "orazaka-apps/ui/orazaka-mobile-client", layer: "app", type: "ui" },
-    { id: "orazaka-cli", path: "orazaka-apps/ui/orazaka-cli", layer: "app", type: "ui" }
-  ];
-
+  const reactor = reactorModules();
+  const known = new Set(reactor.map((m) => m.id));
   const modules = [];
   const dependencies = [];
 
-  for (const m of moduleDefs) {
-    const moduleDir = join(ROOT, m.path);
-    let inbound = [];
-    let outbound = [];
+  // The test kits (`*-test-support`, AGENTS.md §2 Tier 2) are build tooling, not architecture.
+  const testOnly = new Set(reactor.filter((k) => k.id.endsWith("-test-support")).map((k) => k.id));
+  for (let i = reactor.length - 1; i >= 0; i--) if (testOnly.has(reactor[i].id)) reactor.splice(i, 1);
+  known.clear();
+  for (const m of reactor) known.add(m.id);
 
-    if (m.type === "maven") {
-      const pomPath = join(moduleDir, "pom.xml");
-      // The <parent> is the repository's aggregator (or orazaka-parent), never a dependency.
-      const pom = read(pomPath).replace(/<parent>[\s\S]*?<\/parent>/, "");
-      for (const dep of pom.matchAll(/<artifactId>((?:orazaka|krizaka)-[\w-]+)<\/artifactId>/g)) {
-        const to = dep[1];
-        if (
-          to !== m.id &&
-          to !== "orazaka-parent" &&
-          to !== "orazaka-test-support" &&
-          to !== "orazaka-end2end" &&
-          to !== "orazaka-persistence" &&
-          to !== "orazaka-workers" &&
-          !dependencies.some((e) => e.from === m.id && e.to === to)
-        ) {
-          dependencies.push({ from: m.id, to });
-        }
-      }
-      inbound = portsIn(moduleDir, "/domain/ports/inbound/");
-      outbound = portsIn(moduleDir, "/domain/ports/outbound/");
+  for (const m of reactor) {
+    m.role = roleOf(m);
+    for (const d of pomDependencies(m.pom)) {
+      if (!known.has(d.artifactId) || d.artifactId === m.id) continue;
+      if (dependencies.some((e) => e.from === m.id && e.to === d.artifactId)) continue;
+      dependencies.push({ from: m.id, to: d.artifactId, ...(d.scope !== "compile" ? { scope: d.scope } : {}), ...(d.optional ? { optional: true } : {}) });
     }
+  }
 
+  // Native workers and UI clients: one repository each, described by the manifest.
+  const extra = REPOSITORIES.filter((r) => r.layer === "worker" || (r.layer === "app" && r.kind === "npm")).map((r) => ({
+    id: r.name,
+    dir: join(ROOT, r.path),
+    path: r.path,
+    repository: r,
+    role: r.layer === "worker" ? "service" : "client",
+    runtime: r.layer === "worker" ? (r.kind === "python" ? "python" : r.kind) : "node",
+    version: null,
+    description: r.description,
+  }));
+
+  for (const m of [...reactor, ...extra]) {
+    const owner = m.repository.layer === "krizaka" ? "krizaka" : "orazaka";
     modules.push({
       id: m.id,
       path: m.path,
-      repository: repositoryOf(m.path),
-      layer: m.layer,
-      ports: { inbound, outbound }
+      repository: m.repository.name,
+      owner,
+      role: m.role,
+      // The two-value layer the first site schemas read (framework = imported, app = run).
+      layer: m.role === "client" || m.role === "service" ? "app" : "framework",
+      runtime: m.runtime ?? "jvm",
+      version: m.version,
+      description: m.description,
+      ports: m.runtime ? { inbound: [], outbound: [] } : { inbound: portsIn(m.dir, "/domain/ports/inbound/"), outbound: portsIn(m.dir, "/domain/ports/outbound/") },
     });
   }
+  const order = new Map(ROLES.map((r, i) => [r.id, i]));
+  modules.sort((a, b) => order.get(a.role) - order.get(b.role) || a.owner.localeCompare(b.owner) * -1 || a.id.localeCompare(b.id));
+  dependencies.sort((a, b) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to));
 
-  // Add UI apps and Python worker manual dependencies representing real operational flow
-  const manualDeps = [
-    { from: "orazaka-web-client", to: "orazaka-conversation-service" },
-    { from: "orazaka-web-admin", to: "orazaka-conversation-service" },
-    { from: "orazaka-mobile-client", to: "orazaka-conversation-service" },
-    { from: "orazaka-cli", to: "orazaka-conversation-service" },
-    { from: "orazaka-conversation-service", to: "orazaka-worker-media" },
-    { from: "orazaka-worker-media", to: "orazaka-persistence-app" }
-  ];
+  // What each module packages, transitively: a library's code runs inside every service that
+  // depends on it, so that is where its HTTP calls and its messages come from.
+  const direct = new Map(modules.map((m) => [m.id, dependencies.filter((d) => d.from === m.id && d.scope !== "provided").map((d) => d.to)]));
+  const closure = (id, seen = new Set()) => {
+    for (const to of direct.get(id) ?? []) if (!seen.has(to)) { seen.add(to); closure(to, seen); }
+    return seen;
+  };
+  const services = modules.filter((m) => m.role === "service");
+  const hostsOf = (id) => {
+    const self = modules.find((m) => m.id === id);
+    if (self?.role === "service") return [id];
+    return services.filter((s) => closure(s.id).has(id)).map((s) => s.id);
+  };
 
-  for (const d of manualDeps) {
-    if (!dependencies.some((e) => e.from === d.from && e.to === d.to)) {
-      dependencies.push(d);
+  // ── Runtime flows ─────────────────────────────────────────────────────────────────────────
+  const flows = [];
+  const addFlow = (f) => {
+    if (f.from === f.to) return;
+    if (!flows.some((x) => x.from === f.from && x.to === f.to && x.kind === f.kind && x.via === f.via)) flows.push(f);
+  };
+  const jvmServices = reactor.filter((m) => m.role === "service");
+  const byPort = new Map(jvmServices.map((m) => [servicePort(m.dir), m.id]));
+
+  // 1. UI clients → the services whose default local address they name.
+  for (const c of extra.filter((m) => m.role === "client")) {
+    const ports = new Set();
+    // Sources only (src/, app/): build output (.next, dist, …) would make the model depend on what ran before it.
+    const sources = ["src", "app"].flatMap((d) => walk(join(c.dir, d), (p) => /\.(ts|tsx|js|mjs)$/.test(p) && !/(__tests__|\.test\.|\.spec\.|\/e2e\/|\/tests?\/|\/\.next\/|\/dist\/|\/\.expo\/)/.test(p.replaceAll("\\", "/"))));
+    for (const f of sources) {
+      for (const m of read(f).matchAll(/localhost:(\d{4,5})/g)) if (byPort.has(Number(m[1]))) ports.add(Number(m[1]));
+    }
+    for (const port of [...ports].sort()) addFlow({ from: c.id, to: byPort.get(port), kind: "http", via: `localhost:${port}` });
+  }
+  // 2. Route tables (the edge): `- path-prefix: X` + `target: ${VAR:http://localhost:PORT}`.
+  for (const s of jvmServices) {
+    const yml = read(join(s.dir, "src/main/resources/application.yml"));
+    for (const m of yml.matchAll(/-\s*path-prefix:\s*(\S+)\s*\n\s*target:\s*\$\{[\w.-]+:https?:\/\/[\w.-]+:(\d+)\}/g)) {
+      const to = byPort.get(Number(m[2]));
+      if (to) addFlow({ from: s.id, to, kind: "http", via: `route ${m[1]}` });
+    }
+  }
+  // 3. Typed clients: a service that packages `<x>-client` calls the service of the same repository.
+  for (const s of jvmServices) {
+    for (const lib of closure(s.id)) {
+      if (!lib.endsWith("-client")) continue;
+      const repo = reactor.find((m) => m.id === lib)?.repository.name;
+      const target = jvmServices.find((m) => m.repository.name === repo && m.id !== s.id);
+      if (target) addFlow({ from: s.id, to: target.id, kind: "http", via: lib });
     }
   }
 
   const initSql = readInitDb();
+  const interceptorClasses = extractInterceptors([]);
   const pipeline = [...initSql.matchAll(/\('(\w+)',\s*'[^']+',\s*(\d+),\s*(TRUE|FALSE),\s*'[^']*'\)/g)]
-    .map((m) => ({ interceptor: m[1], order: Number(m[2]), enabled: m[3] === "TRUE" }))
+    .map((m) => {
+      const cls = interceptorClasses.find((c) => c.name === m[1]);
+      return {
+        interceptor: m[1],
+        order: Number(m[2]),
+        enabled: m[3] === "TRUE",
+        // Phase 1 (core) runs in the order of the code whatever the row says (ADR-051); phase 2 by this order.
+        phase: coreInterceptorKeys().includes(m[1]) ? "core" : "dynamic",
+        // A row with no class behind it configures nothing.
+        implemented: Boolean(cls),
+        ...(cls ? { concern: cls.concern, summary: cls.summary } : {}),
+      };
+    })
     .sort((a, b) => a.order - b.order);
+  const coreChain = coreInterceptorKeys().map((name, i) => {
+    const cls = interceptorClasses.find((c) => c.name === name);
+    return { interceptor: name, rank: i + 1, ...(cls ? { concern: cls.concern, summary: cls.summary } : {}) };
+  });
 
-  const messaging = extractMessaging(moduleDefs);
+  const messaging = extractMessaging(reactor, extra);
+
+  // 4. Messages: the services that publish a routing key → the services whose queue it reaches.
+  for (const p of messaging.producers) {
+    if (p.routingKey === "(dynamic)") continue;
+    const keys = p.routingKey === "(capability route)" ? [...new Set(messaging.capabilityRoutes.map((r) => r.routingKey))] : [p.routingKey];
+    for (const key of keys) {
+      for (const q of messaging.queues.filter((x) => x.exchange === p.exchange && x.binding)) {
+        if (!q.binding.split(", ").some((b) => topicMatches(b, key))) continue;
+        for (const c of messaging.consumers.filter((x) => x.queue === q.name)) {
+          for (const from of hostsOf(p.module)) for (const to of hostsOf(c.module)) {
+            if (!flows.some((f) => f.kind === "amqp" && f.from === from && f.to === to && f.via === q.name)) {
+              addFlow({ from, to, kind: "amqp", via: q.name, exchange: p.exchange, routingKey: p.routingKey === "(capability route)" ? q.binding : key });
+            }
+          }
+        }
+      }
+    }
+  }
+  flows.sort((a, b) => a.kind.localeCompare(b.kind) || a.from.localeCompare(b.from) || a.to.localeCompare(b.to) || a.via.localeCompare(b.via));
 
   // The repository map (orazaka.workspace.json): which GitHub repository holds what, in build order.
   const repositories = REPOSITORIES.map((r) => ({
@@ -229,173 +404,249 @@ function extractArchitecture() {
     dependsOn: r.dependsOn,
   }));
 
-  return { product: "orazaka", source: "generated from code by scripts/generate-docs.mjs — do not hand-edit", repositories, modules, dependencies, pipeline, messaging };
+  return {
+    product: "orazaka",
+    source: "generated from code by scripts/generate-docs.mjs — do not hand-edit",
+    roles: ROLES,
+    repositories,
+    modules,
+    dependencies,
+    flows,
+    pipeline,
+    coreChain,
+    messaging,
+  };
 }
 
 /**
- * Real AMQP inventory (Phase 0 fitness function): resolves the topology constants
- * (MessagingContract + the worker's AmqpConstants copy), then scans every module's
- * Java sources for @RabbitListener consumers and convertAndSend / OutboxMessage
- * producers (plus the Python media worker's telemetry publisher). docs build --check
- * turns topology drift into a build failure.
+ * Real AMQP inventory (Phase 0 fitness function). Every module's topology constants are read
+ * from the module itself (its AmqpConstants) over the shared contracts (MessagingContract,
+ * NotificationRouting); queues are the *_QUEUE / *_BINDING / *_DLQ triples of one file;
+ * consumers are @RabbitListener queues — SpEL bean references (`#{settlementQueue.name}`)
+ * resolved through the bean that declares the queue — and producers the convertAndSend /
+ * outbox calls. `docs build --check` turns topology drift into a build failure.
  */
-function extractMessaging(moduleDefs) {
-  const contractFiles = [
-    join(ROOT, "orazaka-libs/orazaka-ai-engine/orazaka-persistence-app/src/main/java/com/orazaka/persistence/infrastructure/config/MessagingContract.java"),
-    join(ROOT, "orazaka-apps/services/orazaka-automation-service/src/main/java/com/orazaka/automationservice/infrastructure/config/AmqpConstants.java"),
-    join(ROOT, "krizaka/krizaka-notifications/krizaka-notifications-api/src/main/java/com/krizaka/notifications/domain/model/NotificationRouting.java"),
-    join(ROOT, "krizaka/krizaka-notifications/krizaka-notifications-service/src/main/java/com/krizaka/notifications/service/infrastructure/config/AmqpConstants.java"),
-  ];
-  const constants = new Map();
-  for (const f of contractFiles) {
-    for (const m of read(f).matchAll(/String\s+(\w+)\s*=\s*"([^"]+)"/g)) constants.set(m[1], m[2]);
-  }
-  for (const f of contractFiles) {
-    for (const m of read(f).matchAll(/String\s+(\w+)\s*=\s*(\w+)\s*\+\s*"([^"]+)"/g)) {
-      if (constants.has(m[2])) constants.set(m[1], constants.get(m[2]) + m[3]);
+function extractMessaging(reactor, extra) {
+  const constantsOf = (src, base = new Map()) => {
+    const map = new Map(base);
+    for (let pass = 0; pass < 3; pass++) {
+      for (const m of src.matchAll(/String\s+(\w+)\s*=\s*"([^"]+)"\s*;/g)) map.set(m[1], m[2]);
+      for (const m of src.matchAll(/String\s+(\w+)\s*=\s*([\w.]+)\s*\+\s*"([^"]+)"\s*;/g)) {
+        const v = map.get(m[2].split(".").pop());
+        if (v) map.set(m[1], v + m[3]);
+      }
+      for (const m of src.matchAll(/String\s+(\w+)\s*=\s*([\w.]+)\s*;/g)) {
+        const v = map.get(m[2].split(".").pop());
+        if (v && !map.has(m[1])) map.set(m[1], v);
+      }
     }
-    // A constant that IS another constant — `JOBS_BATCH_BINDING = JOB_MEDIA_GENERATE` (ADR-067).
-    // Without this the lanes documented themselves as binding nothing, which is the drift §10 of
-    // AGENTS.md exists to refuse: a generated model that is quietly wrong is worse than none.
-    // Qualified as well — `REQUESTS_BINDING = NotificationRouting.NOTIFICATION_REQUESTED` names the
-    // contract's constant rather than copying its value.
-    for (const m of read(f).matchAll(/String\s+(\w+)\s*=\s*([\w.]+)\s*;/g)) {
-      const ref = m[2].split(".").pop();
-      if (constants.has(ref) && !constants.has(m[1])) constants.set(m[1], constants.get(ref));
-    }
+    return map;
+  };
+
+  // The shared contracts every module may name.
+  const contractFiles = reactor.flatMap((m) =>
+    walk(join(m.dir, "src/main/java"), (p) => /\/(MessagingContract|NotificationRouting)\.java$/.test(p.replaceAll("\\", "/"))),
+  );
+  if (!contractFiles.some((f) => f.endsWith("MessagingContract.java"))) {
+    throw new Error("generate-docs: MessagingContract.java not found — the messaging topology depends on it");
   }
-  const resolveToken = (raw, local = constants) => {
+  const shared = constantsOf(contractFiles.map(read).join("\n"));
+  const JOBS = shared.get("JOBS_EXCHANGE");
+  const EVENTS = shared.get("EVENTS_EXCHANGE");
+  const DLX = shared.get("DLX_EXCHANGE");
+
+  // The Krizaka building blocks name no exchange: they run on the one the host platform gives them
+  // (krizaka.messaging.exchanges, EVENTS_EXCHANGE / DLX_EXCHANGE in the workspace env).
+  // The contract's key builders — `jobDoneKey(jobId)` is `JOB_EVENT_PREFIX + jobId + JOB_EVENT_DONE_SUFFIX`.
+  const keyBuilders = new Map(
+    [...contractFiles.map(read).join("\n").matchAll(/static\s+String\s+(\w+)\(\s*String\s+\w+\s*\)\s*\{\s*return\s+([^;]+);/g)].map((m) => [m[1], m[2]]),
+  );
+  // A routing key or a queue name as the code writes it: a literal, a constant, or a concatenation
+  // of both with runtime values (`"job." + jobId + ".done"` → `job.{…}.done`).
+  const resolveToken = (raw, local) => {
     const token = raw.trim();
-    const lit = token.match(/^"([^"]+)"$/);
-    if (lit) return lit[1];
-    // CONSTANT or Type.CONSTANT, optionally "+ expr" (user-scoped suffix → {…})
-    const concat = token.match(/^([\w.]+)\s*\+\s*.+$/);
-    if (concat) {
-      const base = local.get(concat[1].split(".").pop());
-      return base ? base + "{…}" : null;
-    }
-    return local.get(token.split(".").pop()) ?? null;
+    if (/^(exchanges\.events\(\)|eventsExchange|this\.eventsExchange)$/.test(token)) return EVENTS;
+    if (/^(exchanges\.deadLetter\(\)|deadLetterExchange)$/.test(token)) return DLX;
+    const call = token.match(/^(?:[\w]+\.)?(\w+)\(([^()]*)\)$/);
+    if (call && keyBuilders.has(call[1])) return resolveToken(keyBuilders.get(call[1]), local);
+    const parts = token.split(/\s*\+\s*/);
+    let known = false;
+    const text = parts
+      .map((part) => {
+        const lit = part.match(/^"([^"]*)"$/);
+        if (lit) { known = true; return lit[1]; }
+        const v = local.get(part.split(".").pop());
+        if (v) { known = true; return v; }
+        return "{…}";
+      })
+      .join("")
+      .replace(/(\{…\})+/g, "{…}");
+    return known ? text : null;
   };
 
-  /** File-local String constants/variables layered over the shared contract constants. */
-  const localConstants = (src) => {
-    const local = new Map(constants);
-    for (const m of src.matchAll(/String\s+(\w+)\s*=\s*"([^"]+)"/g)) local.set(m[1], m[2]);
-    for (const m of src.matchAll(/String\s+(\w+)\s*=\s*([\w.]+)\s*;/g)) {
-      const v = local.get(m[2].split(".").pop());
-      if (v) local.set(m[1], v);
-    }
-    for (const m of src.matchAll(/String\s+(\w+)\s*=\s*([\w.]+)\s*\+\s*[\w.()]+\s*;/g)) {
-      const base = local.get(m[2].split(".").pop());
-      if (base) local.set(m[1], base + "{…}");
-    }
-    return local;
-  };
-
+  const queues = [];
   const consumers = [];
   const producers = [];
+  // A job whose key comes from the capability registry (CapabilityRoutingClient, ADR-037) is
+  // routed by a row of orazaka_capabilities: the key is data, so it is read from the seed below.
+  let routedByCapability = false;
   const addProducer = (module, exchange, routingKey) => {
     if (!exchange || !routingKey) return;
-    if (!producers.some((x) => x.module === module && x.exchange === exchange && x.routingKey === routingKey)) {
-      producers.push({ module, exchange, routingKey });
-    }
+    if (routingKey === "(dynamic)" && exchange === JOBS && routedByCapability) routingKey = "(capability route)";
+    if (!producers.some((x) => x.module === module && x.exchange === exchange && x.routingKey === routingKey)) producers.push({ module, exchange, routingKey });
+  };
+  const addConsumer = (module, queue) => {
+    if (queue && !consumers.some((x) => x.module === module && x.queue === queue)) consumers.push({ module, queue });
   };
 
-  for (const def of moduleDefs.filter((d) => d.type === "maven")) {
-    const srcDir = join(ROOT, def.path, "src", "main", "java");
-    for (const file of walk(srcDir, (p) => p.endsWith(".java"))) {
-      const src = read(file);
-      const local = localConstants(src);
-      // `queues = X)` and `queues = X, concurrency = "…")` alike: a lane declares its own pool
-      // size beside its queue (ADR-067), and a pattern that stopped at the first attribute lost
-      // both lanes from the inventory.
-      for (const m of src.matchAll(
-        /@RabbitListener\(\s*queues\s*=\s*(\{[^}]*\}|[^,)\n]+)\s*[,)]/g,
-      )) {
-        const body = m[1].replace(/[{}]/g, "");
-        for (const token of body.split(",")) {
-          const queue = resolveToken(token, local);
-          if (queue && !consumers.some((x) => x.module === def.id && x.queue === queue)) {
-            consumers.push({ module: def.id, queue });
-          }
+  for (const mod of reactor) {
+    const files = walk(join(mod.dir, "src/main/java"), (p) => p.endsWith(".java"));
+    if (!files.length) continue;
+    const moduleConstants = constantsOf(
+      files.filter((f) => /\/(AmqpConstants|MessagingContract|NotificationRouting)\.java$/.test(f.replaceAll("\\", "/"))).map(read).join("\n"),
+      shared,
+    );
+
+    // Queues: the *_QUEUE / *_BINDING / *_DLQ triples of each constants file of this module.
+    for (const f of files.filter((p) => /\/(AmqpConstants|MessagingContract)\.java$/.test(p.replaceAll("\\", "/")))) {
+      const own = constantsOf(read(f), shared);
+      const local = [...read(f).matchAll(/String\s+(\w+_QUEUE)\s*=/g)].map((m) => m[1]);
+      for (const name of local) {
+        const value = own.get(name);
+        if (!value) continue;
+        const stem = name.slice(0, -"_QUEUE".length);
+        // One queue may carry several bindings — the interactive lane binds job.text.* and
+        // job.media.analyze (ADR-067); a service's queue binds DONE_BINDING and ERROR_BINDING.
+        const fileBindings = [...read(f).matchAll(/String\s+(\w+_BINDING)\s*=/g)].map((m) => m[1]);
+        let keys = fileBindings.filter((k) => k === `${stem}_BINDING` || (k.startsWith(`${stem}_`) && k.endsWith("_BINDING")));
+        // A file with one queue and unprefixed bindings (DONE_BINDING, ERROR_BINDING) binds them to it
+        // when the configuration says so: read the Binding beans of the module.
+        if (!keys.length) {
+          const config = files.map(read).join("\n");
+          const bean = stem.toLowerCase().replace(/_(\w)/g, (_, c) => c.toUpperCase());
+          keys = fileBindings.filter((k) => new RegExp(`bind\\(\\s*\\w*${bean}Queue\\s*\\)[\\s\\S]{0,120}?with\\(\\s*(?:AmqpConstants\\.)?${k}\\b`, "i").test(config));
+        }
+        const binding = keys.map((k) => own.get(k)).filter((v, i, all) => v && all.indexOf(v) === i).join(", ") || null;
+        const exchange = value.startsWith(`${JOBS}.`) ? JOBS : EVENTS;
+        if (!queues.some((q) => q.name === value)) {
+          queues.push({ name: value, exchange, binding, dlq: own.get(`${stem}_DLQ`) ?? null, declaredBy: mod.id });
         }
       }
-      // A resolvable exchange with an unresolvable key is a DB-driven dynamic
-      // dispatch (e.g. orazaka_routing_rules) — inventoried as "(dynamic)".
+    }
+
+    for (const file of files) {
+      const src = read(file);
+      const local = constantsOf(src, moduleConstants);
+      routedByCapability = /\bCapabilityRoutingClient\b/.test(src);
+      for (const m of src.matchAll(/@RabbitListener\(\s*queues\s*=\s*(\{[^}]*\}|[^,)\n]+)\s*[,)]/g)) {
+        for (const token of m[1].replace(/[{}]/g, " ").split(",")) {
+          const spel = token.trim().match(/^"#\s*(\w+)\.name\s*"$/) ?? token.trim().match(/^"#\{(\w+)\.name\}"$/);
+          if (spel) {
+            // `#{settlementQueue.name}`: the queue the bean of that name declares.
+            const bean = files.map(read).join("\n").match(new RegExp(`Queue\\s+${spel[1]}\\s*\\([^)]*\\)\\s*\\{[\\s\\S]*?(?:new Queue\\(|QueueBuilder\\.durable\\()\\s*([^,)]+)`));
+            addConsumer(mod.id, bean ? resolveToken(bean[1], local) : null);
+          } else addConsumer(mod.id, resolveToken(token, local));
+        }
+      }
       for (const m of src.matchAll(/convertAndSend\(\s*([^,()]+),\s*([^,]+?),/g)) {
         const ex = resolveToken(m[1], local);
-        addProducer(def.id, ex, resolveToken(m[2], local) ?? (ex ? "(dynamic)" : null));
+        addProducer(mod.id, ex, resolveToken(m[2], local) ?? (ex ? "(dynamic)" : null));
       }
-      for (const m of src.matchAll(/new OutboxMessage\(([\s\S]*?)\)/g)) {
+      for (const m of src.matchAll(/new OutboxMessage\(([\s\S]*?)\)\s*\)?;/g)) {
         const args = m[1].split(",");
         if (args.length >= 4) {
           const ex = resolveToken(args[2], local);
-          addProducer(def.id, ex, resolveToken(args[3], local) ?? (ex ? "(dynamic)" : null));
+          addProducer(mod.id, ex, resolveToken(args[3], local) ?? (ex ? "(dynamic)" : null));
         }
       }
-      // The studio's own outbox (ADR-067): `appendCommand(aggregate, exchange, routingKey, id, …)`
-      // publishes a step dispatch, and `append(aggregate, eventType, …)` an event on the events
-      // exchange. Both reach the broker through OutboxRelay; a generator that only knew
-      // convertAndSend lost the run path as a producer the day it became durable.
+      // The studio's own outbox (ADR-067): `appendCommand(aggregate, exchange, routingKey, …)` and
+      // `append(aggregate, eventType, …)` on the events exchange, both relayed by OutboxRelay.
       for (const m of src.matchAll(/appendCommand\(([\s\S]*?)\);/g)) {
         const args = m[1].split(",");
         if (args.length >= 4) {
           const ex = resolveToken(args[1], local);
-          addProducer(def.id, ex, resolveToken(args[2], local) ?? (ex ? "(dynamic)" : null));
+          addProducer(mod.id, ex, resolveToken(args[2], local) ?? (ex ? "(dynamic)" : null));
         }
       }
       for (const m of src.matchAll(/outboxService\.append\(([\s\S]*?)\);/g)) {
         const args = m[1].split(",");
-        if (args.length >= 3) {
-          addProducer(def.id, constants.get("EVENTS_EXCHANGE"), resolveToken(args[1], local) ?? "(dynamic)");
-        }
+        if (args.length >= 3) addProducer(mod.id, EVENTS, resolveToken(args[1], local) ?? "(dynamic)");
       }
     }
   }
 
-  // Python media worker: telemetry publisher (duplicated contract subset).
-  const telemetry = read(join(ROOT, "orazaka-apps/workers/orazaka-worker-media/app/telemetry.py"));
-  const pyExchange = telemetry.match(/EVENTS_EXCHANGE\s*=\s*'([^']+)'/)?.[1];
-  const pyKey = telemetry.match(/routing_key=f"([^"]+)"/)?.[1]?.replace(/\{[^}]+\}/g, "{…}");
-  if (pyExchange && pyKey) addProducer("orazaka-worker-media", pyExchange, pyKey);
-
-  // Queues with their binding pattern and DLQ, from the *_QUEUE/*_BINDING/*_DLQ triples.
-  const queues = [];
-  for (const [name, value] of constants) {
-    if (!name.endsWith("_QUEUE")) continue;
-    const stem = name.slice(0, -"_QUEUE".length);
-    const entry = {
-      name: value,
-      exchange: value.startsWith("orazaka.jobs") ? constants.get("JOBS_EXCHANGE") : constants.get("EVENTS_EXCHANGE"),
-      // One queue may carry SEVERAL bindings — the interactive lane binds job.text.* and
-      // job.media.analyze, because a lane is a property of the work and not of the media type
-      // (ADR-067). Every JOBS_<LANE>_*_BINDING is collected, not just the exact stem.
-      binding:
-        [...constants.entries()]
-          .filter(([k]) => k === stem + "_BINDING" || (k.startsWith(stem + "_") && k.endsWith("_BINDING")))
-          .map(([, v]) => v)
-          .filter((v, i, all) => all.indexOf(v) === i)
-          .join(", ") || null,
-      dlq: constants.get(stem + "_DLQ") ?? null,
-    };
-    if (!queues.some((q) => q.name === entry.name)) queues.push(entry);
+  // Native workers: Python publishers and consumers (a duplicated subset of the contract).
+  for (const w of extra.filter((m) => m.runtime === "python")) {
+    for (const f of walk(w.dir, (p) => p.endsWith(".py") && !/\/tests?\//.test(p))) {
+      const src = read(f);
+      const pyConst = new Map([...src.matchAll(/^(\w+)\s*=\s*["']([^"']+)["']/gm)].map((m) => [m[1], m[2]]));
+      for (const m of src.matchAll(/basic_consume\(\s*queue\s*=\s*(\w+)/g)) {
+        const queue = pyConst.get(m[1]);
+        addConsumer(w.id, queue);
+        // The worker binds its queue from its declaration (worker.yaml `bindings`, ADR-038).
+        const declared = [...read(join(w.dir, "worker.yaml")).matchAll(/^\s*-\s*"(job\.[^"]+)"/gm)].map((b) => b[1]);
+        const q = queues.find((x) => x.name === queue);
+        if (q && declared.length) q.binding = [...new Set([...(q.binding ? q.binding.split(", ") : []), ...declared])].join(", ");
+      }
+      const ex = src.match(/EVENTS_EXCHANGE\s*=\s*'([^']+)'/)?.[1];
+      const key = src.match(/routing_key=f"([^"]+)"/)?.[1]?.replace(/\{[^}]+\}/g, "{…}");
+      if (ex && key) addProducer(w.id, ex, key);
+    }
   }
+
+  // The retry policy of the kit's listener container (krizaka.messaging.retry), defaults read from code.
+  const retrySrc = read(sourceFile("krizaka/krizaka-platform-kit/krizaka-messaging", "ConsumerRetryProperties.java"));
+  const retry = {
+    maxAttempts: Number(retrySrc.match(/maxAttempts\s*=\s*maxAttempts\s*==\s*null\s*\?\s*(\d+)/)?.[1]),
+    initialMs: Number(retrySrc.match(/initial\s*=\s*initial\s*==\s*null\s*\?\s*Duration\.ofMillis\((\d+)\)/)?.[1]),
+    multiplier: Number(retrySrc.match(/multiplier\s*=\s*multiplier\s*==\s*null\s*\?\s*([\d.]+)/)?.[1]),
+    maxMs: Number(retrySrc.match(/max\s*=\s*max\s*==\s*null\s*\?\s*Duration\.ofSeconds\((\d+)\)/)?.[1]) * 1000,
+    property: "krizaka.messaging.retry",
+    module: "krizaka-messaging",
+  };
+  if (Object.values(retry).some((v) => typeof v === "number" && !Number.isFinite(v))) {
+    throw new Error("generate-docs: could not read the retry defaults of ConsumerRetryProperties");
+  }
+  // Which consumers run on the kit's listener container (retry, then <queue>.dlq).
+  const deps = new Map(reactor.map((m) => [m.id, pomDependencies(m.pom).map((d) => d.artifactId)]));
+  const usesKit = (id, seen = new Set()) => {
+    if (id === "krizaka-messaging") return true;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return (deps.get(id) ?? []).some((d) => usesKit(d, seen));
+  };
+  for (const c of consumers) c.retry = usesKit(c.module) ? "kit" : "module";
+
+  // The capability routes: (feature_key, handler_key, routing_key, …) rows of orazaka_capabilities.
+  const seed = readInitDb();
+  const capabilityRoutes = [];
+  for (const block of seed.matchAll(/INSERT INTO orazaka_capabilities\s*\(([^)]*)\)\s*VALUES([\s\S]*?);\s*$/gm)) {
+    const cols = block[1].split(",").map((c) => c.trim());
+    const [fi, hi, ri] = ["feature_key", "handler_key", "routing_key"].map((c) => cols.indexOf(c));
+    if (fi < 0 || ri < 0) continue;
+    for (const row of block[2].matchAll(/^\(\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'/gm)) {
+      const vals = [row[1], row[2], row[3]];
+      const route = { feature: vals[fi], handler: hi >= 0 ? vals[hi] : null, routingKey: vals[ri] };
+      if (!capabilityRoutes.some((r) => r.feature === route.feature)) capabilityRoutes.push(route);
+    }
+  }
+  capabilityRoutes.sort((a, b) => a.routingKey.localeCompare(b.routingKey) || a.feature.localeCompare(b.feature));
+
   queues.sort((a, b) => a.name.localeCompare(b.name));
   consumers.sort((a, b) => a.module.localeCompare(b.module) || a.queue.localeCompare(b.queue));
   producers.sort((a, b) => a.module.localeCompare(b.module) || a.routingKey.localeCompare(b.routingKey));
-
   const exchanges = [
-    { name: constants.get("JOBS_EXCHANGE"), type: "topic" },
-    { name: constants.get("EVENTS_EXCHANGE"), type: "topic" },
-    { name: constants.get("DLX_EXCHANGE"), type: "direct" },
+    { name: JOBS, type: "topic" },
+    { name: EVENTS, type: "topic" },
+    { name: DLX, type: "direct" },
   ].filter((e) => e.name);
 
-  return { exchanges, queues, producers, consumers };
+  return { exchanges, queues, producers, consumers, capabilityRoutes, retry };
 }
 
 /** UseCase catalog from business/usecases. */
 function extractUseCases() {
-  const dir = join(ROOT, "orazaka-libs/orazaka-ai-engine/orazaka-business/src/main/java/com/orazaka/business/usecases");
+  const dir = sourceDir("orazaka-libs/orazaka-ai-engine/orazaka-business", "business/usecases");
   return javaFiles(dir)
     .filter((f) => /implements\s+UseCase\b/.test(read(f)))
     .map((f) => {
@@ -424,28 +675,56 @@ function extractUseCases() {
  * that is where the registry reads it from (ADR-051).
  */
 function coreInterceptorKeys() {
-  const src = read(join(ROOT, "orazaka-libs/orazaka-ai-engine/orazaka-core/src/main/java/com/orazaka/core/application/pipeline/PipelineRegistry.java"));
+  const src = read(sourceFile("orazaka-libs/orazaka-ai-engine/orazaka-core", "PipelineRegistry.java"));
   const block = /CORE_INTERCEPTOR_KEYS\s*=\s*List\.of\(([\s\S]*?)\);/.exec(src);
   return block ? [...block[1].matchAll(/"(\w+)"/g)].map((m) => m[1]) : [];
 }
 
+/**
+ * The first sentence of the javadoc right above `class <name>`, inline tags rendered as code and
+ * braces dropped (the text is compiled as MDX on the site), or null.
+ */
+function classSummary(src, name) {
+  const at = src.search(new RegExp(`\\bclass\\s+${name}\\b`));
+  if (at < 0) return null;
+  const doc = src.slice(0, at).match(/\/\*\*([\s\S]*?)\*\/[^/]*$/)?.[1];
+  if (!doc) return null;
+  const text = doc
+    .split("\n")
+    .map((l) => l.replace(/^\s*\*\s?/, ""))
+    .filter((l) => !l.startsWith("@"))
+    .join(" ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\{@\w+\s+([^}]*)\}/g, "`$1`")
+    .replace(/[{}]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  // "Order 6 — …": the order lives in the database (ADR-027), a number in prose is stale by design.
+  const body = text.replace(/^Order\s+\d+\s*[—–-]\s*/, "");
+  const first = body.match(/^(.+?[.!?])(\s|$)/)?.[1] ?? body;
+  return first || null;
+}
+
 /** Interceptor registry: classes + concern package + core rank or DB order. */
 function extractInterceptors(pipeline) {
-  const dir = join(ROOT, "orazaka-libs/orazaka-ai-engine/orazaka-interceptors/src/main/java/com/orazaka/interceptor");
+  const dir = sourceDir("orazaka-libs/orazaka-ai-engine/orazaka-interceptors", "orazaka/interceptor");
   const orderByName = new Map(pipeline.map((p) => [p.interceptor.toLowerCase(), p]));
   const core = coreInterceptorKeys();
   return javaFiles(dir)
-    .filter((f) => /Interceptor\.java$/.test(f) && /\bclass\s+\w+Interceptor\b/.test(read(f)))
+    // An interceptor is a class implementing the core's PromptContextInterceptor SPI (ERR-122),
+    // whatever its name says: UserContextResolver and SystemContextInjector lead the core chain.
+    .filter((f) => new RegExp(`\\bclass\\s+${basename(f, ".java")}\\b[^{]*\\bimplements\\b[^{]*\\bPromptContextInterceptor\\b`).test(read(f)))
     .map((f) => {
       const name = basename(f, ".java");
       const concern = relative(dir, f).split(/[/\\]/)[0];
+      const summary = classSummary(read(f), name);
       const coreRank = core.indexOf(name);
       if (coreRank >= 0) {
-        return { name, concern, order: `core ${coreRank + 1}`, enabled: "locked", sort: coreRank - 1000 };
+        return { name, concern, summary, order: `core ${coreRank + 1}`, enabled: "locked", sort: coreRank - 1000 };
       }
-      const key = name.replace(/Interceptor$/, "").toLowerCase();
-      const hit = [...orderByName.entries()].find(([k]) => key.includes(k) || k.includes(key))?.[1];
-      return { name, concern, order: hit?.order ?? null, enabled: hit?.enabled ?? null, sort: hit?.order ?? 999 };
+      // By exact key: the fuzzy match it replaces gave UserContextInterceptor the order of UserContextResolver.
+      const hit = orderByName.get(name.toLowerCase());
+      return { name, concern, summary, order: hit?.order ?? null, enabled: hit?.enabled ?? null, sort: hit?.order ?? 999 };
     })
     .sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name));
 }
@@ -900,19 +1179,55 @@ const mdRepositories = (a) => {
 };
 
 const mdArchitecture = (a) => {
-  const lines = [frontmatter("Architecture Reference", "Module map, dependencies, pipeline and messaging — extracted from the code.", "Architecture", 2)];
-  lines.push("## Modules\n", "| Module | Layer | Inbound ports | Outbound ports |", "|:---|:---|:---|:---|");
-  for (const m of a.modules) lines.push(`| \`${m.id}\` | ${m.layer} | ${m.ports.inbound.join(", ") || "—"} | ${m.ports.outbound.join(", ") || "—"} |`);
-  lines.push("\n## Dependency edges\n", "```", ...a.dependencies.map((d) => `${d.from} → ${d.to}`), "```");
-  lines.push("\n## Interceptor pipeline (DB-driven order)\n", "| # | Interceptor | Enabled |", "|:--|:---|:--|");
-  for (const p of a.pipeline) lines.push(`| ${p.order} | \`${p.interceptor}\` | ${p.enabled ? "✅" : "—"} |`);
-  lines.push("\n## Messaging topology (AGENTS.md §6)\n", "**Exchanges**\n", ...a.messaging.exchanges.map((e) => `- \`${e.name}\` (${e.type})`));
-  lines.push("\n**Queues**\n", "| Queue | Exchange | Binding | DLQ |", "|:---|:---|:---|:---|");
-  for (const q of a.messaging.queues) lines.push(`| \`${q.name}\` | \`${q.exchange}\` | \`${q.binding ?? "—"}\` | \`${q.dlq ?? "—"}\` |`);
+  const code = (x) => `\`${x}\``;
+  const lines = [frontmatter("Architecture Reference", "Module map, dependencies, runtime flows, pipeline and messaging — extracted from the code.", "Architecture", 2)];
+  lines.push(
+    "Ports & Adapters: dependencies point toward the core. Each module has one **role** — one ring of the hexagon, outermost first — read from the code by the rule beside it.\n",
+    "| Role | Rule | Modules |",
+    "|:---|:---|:---|",
+  );
+  for (const r of a.roles) {
+    const ms = a.modules.filter((m) => m.role === r.id).map((m) => code(m.id));
+    lines.push(`| **${r.title}** | ${r.rule} | ${ms.join(", ") || "—"} |`);
+  }
+  lines.push("\n## Modules\n", "| Module | Role | Repository | Version | Inbound ports | Outbound ports |", "|:---|:---|:---|:---|:---|:---|");
+  for (const m of a.modules) {
+    lines.push(`| ${code(m.id)} | ${m.role} | ${code(m.repository)} | ${m.version ?? "—"} | ${m.ports.inbound.join(", ") || "—"} | ${m.ports.outbound.join(", ") || "—"} |`);
+  }
+  lines.push("\n## Dependencies\n", "Build dependencies between the modules above (test scope excluded): who packages whom.\n", "| Module | Depends on |", "|:---|:---|");
+  for (const m of a.modules) {
+    const to = a.dependencies.filter((d) => d.from === m.id).map((d) => code(d.to) + (d.scope ? ` (${d.scope})` : ""));
+    if (to.length) lines.push(`| ${code(m.id)} | ${to.join(", ")} |`);
+  }
+  lines.push(
+    "\n## Runtime flows\n",
+    "Who calls whom while the platform runs: HTTP (UI defaults, the edge route table, the typed clients a service packages) and AMQP (a published routing key that reaches a queue).\n",
+    "| From | To | Kind | Via |",
+    "|:---|:---|:---|:---|",
+  );
+  for (const f of a.flows) lines.push(`| ${code(f.from)} | ${code(f.to)} | ${f.kind} | ${code(f.via)}${f.routingKey ? ` (${code(f.routingKey)})` : ""} |`);
+  lines.push("\n## Interceptor pipeline\n", "**Phase 1 — core chain** (fixed in code, non-bypassable, ADR-051)\n", "| # | Interceptor | Concern |", "|:--|:---|:---|");
+  for (const c of a.coreChain) lines.push(`| ${c.rank} | ${code(c.interceptor)} | ${c.concern ?? "—"} |`);
+  lines.push("\n**Phase 2 — configured chain** (order and switch in `pipeline_interceptor_config`)\n", "| Order | Interceptor | Enabled | Implemented |", "|:--|:---|:--|:--|");
+  for (const p of a.pipeline.filter((x) => x.phase === "dynamic")) lines.push(`| ${p.order} | ${code(p.interceptor)} | ${p.enabled ? "✅" : "—"} | ${p.implemented ? "✅" : "⚠ no class"} |`);
+  const r = a.messaging.retry;
+  lines.push(
+    "\n## Messaging topology (AGENTS.md §6)\n",
+    "**Exchanges**\n",
+    ...a.messaging.exchanges.map((e) => `- ${code(e.name)} (${e.type})`),
+    "",
+    `**Retry, then dead letter** — a listener on the kit's container (${code(r.module)}, ${code(r.property)}) runs up to ${r.maxAttempts} times, ` +
+      `waiting ${r.initialMs} ms ×${r.multiplier} up to ${r.maxMs / 1000} s, then the message goes to ${code("<queue>.dlq")}.`,
+  );
+  lines.push("\n**Queues**\n", "| Queue | Exchange | Binding | DLQ | Declared by | Consumed by |", "|:---|:---|:---|:---|:---|:---|");
+  for (const q of a.messaging.queues) {
+    const by = a.messaging.consumers.filter((c) => c.queue === q.name).map((c) => code(c.module) + (c.retry === "kit" ? "" : " (own retry)"));
+    lines.push(`| ${code(q.name)} | ${code(q.exchange)} | ${q.binding ? code(q.binding) : "—"} | ${q.dlq ? code(q.dlq) : "—"} | ${code(q.declaredBy)} | ${by.join(", ") || "—"} |`);
+  }
   lines.push("\n**Producers**\n", "| Module | Exchange | Routing key |", "|:---|:---|:---|");
-  for (const p of a.messaging.producers) lines.push(`| \`${p.module}\` | \`${p.exchange}\` | \`${p.routingKey}\` |`);
-  lines.push("\n**Consumers**\n", "| Module | Queue |", "|:---|:---|");
-  for (const c of a.messaging.consumers) lines.push(`| \`${c.module}\` | \`${c.queue}\` |`);
+  for (const p of a.messaging.producers) lines.push(`| ${code(p.module)} | ${code(p.exchange)} | ${code(p.routingKey)} |`);
+  lines.push("\n**Capability routes** (`orazaka_capabilities`: where a job of each capability is published)\n", "| Capability | Handler | Routing key |", "|:---|:---|:---|");
+  for (const c of a.messaging.capabilityRoutes) lines.push(`| ${code(c.feature)} | ${c.handler ? code(c.handler) : "—"} | ${code(c.routingKey)} |`);
   return lines.join("\n") + "\n";
 };
 

@@ -36,6 +36,7 @@ hands-off boot. Tear everything down with `orazaka stop`.
 | `orazaka chat` | Execute interactive REPL or single-shot chat |
 | `orazaka config` | Interactive configuration wizard — review and update .env variables |
 | `orazaka db` | Database maintenance operations |
+| `orazaka demo` | Demonstration persona on the local stack (never on a deployed one) |
 | `orazaka dev` | Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile) |
 | `orazaka docs` | Code-driven documentation: build (generate) \| sync (to the site) |
 | `orazaka doctor` | Advanced system health check with automatic recovery suggestions |
@@ -111,6 +112,14 @@ Database maintenance operations
 | Option | Description |
 |:---|:---|
 | `-y, --yes` | Skip the destructive-action confirmation prompt |
+
+### `orazaka demo`
+
+Demonstration persona on the local stack (never on a deployed one)
+
+| Option | Description |
+|:---|:---|
+| `--fresh` | Delete Eric's conversations first, for a demo that starts from a clean history |
 
 ### `orazaka dev`
 

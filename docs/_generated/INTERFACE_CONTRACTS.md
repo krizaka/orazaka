@@ -69,3 +69,20 @@ generated: true
 - `UserRepositoryPort`
 - `VerificationTokenRepositoryPort`
 
+## `orazaka-persistence-app-api`
+
+**Inbound ports**
+
+- `CapabilityManager`
+- `CatalogModelManager`
+- `ChatMemoryPersistenceProvider`
+- `ChatSessionPersistenceProvider`
+- `JobPersistenceProvider`
+- `OutboxStore`
+- `PipelineConfigManager`
+- `PlatformMcpServerPersistenceProvider`
+- `PlatformToolConfigPersistenceProvider`
+- `RuntimeConfigProvider`
+- `UserMcpServerPersistenceProvider`
+- `ValidationPipelineManager`
+
