@@ -598,6 +598,10 @@
       "to": "krizaka-billing-api"
     },
     {
+      "from": "krizaka-billing-client",
+      "to": "krizaka-test-support"
+    },
+    {
       "from": "orazaka-studio-client",
       "to": "krizaka-security"
     },
@@ -607,7 +611,19 @@
     },
     {
       "from": "orazaka-conversation-service",
-      "to": "krizaka-security"
+      "to": "krizaka-spring-boot-starter-web"
+    },
+    {
+      "from": "orazaka-conversation-service",
+      "to": "krizaka-spring-boot-starter-security"
+    },
+    {
+      "from": "orazaka-conversation-service",
+      "to": "krizaka-spring-boot-starter-rabbitmq"
+    },
+    {
+      "from": "orazaka-conversation-service",
+      "to": "krizaka-spring-boot-starter-observability"
     },
     {
       "from": "orazaka-conversation-service",
@@ -648,6 +664,10 @@
     {
       "from": "orazaka-conversation-service",
       "to": "orazaka-persistence-bridge"
+    },
+    {
+      "from": "orazaka-conversation-service",
+      "to": "krizaka-test-support"
     },
     {
       "from": "orazaka-conversation-service",
@@ -788,6 +808,10 @@
     {
       "from": "krizaka-notifications-service",
       "to": "krizaka-test-support"
+    },
+    {
+      "from": "krizaka-notifications-service",
+      "to": "krizaka-users-api"
     },
     {
       "from": "orazaka-web-client",
