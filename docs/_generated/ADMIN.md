@@ -21,9 +21,10 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 
 | Screen | What it is for | Tabs |
 |:---|:---|:---|
-| `/` | Renders the remastered SecOps console landing. | — |
-| `/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
-| `/studios` | The Studio Builder console (ADR-034 §12.4). | — |
+| `/(console)` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
+| `/(console)/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
+| `/(console)/studios` | The Studio Builder console (ADR-034 §12.4). | — |
+| `/login` | `/login` — where the gate (`src/proxy.ts`) and next-auth (`pages.signIn`) send an operator without a session. | — |
 
 ![Billing — consumption per capability and model, refusals included](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/02-billing-usage.png)
 
@@ -56,6 +57,8 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | Method | Path | Access | Summary |
 |:---|:---|:---|:---|
 | GET | `/api/v1/features/all` | ADMIN | Admin: all capabilities (enabled or not) from the database. |
+| GET | `/api/v1/jobs` | authenticated | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
+| GET | `/api/v1/jobs/active-connections` | ADMIN | Retrieves the current active SSE connection count. |
 | GET | `/api/v1/models/catalog` | authenticated | Retrieves the complete AI model catalog definitions from the database. |
 | GET | `/api/v1/billing/configuration` | ADMIN | The declared key vocabulary — type, permitted domain and code default per key. |
 | PATCH | `/api/v1/billing/configuration` | ADMIN | Applies one validated configuration change. |
