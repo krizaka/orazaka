@@ -13,6 +13,7 @@
 Sovereign AI platform by [Krizaka](https://krizaka.com) — and the **workspace** that assembles it.
 
 [![CI](https://github.com/krizaka/orazaka/actions/workflows/ci.yml/badge.svg)](https://github.com/krizaka/orazaka/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/krizaka/orazaka/badge)](https://scorecard.dev/viewer/?uri=github.com/krizaka/orazaka)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Orazaka](https://img.shields.io/badge/part%20of-Orazaka-f67e23)](https://github.com/krizaka/orazaka#repositories)
 [![Docs](https://img.shields.io/badge/docs-krizaka.com%2Fdocs%2Forazaka-f67e23)](https://www.krizaka.com/docs/orazaka)
