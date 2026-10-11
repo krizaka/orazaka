@@ -2601,7 +2601,7 @@
       "iconKey": "studio",
       "sortWeight": 100,
       "pricing": {
-        "priceCents": 4900,
+        "priceCents": 7900,
         "includedCredits": 5000
       },
       "capabilities": [],
@@ -3611,7 +3611,7 @@
       "iconKey": "shield-check",
       "sortWeight": 20,
       "pricing": {
-        "priceCents": 4900,
+        "priceCents": 7900,
         "includedCredits": 500
       },
       "capabilities": [
