@@ -2059,6 +2059,533 @@
       "module": "krizaka-messaging"
     }
   },
+  "buildingBlocks": {
+    "roles": [
+      {
+        "id": "service",
+        "title": "Services",
+        "rule": "a module with a main (SpringApplication.run): a deployable Krizaka service"
+      },
+      {
+        "id": "adapter",
+        "title": "Adapters",
+        "rule": "a `*-client` or `*-persistence` module: typed HTTP client, JPA adapter"
+      },
+      {
+        "id": "domain",
+        "title": "Domain core",
+        "rule": "a `*-core` module"
+      },
+      {
+        "id": "contract",
+        "title": "Contracts",
+        "rule": "a `*-api` module — interfaces, records, events"
+      },
+      {
+        "id": "starter",
+        "title": "Starters",
+        "rule": "a module of krizaka-platform-kit/starters — one dependency that switches a module on"
+      },
+      {
+        "id": "platform",
+        "title": "Platform kit",
+        "rule": "a library module of krizaka-platform-kit"
+      },
+      {
+        "id": "build",
+        "title": "Build",
+        "rule": "a module of krizaka-build: the parent POM, the BOM, the test kit"
+      }
+    ],
+    "modules": [
+      {
+        "id": "krizaka-billing-service",
+        "path": "krizaka/krizaka-billing/krizaka-billing-service",
+        "repository": "krizaka-billing",
+        "role": "service",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Billing service — credit ledger, hold/settle authorisation, versioned pricebook and entitlements over its own database (ADR-033)"
+      },
+      {
+        "id": "krizaka-notifications-service",
+        "path": "krizaka/krizaka-notifications/krizaka-notifications-service",
+        "repository": "krizaka-notifications",
+        "role": "service",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Notification service — renders templates and delivers them through the channel each request names (e-mail, SMS, webhook); stateless, AMQP-driven"
+      },
+      {
+        "id": "krizaka-users-service",
+        "path": "krizaka/krizaka-users/krizaka-users-service",
+        "repository": "krizaka-users",
+        "role": "service",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Identity service — the trust root: authN, RBAC, profile, credentials, API keys (hosts the krizaka-users-core + persistence-identity libraries)"
+      },
+      {
+        "id": "krizaka-billing-client",
+        "path": "krizaka/krizaka-billing/krizaka-billing-client",
+        "repository": "krizaka-billing",
+        "role": "adapter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Tier-2 SDK — the producer side of the billing contract: a NoOp and an HTTP adapter for CreditAuthorizationClient, selected at bootstrap so no call site ever branches on whether billing exists"
+      },
+      {
+        "id": "krizaka-users-client",
+        "path": "krizaka/krizaka-users/krizaka-users-client",
+        "repository": "krizaka-users",
+        "role": "adapter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Typed HTTP client of the users service's internal API (UserDirectoryClient): user, profile, provider keys and rate-limit tiers, authenticated with a SERVICE token and cached per entry. A Spring Boot auto-configuration."
+      },
+      {
+        "id": "krizaka-users-persistence",
+        "path": "krizaka/krizaka-users/krizaka-users-persistence",
+        "repository": "krizaka-users",
+        "role": "adapter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Orazaka User and Identity Persistence Block"
+      },
+      {
+        "id": "krizaka-users-core",
+        "path": "krizaka/krizaka-users/krizaka-users-core",
+        "repository": "krizaka-users",
+        "role": "domain",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Orazaka Identity and Access Management Domain"
+      },
+      {
+        "id": "krizaka-billing-api",
+        "path": "krizaka/krizaka-billing/krizaka-billing-api",
+        "repository": "krizaka-billing",
+        "role": "contract",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Billing and entitlements contract (ADR-033) — the credit hold/settle ports and DTOs every producer on the hot path depends on; pure JDK, no dependencies"
+      },
+      {
+        "id": "krizaka-notifications-api",
+        "path": "krizaka/krizaka-notifications/krizaka-notifications-api",
+        "repository": "krizaka-notifications",
+        "role": "contract",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Notification contract — the request a producer publishes, the delivery channels and the AMQP routing it travels on; pure JDK, no dependencies"
+      },
+      {
+        "id": "krizaka-users-api",
+        "path": "krizaka/krizaka-users/krizaka-users-api",
+        "repository": "krizaka-users",
+        "role": "contract",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Identity principal contract (the User record) — the only identity type downstream services keep after the Phase 2 extraction; pure JDK, no dependencies"
+      },
+      {
+        "id": "krizaka-spring-boot-starter-observability",
+        "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-observability",
+        "repository": "krizaka-platform-kit",
+        "role": "starter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "The Krizaka observability standard in one dependency: krizaka-observability (required service names, common metric tags, ECS logs, exposure and sampling defaults) with Actuator, OpenTelemetry tracing over OTLP and a Prometheus registry."
+      },
+      {
+        "id": "krizaka-spring-boot-starter-rabbitmq",
+        "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-rabbitmq",
+        "repository": "krizaka-platform-kit",
+        "role": "starter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Events and consumers over RabbitMQ in one dependency: krizaka-messaging (outbox publishing, consumer queues with retry then DLQ, idempotent consumption) with Spring AMQP, JDBC and Jackson. Add your JDBC driver."
+      },
+      {
+        "id": "krizaka-spring-boot-starter-security",
+        "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-security",
+        "repository": "krizaka-platform-kit",
+        "role": "starter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Stateless JWT security in one dependency: krizaka-security (HS256 session tokens, roles authorities, the security baseline, service tokens) with Spring Security and its OAuth2 resource server."
+      },
+      {
+        "id": "krizaka-spring-boot-starter-web",
+        "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-web",
+        "repository": "krizaka-platform-kit",
+        "role": "starter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "HTTP service baseline in one dependency: krizaka-web (Problem Details, request correlation, Jackson defaults, cursor pagination, declared CORS) with Spring MVC, bean validation and Actuator."
+      },
+      {
+        "id": "krizaka-messaging",
+        "path": "krizaka/krizaka-platform-kit/krizaka-messaging",
+        "repository": "krizaka-platform-kit",
+        "role": "platform",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "At-least-once messaging done right for Spring Boot and RabbitMQ: events published through a transactional outbox with their envelope in AMQP headers, a relay that claims what it publishes, consumer queues with retry and a dead-letter queue by convention, and idempotent consumption (an atomic claim, released when the handler fails)."
+      },
+      {
+        "id": "krizaka-observability",
+        "path": "krizaka/krizaka-platform-kit/krizaka-observability",
+        "repository": "krizaka-platform-kit",
+        "role": "platform",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "One observability standard for Spring Boot services: every service names itself (product, service, version) or does not start, its metrics carry those names as common tags, and the defaults every service repeats — ECS JSON console logs, health/info/prometheus exposed, 10% trace sampling — are set once, at the lowest priority."
+      },
+      {
+        "id": "krizaka-security",
+        "path": "krizaka/krizaka-platform-kit/krizaka-security",
+        "repository": "krizaka-platform-kit",
+        "role": "platform",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Stateless JWT security for Spring Boot services: the shared HS256 session-token decoder, the roles-claim authority mapping, one security baseline (CORS preflight, health, error page, SERVICE-only internal surface) and the service-to-service token."
+      },
+      {
+        "id": "krizaka-web",
+        "path": "krizaka/krizaka-platform-kit/krizaka-web",
+        "repository": "krizaka-platform-kit",
+        "role": "platform",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "The HTTP baseline of a Spring Boot service, written once: RFC 9457 Problem Details with stable error codes, X-Request-Id correlation into the MDC, Jackson 3 defaults, opaque cursor pagination and declared CORS origins."
+      },
+      {
+        "id": "krizaka-bom",
+        "path": "krizaka/krizaka-build/krizaka-bom",
+        "repository": "krizaka-build",
+        "role": "build",
+        "packaging": "pom",
+        "version": "0.2.0",
+        "description": "Bill of materials of the Krizaka JVM artifacts: import it once and every com.krizaka dependency resolves to one coherent release."
+      },
+      {
+        "id": "krizaka-parent",
+        "path": "krizaka/krizaka-build/krizaka-parent",
+        "repository": "krizaka-build",
+        "role": "build",
+        "packaging": "pom",
+        "version": "0.2.0",
+        "description": "Parent POM of every Krizaka JVM artifact: Maven Central metadata, Java 21 build conventions (formatting, tests, coverage, enforcer) and the signed release to Maven Central."
+      },
+      {
+        "id": "krizaka-test-support",
+        "path": "krizaka/krizaka-build/krizaka-test-support",
+        "repository": "krizaka-build",
+        "role": "build",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Test kit of the Krizaka repositories, for test scope: generic ArchUnit code rules (hexagonal layering, one class per file, constructor injection, private state, unambiguous configuration binding), source rules, the infra/initdb locator, and Testcontainers helpers: shared PostgreSQL and RabbitMQ containers for integration tests, and the database role of services that own one."
+      }
+    ],
+    "dependencies": [
+      {
+        "from": "krizaka-billing-api",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-billing-api",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-billing-api",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-billing-client",
+        "to": "krizaka-billing-api",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-billing-client",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-billing-client",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-billing-client",
+        "to": "krizaka-security",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-billing-client",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-billing-service",
+        "to": "krizaka-billing-api",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-billing-service",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-billing-service",
+        "to": "krizaka-messaging",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-billing-service",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-billing-service",
+        "to": "krizaka-security",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-billing-service",
+        "to": "krizaka-test-support",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-bom",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-messaging",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-messaging",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-notifications-api",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-notifications-api",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-notifications-api",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-notifications-service",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-notifications-service",
+        "to": "krizaka-messaging",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-notifications-service",
+        "to": "krizaka-notifications-api",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-notifications-service",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-notifications-service",
+        "to": "krizaka-test-support",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-notifications-service",
+        "to": "krizaka-users-api",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-observability",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-security",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-observability",
+        "to": "krizaka-observability",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-observability",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-rabbitmq",
+        "to": "krizaka-messaging",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-rabbitmq",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-rabbitmq",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-security",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-security",
+        "to": "krizaka-security",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-web",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-web",
+        "to": "krizaka-web",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-test-support",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-users-api",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-users-api",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-users-client",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-users-client",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-users-client",
+        "to": "krizaka-security",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-users-client",
+        "to": "krizaka-users-api",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-users-core",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-users-core",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-users-core",
+        "to": "krizaka-test-support",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-users-core",
+        "to": "krizaka-users-api",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-users-core",
+        "to": "krizaka-users-persistence",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-users-persistence",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-users-persistence",
+        "to": "krizaka-messaging",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-users-persistence",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-users-persistence",
+        "to": "krizaka-test-support",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-users-service",
+        "to": "krizaka-bom",
+        "kind": "import"
+      },
+      {
+        "from": "krizaka-users-service",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-users-service",
+        "to": "krizaka-security",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-users-service",
+        "to": "krizaka-test-support",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-users-service",
+        "to": "krizaka-users-core",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-web",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      }
+    ]
+  },
   "packs": [
     {
       "key": "realestate-studio",

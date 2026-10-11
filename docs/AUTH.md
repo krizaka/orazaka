@@ -25,26 +25,25 @@ order: 7
 
 ## 2. Local Credential Flow
 
-```mermaid
-sequenceDiagram
-    participant Browser as NextAuth (Browser)
-    participant BFF as Next.js BFF
-    participant GW as orazaka-conversation-service
-    participant IS as IdentityService
-    participant IP as krizaka-users-persistence
-    participant DB as PostgreSQL
+```sequence
+participant browser: Browser (NextAuth)
+participant bff: @orazaka-web-client
+participant edge: @orazaka-edge
+participant users: @krizaka-users-service
+participant core: @krizaka-users-core
+participant persistence: @krizaka-users-persistence
+participant db: PostgreSQL · krizaka_users_db
 
-    Browser->>BFF: POST /api/auth/login {email, password}
-    BFF->>GW: POST /api/v1/auth/login {email, password}
-    GW->>IS: authenticate(email, password)
-    IS->>IP: findByEmail...
-    IP->>DB: query user details
-    DB-->>IP: raw entities
-    IP-->>IS: UserEntity
-    IS->>IS: BCrypt.matches
-    IS-->>GW: User domain record
-    GW-->>BFF: JWT Token payload
-    BFF-->>Browser: Set session cookie
+browser -> bff: POST /api/auth/login {email, password}
+bff -> edge: POST /api/v1/auth/login
+edge -> users: route /api/v1/auth
+users -> core: IdentityService.authenticate(email, password)
+core -> persistence: find the user by e-mail
+persistence -> db: select the user
+core -> core: BCrypt.matches — the hash never leaves the core
+core --> users: User domain record
+users --> bff: session JWT
+bff --> browser: session cookie
 ```
 
 - Endpoint: `POST /api/v1/auth/login`
@@ -54,35 +53,31 @@ sequenceDiagram
 
 ## 3. OAuth2 Token-Exchange Flow
 
-```mermaid
-sequenceDiagram
-    participant Browser as NextAuth (Browser)
-    participant Provider as Google/GitHub
-    participant BFF as Next.js BFF
-    participant GW as orazaka-conversation-service
-    participant RS as IdentityReconciliationService
-    participant PV as OAuth2ProviderVerifier
-    participant IP as krizaka-users-persistence
-    participant DB as PostgreSQL
+```sequence
+participant browser: Browser (NextAuth)
+participant provider: Google / GitHub
+participant bff: @orazaka-web-client
+participant edge: @orazaka-edge
+participant users: @krizaka-users-service
+participant core: @krizaka-users-core
+participant persistence: @krizaka-users-persistence
 
-    Browser->>Provider: OAuth2 Authorization Flow
-    Provider-->>Browser: ID Token / Access Token
-    Browser->>BFF: POST /api/auth/callback {provider, idToken}
-    BFF->>GW: POST /api/v1/auth/oauth {provider, idToken}
-    GW->>RS: reconcile(provider, idToken)
-    RS->>PV: verifyAndExtract(idToken)
-    PV-->>RS: ExtractedProfile
-    RS->>IP: findByProviderAndProviderId
-    IP->>DB: query user identity
-    alt User exists
-        DB-->>IP: UserEntity
-    else New user
-        RS->>IP: save(new UserEntity)
-        IP->>DB: INSERT UserEntity
-    end
-    RS-->>GW: User domain record
-    GW-->>BFF: Token response
-    BFF-->>Browser: Set session cookie
+browser -> provider: OAuth2 authorization (redirects handled by NextAuth)
+provider --> browser: ID token
+browser -> bff: POST /api/auth/callback {provider, idToken}
+bff -> edge: POST /api/v1/auth/oauth
+edge -> users: route /api/v1/auth
+users -> core: IdentityReconciliationService.reconcile(provider, idToken)
+core -> core: OAuth2ProviderVerifier — verify the token, extract the profile
+core -> persistence: find the identity by provider and provider id
+if the user exists
+core -> core: reuse the account
+else a new user
+core -> persistence: save the new user and its identity
+end
+core --> users: User domain record
+users --> bff: session JWT
+bff --> browser: session cookie
 ```
 
 - Endpoint: `POST /api/v1/auth/oauth`
@@ -92,39 +87,38 @@ sequenceDiagram
 
 ## 4. Password Recovery Flow
 
-```mermaid
-sequenceDiagram
-    participant Client as Browser / CLI
-    participant BFF as Next.js BFF
-    participant GW as orazaka-conversation-service
-    participant PRS as PasswordRecoveryService
-    participant IP as krizaka-users-persistence
-    participant DB as PostgreSQL
+```sequence
+participant client: Browser / CLI
+participant bff: @orazaka-web-client
+participant edge: @orazaka-edge
+participant users: @krizaka-users-service
+participant core: @krizaka-users-core
+participant persistence: @krizaka-users-persistence
 
-    Note over Client,DB: Request Reset
-    Client->>BFF: POST /api/auth/forgot {email}
-    BFF->>GW: POST /api/v1/auth/forgot {email}
-    GW->>PRS: requestPasswordReset(email)
-    PRS->>IP: findByEmailAndEnabledTrue(email)
-    alt User exists
-        PRS->>PRS: Generate 48-byte token & hash it
-        PRS->>IP: save(PasswordResetTokenEntity)
-    end
-    GW-->>Client: 200 OK (Always succeeds)
-
-    Note over Client,DB: Reset Action
-    Client->>BFF: POST /api/auth/reset {token, newPassword}
-    BFF->>GW: POST /api/v1/auth/reset {token, newPassword}
-    GW->>PRS: resetPassword(token, newPassword)
-    PRS->>PRS: SHA-256 hash raw token
-    PRS->>IP: findByTokenHash
-    alt Token valid and active
-        PRS->>PRS: BCrypt.encode (outside Tx)
-        PRS->>IP: updatePasswordHash + deleteByTokenHash
-        GW-->>Client: 200 OK (Success)
-    else Invalid
-        GW-->>Client: 400 Bad Request
-    end
+## Request a reset
+client -> bff: POST /api/auth/forgot {email}
+bff -> edge: POST /api/v1/auth/forgot
+edge -> users: route /api/v1/auth
+users -> core: PasswordRecoveryService.requestPasswordReset(email)
+core -> persistence: find the enabled user by e-mail
+if the user exists
+core -> core: generate a 48-byte token, keep only its SHA-256 hash
+core -> persistence: save the reset token (hash, 15 min)
+end
+users --> client: 200 OK — always, so an address cannot be probed
+## Reset the password
+client -> bff: POST /api/auth/reset {token, newPassword}
+bff -> edge: POST /api/v1/auth/reset
+edge -> users: route /api/v1/auth
+users -> core: PasswordRecoveryService.resetPassword(token, newPassword)
+core -> persistence: find the token by its SHA-256 hash
+if the token is valid and active
+core -> core: BCrypt.encode, outside the transaction
+core -> persistence: update the password hash, delete the token
+users --> client: 200 OK
+else the token is invalid or expired
+users --> client: 400 Bad Request
+end
 ```
 
 - **Forgot Password**: `POST /api/v1/auth/forgot`. Enforces **Zero-Enumeration Invariant**: returns `200 OK` regardless of whether the email exists.
