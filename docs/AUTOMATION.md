@@ -6,21 +6,16 @@ order: 8
 ---
 # Automation & Local Agent Protocol Specification
 
-> Decoupled background execution worker (`orazaka-workers/external-services`) and the NAT-bypassing Local Agent Protocol.
+> Decoupled background execution service (`orazaka-automation-service`) and the NAT-bypassing Local Agent Protocol.
 
 ---
 
 ## 1. Architectural Setup
 
-```mermaid
-graph TD
-    rabbitmq[" RabbitMQ Bus"] -->|Consume Approved Jobs / Events| worker["orazaka-workers/external-services"]
-    worker -->|Push Telemetry & Heartbeats| rabbitmq
-    worker -->|Trigger Outbound Cloud Actions| external[" Cloud APIs (Jira, Slack, WhatsApp)"]
-    worker -->|Quartz + Flyway State| db[" PostgreSQL"]
-    
-    gateway["orazaka-conversation-service"] -.->|Reverse Tunnel / SSE| cli["orazaka-cli Agent"]
-    rabbitmq -.->|Proxy Tunnel Payload| gateway
+```architecture
+product: orazaka
+focus: orazaka-automation-service
+mode: runtime
 ```
 
 - **Hexagonal Isolation**: The worker is fully isolated. It has zero dependency on `orazaka-conversation-service`.
@@ -46,32 +41,26 @@ The worker does not integrate with actual cloud APIs or Apache Camel routing. In
 
 ## 4. Local Agent Protocol (Reverse SSE Tunneling)
 
-```mermaid
-sequenceDiagram
-    participant CLI as orazaka-cli (User)
-    participant GW as orazaka-conversation-service
-    participant ID as Identity Core
-    participant MQ as RabbitMQ Exchange
-    participant WK as Automation Worker
+```sequence
+participant cli: @orazaka-cli
+participant conversation: @orazaka-conversation-service
+participant mq: RabbitMQ · orazaka.jobs / orazaka.events
+participant automation: @orazaka-automation-service
 
-    Note over CLI,GW: Phase 1 — Secure Reverse Registration
-    CLI->>GW: GET /api/v1/agent/stream (Bearer Token)
-    GW->>ID: Validate JWT
-    ID-->>GW: Authenticated (userId)
-    GW->>MQ: Publish heartbeat (cli.online)
-    GW-->>CLI: SSE Tunnel Established
-
-    Note over GW,WK: Phase 2 — Job Dispatch
-    WK->>MQ: Publish CLI Job (orazaka.automation.exchange)
-    MQ-->>GW: Consume job (cli.{userId}.dispatch)
-    GW-->>CLI: SSE Event: automation_payload
-
-    Note over CLI,GW: Phase 3 — Local Consent & Execution
-    CLI->>CLI: Prompt User [Y/n]
-    CLI->>CLI: Execute local script safely
-    CLI->>GW: POST /api/v1/agent/report (Result JSON)
-    GW->>MQ: Publish result (cli.{userId}.result)
-    MQ-->>WK: Mark Job COMPLETED
+## Phase 1 — secure reverse registration
+cli -> conversation: GET /api/v1/agent/stream (Bearer token)
+conversation -> conversation: validate the session JWT (krizaka-security)
+conversation -> mq: publish evt.agent.presence
+conversation --> cli: SSE tunnel established
+## Phase 2 — job dispatch
+automation -> mq: publish job.agent.dispatch.{userId}
+mq --> conversation: deliver the job of this user
+conversation --> cli: SSE event automation_payload
+## Phase 3 — local consent and execution
+cli -> cli: ask the user: Execute this action? [Y/n]
+cli -> cli: run the approved script locally
+cli -> conversation: POST /api/v1/agent/report (result JSON)
+conversation -> mq: publish evt.agent.result.{jobId}
 ```
 
 - **Phase 1 (Registration)**: The CLI opens an SSE channel (`GET /api/v1/agent/stream`). Gateway registers the channel and broadcasts metadata.

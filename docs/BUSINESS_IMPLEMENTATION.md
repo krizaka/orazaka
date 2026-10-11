@@ -29,29 +29,16 @@ CinePulse is a multi-modal entertainment discovery platform:
 
 ## 2. Architecture Mapping
 
-```mermaid
-graph TD
-    text["🗣️ 'A cozy movie tonight?'"] --> sse["SSE Stream"]
-    audio["🎵 Audio clip"] --> rest["REST Ingest"]
-    visual["📸 Movie Poster / Image"] --> rest
-    
-    sse --> orchestrator["DynamicPipelineOrchestrator"]
-    rest --> orchestrator
-    
-    orchestrator --> fallback["Hybrid Routing Fallback"]
-    fallback --> lang["LanguageAlignmentInterceptor"]
-    lang --> memory["MemoryInterceptor"]
-    memory --> rag["RagInterceptor"]
-    rag --> refiner["RefinerInterceptor"]
-    refiner --> router["RouterInterceptor"]
-    router --> cost["CostShieldInterceptor"]
-    
-    router --> llama["Llama 3 (Text recommendation)"]
-    router --> whisper["Whisper (Audio transcription)"]
-    router --> llava["LLaVA (Vision analysis)"]
-    
-    cost --> tmdb["TMDb API Tool"]
-    cost --> spotify["Spotify/AcoustID Tool"]
+```architecture
+product: orazaka
+focus: orazaka-business
+mode: build
+```
+
+Every CinePulse turn — text over SSE, an audio clip or an image over REST — goes through the same interceptor pipeline before a model is called. The pipeline below is read from the code and the database order:
+
+```pipeline
+product: orazaka
 ```
 
 ---

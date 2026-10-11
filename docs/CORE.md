@@ -12,16 +12,15 @@ order: 3
 
 ## 1. Architectural Position
 
-`orazaka-core` is the central orchestration library. It is strictly stateless, web-agnostic, database-agnostic, and security-context-agnostic. It wraps Spring AI (`1.1.6`) under a single entry facade: `AiClient`.
+`orazaka-core` is the central orchestration library. It is strictly stateless, web-agnostic, database-agnostic, and security-context-agnostic. It wraps Spring AI (`2.0`, ADR-030) under a single entry facade: `AiClient`.
 
-```mermaid
-flowchart LR
-    GW[orazaka-conversation-service] -->|Inbound Port| Facade["AiClient Facade"]
-    Facade --> Pipeline["DynamicPipelineOrchestrator"]
-    Pipeline --> Interceptors["orazaka-interceptors (SPI)"]
-    Pipeline --> Engines["Model Engines"]
-    Engines --> Outbound["Outbound APIs / Workers"]
+```architecture
+product: orazaka
+focus: orazaka-core
+mode: build
 ```
+
+Select a module to see what it depends on and what depends on it: every arrow points toward the core, never away from it.
 
 ---
 
@@ -44,8 +43,7 @@ Request payloads are immutable Java `record`s enforcing compact constructor vali
 
 ## 3. Dynamic Pipeline Orchestrator
 
-The orchestrator executes a sequence of `PromptContextInterceptor` beans. It can be bypassed using:
-`orazaka.core.orchestration.pipeline.enabled=false`.
+The orchestrator executes a sequence of `PromptContextInterceptor` beans. It is never bypassed: `orazaka.core.orchestration.enabled=false` (`ORCHESTRATION_ENABLED`) **refuses** every engine turn (`PipelineDisabledException` → `503`) instead of calling the model without its controls (ADR-062).
 
 ### Routing Modes (`orazaka.core.orchestration.routing.mode`)
 - **DETERMINISTIC**: Database-driven order configured in `pipeline_interceptor_config`.
@@ -54,66 +52,19 @@ The orchestrator executes a sequence of `PromptContextInterceptor` beans. It can
 ### Kill-Switch
 If `orazaka.security.disable-ai=true`, any interceptor returning `isAiDependent() == true` raises a `SecurityException`.
 
-### Core Interceptor Chain Blueprint
+### The interceptor chain
 
-| Order | Interceptor | Module | AI-Dep | Purpose |
-| :---: | :--- | :--- | :---: | :--- |
-| 1 | `UserContextResolver` | context | No | RBAC & rate-limiting tier |
-| 2 | `SystemContextInjector` | context | No | Hardware status & env tags |
-| 3 | `LanguageAlignmentInterceptor` | translation | No | English reasoning enforcement |
-| 3 (DB: 3) | `RagInterceptor` | enrichment | No | Vector store retrieval and context injection |
-| 4 (DB: 4) | `McpInterceptor` | enrichment | No | External MCP knowledge resolution |
-| 5 (DB: 5) | `MemoryInterceptor` | enrichment | No | Conversation history prepend (FIFO window) |
-| 6 (DB: 6) | `RefinerInterceptor` | reformulation | Yes | Fuzzy query to precise instruction refinement |
-| 7 (DB: 7) | `RouterInterceptor` | reformulation | Yes | Intent to optimal provider routing |
-| 8 (DB: 8) | `ToolInterceptor` | tooling | No | Dynamic tool callback attachment |
-| 9 (DB: 9) | `MediaInterceptor` | validation | No | Base64 media extraction and multimodal assembly |
-| - | `CostShieldInterceptor` | validation | No | Offloads to cloud if host memory > 85% |
-| Inf | `QuantumValidationAdvisor` | validation | Yes | 4-tier closed-loop validation |
+A turn goes through the core chain first — in the order of the code, never bypassable — then through the configured interceptors in their database order (`pipeline_interceptor_config`). The chain below is read from both; [Interceptor Registry](INTERCEPTORS.md) lists every row with its class.
 
-```mermaid
-sequenceDiagram
-    participant GW as Gateway
-    participant PC as PromptContext
-    participant Chain as Pipeline Interceptors
-    participant E as Engine
-
-    GW->>PC: Create context snapshot
-    PC->>Chain: Resolve ordered interceptors (1 -> 9)
-    Chain->>E: Final enriched context
-    E-->>GW: Response / Flux stream
+```pipeline
+product: orazaka
 ```
 
 ---
 
 ## 4. Engine Topology
 
-Engines map core models to Spring AI integrations:
-
-```mermaid
-classDiagram
-    class AbstractEngine {
-        <<abstract>>
-        #resolveOptions()
-        #buildPrompt()
-    }
-    class ChatEngine {
-        -ChatModel chatModel
-    }
-    class ImageEngine {
-        -ImageModel imageModel
-    }
-    class AudioEngine {
-        -TextToSpeechModel ttsModel
-    }
-    class VideoEngine {
-        -VideoGeneratorClient videoClient
-    }
-    AbstractEngine <|-- ChatEngine
-    AbstractEngine <|-- ImageEngine
-    AbstractEngine <|-- AudioEngine
-    AbstractEngine <|-- VideoEngine
-```
+One engine serves every modality. `AbstractEngine` is **sealed** and permits a single subclass, `Engine` (ADR-003): chat, streaming, image and speech are methods of the same class, each wired to its Spring AI model (`ChatModel`, `TextToSpeechModel`, image and video through their outbound ports), so a pattern match over engines is always exhaustive. Model choice is not a subclass: it is routing (`DeterministicRouterEngine`, `SemanticRoutingEngine`) over the model catalogue in the database.
 
 ---
 

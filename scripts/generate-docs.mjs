@@ -423,7 +423,124 @@ function extractArchitecture() {
     pipeline,
     coreChain,
     messaging,
+    buildingBlocks: extractBuildingBlocks(),
   };
+}
+
+/**
+ * The Krizaka Java building blocks (krizaka.com /docs/java): every artifact of the Krizaka repositories
+ * of the workspace — the build (parent POM, BOM, test kit) included, which the architecture leaves out
+ * as tooling — with its version and the real relations between them, read from the POMs:
+ *   compile / runtime / provided / test   a <dependency> on another Krizaka artifact (its scope)
+ *   parent                                the module inherits that POM (through its repository's reactor)
+ *   import                                the module resolves its versions from that BOM (a <scope>import</scope>)
+ * Reactor-only POMs (a repository's root, starters/) are not artifacts anyone uses: a module that
+ * inherits one is drawn inheriting the first real parent above it, and what the reactor imports
+ * (the BOM) is imported by its modules.
+ */
+const BUILDING_BLOCK_ROLES = [
+  { id: "service", title: "Services", rule: "a module with a main (SpringApplication.run): a deployable Krizaka service" },
+  { id: "adapter", title: "Adapters", rule: "a `*-client` or `*-persistence` module: typed HTTP client, JPA adapter" },
+  { id: "domain", title: "Domain core", rule: "a `*-core` module" },
+  { id: "contract", title: "Contracts", rule: "a `*-api` module — interfaces, records, events" },
+  { id: "starter", title: "Starters", rule: "a module of krizaka-platform-kit/starters — one dependency that switches a module on" },
+  { id: "platform", title: "Platform kit", rule: "a library module of krizaka-platform-kit" },
+  { id: "build", title: "Build", rule: "a module of krizaka-build: the parent POM, the BOM, the test kit" },
+];
+
+function extractBuildingBlocks() {
+  const poms = [];
+  const visit = (dir, repo) => {
+    const pom = read(join(dir, "pom.xml"));
+    if (!pom) return;
+    const own = ownPom(pom);
+    const id = own.match(/<artifactId>([\w.-]+)<\/artifactId>/)?.[1];
+    const parent = pom.match(/<parent>[\s\S]*?<artifactId>([\w.-]+)<\/artifactId>[\s\S]*?<\/parent>/)?.[1] ?? null;
+    const parentVersion = pom.match(/<parent>[\s\S]*?<version>([^<]+)<\/version>[\s\S]*?<\/parent>/)?.[1] ?? null;
+    const head = own.replace(/<(dependencies|properties|repositories|pluginRepositories|reporting|modules)>[\s\S]*?<\/\1>/g, "");
+    let version = head.match(/<version>([^<]+)<\/version>/)?.[1] ?? parentVersion;
+    if (version?.startsWith("${")) version = parentVersion;
+    const children = [...pom.matchAll(/<module>([^<]+)<\/module>/g)].map((m) => m[1].trim());
+    const imports = [...(pom.match(/<dependencyManagement>([\s\S]*?)<\/dependencyManagement>/)?.[1] ?? "").matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)]
+      .filter((m) => /<scope>\s*import\s*<\/scope>/.test(m[1]))
+      .map((m) => m[1].match(/<artifactId>([^<]+)<\/artifactId>/)?.[1]?.trim());
+    const deps = [...(ownPom(pom).match(/<dependencies>([\s\S]*?)<\/dependencies>/)?.[1] ?? "").matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)].map((m) => ({
+      artifactId: m[1].match(/<artifactId>([^<]+)<\/artifactId>/)?.[1]?.trim(),
+      scope: m[1].match(/<scope>([^<]+)<\/scope>/)?.[1]?.trim() ?? "compile",
+      optional: /<optional>\s*true\s*<\/optional>/.test(m[1]),
+    }));
+    const rel = relative(ROOT, dir).replaceAll("\\", "/");
+    poms.push({
+      id,
+      dir,
+      path: rel,
+      repository: repo,
+      pom,
+      parent,
+      version,
+      imports,
+      deps,
+      // A reactor POM lists modules; the parent POM and the BOM list none and are published artifacts.
+      reactor: /<packaging>pom<\/packaging>/.test(pom) && children.length > 0,
+      packaging: pom.match(/<packaging>(\w+)<\/packaging>/)?.[1] ?? "jar",
+      description: xmlText(own.match(/<description>([\s\S]*?)<\/description>/)?.[1] ?? "") || null,
+    });
+    for (const child of children) visit(join(dir, child), repo);
+  };
+  // krizaka-build's own reactor inherits krizaka-parent by relativePath: visit the parent explicitly too.
+  for (const repo of REPOSITORIES.filter((r) => r.kind === "maven" && r.layer === "krizaka")) visit(join(ROOT, repo.path), repo);
+  const byId = new Map(poms.filter((p) => p.id).map((p) => [p.id, p]));
+  const artifacts = poms.filter((p) => p.id && !p.reactor && !p.path.split("/").includes("examples"));
+  const known = new Set(artifacts.map((a) => a.id));
+  if (!known.size) throw new Error("generate-docs: no Krizaka artifact found — clone the krizaka/* repositories of orazaka.workspace.json");
+
+  const roleOf = (a) => {
+    if (a.repository.name === "krizaka-build") return "build";
+    if (a.repository.name === "krizaka-platform-kit") return a.path.split("/").includes("starters") ? "starter" : "platform";
+    if (/SpringApplication\.run\(/.test(javaFiles(join(a.dir, "src/main/java")).map(read).join("\n"))) return "service";
+    if (a.id.endsWith("-api")) return "contract";
+    if (a.id.endsWith("-core")) return "domain";
+    return "adapter";
+  };
+  /** The first real artifact up the parent chain, and every BOM the chain imports. */
+  const lineage = (a) => {
+    let parent = null;
+    const imports = new Set(a.imports);
+    for (let p = byId.get(a.parent), guard = 0; p && guard < 10; p = byId.get(p.parent), guard++) {
+      for (const i of p.imports) imports.add(i);
+      if (!parent && !p.reactor) parent = p.id;
+    }
+    return { parent: parent ?? (known.has(a.parent) ? a.parent : null), imports: [...imports].filter((i) => known.has(i)) };
+  };
+
+  const order = new Map(BUILDING_BLOCK_ROLES.map((r, i) => [r.id, i]));
+  const modules = artifacts
+    .map((a) => ({
+      id: a.id,
+      path: a.path,
+      repository: a.repository.name,
+      role: roleOf(a),
+      packaging: a.packaging,
+      version: a.version,
+      description: a.description,
+    }))
+    .sort((x, y) => order.get(x.role) - order.get(y.role) || x.repository.localeCompare(y.repository) || x.id.localeCompare(y.id));
+
+  const dependencies = [];
+  const add = (d) => {
+    if (d.from !== d.to && !dependencies.some((x) => x.from === d.from && x.to === d.to && x.kind === d.kind)) dependencies.push(d);
+  };
+  for (const a of artifacts) {
+    const { parent, imports } = lineage(a);
+    if (parent) add({ from: a.id, to: parent, kind: "parent" });
+    for (const bom of imports) add({ from: a.id, to: bom, kind: "import" });
+    for (const d of a.deps) {
+      if (!known.has(d.artifactId)) continue;
+      add({ from: a.id, to: d.artifactId, kind: d.scope, ...(d.optional ? { optional: true } : {}) });
+    }
+  }
+  dependencies.sort((x, y) => x.from.localeCompare(y.from) || x.to.localeCompare(y.to) || x.kind.localeCompare(y.kind));
+  return { roles: BUILDING_BLOCK_ROLES, modules, dependencies };
 }
 
 /**
