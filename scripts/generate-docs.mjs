@@ -1611,7 +1611,7 @@ const mdModels = (rows) => {
     "| Model | Label | Category | Description |",
     "|:---|:---|:---|:---|",
   );
-  for (const m of rows) lines.push(`| \`${m.name}\` | ${m.label} | ${m.category} | ${m.description.replace(/\|/g, "\\|")} |`);
+  for (const m of rows) lines.push(`| \`${m.name}\` | ${m.label} | ${m.category} | ${m.description.replace(/\\/g, "\\\\").replace(/\|/g, "\\|")} |`);
   return lines.join("\n") + "\n";
 };
 
