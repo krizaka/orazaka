@@ -39,7 +39,7 @@ Orazaka does not sell seats. It sells **variable-cost compute** — a 4-second v
 orders of magnitude more to produce than a chat reply. Three consequences drive the whole design:
 
 1. **Authorisation must precede execution.** Once an MLX video job starts on the Mac, the cost is
-   already sunk. A post-paid model lets a user with a €0 balance burn an hour of GPU. Hence the
+   already sunk. A post-paid model lets a user with a $0 balance burn an hour of GPU. Hence the
    **hold**.
 2. **The estimate is never the truth.** A chat turn's token count is unknown before generation; a
    video's real cost depends on the frames actually rendered. Hence the **settle**.
@@ -143,7 +143,7 @@ CREATE TABLE billing_plan (
     tier_rank           INT          NOT NULL,          -- ordering for upgrade/downgrade logic
     monthly_credit_grant BIGINT      NOT NULL DEFAULT 0,-- credits granted at each period start
     price_cents         INT          NOT NULL DEFAULT 0,
-    currency            CHAR(3)      NOT NULL DEFAULT 'EUR',
+    currency            CHAR(3)      NOT NULL,          -- ISO 4217; billing.currency (CAD) when a plan names none
     rate_limit_tier_key VARCHAR(50)  NOT NULL,          -- OPAQUE ref into identity — no FK
     external_plan_code  VARCHAR(100),                   -- Lago plan code; NULL while local-only
     is_public           BOOLEAN      NOT NULL DEFAULT TRUE,
@@ -575,9 +575,19 @@ Anchor to money in `billing_runtime_config` — one key, one place, admin-editab
 placement rationale in §13.5):
 
 ```
-billing.credit.unit-price-cents  = 1          -- 1 credit ≈ €0.01 at list price
+billing.currency                 = CAD        -- ISO 4217 of every amount stated without one
+billing.credit.unit-price-cents  = 1          -- 1 credit ≈ 0,01 $ CA at list price
 billing.enforcement.mode         = DRY_RUN    -- OFF | DRY_RUN | ENFORCING  (§13.3)
 ```
+
+> **Currency.** Orazaka bills in **Canadian dollars** — Krizaka is a Montréal company. The billing block
+> stays multi-currency: a plan carries its own ISO 4217 code, and `billing.currency` (default `CAD`) is
+> the currency of everything stated without one (pack prices, the money anchor). Screens format money
+> with `@krizaka/intl` `formatMoney` in the reader's *language* (`en` → "CA$29.00", `fr` → "29,00 $CA"),
+> so the currency is always named for an international reader.
+>
+> **Since ADR-047** the credit is ten times finer: the anchor is `billing.credit.unit-price-millicents
+> = 100` (1 credit = 0.1 ¢ CA) and the grants below are ×10 in v2 credits. The prices do not move.
 
 Indicative plan shape (all editable in admin, none in code). `rate_limit_tier_key` is NOT NULL on
 `billing_plan` and is an **opaque** reference into identity's `rate_limits` — it must be
@@ -587,9 +597,12 @@ concurrent jobs this plan sells.
 
 | Plan | Price | Monthly grant | `rate_limit_tier_key` | Entitlements | Top-up |
 |:---|---:|---:|:---|:---|:---|
-| `free` | €0 | 500 | `free` | chat + image only · 1 concurrent job · local models | ❌ |
-| `premium` | €19 | 5,000 | `premium` | + audio, video, agent · 5 jobs · premium models | ✅ |
-| `ultimate` | €49 | 20,000 | `enterprise` | + workflows, automation, API keys · 20 jobs · all models | ✅ |
+| `free` | 0 $ CA | 500 | `free` | chat + image only · 1 concurrent job · local models | ❌ |
+| `premium` | 29 $ CA | 5,000 | `premium` | + audio, video, agent · 5 jobs · premium models | ✅ |
+| `ultimate` | 79 $ CA | 20,000 | `enterprise` | + workflows, automation, API keys · 20 jobs · all models | ✅ |
+
+Prices were €19 / €49 until 2026-10; the CAD prices are the euro ones at ~1.55 CAD/EUR, rounded to the
+x9 price points (`infra/migrations/2026-10-11-billing-currency-cad.sql` moves an existing database).
 
 Blocking top-up on `free` is deliberate: an unpaid account able to buy compute is a fraud and abuse
 surface (stolen cards, resale of your GPU). Top-up is a privilege of a verified paying relationship.
