@@ -1292,6 +1292,16 @@ const mdCli = (rows) => {
 
   // Local dev loop (authored here, single-sourced in the generator — see AGENTS.md §1).
   lines.push(
+    "## Install",
+    "",
+    "The CLI is published on npm as [`@krizaka/orazaka-cli`](https://www.npmjs.com/package/@krizaka/orazaka-cli);",
+    "[`orazaka`](https://www.npmjs.com/package/orazaka) is its short name, so `npx orazaka <command>` and",
+    "`npx @krizaka/orazaka-cli <command>` run the same CLI. Requirements: git, JDK 21, Node.js 22+, Docker.",
+    "",
+    "`orazaka install` run outside a workspace clones this one and every repository into `./orazaka`",
+    "(`--dir`, `--depth`), then configures it; `--yes` takes every default. `start`, `dev`, `test` and `docs`",
+    "run inside a workspace and say how to get one when there is none.",
+    "",
     "## Local dev workflow",
     "",
     "The dev loop has two layers — start them in order:",

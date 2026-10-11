@@ -128,23 +128,23 @@ Rules (AGENTS.md §2): a repository depends only on repositories **before** it i
 
 ## Quick start
 
-Requirements: JDK 21, Node.js 22+, Docker, Python 3.11+ (media worker), macOS recommended for native
+Requirements: git, JDK 21, Node.js 22+, Docker, Python 3.11+ (media worker), macOS recommended for native
 inference.
 
 ```bash
-git clone https://github.com/krizaka/orazaka.git && cd orazaka
-node scripts/workspace.mjs clone       # clones every repository at its workspace path
+npx orazaka install                    # clones this workspace and every repository into ./orazaka, verifies the tools, configures it
+cd orazaka
 ./mvnw install                         # builds and tests every JVM repository in one reactor
-cd orazaka-apps/ui && npm install      # links the cloned UI repositories and the CLI
-npm run build -w orazaka-cli && npm install   # builds the CLI, then links its `orazaka` command
-npx orazaka install                    # setup wizard: verifies the tools, installs dependencies, configures the topology
+(cd orazaka-apps/ui && npm install)    # links the cloned UI repositories
 npx orazaka start                      # local infrastructure: Docker middleware and AI engines
 npx orazaka dev                        # the whole stack: every service, Web, Admin and Mobile
 npx orazaka demo seed                  # second terminal, stack up: Eric, the demo persona (account, plan, packs, Studios)
 ```
 
 Sign in on the web client as Eric — the account `orazaka demo seed` prints — and replay the demo above on your
-own machine. The CLI is not on npm yet: `npx orazaka` resolves the workspace copy, so run it from `orazaka-apps/ui`.
+own machine. `npx orazaka` is [`@krizaka/orazaka-cli`](https://www.npmjs.com/package/@krizaka/orazaka-cli) on npm
+(`orazaka` is its short name; `npx @krizaka/orazaka-cli …` is the canonical form). By hand instead of `install`:
+`git clone https://github.com/krizaka/orazaka.git && cd orazaka && node scripts/workspace.mjs clone`.
 
 `node scripts/workspace.mjs status` shows the branch and state of every repository;
 `node scripts/workspace.mjs pull` updates them all.
