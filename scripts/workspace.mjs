@@ -227,6 +227,20 @@ function publish(name) {
     }
     return;
   }
+  if (target.name === "orazaka-cli") {
+    // @krizaka/orazaka-cli first: its `orazaka` alias (alias/) depends on that exact version on the registry.
+    run("npm", ["install", "--no-audit", "--no-fund"], { cwd: UI });
+    const dir = join(ROOT, target.path);
+    for (const pkgDir of [dir, join(dir, "alias")]) {
+      const { name: pkg, version } = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8"));
+      if (capture("npm", ["view", `${pkg}@${version}`, "version", "--prefer-online"], pkgDir) === version) {
+        console.log(`${pkg}@${version} is already on npm — skipped.`);
+        continue;
+      }
+      run("npm", ["publish", "--access", "public", "--provenance"], { cwd: pkgDir });
+    }
+    return;
+  }
   console.log(`${name} is a ${target.kind} application — nothing to publish.`);
 }
 
