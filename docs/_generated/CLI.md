@@ -83,6 +83,10 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka mcp register` | Register a new private MCP server |
 | `orazaka mcp delete <id>` | Delete a private MCP server by ID |
 | `orazaka models` | Scan the host hardware and report which catalog models it can run |
+| `orazaka models image` | Local image models (stable-diffusion.cpp, Metal): list, download, choose the one served |
+| `orazaka models list` | List the installable image models, their licence, size and whether they are installed |
+| `orazaka models pull <id>` | Download an image model into ~/models/stable-diffusion and verify its checksums |
+| `orazaka models use <id>` | Make an installed image model the catalogue's default — the one `orazaka start` serves |
 | `orazaka onboard` | Full clone-and-run onboarding: verify prerequisites, compile, smoke-test M2M handshake, and probe local AI runtimes |
 | `orazaka pack` | Validate, install and publish pack bundles |
 | `orazaka pack validate <directory>` | Check a bundle's manifest, and whether this platform can run it |
@@ -103,7 +107,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka studio list` | Browse the Studio catalogue |
 | `orazaka studio installed` | List the Studios you have installed |
 | `orazaka studio install <studioKey>` | Install a Studio into your workspace |
-| `orazaka studio run <installationId>` | Run an installed Studio |
+| `orazaka studio run <target>` | Run an installed Studio — or, with --studio, a toolkit Studio by its key |
 | `orazaka studio logs <runId>` | Show a run's per-step state and results |
 | `orazaka test [mode]` | Run the test pyramid: unit \| it (Testcontainers) \| e2e (hermetic) |
 | `orazaka verify [token]` | Verify account registration token |
@@ -252,6 +256,22 @@ Register a new private MCP server
 |:---|:---|
 | `--auth-token <token>` | Optional authorization token/header |
 
+### `orazaka models pull <id>`
+
+Download an image model into ~/models/stable-diffusion and verify its checksums
+
+| Argument / option | Description |
+|:---|:---|
+| `<id>` | Model id (see `orazaka models image list`) |
+
+### `orazaka models use <id>`
+
+Make an installed image model the catalogue's default — the one `orazaka start` serves
+
+| Argument / option | Description |
+|:---|:---|
+| `<id>` | Model id (see `orazaka models image list`) |
+
 ### `orazaka pack validate <directory>`
 
 Check a bundle's manifest, and whether this platform can run it
@@ -362,14 +382,16 @@ Install a Studio into your workspace
 | `<studioKey>` | The Studio to install |
 | `-c, --config <pairs>` | Configuration as key=value,key2=value2 |
 
-### `orazaka studio run <installationId>`
+### `orazaka studio run <target>`
 
-Run an installed Studio
+Run an installed Studio — or, with --studio, a toolkit Studio by its key
 
 | Argument / option | Description |
 |:---|:---|
-| `<installationId>` | The installation to run |
+| `<target>` | The installation to run (or the Studio key with --studio) |
 | `-i, --inputs <pairs>` | Inputs as key=value,key2=a\|b\|c (pipes make a list) |
+| `-f, --inputs-file <file>` | Inputs as one JSON object (for prose with commas); --inputs pairs apply on top |
+| `-s, --studio` | The target is a Studio key: a toolkit Studio (media, art direction) has no installation |
 
 ### `orazaka studio logs <runId>`
 

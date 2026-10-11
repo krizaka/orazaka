@@ -2695,7 +2695,7 @@
     {
       "key": "orazaka-media",
       "dir": "orazaka-media",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tier": "DATA",
       "kind": "TOOLKIT",
       "distribution": "OSS",
@@ -2753,6 +2753,14 @@
               "title": "Format"
             },
             {
+              "key": "negativePrompt",
+              "title": "À éviter (facultatif)"
+            },
+            {
+              "key": "seed",
+              "title": "Graine (facultatif)"
+            },
+            {
               "key": "model",
               "title": "Modèle (facultatif)"
             }
@@ -2761,6 +2769,18 @@
             {
               "key": "image",
               "type": "IMAGE"
+            },
+            {
+              "key": "seed",
+              "type": "TEXT"
+            },
+            {
+              "key": "model",
+              "type": "TEXT"
+            },
+            {
+              "key": "generationMs",
+              "type": "TEXT"
             }
           ],
           "text": {
@@ -2773,6 +2793,230 @@
               "label": "Génération d'image",
               "tagline": "Une phrase, une image.",
               "description": null
+            }
+          }
+        },
+        {
+          "key": "art-golden-hour",
+          "profession": "creative",
+          "iconKey": "image",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 200,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "subject",
+              "title": "Votre sujet"
+            },
+            {
+              "key": "size",
+              "title": "Format"
+            },
+            {
+              "key": "seed",
+              "title": "Graine (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "image",
+              "type": "IMAGE"
+            },
+            {
+              "key": "seed",
+              "type": "TEXT"
+            },
+            {
+              "key": "model",
+              "type": "TEXT"
+            },
+            {
+              "key": "generationMs",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Golden-hour editorial",
+              "tagline": "Your subject, in warm low light, shot like a magazine spread.",
+              "description": "Lifestyle photography at golden hour: raking sunlight, an 85 mm lens wide open, weathered wood, wool and brass, an amber and terracotta palette. Describe who and where — the light, the optics, the materials and the palette are taken care of."
+            },
+            "fr": {
+              "label": "Éditorial lumière dorée",
+              "tagline": "Votre sujet dans la lumière basse du soir, cadré comme une double page de magazine.",
+              "description": "Photographie lifestyle à l'heure dorée : lumière rasante, objectif de 85 mm grand ouvert, bois patiné, laine et laiton, palette ambre et terre cuite. Dites qui et où — la lumière, l'optique, les matières et la palette sont réglées."
+            }
+          }
+        },
+        {
+          "key": "art-miniature",
+          "profession": "creative",
+          "iconKey": "image",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 200,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "subject",
+              "title": "Votre sujet"
+            },
+            {
+              "key": "size",
+              "title": "Format"
+            },
+            {
+              "key": "seed",
+              "title": "Graine (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "image",
+              "type": "IMAGE"
+            },
+            {
+              "key": "seed",
+              "type": "TEXT"
+            },
+            {
+              "key": "model",
+              "type": "TEXT"
+            },
+            {
+              "key": "generationMs",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Tilt-shift miniature",
+              "tagline": "Your scene as a handcrafted diorama, shot in macro.",
+              "description": "A 1:24 diorama of figurines and props in felt, embroidered thread and painted resin, a razor-thin plane of focus and soft window light. Describe the scene; it becomes a miniature."
+            },
+            "fr": {
+              "label": "Diorama miniature tilt-shift",
+              "tagline": "Votre scène en diorama fait main, photographiée en macro.",
+              "description": "Un diorama au 1/24 de figurines et d'accessoires en feutre, fil brodé et résine peinte, une zone de netteté très fine et la lumière douce d'une fenêtre. Décrivez la scène : elle devient miniature."
+            }
+          }
+        },
+        {
+          "key": "art-still-life",
+          "profession": "creative",
+          "iconKey": "image",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 200,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "subject",
+              "title": "Votre sujet"
+            },
+            {
+              "key": "size",
+              "title": "Format"
+            },
+            {
+              "key": "seed",
+              "title": "Graine (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "image",
+              "type": "IMAGE"
+            },
+            {
+              "key": "seed",
+              "type": "TEXT"
+            },
+            {
+              "key": "model",
+              "type": "TEXT"
+            },
+            {
+              "key": "generationMs",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Artisanal still life",
+              "tagline": "Objects and produce in single-window light.",
+              "description": "Chiaroscuro on a weathered table: hand-thrown ceramics, hammered copper, linen and fresh produce, a muted earthy palette. Name the objects; they are arranged and lit."
+            },
+            "fr": {
+              "label": "Nature morte artisanale",
+              "tagline": "Objets et produits dans la lumière d'une seule fenêtre.",
+              "description": "Clair-obscur sur une table patinée : céramique tournée, cuivre martelé, lin et produits frais, palette terreuse et sourde. Nommez les objets : ils sont disposés et éclairés."
+            }
+          }
+        },
+        {
+          "key": "art-montreal-night",
+          "profession": "creative",
+          "iconKey": "image",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 200,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "subject",
+              "title": "Votre sujet"
+            },
+            {
+              "key": "size",
+              "title": "Format"
+            },
+            {
+              "key": "seed",
+              "title": "Graine (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "image",
+              "type": "IMAGE"
+            },
+            {
+              "key": "seed",
+              "type": "TEXT"
+            },
+            {
+              "key": "model",
+              "type": "TEXT"
+            },
+            {
+              "key": "generationMs",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Montreal neon night",
+              "tagline": "Wet streets, brick and spiral staircases under magenta and teal.",
+              "description": "Montreal after rain: cobblestones mirroring window light and neon, light mist, a 35 mm lens wide open, cinematic grading. Describe the place and the moment."
+            },
+            "fr": {
+              "label": "Néon de Montréal la nuit",
+              "tagline": "Rues mouillées, brique et escaliers en colimaçon sous le magenta et le turquoise.",
+              "description": "Montréal après la pluie : pavés qui reflètent les fenêtres et le néon, brume légère, objectif de 35 mm grand ouvert, étalonnage cinéma. Décrivez le lieu et le moment."
             }
           }
         },
