@@ -96,11 +96,14 @@ const MODULES = (() => {
   return index;
 })();
 
+/** A front-matter value, quoted when plain YAML would misread it (a ": " starts a nested mapping). */
+const yamlValue = (v) => (/:\s|\s#|^[[\]{}'"&*!|>%@`]/.test(v) ? JSON.stringify(v) : v);
+
 function frontmatter(title, description, category, order) {
   return [
     "---",
-    `title: ${title}`,
-    `description: ${description}`,
+    `title: ${yamlValue(title)}`,
+    `description: ${yamlValue(description)}`,
     `category: ${category}`,
     `order: ${order}`,
     "generated: true",
@@ -2447,6 +2450,17 @@ function extractAdmin(api) {
   return { repo: repo?.name, screens, consoleRows, adminOnly, auth };
 }
 
+/**
+ * Captures of the console, taken on a local stack and hosted on the Krizaka CDN (never committed — PR captures and
+ * doc captures live on Bunny Storage). E-mail addresses are redacted. Re-take them when a screen changes.
+ */
+const ADMIN_CAPTURES = [
+  ["02-billing-usage", "Billing — consumption per capability and model, refusals included"],
+  ["05-billing-plans", "Billing — the plans and what each one grants"],
+  ["04-billing-pricebook", "Billing — the price book: credits per unit for every capability and model, versioned"],
+  ["09-studios-builder", "Studios — the blueprint editor: versions, credits, steps and forms"],
+].map(([file, caption]) => ({ url: `https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/${file}.png`, caption }));
+
 const mdAdmin = (a) => {
   const lines = [
     frontmatter(
@@ -2472,6 +2486,11 @@ const mdAdmin = (a) => {
   );
   for (const s of a.screens) lines.push(`| ${code(s.route)} | ${s.summary || "—"} | ${s.tabs.join(" · ") || "—"} |`);
   lines.push(
+    "",
+    ...ADMIN_CAPTURES.flatMap((c) => [`![${c.caption}](${c.url})`, "", `*${c.caption}.*`, ""]),
+    "> The console's screens are in French for now, and it ships no sign-in page yet",
+    "> ([orazaka-web-admin#5](https://github.com/krizaka/orazaka-web-admin/issues/5)): every administrative",
+    "> action is also an endpoint, listed below.",
     "",
     "### How the console is secured",
     "",

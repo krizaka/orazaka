@@ -1,6 +1,6 @@
 ---
 title: Business Layer
-description: The App Factory of orazaka-business: intentions, use-cases, the dispatcher and the ports between business and engine, extracted from the code.
+description: "The App Factory of orazaka-business: intentions, use-cases, the dispatcher and the ports between business and engine, extracted from the code."
 category: Business
 order: 3
 generated: true

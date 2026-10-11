@@ -1,6 +1,6 @@
 ---
 title: Jobs, Schedules & Automation
-description: Everything Orazaka runs without a user waiting: the job plane, its executors and workers, every scheduled task and the automation connectors — extracted from the code.
+description: "Everything Orazaka runs without a user waiting: the job plane, its executors and workers, every scheduled task and the automation connectors — extracted from the code."
 category: Core
 order: 7
 generated: true

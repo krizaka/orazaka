@@ -25,6 +25,26 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | `/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
 | `/studios` | The Studio Builder console (ADR-034 §12.4). | — |
 
+![Billing — consumption per capability and model, refusals included](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/02-billing-usage.png)
+
+*Billing — consumption per capability and model, refusals included.*
+
+![Billing — the plans and what each one grants](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/05-billing-plans.png)
+
+*Billing — the plans and what each one grants.*
+
+![Billing — the price book: credits per unit for every capability and model, versioned](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/04-billing-pricebook.png)
+
+*Billing — the price book: credits per unit for every capability and model, versioned.*
+
+![Studios — the blueprint editor: versions, credits, steps and forms](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/09-studios-builder.png)
+
+*Studios — the blueprint editor: versions, credits, steps and forms.*
+
+> The console's screens are in French for now, and it ships no sign-in page yet
+> ([orazaka-web-admin#5](https://github.com/krizaka/orazaka-web-admin/issues/5)): every administrative
+> action is also an endpoint, listed below.
+
 ### How the console is secured
 
 - **Sign-in by credentials only** — no social login: the role that matters is granted by the identity service, and an account without `ROLE_ADMIN` is refused a console session.
