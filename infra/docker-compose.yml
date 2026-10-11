@@ -20,9 +20,12 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-orazaka_app}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-orazaka_pass}
     # Bound to loopback only: reachable by host-run E2E integration tests
-    # (E2eJdbcClient → localhost:5432) without exposing the DB externally.
+    # (E2eJdbcClient → localhost:${POSTGRES_PORT}) without exposing the DB externally.
+    # The host port is POSTGRES_PORT (.env, read by `orazaka start`): a machine that already
+    # runs a Postgres on 5432 (another Krizaka product, Homebrew) sets another port here and
+    # in the *_DB_URL lines, instead of a container left without a published port.
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgvector_data:/var/lib/postgresql/data
       # Bootstrap files (one per bounded context, run alphabetically on a fresh
