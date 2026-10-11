@@ -115,7 +115,13 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-conversation-service` | `orazaka-studio-service` | amqp | `orazaka.events.studio.capability` (`evt.capability.changed`) |
 | `orazaka-conversation-service` | `orazaka-worker-media` | amqp | `orazaka.jobs.video` (`job.video.*, job.compose.*`) |
 | `orazaka-job-service` | `krizaka-billing-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
+| `orazaka-job-service` | `krizaka-notifications-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
+| `orazaka-job-service` | `krizaka-users-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
+| `orazaka-job-service` | `orazaka-automation-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
+| `orazaka-job-service` | `orazaka-conversation-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `orazaka-conversation-service` | amqp | `orazaka.events.job-relay` (`job.{…}.done`) |
+| `orazaka-job-service` | `orazaka-knowledge-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
+| `orazaka-job-service` | `orazaka-studio-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `orazaka-studio-service` | amqp | `orazaka.events.studio` (`job.{…}.done`) |
 | `orazaka-job-service` | `orazaka-studio-service` | amqp | `orazaka.events.studio.capability` (`evt.capability.changed`) |
 | `orazaka-studio-service` | `orazaka-automation-service` | amqp | `orazaka.jobs.automation` (`job.automation.approved`) |
@@ -185,7 +191,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 
 | Queue | Exchange | Binding | DLQ | Declared by | Consumed by |
 |:---|:---|:---|:---|:---|:---|
-| `krizaka.billing.settlements` | `orazaka.events` | `job.*.done, job.*.error` | `krizaka.billing.settlements.dlq` | `krizaka-billing-service` | `krizaka-billing-service` |
+| `krizaka.billing.settlements` | `orazaka.events` | `job.*.done, job.*.error` | `krizaka.billing.settlements.dlq` | `krizaka-billing-service` | `krizaka-billing-service`, `krizaka-messaging` |
 | `krizaka.billing.unmetered` | `orazaka.events` | `evt.turn.unmetered` | `krizaka.billing.unmetered.dlq` | `krizaka-billing-service` | `krizaka-billing-service` |
 | `krizaka.notifications.password-events` | `orazaka.events` | `evt.password.*` | `krizaka.notifications.password-events.dlq` | `krizaka-notifications-service` | `krizaka-notifications-service` |
 | `krizaka.notifications.requests` | `orazaka.events` | `evt.notification.requested` | `krizaka.notifications.requests.dlq` | `krizaka-notifications-service` | `krizaka-notifications-service` |

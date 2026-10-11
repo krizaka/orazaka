@@ -1,0 +1,129 @@
+---
+title: Jobs, Schedules & Automation
+description: Everything Orazaka runs without a user waiting: the job plane, its executors and workers, every scheduled task and the automation connectors — extracted from the code.
+category: Core
+order: 7
+generated: true
+---
+
+# Jobs, Schedules & Automation
+
+> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
+
+Three mechanisms run work in the background, each with one owner:
+
+- **The job plane** (`orazaka-job-service`) — asynchronous AI work: a capability is published as a job on
+  RabbitMQ and executed in process or by a worker. Studio runs and `ASYNC` intentions use it.
+- **Scheduled tasks** — sweepers and probes inside each service (`@Scheduled`), configured by properties.
+- **Automation** (`orazaka-automation-service`) — connector actions (Slack, Jira, the CLI agent…) and its
+  Quartz scheduler.
+
+## The job plane
+
+Asynchronous RabbitMQ listener that consumes task execution requests. Manages the state of jobs from PENDING → PROCESSING → COMPLETED or FAILED. Delegates feature-specific execution to the registered `JobExecutor` whose `handlerKey()` matches the capability's `handler_key` column. The executors arrive by the AutoConfiguration SPI, so an out-of-tree jar contributes one without touching this class (ADR-038).
+
+A capability row (`orazaka_capabilities`) says **where** a job goes (`routing_key`, the queue a process drains)
+and **which code** runs it (`handler_key`). Both are data: a pack adds a capability with a row, not a deploy.
+
+| Capability | Handler | Routing key | Runs in |
+|:---|:---|:---|:---|
+| `orazaka.studio.media.compose` | `media.compose` | `job.compose.assemble` | a worker (see the [worker protocol](../WORKER_PROTOCOL.md)) |
+| `orazaka.core.media.vision` | `image.analyze` | `job.media.analyze` | `VisionAnalysisStrategy` (in process) |
+| `orazaka.core.media.audio.analysis` | `audio.analyze` | `job.media.generate` | `AudioAnalysisStrategy` (in process) |
+| `orazaka.core.media.image` | `image.generate` | `job.media.generate` | `ImageGenerationStrategy` (in process) |
+| `orazaka.core.media.video.analysis` | `video.analyze` | `job.media.generate` | `VideoAnalysisStrategy` (in process) |
+| `orazaka.core.chat.completion` | `text.generate` | `job.text.process` | `ChatGenerationStrategy` (in process) |
+| `orazaka.core.media.speech` | `speech.synthesize` | `job.text.process` | `SpeechSynthesisStrategy` (in process) |
+| `orazaka.core.media.video` | `video.generate` | `job.video.generate` | a worker (see the [worker protocol](../WORKER_PROTOCOL.md)) |
+
+### In-process executors
+
+One capability's execution, in process.
+
+| Handler key | Executor | Repository | Summary |
+|:---|:---|:---|:---|
+| `audio.analyze` | `AudioAnalysisStrategy` | `orazaka-job-service` | Executes audio transcription/analysis jobs by delegating to the `AudioPreProcessor`. |
+| `image.analyze` | `VisionAnalysisStrategy` | `orazaka-job-service` | Executes vision/image analysis jobs using the AI chat client with vision models. |
+| `image.generate` | `ImageGenerationStrategy` | `orazaka-job-service` | Executes image generation jobs via the AI client's image endpoint. |
+| `speech.synthesize` | `SpeechSynthesisStrategy` | `orazaka-job-service` | Executes text-to-speech synthesis jobs via the AI client's audio endpoint. |
+| `text.generate` | `ChatGenerationStrategy` | `orazaka-job-service` | Default fallback strategy for text/chat generation jobs. |
+| `video.analyze` | `VideoAnalysisStrategy` | `orazaka-job-service` | Executes video analysis jobs by delegating to the `VideoPreProcessor`. |
+
+### Capability and worker registries
+
+Service-to-service (`SERVICE` token): how a pack registers a capability and a worker announces itself.
+
+| Method | Path | Summary |
+|:---|:---|:---|
+| DELETE | `/internal/v1/capabilities/{featureKey}` | Removes one capability. |
+| PUT | `/internal/v1/capabilities/{featureKey}` | Registers or replaces one capability a pack contributes. |
+| GET | `/internal/v1/capabilities/{featureKey}/route` | Resolves where one capability's work is executed. |
+| POST | `/internal/v1/workers` | Registers a worker, or refreshes what is known about it. |
+| POST | `/internal/v1/workers/{workerName}/heartbeat` | Records a heartbeat from an already-registered worker. |
+
+### Following and approving jobs
+
+| Method | Path | Access | Summary |
+|:---|:---|:---|:---|
+| GET | `/api/v1/jobs` | authenticated | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
+| GET | `/api/v1/jobs/{id}` | ADMIN + USER | Fetches the single, atomic state of a specific job. |
+| POST | `/api/v1/jobs/{id}/progress` | public | Updates progress of a running job and broadcasts it to connected users. |
+| POST | `/api/v1/jobs/{jobId}/approve` | ADMIN + USER | Approves a pending automation job and dispatches its payload to the execution queue. |
+| POST | `/api/v1/jobs/{jobId}/revoke` | ADMIN + USER | Revokes a pending automation job, preventing its execution. |
+| GET | `/api/v1/jobs/active-connections` | ADMIN | Retrieves the current active SSE connection count. |
+| POST | `/api/v1/jobs/purge` | ADMIN | Purges jobs, chat sessions and rate-limit cache for the default test accounts. |
+| GET | `/api/v1/jobs/stream` | ADMIN + USER | Registers a Server-Sent Events stream for real-time job status notifications. |
+
+## Scheduled tasks
+
+Every `@Scheduled` method of the platform. A property in parentheses overrides the interval (or cron) in
+the service's `application.yml` or environment.
+
+| Repository | Task | Schedule | What it does |
+|:---|:---|:---|:---|
+| `krizaka-billing` | `HoldSweeper.sweep` | every 60 s (`krizaka.billing-service.sweeper.interval`) | Time-triggered inbound adapter: releases `ACTIVE` holds that outlived their TTL. |
+| `orazaka-ai-engine` | `InfrastructureProber.probeVideoInfrastructure` | every 5 s (`orazaka.core.video.probing.interval-ms`) | Periodically pings the configured video port to check if the video inference engine is responsive. |
+| `orazaka-ai-engine` | `InfrastructureProber.probeImageInfrastructure` | every 5 s (`orazaka.core.image.probing.interval-ms`) | Periodically pings the configured image port to check if the image inference engine (Stable Diffusion) is responsive. |
+| `orazaka-ai-engine` | `SandboxEvictionScheduler.evictExpiredSandboxes` | every 60 s | Scheduled eviction process — prunes expired or orphaned jobId sandbox contexts from memory. |
+| `orazaka-conversation-service` | `JobReconciliationService.reconcileScheduled` | every 60 s (`orazaka.jobs.reconcile-interval-ms`) | Recovers jobs whose result was written to disk but whose terminal status update never reached the database (e.g. |
+| `orazaka-conversation-service` | `JobStreamService.sendHeartbeats` | every 15 s | Service managing client Server-Sent Events (SSE) connections for real-time job lifecycle updates. |
+| `orazaka-job-service` | `JobRetentionSweeper.sweep` | every 60 s (`orazaka.jobs.retention-sweep-interval`) | Runs the job plane's retention on a fixed delay (ADR-065). |
+| `orazaka-job-service` | `WorkerHeartbeatSweeper.markStaleWorkers` | every 30 s (`orazaka.jobs.worker-sweeper-interval`) | Marks workers that have stopped heartbeating as `STALE`. |
+| `orazaka-job-service` | `WorkerSelfRegistration.heartbeat` | every 30 s (`orazaka.jobs.worker-heartbeat-interval`) | Registers the job service in the worker registry from its own `worker.yaml`. |
+| `orazaka-studio` | `PackBootstrap.install` | every 30 s (`orazaka.studio-service.packs.bootstrap-interval`) | Installs the packs this deployment ships, so a fresh environment has Studios (ADR-068, `#45`). |
+| `orazaka-studio` | `RetentionSweeper.purge` | cron `0 30 3 * * *` (`orazaka.studio-service.retention.cron`) | Purges what the retention window says may no longer be kept (ADR-034 §14, GDPR / Loi 25). |
+| `orazaka-studio` | `RunSweeper.sweep` | every 60 s (`orazaka.studio-service.sweeper.interval`) | Closes runs whose steps stopped reporting, and releases their holds. |
+
+## Automation
+
+Connector actions are jobs too: a producer publishes on `job.automation.*` (exchange `orazaka.jobs`), the
+automation service consumes `orazaka.jobs.automation` (failures dead-letter to `orazaka.jobs.automation.dlq`), runs the connector and
+reports each state change on `evt.automation.telemetry` (exchange `orazaka.events`).
+
+| Producer | Repository | Routing key |
+|:---|:---|:---|
+| `AmqpStepExecutionAdapter` | `orazaka-studio` | `job.automation.approved` |
+
+| Connector | Behaviour |
+|:---|:---|
+| `JIRA` | logs the action (no outbound call yet) |
+| `WHATSAPP` | logs the action (no outbound call yet) |
+| `MESSENGER` | logs the action (no outbound call yet) |
+| `SLACK` | logs the action (no outbound call yet) |
+| `CLI_AGENT` | forwarded to the user's CLI agent on `job.agent.dispatch.{userId}` |
+
+Automation job states: `PENDING_APPROVAL` · `APPROVED` · `RUNNING` · `COMPLETED` · `FAILED` · `AWAITING_CLI_EXECUTION`.
+
+The CLI agent runs on the user's machine and connects **outbound** (no inbound port):
+
+```bash
+orazaka login
+orazaka agent listen   # Start CLI agent listener and reverse tunnel
+```
+
+| Method | Path | Access | Summary |
+|:---|:---|:---|:---|
+| POST | `/api/v1/agent/report` | authenticated | Receives execution reports from the CLI agent after local task completion. |
+| GET | `/api/v1/agent/stream` | authenticated | Establishes a persistent SSE stream for the CLI agent. |
+
+The service embeds a Quartz scheduler (`OrazakaAutomationScheduler`): JDBC job store in its own database, 5 threads, clustered: false.

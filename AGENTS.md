@@ -4,7 +4,7 @@
 > This file is **agent-neutral**: `CLAUDE.md` (and any other agent file) only **imports** it (`@AGENTS.md`). No rule lives anywhere except in this contract and in `.agent/rules/*`.
 > Every generation, review, or refactor **must** enforce these constraints without exception.
 >
-> Architectural detail (non-normative): [`docs/VISION_ARCHITECTURE.md`](docs/VISION_ARCHITECTURE.md), [`docs/INTERFACES.md`](docs/INTERFACES.md), [`docs/DEVEX_LIFECYCLE.md`](docs/DEVEX_LIFECYCLE.md). Code-derived docs (architecture map, ports, use-cases, interceptors, API, CLI, models, ADRs) are generated under [`docs/_generated/`](docs/_generated/) by `orazaka docs build`.
+> Architectural detail (non-normative): [`docs/VISION_ARCHITECTURE.md`](docs/VISION_ARCHITECTURE.md), [`docs/INTERFACES.md`](docs/INTERFACES.md), [`docs/DEVEX_LIFECYCLE.md`](docs/DEVEX_LIFECYCLE.md). Code-derived docs (architecture map, ports, use-cases, business layer, tools, jobs & schedules, packs, administration, interceptors, API, CLI, models, ADRs) are generated under [`docs/_generated/`](docs/_generated/) by `orazaka docs build`.
 
 ---
 
@@ -267,7 +267,7 @@ All clients live under `orazaka-apps/ui/` — one repository each, linked by the
 ## 10. Documentation generation (local, automated, from code)
 
 - **Docs come from code.** **Full** automation, wired into the **build**: no hand-maintained architecture doc that can drift.
-- `orazaka docs build`: generates, from the code, **(a)** markdown (catalog of `UseCaseDescriptor`, ADR ledger, interceptor registry, interface contracts, **API reference, governance-rule registry**, CLI reference, model catalog) **and (b)** a **structured** architecture model (`docs/_generated/architecture.json`: modules, ports, dependencies, pipeline, messaging) extracted via ArchUnit/annotation scan. The build fails if the model is stale (`docs build --check`).
+- `orazaka docs build`: generates, from the code, **(a)** markdown (catalog of `UseCaseDescriptor`, ADR ledger, interceptor registry, interface contracts, **API reference, governance-rule registry**, CLI reference, model catalog, and the guides to the business layer, tools & MCP, jobs/schedules/automation, packs and administration) **and (b)** a **structured** architecture model (`docs/_generated/architecture.json`: modules, ports, dependencies, pipeline, messaging) extracted via ArchUnit/annotation scan. The build fails if the model is stale (`docs build --check`).
 - **The API reference carries the authorisation rule, not only the path.** Access is resolved per endpoint from each service's `SecurityConfig` in **declaration order** — Spring Security is first-match-wins, and ranking matchers by specificity inverts the answer. An endpoint no matcher covers is rendered **⚠ no rule**, which is a finding rather than a formatting gap: it means the service has no security on that path at all.
 - **The governance registry lists which suite enforces each rule.** A rule with no suite enforces nothing, and that must be visible without reading the test tree. Every `assert*` in `orazaka-test-support` appears, summarised by its own javadoc — so a rule is documented by whoever writes it.
 - **Docstrings are the generator's input, not decoration.** A controller method's first javadoc sentence becomes its API summary; a rule's becomes its registry entry. An undocumented public surface generates an empty cell.
