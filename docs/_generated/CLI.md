@@ -151,8 +151,6 @@ Create or refresh Eric, the demo persona: account, onboarding, plan, packs and S
 | Argument / option | Description |
 |:---|:---|
 | `--fresh` | Delete Eric's conversations first, for a demo that starts from a clean history |
-| `--runs` | Also run Eric's demo work on this stack: a product photo, a voice-over, a prospect dossier, a lease check, an invoice check |
-| `--with-video` | With --runs, also generate a few seconds of video (loads a video model: one heavy job, never by default) |
 
 ### `orazaka dev`
 
