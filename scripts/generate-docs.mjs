@@ -1126,6 +1126,46 @@ function extractCli() {
 }
 
 /**
+ * What the quick start does, in order — the CLI's own words: the phases `install` and `start`
+ * announce (`logStep("Phase 1 — Tool Verification")`), and the processes `dev` launches with their
+ * ports (PORTS, utils/config.ts — the defaults, each overridable by its env key).
+ *
+ * krizaka.com draws it as the journey of /docs/orazaka/cli; the same steps are written below the
+ * ```cli-journey block of CLI.md for whoever reads the markdown.
+ */
+function extractCliJourney(commands) {
+  const cliRoot = join(ROOT, "orazaka-apps/ui/orazaka-cli");
+  const src = (name) => read(join(cliRoot, "src/commands", `${name}.command.ts`));
+  const description = (name) => commands.find((c) => c.name === name)?.description ?? "";
+  // A phase announced inside `if (mode === "full"…)` only runs with `--mode full`.
+  const phases = (name) => {
+    const code = src(name);
+    const fullFrom = code.search(/if\s*\(\s*mode\s*===\s*"full"/);
+    return [...code.matchAll(/logStep\(\s*"((?:Phase\s+(\w+)|Workspace)[^"]*)"\s*\)/g)].map((m) => {
+      const [head, ...rest] = m[1].split(/\s+—\s+|:\s+/);
+      const title = (m[2] ? rest.join(" — ") : head).replace(/\.\.\.$/, "").trim();
+      const only = fullFrom >= 0 && m.index > fullFrom ? "--mode full" : "";
+      return { id: m[2] ? m[2].toLowerCase() : head.toLowerCase(), title, detail: m[2] ? only : rest.join(" — ") };
+    });
+  };
+  const ports = Object.fromEntries(
+    [...read(join(cliRoot, "src/utils/config.ts")).matchAll(/^\s+(\w+):\s*intEnv\([^,]+,\s*(\d+)\)/gm)].map((m) => [m[1], Number(m[2])]),
+  );
+  const processes = [...src("dev").matchAll(/serviceKey:\s*"(\w+)",\s*label:\s*"([^"]+)"[\s\S]*?port:\s*PORTS\.(\w+)/g)].map((m) => ({
+    key: m[1],
+    label: m[2],
+    port: ports[m[3]] ?? null,
+  }));
+  // …and the Python workers each worker.yaml declares (ADR-072 §4): discovered at launch, no HTTP port.
+  if (/function discoverWorkers\(/.test(src("dev"))) processes.push({ key: "workers", label: "worker.yaml", port: null });
+  return [
+    { command: "install", description: description("install"), phases: phases("install") },
+    { command: "start", description: description("start"), phases: phases("start") },
+    { command: "dev", description: description("dev"), processes },
+  ];
+}
+
+/**
  * The architecture rules that bind the build, and the suites that enforce each one.
  *
  * These are the most load-bearing documentation in the repository and had none: a rule nobody can
@@ -1474,12 +1514,32 @@ const mdApi = (rows) => {
   return lines.join("\n") + "\n";
 };
 
-const mdCli = (rows) => {
-  const lines = [frontmatter("CLI Reference", "orazaka CLI commands, subcommands, arguments and options, extracted from the command definitions.", "DevEx", 7)];
+/**
+ * The CLI as data, for the site (architecture.json → `cli`): its packages, its commands with their
+ * arguments and options, and the journey of the quick start. krizaka.com renders the command
+ * explorer and the journey of /docs/orazaka/cli from it; CLI.md below says the same in markdown.
+ */
+function cliModel(rows) {
   const cliRoot = join(ROOT, "orazaka-apps/ui/orazaka-cli");
   const pkg = JSON.parse(read(join(cliRoot, "package.json")) || "{}");
   const alias = JSON.parse(read(join(cliRoot, "alias/package.json")) || "{}");
-  const bin = Object.keys(pkg.bin ?? { orazaka: "" })[0];
+  return {
+    package: pkg.name ?? null,
+    alias: alias.name ?? null,
+    version: pkg.version ?? null,
+    bin: Object.keys(pkg.bin ?? { orazaka: "" })[0],
+    node: pkg.engines?.node ?? null,
+    commands: rows.map(({ order, ...c }) => c),
+    journey: extractCliJourney(rows),
+  };
+}
+
+const mdCli = (rows) => {
+  const lines = [frontmatter("CLI Reference", "orazaka CLI commands, subcommands, arguments and options, extracted from the command definitions.", "DevEx", 7)];
+  const model = cliModel(rows);
+  const pkg = { name: model.package, engines: { node: model.node } };
+  const alias = { name: model.alias };
+  const bin = model.bin;
   const runner = alias.name ? `npx ${alias.name}` : `npx ${pkg.name}`;
   const cell = (s) => (s || "—").replace(/\|/g, "\\|");
   const usage = (c) => [`${bin} ${c.name}`, ...c.args.map((a) => a.name)].join(" ");
@@ -1501,6 +1561,13 @@ const mdCli = (rows) => {
     `${runner} dev       # the whole stack: services, web, admin, mobile`,
     "```",
     "",
+    // krizaka.com plays a recording of these commands here (a terminal replay of the published CLI).
+    "```cli-replay",
+    `${runner} install --yes`,
+    `${runner} start`,
+    `${runner} dev`,
+    "```",
+    "",
     ...(alias.name
       ? [
           `\`${alias.name}\` on npm is the short name of the canonical package \`${pkg.name}\` — both run the same CLI:`,
@@ -1514,6 +1581,18 @@ const mdCli = (rows) => {
       : []),
     "`install --check-only` only reports what is missing. `start`, `dev`, `test` and `docs` run inside",
     "a workspace and say how to get one when there is none.",
+    "",
+    "## What happens",
+    "",
+    "What each command of the quick start does, in order — the phases it announces, the processes it launches:",
+    "",
+    "```cli-journey",
+    ...model.journey.flatMap((step) => [
+      `${bin} ${step.command} — ${step.description}`,
+      ...(step.phases ?? []).map((p) => `  ${/^\d/.test(p.id) ? `${p.id}.` : "·"} ${p.title}${p.detail ? ` (${p.detail})` : ""}`),
+      ...(step.processes ?? []).map((p) => `  ${p.label}${p.port ? ` :${p.port}` : " (Python workers, no HTTP port)"}`),
+    ]),
+    "```",
     "",
     "## Local dev workflow",
     "",
@@ -1535,6 +1614,11 @@ const mdCli = (rows) => {
     "> complementary, not alternatives.",
     "",
     "## Commands",
+    "",
+    // krizaka.com renders the command explorer here (architecture.json → cli.commands); the table is its text version.
+    "```cli-commands",
+    `${model.commands.filter((c) => c.isTop).length} commands, ${model.commands.filter((c) => !c.isTop).length} subcommands — every one in the table below.`,
+    "```",
     "",
     "| Command | Description |",
     "|:---|:---|",
@@ -2674,9 +2758,9 @@ const mdAdmin = (a) => {
 // MAIN
 // ════════════════════════════════════════════════════════════════════════════
 
-const arch = { ...extractArchitecture(), packs: extractPackCatalog() };
 const api = extractApi();
 const cli = extractCli();
+const arch = { ...extractArchitecture(), packs: extractPackCatalog(), cli: cliModel(cli) };
 const outputs = {
   "architecture.json": JSON.stringify(arch, null, 2) + "\n",
   "ARCHITECTURE.md": mdArchitecture(arch),

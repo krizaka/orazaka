@@ -3981,5 +3981,1116 @@
         }
       ]
     }
-  ]
+  ],
+  "cli": {
+    "package": "@krizaka/orazaka-cli",
+    "alias": "orazaka",
+    "version": "1.0.0",
+    "bin": "orazaka",
+    "node": ">=22",
+    "commands": [
+      {
+        "name": "agent",
+        "top": "agent",
+        "isTop": true,
+        "description": "Manage Orazaka local executing agent",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "agent listen",
+        "top": "agent",
+        "isTop": false,
+        "description": "Start CLI agent listener and reverse tunnel",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "chat",
+        "top": "chat",
+        "isTop": true,
+        "description": "Execute interactive REPL or single-shot chat",
+        "args": [
+          {
+            "name": "[prompt...]",
+            "desc": "Optional prompt words for single-shot chat"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-t, --text",
+            "desc": "Force text chat mode",
+            "default": null
+          },
+          {
+            "flag": "-i, --image <path>",
+            "desc": "Analyze a poster image",
+            "default": null
+          },
+          {
+            "flag": "-a, --audio <path>",
+            "desc": "Analyze an audio clip",
+            "default": null
+          },
+          {
+            "flag": "-g, --gen-image",
+            "desc": "Generate an image",
+            "default": null
+          },
+          {
+            "flag": "-s, --speech",
+            "desc": "Convert text to speech",
+            "default": null
+          },
+          {
+            "flag": "-m, --model <model>",
+            "desc": "Specify AI model name",
+            "default": null
+          },
+          {
+            "flag": "-v, --voice <voice>",
+            "desc": "Specify voice name",
+            "default": null
+          },
+          {
+            "flag": "-o, --save <path>",
+            "desc": "Specific file path to save output media",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "config",
+        "top": "config",
+        "isTop": true,
+        "description": "Interactive configuration wizard — review and update .env variables",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-l, --list",
+            "desc": "List all current configuration values",
+            "default": null
+          },
+          {
+            "flag": "-c, --category <name>",
+            "desc": "Jump directly to a specific category",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "db",
+        "top": "db",
+        "isTop": true,
+        "description": "Database maintenance operations",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "db reseed",
+        "top": "db",
+        "isTop": false,
+        "description": "Drop & re-apply infra/initdb/*.sql (schema + seed). Destroys all local dev data.",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-y, --yes",
+            "desc": "Skip the destructive-action confirmation prompt",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "demo",
+        "top": "demo",
+        "isTop": true,
+        "description": "Demonstration persona on the local stack (never on a deployed one)",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "demo seed",
+        "top": "demo",
+        "isTop": false,
+        "description": "Create or refresh Eric, the demo persona: account, onboarding, plan, packs and Studios (replayable)",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--fresh",
+            "desc": "Delete Eric's conversations first, for a demo that starts from a clean history",
+            "default": null
+          },
+          {
+            "flag": "--runs",
+            "desc": "Also run Eric's demo work on this stack: a product photo, a voice-over, a prospect dossier, a lease check, an invoice check",
+            "default": null
+          },
+          {
+            "flag": "--with-video",
+            "desc": "With --runs, also generate a few seconds of video (loads a video model: one heavy job, never by default)",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "dev",
+        "top": "dev",
+        "isTop": true,
+        "description": "Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile)",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--only <services>",
+            "desc": "Launch only these services (comma-separated: edge,router,identity,automation,knowledge,job,billing,studio,notifications,web,admin,mobile)",
+            "default": null
+          },
+          {
+            "flag": "--skip-edge",
+            "desc": "Skip the Edge gateway (strangler facade on :8088)",
+            "default": null
+          },
+          {
+            "flag": "--skip-identity",
+            "desc": "Skip the Identity service (:8083)",
+            "default": null
+          },
+          {
+            "flag": "--skip-router",
+            "desc": "Skip the Router (Spring Boot) backend — run RouterApplication from your IDE instead",
+            "default": null
+          },
+          {
+            "flag": "--skip-core",
+            "desc": "Deprecated alias for --skip-router",
+            "default": null
+          },
+          {
+            "flag": "--skip-automation",
+            "desc": "Skip the Automation service (AMQP on :8082)",
+            "default": null
+          },
+          {
+            "flag": "--skip-knowledge",
+            "desc": "Skip the Knowledge service (:8084)",
+            "default": null
+          },
+          {
+            "flag": "--skip-job",
+            "desc": "Skip the Job Orchestration service (:8090)",
+            "default": null
+          },
+          {
+            "flag": "--skip-billing",
+            "desc": "Skip the Billing service (:8095)",
+            "default": null
+          },
+          {
+            "flag": "--skip-studio",
+            "desc": "Skip the Studio service (:8096)",
+            "default": null
+          },
+          {
+            "flag": "--skip-notifications",
+            "desc": "Skip the Notification service (:8097)",
+            "default": null
+          },
+          {
+            "flag": "--skip-admin",
+            "desc": "Skip Admin console",
+            "default": null
+          },
+          {
+            "flag": "--skip-mobile",
+            "desc": "Skip Expo mobile server",
+            "default": null
+          },
+          {
+            "flag": "--skip-web",
+            "desc": "Skip Web client",
+            "default": null
+          },
+          {
+            "flag": "--skip-workers",
+            "desc": "Skip the Python workers declared by worker.yaml",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "docs",
+        "top": "docs",
+        "isTop": true,
+        "description": "Code-driven documentation: build (generate) | sync (to the site)",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "docs build",
+        "top": "docs",
+        "isTop": false,
+        "description": "Regenerate docs/_generated/ from the code",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--check",
+            "desc": "Fail if any generated doc is stale (build gate), without writing",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "docs sync",
+        "top": "docs",
+        "isTop": false,
+        "description": "Copy docs/ (+ generated) into the Krizaka site content tree",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "doctor",
+        "top": "doctor",
+        "isTop": true,
+        "description": "Advanced system health check with automatic recovery suggestions",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-q, --quiet",
+            "desc": "Only show issues, suppress passing checks",
+            "default": null
+          },
+          {
+            "flag": "--fix",
+            "desc": "Attempt to auto-fix detected issues",
+            "default": null
+          },
+          {
+            "flag": "-v, --verbose",
+            "desc": "Show detailed diagnostic output",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "forgot",
+        "top": "forgot",
+        "isTop": true,
+        "description": "Request a password reset token via email",
+        "args": [
+          {
+            "name": "[email]",
+            "desc": "Account email address"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "generate",
+        "top": "generate",
+        "isTop": true,
+        "description": "Generate features, interceptors, connectors, and configurations",
+        "args": [],
+        "aliases": [
+          "gen",
+          "scaffold"
+        ],
+        "options": []
+      },
+      {
+        "name": "graph",
+        "top": "graph",
+        "isTop": true,
+        "description": "Display Operation Graph capability matrix",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "init",
+        "top": "init",
+        "isTop": true,
+        "description": "Initialize workspace — detects existing projects, validates config, and fixes gaps",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-f, --force",
+            "desc": "Overwrite existing configuration",
+            "default": null
+          },
+          {
+            "flag": "-y, --yes",
+            "desc": "Non-interactive mode with defaults",
+            "default": null
+          },
+          {
+            "flag": "--skip-validation",
+            "desc": "Skip diagnostic checks",
+            "default": null
+          },
+          {
+            "flag": "--dir <path>",
+            "desc": "Target directory (default: current directory)",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "install",
+        "top": "install",
+        "isTop": true,
+        "description": "Setup wizard — verify tools, install dependencies, and configure deployment topology",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--check-only",
+            "desc": "Read-only: verify tool availability & versions, then exit (no .env / compose changes)",
+            "default": null
+          },
+          {
+            "flag": "-y, --yes",
+            "desc": "Non-interactive mode — accept every default (clone, tools, local dev topology, bundled infra)",
+            "default": null
+          },
+          {
+            "flag": "--dir <path>",
+            "desc": "Where to clone the platform when no workspace is found",
+            "default": "orazaka"
+          },
+          {
+            "flag": "--depth <n>",
+            "desc": "git clone depth for the platform repositories (0 = full history)",
+            "default": "1"
+          }
+        ]
+      },
+      {
+        "name": "login",
+        "top": "login",
+        "isTop": true,
+        "description": "Authenticate and cache JWT token",
+        "args": [
+          {
+            "name": "[email]",
+            "desc": "Account email address"
+          },
+          {
+            "name": "[password]",
+            "desc": "Account password"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "logs",
+        "top": "logs",
+        "isTop": true,
+        "description": "Stream and browse service logs",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--service <name>",
+            "desc": "Tail a specific service (router, ollama, media-worker, image-worker, ui)",
+            "default": null
+          },
+          {
+            "flag": "--list",
+            "desc": "List all available log files with sizes",
+            "default": null
+          },
+          {
+            "flag": "--since <duration>",
+            "desc": "Show logs from last N hours (e.g., 1h, 30m)",
+            "default": "24h"
+          },
+          {
+            "flag": "--tail <lines>",
+            "desc": "Number of lines to show from end of file",
+            "default": "50"
+          }
+        ]
+      },
+      {
+        "name": "mcp",
+        "top": "mcp",
+        "isTop": true,
+        "description": "Manage your private dynamic MCP server connections",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "mcp list",
+        "top": "mcp",
+        "isTop": false,
+        "description": "List your registered private MCP servers",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "mcp register",
+        "top": "mcp",
+        "isTop": false,
+        "description": "Register a new private MCP server",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--auth-token <token>",
+            "desc": "Optional authorization token/header",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "mcp delete",
+        "top": "mcp",
+        "isTop": false,
+        "description": "Delete a private MCP server by ID",
+        "args": [
+          {
+            "name": "<id>",
+            "desc": ""
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "models",
+        "top": "models",
+        "isTop": true,
+        "description": "Scan the host hardware and report which catalog models it can run",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "models image",
+        "top": "models",
+        "isTop": false,
+        "description": "Local image models (stable-diffusion.cpp, Metal): list, download, choose the one served",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "models list",
+        "top": "models",
+        "isTop": false,
+        "description": "List the installable image models, their licence, size and whether they are installed",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "models pull",
+        "top": "models",
+        "isTop": false,
+        "description": "Download an image model into ~/models/stable-diffusion and verify its checksums",
+        "args": [
+          {
+            "name": "<id>",
+            "desc": "Model id (see `orazaka models image list`)"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "models use",
+        "top": "models",
+        "isTop": false,
+        "description": "Make an installed image model the catalogue's default — the one `orazaka start` serves",
+        "args": [
+          {
+            "name": "<id>",
+            "desc": "Model id (see `orazaka models image list`)"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "onboard",
+        "top": "onboard",
+        "isTop": true,
+        "description": "Full clone-and-run onboarding: verify prerequisites, compile, smoke-test M2M handshake, and probe local AI runtimes",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "pack",
+        "top": "pack",
+        "isTop": true,
+        "description": "Validate, install and publish pack bundles",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "pack validate",
+        "top": "pack",
+        "isTop": false,
+        "description": "Check a bundle's manifest, and whether this platform can run it",
+        "args": [
+          {
+            "name": "<directory>",
+            "desc": "The bundle directory holding pack.yaml"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--offline",
+            "desc": "Check the manifest's shape only, without asking the platform",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "pack install",
+        "top": "pack",
+        "isTop": false,
+        "description": "Install a bundle: capabilities, billing and catalogue, or none of them",
+        "args": [
+          {
+            "name": "<directory>",
+            "desc": "The bundle directory holding pack.yaml, or a directory of bundles with --all"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--all",
+            "desc": "Install every bundle in the directory — what a fresh database needs",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "pack publish",
+        "top": "pack",
+        "isTop": false,
+        "description": "Put an installed bundle's pack and Studios on the shelf",
+        "args": [
+          {
+            "name": "<directory>",
+            "desc": "The bundle directory holding pack.yaml"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "pack list",
+        "top": "pack",
+        "isTop": false,
+        "description": "List the bundles this deployment's pack sources offer",
+        "args": [
+          {
+            "name": "[directory]",
+            "desc": "Look in this directory instead of the configured sources"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "profile",
+        "top": "profile",
+        "isTop": true,
+        "description": "Display authenticated user profile information",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "recover",
+        "top": "recover",
+        "isTop": true,
+        "description": "Diagnose and recover from common issues",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "register",
+        "top": "register",
+        "isTop": true,
+        "description": "Register a new user account",
+        "args": [
+          {
+            "name": "[username]",
+            "desc": "Desired username"
+          },
+          {
+            "name": "[email]",
+            "desc": "Account email address"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-l, --language <lang>",
+            "desc": "BCP 47 language tag (e.g. en, ja)",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "reset",
+        "top": "reset",
+        "isTop": true,
+        "description": "Reset account password using a valid reset token",
+        "args": [
+          {
+            "name": "[token]",
+            "desc": "Password reset token"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "settings",
+        "top": "settings",
+        "isTop": true,
+        "description": "Manage user settings and preferences",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "settings get",
+        "top": "settings",
+        "isTop": false,
+        "description": "Get all settings and preferences",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "settings set",
+        "top": "settings",
+        "isTop": false,
+        "description": "Set a user preference key-value pair",
+        "args": [
+          {
+            "name": "<key>",
+            "desc": "Preference key to set"
+          },
+          {
+            "name": "<value>",
+            "desc": "Preference value to set"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "start",
+        "top": "start",
+        "isTop": true,
+        "description": "Start Orazaka infrastructure — dev mode (Docker middleware + AI engines) or full mode (also Router + UI)",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--mode <mode>",
+            "desc": "Startup mode: dev (default, infra + AI engines) or full (also Router + Next.js UI)",
+            "default": "dev"
+          },
+          {
+            "flag": "--only <service>",
+            "desc": "Start only a specific service (postgres, redis, rabbitmq, ollama, localai, image-gen, media-worker)",
+            "default": null
+          },
+          {
+            "flag": "--skip-health",
+            "desc": "Skip final health verification",
+            "default": null
+          },
+          {
+            "flag": "--wait-timeout <ms>",
+            "desc": "Timeout for service startup (default: 60000ms)",
+            "default": "60000"
+          },
+          {
+            "flag": "--allow-partial",
+            "desc": "Allow partial startup (some services may fail)",
+            "default": null
+          },
+          {
+            "flag": "--verbose",
+            "desc": "Show detailed startup logs",
+            "default": null
+          },
+          {
+            "flag": "--logs",
+            "desc": "Tail log files after startup",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "status",
+        "top": "status",
+        "isTop": true,
+        "description": "Show live status of all Orazaka services",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--json",
+            "desc": "Output status as JSON",
+            "default": null
+          },
+          {
+            "flag": "--watch",
+            "desc": "Refresh every 5 seconds",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "stop",
+        "top": "stop",
+        "isTop": true,
+        "description": "Teardown the Orazaka infrastructure — containers, workers, and state",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--purge",
+            "desc": "Also purge database data and upload directories",
+            "default": null
+          },
+          {
+            "flag": "-y, --yes",
+            "desc": "Skip confirmation prompts",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "studio",
+        "top": "studio",
+        "isTop": true,
+        "description": "Browse, install and run installable business workflows",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "studio list",
+        "top": "studio",
+        "isTop": false,
+        "description": "Browse the Studio catalogue",
+        "args": [],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-p, --profession <trade>",
+            "desc": "Filter by trade",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "studio installed",
+        "top": "studio",
+        "isTop": false,
+        "description": "List the Studios you have installed",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "studio install",
+        "top": "studio",
+        "isTop": false,
+        "description": "Install a Studio into your workspace",
+        "args": [
+          {
+            "name": "<studioKey>",
+            "desc": "The Studio to install"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-c, --config <pairs>",
+            "desc": "Configuration as key=value,key2=value2",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "studio run",
+        "top": "studio",
+        "isTop": false,
+        "description": "Run an installed Studio — or, with --studio, a toolkit Studio by its key",
+        "args": [
+          {
+            "name": "<target>",
+            "desc": "The installation to run (or the Studio key with --studio)"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-i, --inputs <pairs>",
+            "desc": "Inputs as key=value,key2=a|b|c (pipes make a list)",
+            "default": null
+          },
+          {
+            "flag": "-f, --inputs-file <file>",
+            "desc": "Inputs as one JSON object (for prose with commas); --inputs pairs apply on top",
+            "default": null
+          },
+          {
+            "flag": "-s, --studio",
+            "desc": "The target is a Studio key: a toolkit Studio (media, art direction) has no installation",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "studio logs",
+        "top": "studio",
+        "isTop": false,
+        "description": "Show a run's per-step state and results",
+        "args": [
+          {
+            "name": "<runId>",
+            "desc": "The run to inspect"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "test",
+        "top": "test",
+        "isTop": true,
+        "description": "Run the test pyramid: unit | it (Testcontainers) | e2e (hermetic)",
+        "args": [
+          {
+            "name": "[mode]",
+            "desc": ""
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "verify",
+        "top": "verify",
+        "isTop": true,
+        "description": "Verify account registration token",
+        "args": [
+          {
+            "name": "[token]",
+            "desc": "Email verification token"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "video",
+        "top": "video",
+        "isTop": true,
+        "description": "Generate video from a text prompt",
+        "args": [
+          {
+            "name": "<prompt>",
+            "desc": "Text prompt describing the desired video"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-d, --duration <seconds>",
+            "desc": "Duration of the video in seconds",
+            "default": "4"
+          },
+          {
+            "flag": "-m, --model <model>",
+            "desc": "Specify AI model name",
+            "default": null
+          },
+          {
+            "flag": "-o, --output <path>",
+            "desc": "Specific file path to save the video",
+            "default": null
+          }
+        ]
+      }
+    ],
+    "journey": [
+      {
+        "command": "install",
+        "description": "Setup wizard — verify tools, install dependencies, and configure deployment topology",
+        "phases": [
+          {
+            "id": "1",
+            "title": "Tool Verification",
+            "detail": ""
+          },
+          {
+            "id": "2",
+            "title": "Install Missing Tools via Homebrew",
+            "detail": ""
+          },
+          {
+            "id": "workspace",
+            "title": "Workspace",
+            "detail": "no Orazaka workspace here"
+          },
+          {
+            "id": "3",
+            "title": "Media Worker Python Environment",
+            "detail": ""
+          },
+          {
+            "id": "4",
+            "title": "Deployment Topology Configuration",
+            "detail": ""
+          }
+        ]
+      },
+      {
+        "command": "start",
+        "description": "Start Orazaka infrastructure — dev mode (Docker middleware + AI engines) or full mode (also Router + UI)",
+        "phases": [
+          {
+            "id": "1",
+            "title": "Docker Services (Postgres, Redis, RabbitMQ)",
+            "detail": ""
+          },
+          {
+            "id": "2",
+            "title": "AI Engine (Ollama)",
+            "detail": ""
+          },
+          {
+            "id": "3",
+            "title": "Image Generation (LocalAI)",
+            "detail": ""
+          },
+          {
+            "id": "3b",
+            "title": "Image Generation (stable-diffusion.cpp)",
+            "detail": ""
+          },
+          {
+            "id": "4",
+            "title": "Media Generation Worker",
+            "detail": ""
+          },
+          {
+            "id": "5a",
+            "title": "Starting Router (Spring Boot)",
+            "detail": "--mode full"
+          },
+          {
+            "id": "5b",
+            "title": "Starting Next.js UI",
+            "detail": "--mode full"
+          }
+        ]
+      },
+      {
+        "command": "dev",
+        "description": "Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile)",
+        "processes": [
+          {
+            "key": "edge",
+            "label": "EDGE",
+            "port": 8088
+          },
+          {
+            "key": "router",
+            "label": "ROUTER",
+            "port": 8080
+          },
+          {
+            "key": "identity",
+            "label": "IDENTITY",
+            "port": 8083
+          },
+          {
+            "key": "automation",
+            "label": "AUTOMATION",
+            "port": 8082
+          },
+          {
+            "key": "knowledge",
+            "label": "KNOWLEDGE",
+            "port": 8084
+          },
+          {
+            "key": "job",
+            "label": "JOB",
+            "port": 8090
+          },
+          {
+            "key": "billing",
+            "label": "BILLING",
+            "port": 8095
+          },
+          {
+            "key": "studio",
+            "label": "STUDIO",
+            "port": 8096
+          },
+          {
+            "key": "notifications",
+            "label": "NOTIFICATIONS",
+            "port": 8097
+          },
+          {
+            "key": "web",
+            "label": "WEB-CLIENT",
+            "port": 3000
+          },
+          {
+            "key": "admin",
+            "label": "WEB-ADMIN",
+            "port": 3001
+          },
+          {
+            "key": "mobile",
+            "label": "MOBILE",
+            "port": 8081
+          },
+          {
+            "key": "workers",
+            "label": "worker.yaml",
+            "port": null
+          }
+        ]
+      }
+    ]
+  }
 }
