@@ -13,7 +13,12 @@
  *   - USE_CASES.md        UseCase catalog (App Factory)
  *   - INTERCEPTORS.md     interceptor registry + DB-driven order
  *   - API_REFERENCE.md    router REST endpoints
- *   - CLI.md              orazaka CLI commands
+ *   - CLI.md              orazaka CLI commands, subcommands, arguments and options
+ *   - BUSINESS.md         the App Factory: intentions, use-cases, dispatcher (orazaka-business)
+ *   - TOOLS.md            tools, MCP servers, tool cache and write sandbox (orazaka-tools)
+ *   - JOBS.md             job plane, executors, every @Scheduled task, automation connectors
+ *   - PACKS.md            reference packs, manifest fields, the pack authors' guide (orazaka-packs)
+ *   - ADMIN.md            the SecOps console and every ADMIN-only endpoint
  *   - MODELS.md           AI model catalog (from infra/initdb seed)
  *   - ADRS.md             ADR ledger (files + code citations)
  *   - REPOSITORIES.md     repository map (from orazaka.workspace.json)
@@ -832,6 +837,37 @@ function accessFor(rules, path, method) {
   return "⚠ no rule";
 }
 
+/**
+ * The roles a `@PreAuthorize` expression in `text` requires, as "ADMIN" (or "A + B"), or null.
+ *
+ * The URL rules of a SecurityConfig were the whole access column, so every billing write — gated
+ * by `@PreAuthorize("hasRole('ADMIN')")` on its method — read as open to any authenticated user.
+ * An administration surface is exactly the fact a reader looks for in this table.
+ */
+function preAuthorizeRoles(text) {
+  const expr = text.match(/@PreAuthorize\(\s*"([^"]*)"/)?.[1];
+  if (!expr) return null;
+  const roles = [...expr.matchAll(/has(?:Any)?(?:Role|Authority)\(([^)]*)\)/g)]
+    .flatMap((m) => [...m[1].matchAll(/'([^']+)'/g)].map((r) => r[1].replace(/^ROLE_/, "")));
+  return roles.length ? [...new Set(roles)].join(" + ") : null;
+}
+
+/** The method-level `@PreAuthorize` of the handler a mapping annotation belongs to, or null. */
+function preAuthorizeAt(src, index) {
+  const before = src.slice(0, index);
+  const start = Math.max(before.lastIndexOf(";"), before.lastIndexOf("}"), before.lastIndexOf("*/"));
+  const rest = src.slice(index);
+  const end = rest.search(/\)\s*(?:throws[^{;]*)?\{/);
+  return preAuthorizeRoles(src.slice(start + 1, index + (end < 0 ? 0 : end)));
+}
+
+/** A URL rule narrowed by a method-level role: the role, unless the URL rule asks for more. */
+function withPreAuthorize(access, roles) {
+  if (!roles) return access;
+  if (access === "public" || access === "authenticated" || access.split(" + ").some((a) => roles.split(" + ").includes(a))) return roles;
+  return `${access}, then ${roles}`;
+}
+
 /** First sentence of the javadoc immediately above a mapping, as the endpoint's summary. */
 function summaryAbove(src, index) {
   const before = src.slice(0, index);
@@ -886,6 +922,7 @@ function extractApi() {
       );
       const base = classMapping?.[1] ?? "";
       const controller = basename(f, ".java");
+      const classPreAuthorize = preAuthorizeRoles(src.slice(0, classDeclIndex));
       // A *method*-level @RequestMapping is an endpoint answering every verb — the edge's
       // transparent proxy is written that way, and matching only the verb-specific annotations
       // left the whole facade undocumented. It is told from the class-level base by position:
@@ -905,7 +942,7 @@ function extractApi() {
           path,
           controller,
           service: service.replace(/^orazaka-/, ""),
-          access: accessFor(rules, path, method),
+          access: withPreAuthorize(accessFor(rules, path, method), preAuthorizeAt(src, m.index) ?? classPreAuthorize),
           summary: summaryAbove(src, m.index),
         });
       }
@@ -917,36 +954,55 @@ function extractApi() {
 }
 
 /**
- * orazaka CLI commands — name, description and options, parsed from the command
- * definitions. Each `new Command("x")` segment owns the `.description(...)` and
- * `.option(...)` calls that precede the next `new Command(` (so subcommands like
- * `docs build` are captured with their own flags).
+ * orazaka CLI commands — as the program registers them, subcommands included.
+ *
+ * A command file exports one top-level command (`export const x = new Command("pack")`, added to
+ * the program in src/index.ts); every other `new Command("…")` or `.command("…")` in the file is
+ * one of its subcommands, whether it is declared before the parent and attached with
+ * `.addCommand(…)` or chained after it. The flat list this replaced named `orazaka install` twice
+ * (the setup wizard and `pack install`) and never named `demo seed`, `db reseed` or `mcp list`:
+ * a reference that lists `orazaka build` for `orazaka docs build` sends the reader to a command
+ * that does not exist.
+ *
+ * Each marker's segment — up to the next marker — owns its `.description`, `.argument`, `.alias`
+ * and `.option` calls.
  */
 function extractCli() {
-  const dir = join(ROOT, "orazaka-apps/ui/orazaka-cli/src/commands");
+  const cliRoot = join(ROOT, "orazaka-apps/ui/orazaka-cli");
+  const dir = join(cliRoot, "src/commands");
   if (!existsSync(dir)) return [];
+  const registered = new Set([...read(join(cliRoot, "src/index.ts")).matchAll(/\.addCommand\(\s*(\w+)\s*\)/g)].map((m) => m[1]));
+  const str = String.raw`"((?:[^"\\]|\\.)*)"`;
   const commands = [];
-  for (const n of readdirSync(dir).filter((x) => x.endsWith(".command.ts"))) {
+  for (const n of readdirSync(dir).filter((x) => x.endsWith(".command.ts")).sort()) {
     const src = read(join(dir, n));
-    const markers = [...src.matchAll(/new Command\(\s*"([^"]+)"\s*\)/g)];
-    for (let i = 0; i < markers.length; i++) {
-      const name = markers[i][1];
-      const segment = src.slice(markers[i].index, markers[i + 1]?.index ?? src.length);
-      const description = segment.match(/\.description\(\s*"((?:[^"\\]|\\.)*)"/)?.[1] ?? "";
-      const options = [...segment.matchAll(/\.option\(\s*"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"/g)].map((m) => ({
-        flag: m[1],
-        desc: m[2],
-      }));
-      commands.push({ name, description, options });
-    }
+    const exported = new RegExp(String.raw`export const (\w+)\s*=\s*new Command\(\s*"([^"]+)"\s*\)`).exec(src);
+    if (!exported || (registered.size && !registered.has(exported[1]))) continue;
+    const top = exported[2];
+    const topIndex = exported.index + exported[0].indexOf("new Command");
+    const markers = [...src.matchAll(/(?:new Command|\.command)\(\s*"([^"]+)"\s*\)/g)];
+    markers.forEach((m, i) => {
+      const [word, ...inlineArgs] = m[1].trim().split(/\s+/);
+      const isTop = m.index === topIndex;
+      const segment = src.slice(m.index, markers[i + 1]?.index ?? src.length);
+      const description = segment.match(new RegExp(String.raw`\.description\(\s*` + str))?.[1] ?? "";
+      const args = [
+        ...inlineArgs.map((name) => ({ name, desc: "" })),
+        ...[...segment.matchAll(new RegExp(String.raw`\.argument\(\s*` + str + String.raw`(?:\s*,\s*` + str + ")?", "g"))].map((a) => ({
+          name: a[1],
+          desc: a[2] ?? "",
+        })),
+      ];
+      const aliasList = segment.match(/\.aliases\(\s*\[([^\]]*)\]/)?.[1] ?? segment.match(/\.alias\(\s*("[^"]*")/)?.[1] ?? "";
+      const aliases = [...aliasList.matchAll(/"([^"]+)"/g)].map((a) => a[1]);
+      const options = [...segment.matchAll(new RegExp(String.raw`\.option\(\s*` + str + String.raw`\s*,\s*` + str + String.raw`(?:\s*,\s*` + str + ")?", "g"))].map(
+        (o) => ({ flag: o[1], desc: o[2], default: o[3] ?? null }),
+      );
+      commands.push({ name: isTop ? top : `${top} ${word}`, top, isTop, order: i, description, args, aliases, options });
+    });
   }
-  // Dedup by name, preferring the entry that carries a description.
-  const byName = new Map();
-  for (const c of commands) {
-    const prev = byName.get(c.name);
-    if (!prev || (!prev.description && c.description)) byName.set(c.name, c);
-  }
-  return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+  // Each command after its parent's row, subcommands in declaration order; parents alphabetically.
+  return commands.sort((a, b) => a.top.localeCompare(b.top) || Number(b.isTop) - Number(a.isTop) || a.order - b.order);
 }
 
 /**
@@ -1288,10 +1344,46 @@ const mdApi = (rows) => {
 };
 
 const mdCli = (rows) => {
-  const lines = [frontmatter("CLI Reference", "orazaka CLI commands and options, extracted from the command definitions.", "DevEx", 7)];
+  const lines = [frontmatter("CLI Reference", "orazaka CLI commands, subcommands, arguments and options, extracted from the command definitions.", "DevEx", 7)];
+  const cliRoot = join(ROOT, "orazaka-apps/ui/orazaka-cli");
+  const pkg = JSON.parse(read(join(cliRoot, "package.json")) || "{}");
+  const alias = JSON.parse(read(join(cliRoot, "alias/package.json")) || "{}");
+  const bin = Object.keys(pkg.bin ?? { orazaka: "" })[0];
+  const runner = alias.name ? `npx ${alias.name}` : `npx ${pkg.name}`;
+  const cell = (s) => (s || "—").replace(/\|/g, "\\|");
+  const usage = (c) => [`${bin} ${c.name}`, ...c.args.map((a) => a.name)].join(" ");
 
-  // Local dev loop (authored here, single-sourced in the generator — see AGENTS.md §1).
+  // Quick start and dev loop (authored here, single-sourced in the generator — see AGENTS.md §1).
   lines.push(
+    "The `orazaka` CLI is the single orchestrator of the platform: it clones and configures the",
+    "workspace, starts the infrastructure, runs the whole stack, tests it, builds these docs and",
+    "installs packs. No shell script to remember — one command per intent.",
+    "",
+    "## Quick start",
+    "",
+    `Requirements: git, JDK 21, Node.js ${pkg.engines?.node ?? ">=22"}, Docker (Python 3.11+ for the media worker).`,
+    "",
+    "```bash",
+    `${runner} install   # no workspace here? clones the platform into ./orazaka, then configures it`,
+    "cd orazaka && ./mvnw install && (cd orazaka-apps/ui && npm install)",
+    `${runner} start     # Docker infrastructure (PostgreSQL + pgvector, Redis, RabbitMQ)`,
+    `${runner} dev       # the whole stack: services, web, admin, mobile`,
+    "```",
+    "",
+    ...(alias.name
+      ? [
+          `\`${alias.name}\` on npm is the short name of the canonical package \`${pkg.name}\` — both run the same CLI:`,
+          "",
+          "```bash",
+          `npx ${pkg.name} install      # the same as ${runner} install`,
+          `npm install -g ${pkg.name}   # then: ${bin} <command>`,
+          "```",
+          "",
+        ]
+      : []),
+    "`install --check-only` only reports what is missing. `start`, `dev`, `test` and `docs` run inside",
+    "a workspace and say how to get one when there is none.",
+    "",
     "## Local dev workflow",
     "",
     "The dev loop has two layers — start them in order:",
@@ -1299,12 +1391,14 @@ const mdCli = (rows) => {
     "1. **Infrastructure** — `orazaka start --mode dev` brings up the Docker middleware",
     "   (PostgreSQL+pgvector, Redis, RabbitMQ) and the native AI engines (Ollama, LocalAI,",
     "   video worker). Inference runs natively on macOS Metal — never in Docker.",
-    "2. **Applications** — `orazaka dev` spawns the Router (Spring Boot), Web client, Web admin",
-    "   and the Expo mobile server in parallel. Prefer to debug the backend in your IDE? Run",
-    "   `RouterApplication` from IntelliJ and start the rest with `orazaka dev --skip-router`.",
+    "2. **Applications** — `orazaka dev` spawns the services (edge, conversation router, identity,",
+    "   automation, knowledge, job, billing, studio, notifications), the Web client, the Web admin",
+    "   and the Expo mobile server in parallel. Prefer to debug the conversation router in your IDE?",
+    "   Run `ConversationServiceApplication` there and start the rest with `orazaka dev --skip-router`.",
     "",
-    "`orazaka start --mode full` additionally builds/runs the Router JAR and the UI for a",
-    "hands-off boot. Tear everything down with `orazaka stop`.",
+    "`orazaka start --mode full` additionally runs the router and the UI for a",
+    "hands-off boot. Tear everything down with `orazaka stop`. On a local stack,",
+    "`orazaka demo seed` creates the demo persona with its plan, packs and Studios.",
     "",
     "> ℹ️ `start` manages *infrastructure*; `dev` manages *application processes*. They are",
     "> complementary, not alternatives.",
@@ -1314,17 +1408,23 @@ const mdCli = (rows) => {
     "| Command | Description |",
     "|:---|:---|",
   );
-  const cell = (s) => (s || "—").replace(/\|/g, "\\|");
-  for (const c of rows) lines.push(`| \`orazaka ${c.name}\` | ${cell(c.description)} |`);
+  for (const c of rows) {
+    const aka = c.aliases.length ? ` (alias ${c.aliases.map((a) => `\`${a}\``).join(", ")})` : "";
+    lines.push(`| \`${cell(usage(c))}\`${aka} | ${cell(c.description)} |`);
+  }
 
-  const withOpts = rows.filter((c) => c.options.length > 0);
-  if (withOpts.length) {
-    lines.push("", "## Options", "");
-    for (const c of withOpts) {
-      lines.push(`### \`orazaka ${c.name}\``, "");
+  const detailed = rows.filter((c) => c.options.length > 0 || c.args.some((a) => a.desc));
+  if (detailed.length) {
+    lines.push("", "## Arguments and options", "");
+    for (const c of detailed) {
+      lines.push(`### \`${usage(c)}\``, "");
       if (c.description) lines.push(`${c.description}`, "");
-      lines.push("| Option | Description |", "|:---|:---|");
-      for (const o of c.options) lines.push(`| \`${cell(o.flag)}\` | ${cell(o.desc)} |`);
+      lines.push("| Argument / option | Description |", "|:---|:---|");
+      for (const a of c.args) lines.push(`| \`${cell(a.name)}\` | ${cell(a.desc)} |`);
+      for (const o of c.options) {
+        const def = o.default !== null ? ` (default: \`${cell(o.default)}\`)` : "";
+        lines.push(`| \`${cell(o.flag)}\` | ${cell(o.desc)}${def} |`);
+      }
       lines.push("");
     }
   }
@@ -1373,10 +1473,1041 @@ const mdAdrs = (rows) => {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
+// ENGINE GUIDES — business layer, tools, jobs & automation, packs, administration
+// ════════════════════════════════════════════════════════════════════════════
+//
+// The five subjects a developer asks about first and the docs answered last: what lives in the
+// business layer, what "tools" are, what runs on a schedule, how a pack is written and what an
+// administrator controls. Each guide is built from the code that implements it — the prose here
+// only joins tables the code fills, so a renamed class or a new endpoint updates the page.
+
+/** The javadoc block right above `index` (its text, tags dropped), or "". */
+function javadocAbove(src, index) {
+  const doc = src.slice(0, index).match(/\/\*\*((?:(?!\*\/)[\s\S])*)\*\/\s*(?:@[\w.]+(?:\([^)]*\))?\s*)*$/)?.[1];
+  return doc ? docText(doc) : "";
+}
+
+/** Javadoc text as Markdown-safe prose: inline tags as code, HTML and braces dropped. */
+function docText(doc) {
+  return doc
+    .split("\n")
+    .map((l) => l.replace(/^\s*\*\s?/, ""))
+    .filter((l) => !l.trim().startsWith("@"))
+    .join(" ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\{@\w+\s+([^}]*)\}/g, "`$1`")
+    .replace(/[{}]/g, "")
+    .replace(/\|/g, "\\|")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const firstSentence = (text) => text.match(/^(.+?[.!?])(\s|$)/)?.[1] ?? text;
+
+/** A type's kind and the first sentence of its javadoc. */
+function typeInfo(src, name) {
+  const decl = new RegExp(String.raw`\b(class|interface|record|enum|@interface)\s+${name}\b`).exec(src);
+  if (!decl) return null;
+  const lineStart = src.lastIndexOf("\n", decl.index) + 1;
+  // The javadoc sits above the annotations of the type, which sit above its modifiers.
+  const head = src.slice(0, lineStart);
+  const doc = head.match(/\/\*\*((?:(?!\*\/)[\s\S])*)\*\/\s*(?:@[\w.]+(?:\([^)]*\))?\s*)*$/)?.[1];
+  return { kind: decl[1] === "@interface" ? "annotation" : decl[1], summary: doc ? firstSentence(docText(doc)) : "" };
+}
+
+/** `@param name text` tags of the javadoc above a type, in declaration order. */
+function paramTags(src, name) {
+  const decl = new RegExp(String.raw`\b(?:class|interface|record|enum)\s+${name}\b`).exec(src);
+  const doc = decl ? src.slice(0, decl.index).match(/\/\*\*((?:(?!\*\/)[\s\S])*)\*\/[^/]*$/)?.[1] : null;
+  if (!doc) return [];
+  const lines = doc.split("\n").map((l) => l.replace(/^\s*\*\s?/, ""));
+  const tags = [];
+  for (const line of lines) {
+    const m = line.match(/^@param\s+(<?\w+>?)\s*(.*)$/);
+    if (m) tags.push({ name: m[1], text: m[2] });
+    else if (tags.length && line.trim() && !line.trim().startsWith("@")) tags.at(-1).text += " " + line.trim();
+    else if (line.trim().startsWith("@")) tags.push({ name: null, text: "" });
+  }
+  return tags.filter((t) => t.name && !t.name.startsWith("<")).map((t) => ({ name: t.name, text: docText(t.text) }));
+}
+
+/** The components of a record, as `Type name` pairs. */
+function recordComponents(src, name) {
+  const m = new RegExp(String.raw`record\s+${name}\s*\(([\s\S]*?)\)\s*(?:implements[^{]*)?\{`).exec(src);
+  if (!m) return [];
+  const parts = [];
+  let depth = 0;
+  let current = "";
+  for (const ch of m[1].replace(/@\w+(\([^)]*\))?\s*/g, "")) {
+    if (ch === "<") depth++;
+    if (ch === ">") depth--;
+    if (ch === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+    } else current += ch;
+  }
+  if (current.trim()) parts.push(current);
+  return parts.map((p) => p.trim().replace(/\s+/g, " ")).map((p) => ({ type: p.replace(/\s+\w+$/, ""), name: p.match(/(\w+)$/)?.[1] }));
+}
+
+/** The constants of an enum, comments stripped. */
+function enumValues(src, name) {
+  // Comments first: a constant's javadoc may hold the ";" that would end the scan early.
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  const m = new RegExp(String.raw`enum\s+${name}\s*\{([\s\S]*?)(?:;|\})`).exec(code);
+  if (!m) return [];
+  return m[1]
+    .split(",")
+    .map((v) => v.trim().match(/^([A-Z][A-Z0-9_]*)/)?.[1])
+    .filter(Boolean);
+}
+
+/** Top-level comma split of an argument list (parentheses, brackets and generics respected). */
+function splitArgs(text) {
+  const out = [];
+  let depth = 0;
+  let current = "";
+  for (const ch of text) {
+    if ("([<{".includes(ch)) depth++;
+    if (")]>}".includes(ch)) depth--;
+    if (ch === "," && depth === 0) {
+      out.push(current.trim());
+      current = "";
+    } else current += ch;
+  }
+  if (current.trim()) out.push(current.trim());
+  return out;
+}
+
+/** The repository a file belongs to, by workspace path. */
+const repoOfFile = (file) => repositoryOf(relative(ROOT, file).split(/[/\\]/).join("/"));
+
+/** The CREATE TABLE columns of a table in the bootstrap SQL (name and type). */
+function tableColumns(sql, table) {
+  const m = new RegExp(String.raw`CREATE TABLE(?: IF NOT EXISTS)?\s+${table}\s*\(([\s\S]*?)\n\);`).exec(sql);
+  if (!m) return [];
+  return m[1]
+    .split("\n")
+    .map((l) => l.trim().replace(/,$/, ""))
+    .filter((l) => l && !/^(PRIMARY KEY|CONSTRAINT|UNIQUE|FOREIGN KEY|CHECK|--)/i.test(l))
+    .map((l) => ({ name: l.split(/\s+/)[0], type: l.split(/\s+/).slice(1).join(" ") }));
+}
+
+// ── Business layer ──────────────────────────────────────────────────────────
+
+function extractBusiness() {
+  const moduleDir = MODULES.get("orazaka-business");
+  if (!moduleDir) return null;
+  const javaRoot = join(moduleDir, "src/main/java");
+  const files = javaFiles(javaRoot);
+  const config = files.find((f) => f.endsWith("BusinessAutoConfiguration.java"));
+  const base = config ? join(config, "..") : javaRoot;
+  const types = files
+    .map((f) => {
+      const name = basename(f, ".java");
+      const info = typeInfo(read(f), name);
+      return info && { name, file: f, pkg: relative(base, join(f, "..")).split(/[/\\]/).join("/") || ".", ...info };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.pkg.localeCompare(b.pkg) || a.name.localeCompare(b.name));
+  const byName = new Map(types.map((t) => [t.name, t]));
+  const src = (name) => (byName.has(name) ? read(byName.get(name).file) : "");
+
+  const records = ["Intention", "IntentionContext", "UseCaseDescriptor", "UseCaseContext", "RbacPolicy"]
+    .filter((n) => byName.get(n)?.kind === "record")
+    .map((n) => {
+      const docs = new Map(paramTags(src(n), n).map((p) => [p.name, p.text]));
+      return { name: n, summary: byName.get(n).summary, components: recordComponents(src(n), n).map((c) => ({ ...c, doc: docs.get(c.name) ?? "" })) };
+    });
+  const enums = types.filter((t) => t.kind === "enum").map((t) => ({ name: t.name, summary: t.summary, values: enumValues(read(t.file), t.name) }));
+
+  const useCases = types
+    .filter((t) => /implements\s+UseCase\b/.test(read(t.file)))
+    .map((t) => {
+      const s = read(t.file);
+      const call = s.match(/new UseCaseDescriptor\(([\s\S]*?)\);/)?.[1];
+      const args = call ? splitArgs(call) : [];
+      const setOf = (a) => [...(a ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+      const rbac = args[5] ?? "";
+      return {
+        name: t.name,
+        domain: t.pkg.replace(/^usecases\/?/, ""),
+        summary: t.summary,
+        id: args[0]?.match(/"([^"]+)"/)?.[1] ?? "—",
+        capability: args[1]?.match(/Capability\.(\w+)/)?.[1] ?? "—",
+        personas: setOf(args[2]),
+        planning: args[3]?.match(/PlanningMode\.(\w+)/)?.[1] ?? "—",
+        tools: setOf(args[4]),
+        rbac: /PERMIT_ALL/.test(rbac) ? "anyone authenticated" : setOf(rbac).join(" + ") || "—",
+      };
+    });
+
+  const errors = [...src("UseCaseDispatcherImpl").matchAll(/"(ERR-\d+): ([^"]+)"/g)].map((m) => ({ code: m[1], message: m[2].trim() }));
+
+  // Who calls into the layer from outside it: the transport adapters a request arrives through.
+  const outside = walk(join(ROOT, "orazaka-apps"), (p) => p.endsWith(".java") && p.includes(`${"/"}src${"/"}main${"/"}`));
+  const callers = outside
+    .filter((f) => /\bUseCaseDispatcher\b|\bimplements\s+WorkflowOrchestrator\b/.test(read(f)) && /@(RestController|Component|Service)\b/.test(read(f)))
+    .map((f) => {
+      const name = basename(f, ".java");
+      return { name, repo: repoOfFile(f), summary: typeInfo(read(f), name)?.summary ?? "" };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const reference = useCases.find((u) => u.capability === "CHAT") ?? useCases[0];
+  const referenceSource = reference ? read(byName.get(reference.name).file).replace(/^import .*\n/gm, "").replace(/\n{3,}/g, "\n\n").trim() : "";
+  return { types, records, enums, useCases, errors, callers, reference, referenceSource, repo: repoOfFile(moduleDir) };
+}
+
+const mdBusiness = (b) => {
+  const lines = [
+    frontmatter(
+      "Business Layer",
+      "The App Factory of orazaka-business: intentions, use-cases, the dispatcher and the ports between business and engine, extracted from the code.",
+      "Business",
+      3,
+    ),
+  ];
+  if (!b) return lines.join("\n") + "\n";
+  const code = (s) => `\`${s}\``;
+  lines.push(
+    `\`orazaka-business\` (repository \`${b.repo}\`) is the **App Factory** of the engine: the layer that decides`,
+    "*what* a request is for, never *how* a model answers it. Every request a client sends becomes one immutable",
+    "`Intention`; the `UseCaseDispatcher` resolves it to the `UseCase` that serves its capability, checks the",
+    "use-case's RBAC policy against the actor's authorities and runs it. A use-case coordinates the core's inbound",
+    "ports (`AiClient`, the Studio run API…) and holds no model logic — that stays in `orazaka-core` and the",
+    "interceptor pipeline.",
+    "",
+    "```mermaid",
+    "flowchart LR",
+    '  client["Client · CLI · agent"] -->|"POST /api/v1/intent"| ctrl["IntentController (conversation service)"]',
+    '  ctrl -->|Intention| disp["UseCaseDispatcher"]',
+    '  disp -->|"resolve by capability"| reg["UseCaseRegistry"]',
+    '  disp -->|"RBAC, then execute"| uc["UseCase"]',
+    '  uc -->|"inbound port"| core["orazaka-core · AiClient"]',
+    "```",
+    "",
+    "> **Use-cases are not packs.** A use-case is a technical entry point of the engine, written in Java. The",
+    "> business offers customers install — Studios, grouped in packs — are data: see [Packs & Studios](PACKS.md).",
+    "",
+    "## Where things live",
+    "",
+    "Ports & adapters, the same layout in every Orazaka module: `api` is the contract other modules may import,",
+    "`application` implements it, `domain` holds the model and the ports, and the use-cases are plain classes",
+    "discovered by Spring — adding one changes neither the core nor the router.",
+    "",
+    "| Package | Type | Kind | Role |",
+    "|:---|:---|:---|:---|",
+  );
+  for (const t of b.types) lines.push(`| ${code(t.pkg)} | ${code(t.name)} | ${t.kind} | ${t.summary || "—"} |`);
+
+  lines.push("", "## The contract", "");
+  for (const r of b.records) {
+    lines.push(`### ${code(r.name)}`, "", r.summary, "", "| Field | Type | Meaning |", "|:---|:---|:---|");
+    for (const c of r.components) lines.push(`| ${code(c.name)} | ${code(c.type)} | ${c.doc || "—"} |`);
+    lines.push("");
+  }
+  lines.push("| Enum | Values | Meaning |", "|:---|:---|:---|");
+  for (const e of b.enums) lines.push(`| ${code(e.name)} | ${e.values.map(code).join(" · ")} | ${e.summary || "—"} |`);
+
+  lines.push(
+    "",
+    "## Use-cases",
+    "",
+    "The registry matches an intention to the **first** use-case whose descriptor serves its capability.",
+    "",
+    "| Use-case | Id | Capability | Planning | Personas | Required tools | RBAC | Summary |",
+    "|:---|:---|:---|:---|:---|:---|:---|:---|",
+  );
+  for (const u of b.useCases) {
+    lines.push(
+      `| ${code(u.name)} | ${code(u.id)} | ${u.capability} | ${u.planning} | ${u.personas.map(code).join(", ") || "—"} | ${u.tools.map(code).join(", ") || "—"} | ${u.rbac} | ${u.summary || "—"} |`,
+    );
+  }
+  if (b.errors.length) {
+    lines.push("", "Dispatch refuses an intention with:", "", "| Code | When |", "|:---|:---|");
+    for (const e of b.errors) lines.push(`| ${code(e.code)} | ${e.message} |`);
+  }
+  if (b.callers.length) {
+    lines.push("", "## Entry points", "", "The adapters that hand work to the business layer:", "", "| Adapter | Repository | Role |", "|:---|:---|:---|");
+    for (const c of b.callers) lines.push(`| ${code(c.name)} | ${code(c.repo)} | ${c.summary || "—"} |`);
+  }
+  lines.push(
+    "",
+    "Call it over HTTP through the edge with a session token (see the [API reference](API_REFERENCE.md)):",
+    "",
+    "```bash",
+    "curl -X POST http://localhost:8088/api/v1/intent \\",
+    '  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \\',
+    `  -d '{"capability":"CHAT","prompt":"Summarise our refund policy in three bullet points."}'`,
+    "```",
+  );
+  if (b.reference) {
+    lines.push(
+      "",
+      "## Adding a use-case",
+      "",
+      "A new product capability is one class: implement `UseCase<I, R>`, declare its `UseCaseDescriptor`",
+      "(id, capability, personas, planning mode, required tools, RBAC) and register it as a bean — the registry",
+      "discovers it. Personas are Markdown prompts read from `classpath:prompts/<name>.md` by",
+      "`MarkdownPromptResolver`. The reference implementation, verbatim:",
+      "",
+      "```java",
+      b.referenceSource,
+      "```",
+    );
+  }
+  return lines.join("\n") + "\n";
+};
+
+// ── Tools ───────────────────────────────────────────────────────────────────
+
+function extractTools() {
+  const moduleDir = MODULES.get("orazaka-tools");
+  if (!moduleDir) return null;
+  const files = javaFiles(join(moduleDir, "src/main/java"));
+  const byName = new Map(files.map((f) => [basename(f, ".java"), f]));
+  const src = (n) => (byName.has(n) ? read(byName.get(n)) : "");
+
+  const registry = src("DefaultToolRegistry");
+  const tools = [...registry.matchAll(/registerTool\(\s*(?:"([^"]+)"|(\w+))\s*,\s*"((?:[^"\\]|\\.)*)"\s*,\s*(\w+)\.class/g)].map((m) => {
+    const name = m[1] ?? registry.match(new RegExp(String.raw`${m[2]}\s*=\s*"([^"]+)"`))?.[1] ?? m[2];
+    const input = m[4];
+    return { name, description: m[3], input, fields: recordComponents(src(input), input) };
+  });
+
+  // How the pipeline picks tools for a turn: ToolInterceptor in orazaka-interceptors.
+  const interceptorFile = walk(join(ROOT, "orazaka-libs"), (p) => basename(p) === "ToolInterceptor.java" && p.includes("/src/main/"))[0];
+  const interceptor = interceptorFile ? read(interceptorFile) : "";
+  const skippedModels = [...(interceptor.match(/modelLower\.contains[\s\S]*?\)\s*\{/)?.[0] ?? "").matchAll(/contains\("([^"]+)"\)/g)].map((m) => m[1]);
+  const demands = [...interceptor.matchAll(/"(\w+)"\.equals\(toolName\)\s*&&\s*(\w+)\(/g)].map((m) => {
+    const body = interceptor.match(new RegExp(String.raw`boolean ${m[2]}\([^)]*\)\s*\{([\s\S]*?)\n  \}`))?.[1] ?? "";
+    return { tool: m[1], keywords: [...body.matchAll(/contains\("([^"]+)"\)/g)].map((k) => k[1]) };
+  });
+
+  const sql = readInitDb();
+  const tables = ["platform_tool_configs", "platform_mcp_servers", "user_mcp_servers", "orazaka_tools_cache"].map((t) => ({ table: t, columns: tableColumns(sql, t) }));
+  const seeded = [...sql.matchAll(/INSERT INTO platform_tool_configs[^;]*?VALUES\s*([\s\S]*?)(?:ON CONFLICT|;)/g)].flatMap((m) =>
+    [...m[1].matchAll(/\('([^']+)'/g)].map((r) => r[1]),
+  );
+
+  const sandboxProps = src("SandboxProperties");
+  const sandbox = {
+    marker: typeInfo(src("McpWriteTool"), "McpWriteTool")?.summary ?? "",
+    markerDoc: javadocAbove(src("McpWriteTool"), src("McpWriteTool").search(/public @interface/)),
+    prefix: sandboxProps.match(/prefix\s*=\s*"([^"]+)"/)?.[1] ?? "",
+    params: paramTags(sandboxProps, "SandboxProperties"),
+  };
+  const toolsPrefix = src("ToolsProperties").match(/prefix\s*=\s*"([^"]+)"/)?.[1] ?? "";
+  return { tools, skippedModels, demands, tables, seeded, sandbox, toolsPrefix, repo: repoOfFile(moduleDir) };
+}
+
+const mdTools = (t, api, cli) => {
+  const lines = [
+    frontmatter(
+      "Tools & MCP",
+      "What tools are in Orazaka — function calling, MCP servers, tool caching and the write sandbox — extracted from orazaka-tools and the tool interceptor.",
+      "Core",
+      6,
+    ),
+  ];
+  if (!t) return lines.join("\n") + "\n";
+  const code = (s) => `\`${s}\``;
+  lines.push(
+    `In Orazaka a **tool** is a function a model may call during a turn (Spring AI function calling).`,
+    `\`orazaka-tools\` (repository \`${t.repo}\`) holds the tool registry, the bridge to external MCP servers, the`,
+    "tool result cache and the sandbox that isolates tools which write. Tools are attached to a turn by the",
+    "`ToolInterceptor` of the pipeline (see the [interceptor registry](INTERCEPTORS.md)) — a model only sees the",
+    "tools the turn needs.",
+    "",
+    "## Registered tools",
+    "",
+    "| Tool | Description | Input | Fields |",
+    "|:---|:---|:---|:---|",
+  );
+  for (const x of t.tools) {
+    lines.push(`| ${code(x.name)} | ${x.description.replace(/\|/g, "\\|")} | ${code(x.input)} | ${x.fields.map((f) => code(f.name)).join(", ") || "—"} |`);
+  }
+  lines.push(
+    "",
+    "`searchWeb` searches the sources the knowledge service holds for the signed-in user. `analyzePoster` and",
+    "`analyzeAudioExtract` are reference tools: they demonstrate the contract and return a fixed analysis.",
+    "",
+    "## When a tool is attached",
+    "",
+  );
+  if (t.skippedModels.length) {
+    lines.push(`- Never on a streaming turn, nor for a vision model (model name containing ${t.skippedModels.map(code).join(", ")}).`);
+  }
+  for (const d of t.demands) lines.push(`- ${code(d.tool)} only when the turn mentions ${d.keywords.map(code).join(", ")}.`);
+  lines.push("- Every other registered tool is offered on every eligible turn.");
+  lines.push(
+    "",
+    "## Configuration in the database",
+    "",
+    "Tools are configured per deployment, in data: no redeploy to cache a tool or to add an MCP server. A tool",
+    "whose `platform_tool_configs` row enables caching is wrapped in `CachingToolCallback`: the same input returns",
+    "the stored result for `cache_ttl_seconds`, kept in memory (Caffeine) and in `orazaka_tools_cache` (PostgreSQL).",
+    `Static defaults live under \`${t.toolsPrefix}\` in \`application.yml\`.`,
+    "",
+  );
+  for (const tb of t.tables.filter((x) => x.columns.length)) {
+    lines.push(`### ${code(tb.table)}`, "", "| Column | Type |", "|:---|:---|");
+    for (const c of tb.columns) lines.push(`| ${code(c.name)} | ${code(c.type)} |`);
+    lines.push("");
+  }
+  if (t.seeded.length) lines.push(`Seeded tool configuration: ${t.seeded.map(code).join(", ")}.`, "");
+  lines.push(
+    "## MCP servers",
+    "",
+    "Orazaka is an MCP **client**: before a turn, `DefaultMcpOrchestrator` queries every enabled `REMOTE` platform",
+    "server and the user's own servers in parallel (one virtual thread each) and adds what they return to the",
+    "context.",
+    "Platform servers are declared by an administrator; each user may add private ones.",
+    "",
+  );
+  const mcpRows = api.filter((r) => r.path.includes("/mcp/"));
+  if (mcpRows.length) {
+    lines.push("| Method | Path | Access | Summary |", "|:---|:---|:---|:---|");
+    for (const r of mcpRows) lines.push(`| ${r.method} | ${code(r.path)} | ${r.access} | ${r.summary || "—"} |`);
+    lines.push("");
+  }
+  const mcpCli = cli.filter((c) => c.top === "mcp" && !c.isTop);
+  if (mcpCli.length) {
+    lines.push("From the terminal ([CLI reference](CLI.md)):", "", "```bash");
+    for (const c of mcpCli) lines.push(`orazaka ${[c.name, ...c.args.map((a) => a.name)].join(" ")}`.padEnd(34) + `# ${c.description}`);
+    lines.push("```", "");
+  }
+  lines.push("## The write sandbox", "", t.sandbox.markerDoc, "");
+  if (t.sandbox.params.length) {
+    lines.push("| Property | Meaning |", "|:---|:---|");
+    for (const p of t.sandbox.params) lines.push(`| ${code(`${t.sandbox.prefix}.${p.name.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase())}`)} | ${p.text} |`);
+  }
+  return lines.join("\n").trimEnd() + "\n";
+};
+
+// ── Jobs, schedules & automation ────────────────────────────────────────────
+
+/** Every @Scheduled method of the platform: where, how often, and what it does. */
+function extractSchedules() {
+  const rows = [];
+  for (const repo of REPOSITORIES) {
+    for (const f of javaFiles(join(ROOT, repo.path)).filter((p) => p.includes(`${"/"}src${"/"}main${"/"}`))) {
+      const s = read(f);
+      const scheduled = [...s.matchAll(/@Scheduled\(([\s\S]*?)\)\s*(?:@[\w.]+(?:\([^)]*\))?\s*)*(?:public\s+|protected\s+)?void\s+(\w+)\s*\(/g)];
+      for (const m of scheduled) {
+        const attrs = m[1];
+        const value = (key) => attrs.match(new RegExp(String.raw`${key}\s*=\s*(?:"([^"]*)"|([\w_ ]+))`));
+        const cron = value("cron");
+        const delay = value("fixedDelayString") ?? value("fixedDelay");
+        const rate = value("fixedRateString") ?? value("fixedRate");
+        const describe = (kind, v) => {
+          if (!v) return null;
+          const literal = v[1] ?? v[2].replace(/_/g, "");
+          const prop = literal.match(/^\$\{([^:}]+):?([^}]*)\}$/);
+          const shown = (v) => (kind === "cron" ? `\`${v}\`` : v);
+          return prop ? `${kind} ${shown(prop[2] || "?")} (\`${prop[1]}\`)` : `${kind} ${shown(literal)}`;
+        };
+        const ms = (text) => text.replace(/(\d+)(?= \(|$)/, (n) => (Number(n) >= 1000 ? `${Number(n) / 1000} s` : `${n} ms`));
+        const schedule = cron ? describe("cron", cron) : delay ? ms(describe("every", delay)) : rate ? ms(describe("every", rate)) : "—";
+        const name = basename(f, ".java");
+        rows.push({
+          repo: repo.name,
+          type: name,
+          method: m[2],
+          schedule,
+          // One task per class: the class says what it is for. Several: each method says which one it is.
+          summary: (scheduled.length === 1 ? typeInfo(s, name)?.summary : firstSentence(javadocAbove(s, m.index))) || typeInfo(s, name)?.summary || "",
+        });
+      }
+    }
+  }
+  return rows.sort((a, b) => a.repo.localeCompare(b.repo) || a.type.localeCompare(b.type));
+}
+
+function extractJobs(arch) {
+  const executors = [];
+  for (const f of javaFiles(join(ROOT, "orazaka-apps")).filter((p) => p.includes("/src/main/"))) {
+    const s = read(f);
+    const key = s.match(/String handlerKey\(\)\s*\{\s*return\s+"([^"]+)"/)?.[1];
+    if (key) executors.push({ key, type: basename(f, ".java"), repo: repoOfFile(f), summary: typeInfo(s, basename(f, ".java"))?.summary ?? "" });
+  }
+  const contract = walk(join(ROOT, "orazaka-libs"), (p) => basename(p) === "JobExecutor.java" && p.includes("/src/main/"))[0];
+  const listener = walk(join(ROOT, "orazaka-apps"), (p) => basename(p) === "JobListener.java" && p.includes("/src/main/"))[0];
+
+  const auto = REPOSITORIES.find((r) => r.name === "orazaka-automation-service");
+  const autoDir = auto ? join(ROOT, auto.path) : null;
+  const autoFile = (n) => (autoDir ? walk(autoDir, (p) => basename(p) === n && p.includes("/src/main/"))[0] : undefined);
+  const dispatcher = read(autoFile("ConnectorDispatcher.java") ?? "");
+  const connectors = [...dispatcher.matchAll(/case\s+"(\w+)"\s*->\s*(\w+)\(/g)].map((m) => {
+    const body = dispatcher.match(new RegExp(String.raw`void ${m[2]}\([^)]*\)\s*\{([\s\S]*?)\n  \}`))?.[1] ?? "";
+    const statements = body.split(";").map((x) => x.trim()).filter(Boolean);
+    const logsOnly = statements.length > 0 && statements.every((x) => x.startsWith("logger."));
+    return { type: m[1], behaviour: logsOnly ? "logs the action (no outbound call yet)" : firstSentence(body.match(/logger\.info\(\s*"([^"]+)"/)?.[1] ?? "dispatched") };
+  });
+  const statusSrc = read(autoFile("AutomationJobStatus.java") ?? "");
+  const constants = read(autoFile("AmqpConstants.java") ?? "");
+  const constant = (n) => constants.match(new RegExp(String.raw`${n}\s*=\s*([^;]+);`))?.[1]?.replace(/AUTOMATION_QUEUE\s*\+\s*"([^"]*)"/, (_, x) => `${constants.match(/AUTOMATION_QUEUE\s*=\s*"([^"]+)"/)?.[1]}${x}`).replace(/"/g, "");
+  const yml = read(autoDir ? join(autoDir, "src/main/resources/application.yml") : "");
+  const quartz = {
+    store: yml.match(/job-store-type:\s*(\S+)/)?.[1],
+    name: yml.match(/instanceName:\s*(\S+)/)?.[1],
+    threads: yml.match(/threadCount:\s*(\S+)/)?.[1],
+    clustered: yml.match(/isClustered:\s*(\S+)/)?.[1],
+  };
+  // Who publishes automation jobs, besides the service itself.
+  const producers = javaFiles(join(ROOT, "orazaka-apps"))
+    .filter((p) => p.includes("/src/main/") && !(autoDir && p.startsWith(autoDir)))
+    .filter((p) => /"job\.automation\.[\w*]+"/.test(read(p)))
+    .map((p) => ({ type: basename(p, ".java"), repo: repoOfFile(p), key: read(p).match(/"(job\.automation\.[\w*]+)"/)[1] }));
+  return {
+    routes: arch.messaging.capabilityRoutes,
+    executors: executors.sort((a, b) => a.key.localeCompare(b.key)),
+    contract: contract ? typeInfo(read(contract), "JobExecutor")?.summary : "",
+    lifecycle: listener ? typeInfo(read(listener), "JobListener") : null,
+    listenerDoc: listener ? javadocAbove(read(listener), read(listener).search(/@Component\s*\npublic class JobListener/)) : "",
+    schedules: extractSchedules(),
+    automation: {
+      connectors,
+      statuses: enumValues(statusSrc, "AutomationJobStatus"),
+      queue: constant("AUTOMATION_QUEUE"),
+      binding: constant("AUTOMATION_BINDING"),
+      dlq: constant("AUTOMATION_DLQ"),
+      telemetry: constant("TELEMETRY_ROUTING_KEY"),
+      agentPrefix: constant("AGENT_DISPATCH_PREFIX"),
+      quartz,
+      producers,
+      repo: auto?.name,
+    },
+  };
+}
+
+const mdJobs = (j, api, cli) => {
+  const lines = [
+    frontmatter(
+      "Jobs, Schedules & Automation",
+      "Everything Orazaka runs without a user waiting: the job plane, its executors and workers, every scheduled task and the automation connectors — extracted from the code.",
+      "Core",
+      7,
+    ),
+  ];
+  const code = (s) => `\`${s}\``;
+  lines.push(
+    "Three mechanisms run work in the background, each with one owner:",
+    "",
+    "- **The job plane** (`orazaka-job-service`) — asynchronous AI work: a capability is published as a job on",
+    "  RabbitMQ and executed in process or by a worker. Studio runs and `ASYNC` intentions use it.",
+    "- **Scheduled tasks** — sweepers and probes inside each service (`@Scheduled`), configured by properties.",
+    `- **Automation** (\`${j.automation.repo}\`) — connector actions (Slack, Jira, the CLI agent…) and its`,
+    "  Quartz scheduler.",
+    "",
+    "## The job plane",
+    "",
+    j.listenerDoc,
+    "",
+    "A capability row (`orazaka_capabilities`) says **where** a job goes (`routing_key`, the queue a process drains)",
+    "and **which code** runs it (`handler_key`). Both are data: a pack adds a capability with a row, not a deploy.",
+    "",
+    "| Capability | Handler | Routing key | Runs in |",
+    "|:---|:---|:---|:---|",
+  );
+  const exec = new Map(j.executors.map((e) => [e.key, e]));
+  for (const r of j.routes) {
+    const e = r.handler ? exec.get(r.handler) : null;
+    lines.push(`| ${code(r.feature)} | ${r.handler ? code(r.handler) : "—"} | ${code(r.routingKey)} | ${e ? `${code(e.type)} (in process)` : "a worker (see the [worker protocol](../WORKER_PROTOCOL.md))"} |`);
+  }
+  lines.push("", "### In-process executors", "", j.contract, "", "| Handler key | Executor | Repository | Summary |", "|:---|:---|:---|:---|");
+  for (const e of j.executors) lines.push(`| ${code(e.key)} | ${code(e.type)} | ${code(e.repo)} | ${e.summary || "—"} |`);
+  const internal = api.filter((r) => r.path.startsWith("/internal/v1/capabilities") || r.path.startsWith("/internal/v1/workers"));
+  if (internal.length) {
+    lines.push("", "### Capability and worker registries", "", "Service-to-service (`SERVICE` token): how a pack registers a capability and a worker announces itself.", "", "| Method | Path | Summary |", "|:---|:---|:---|");
+    for (const r of internal) lines.push(`| ${r.method} | ${code(r.path)} | ${r.summary || "—"} |`);
+  }
+  const jobApi = api.filter((r) => r.path.startsWith("/api/v1/jobs"));
+  if (jobApi.length) {
+    lines.push("", "### Following and approving jobs", "", "| Method | Path | Access | Summary |", "|:---|:---|:---|:---|");
+    for (const r of jobApi) lines.push(`| ${r.method} | ${code(r.path)} | ${r.access} | ${r.summary || "—"} |`);
+  }
+
+  lines.push(
+    "",
+    "## Scheduled tasks",
+    "",
+    "Every `@Scheduled` method of the platform. A property in parentheses overrides the interval (or cron) in",
+    "the service's `application.yml` or environment.",
+    "",
+    "| Repository | Task | Schedule | What it does |",
+    "|:---|:---|:---|:---|",
+  );
+  for (const s of j.schedules) lines.push(`| ${code(s.repo)} | ${code(`${s.type}.${s.method}`)} | ${s.schedule} | ${s.summary || "—"} |`);
+
+  const a = j.automation;
+  lines.push(
+    "",
+    "## Automation",
+    "",
+    `Connector actions are jobs too: a producer publishes on ${code(a.binding)} (exchange \`orazaka.jobs\`), the`,
+    `automation service consumes ${code(a.queue)} (failures dead-letter to ${code(a.dlq)}), runs the connector and`,
+    `reports each state change on ${code(a.telemetry)} (exchange \`orazaka.events\`).`,
+    "",
+  );
+  if (a.producers.length) {
+    lines.push("| Producer | Repository | Routing key |", "|:---|:---|:---|");
+    for (const p of a.producers) lines.push(`| ${code(p.type)} | ${code(p.repo)} | ${code(p.key)} |`);
+    lines.push("");
+  }
+  lines.push("| Connector | Behaviour |", "|:---|:---|");
+  for (const c of a.connectors) lines.push(`| ${code(c.type)} | ${c.type === "CLI_AGENT" ? `forwarded to the user's CLI agent on ${code(`${a.agentPrefix}{userId}`)}` : c.behaviour} |`);
+  lines.push("", `Automation job states: ${a.statuses.map(code).join(" · ")}.`);
+  const agent = cli.find((c) => c.name === "agent listen");
+  if (agent) {
+    lines.push(
+      "",
+      "The CLI agent runs on the user's machine and connects **outbound** (no inbound port):",
+      "",
+      "```bash",
+      "orazaka login",
+      `orazaka agent listen   # ${agent.description}`,
+      "```",
+    );
+    const agentApi = api.filter((r) => r.path.startsWith("/api/v1/agent"));
+    if (agentApi.length) {
+      lines.push("", "| Method | Path | Access | Summary |", "|:---|:---|:---|:---|");
+      for (const r of agentApi) lines.push(`| ${r.method} | ${code(r.path)} | ${r.access} | ${r.summary || "—"} |`);
+    }
+  }
+  if (a.quartz.store) {
+    lines.push(
+      "",
+      `The service embeds a Quartz scheduler (\`${a.quartz.name}\`): ${a.quartz.store.toUpperCase()} job store in its own database, ${a.quartz.threads} threads, clustered: ${a.quartz.clustered}.`,
+    );
+  }
+  return lines.join("\n").trimEnd() + "\n";
+};
+
+// ── Packs ───────────────────────────────────────────────────────────────────
+
+/**
+ * A YAML reader for the subset the pack manifests and their translations use: block mappings and
+ * sequences, plain and quoted scalars, folded (`>`, `>-`) and literal (`|`, `|-`) blocks, comments,
+ * and flow collections on one or several lines (`[a, b]` becomes a list of scalars; a flow mapping is
+ * kept as its source text — the docs never read inside one). The generator has no dependency by
+ * design (it runs before anything is installed), and the manifests are the platform's own files,
+ * validated against pack.schema.json — this is not a general YAML parser and does not pretend to be.
+ */
+function parseYaml(text) {
+  const raw = text.replace(/\r\n?/g, "\n").split("\n");
+  const stripComment = (line) => {
+    let quote = null;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (quote) {
+        if (c === quote) quote = null;
+      } else if (c === '"' || c === "'") quote = c;
+      else if (c === "#" && (i === 0 || /\s/.test(line[i - 1]))) return line.slice(0, i).replace(/\s+$/, "");
+    }
+    return line.replace(/\s+$/, "");
+  };
+  const lines = raw.map((l) => ({ indent: l.match(/^ */)[0].length, text: stripComment(l).trim(), raw: l }));
+  let i = 0;
+  const skip = () => {
+    while (i < lines.length && !lines[i].text) i++;
+  };
+  const scalar = (v) => {
+    if (v === "" || v === "~" || v === "null") return null;
+    if (v === "true") return true;
+    if (v === "false") return false;
+    if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+    if (v.startsWith('"')) return JSON.parse(v);
+    if (v.startsWith("'")) return v.slice(1, -1).replace(/''/g, "'");
+    return v;
+  };
+  const balance = (s) => [...s].reduce((n, c) => n + ("[{".includes(c) ? 1 : "]}".includes(c) ? -1 : 0), 0);
+  const value = (v, ownIndent) => {
+    if (/^[>|][-+]?$/.test(v)) {
+      const folded = v[0] === ">";
+      const keep = v.endsWith("+");
+      const chomp = v.endsWith("-");
+      const body = [];
+      let blockIndent = null;
+      while (i < lines.length && (!lines[i].raw.trim() || lines[i].indent > ownIndent)) {
+        if (blockIndent === null && lines[i].raw.trim()) blockIndent = lines[i].indent;
+        body.push(lines[i].raw.slice(blockIndent ?? 0));
+        i++;
+      }
+      while (body.length && !body.at(-1).trim()) body.pop();
+      const textOut = folded ? body.join("\n").replace(/([^\n])\n(?=[^\n])/g, "$1 ") : body.join("\n");
+      return chomp ? textOut : textOut + (keep ? "\n" : "\n");
+    }
+    if (v.startsWith("[") || v.startsWith("{")) {
+      let source = v;
+      while (balance(source) > 0 && i < lines.length) source += " " + lines[i++].text;
+      if (source.startsWith("[")) {
+        const inner = source.slice(1, -1).trim();
+        if (!/[[{]/.test(inner)) return inner ? inner.split(",").map((x) => scalar(x.trim())) : [];
+      }
+      return source;
+    }
+    return scalar(v);
+  };
+  const block = (indent) => {
+    skip();
+    if (i >= lines.length || lines[i].indent < indent) return null;
+    const at = lines[i].indent;
+    if (lines[i].text.startsWith("- ") || lines[i].text === "-") {
+      const out = [];
+      while (i < lines.length) {
+        skip();
+        if (i >= lines.length || lines[i].indent !== at || !(lines[i].text.startsWith("- ") || lines[i].text === "-")) break;
+        const rest = lines[i].text.slice(1).trim();
+        const itemIndent = at + 2;
+        if (!rest) {
+          i++;
+          out.push(block(itemIndent));
+        } else if (/^[\w.-]+:(\s|$)/.test(rest) || /^"[^"]+":(\s|$)/.test(rest)) {
+          // A mapping that starts on the dash line: re-read the line as if indented.
+          lines[i] = { ...lines[i], indent: itemIndent, text: rest };
+          out.push(mapping(itemIndent));
+        } else {
+          i++;
+          out.push(value(rest, at));
+        }
+      }
+      return out;
+    }
+    return mapping(at);
+  };
+  const mapping = (at) => {
+    const out = {};
+    while (i < lines.length) {
+      skip();
+      if (i >= lines.length || lines[i].indent !== at || lines[i].text.startsWith("- ")) break;
+      const m = lines[i].text.match(/^("[^"]+"|'[^']+'|[^:]+?):(?:\s+(.*))?$/);
+      if (!m) throw new Error(`parseYaml: cannot read line ${i + 1}: ${lines[i].raw}`);
+      const key = scalar(m[1].trim());
+      const rest = (m[2] ?? "").trim();
+      i++;
+      if (rest) out[key] = value(rest, at);
+      else {
+        skip();
+        // A sequence may sit at the key's own indent (`key:\n- a`), a mapping must be deeper.
+        const next = lines[i];
+        out[key] = next && (next.indent > at || (next.indent === at && next.text.startsWith("- "))) ? block(next.indent) : null;
+      }
+    }
+    return out;
+  };
+  return block(0) ?? {};
+}
+
+/**
+ * The pack catalogue, read from orazaka-packs: every bundle's manifest, its translations, its
+ * Studios (with what their blueprint asks and runs) and its rulesets. It goes into
+ * architecture.json so the site sells the packs that exist — the list used to be written by hand
+ * on the site and showed one pack the repository never had. `showcase` is false for a bundle the
+ * catalogue keeps off the shelf (`catalog.status: DRAFT`, e.g. the platform's test pack).
+ */
+function extractPackCatalog() {
+  const repo = REPOSITORIES.find((r) => r.name === "orazaka-packs");
+  const dir = repo ? join(ROOT, repo.path) : null;
+  if (!dir || !existsSync(dir)) return [];
+  const text = (o) => (o ? { label: o.label ?? null, tagline: o.tagline ?? null, description: o.description ?? null } : null);
+  return readdirSync(dir)
+    .filter((n) => existsSync(join(dir, n, "pack.yaml")))
+    .sort()
+    .map((name) => {
+      const root = join(dir, name);
+      const m = parseYaml(read(join(root, "pack.yaml")));
+      const i18nDir = join(root, "i18n");
+      const i18n = existsSync(i18nDir)
+        ? Object.fromEntries(
+            readdirSync(i18nDir)
+              .filter((f) => f.endsWith(".yaml"))
+              .sort()
+              .map((f) => [f.replace(/\.yaml$/, ""), parseYaml(read(join(i18nDir, f)))]),
+          )
+        : {};
+      const locales = Object.keys(i18n);
+      const status = m.catalog?.status ?? (m.catalog ? "PUBLISHED" : "UNLISTED");
+      const studios = (m.studios ?? []).map((s) => {
+        const bpPath = join(root, s.blueprint ?? `studios/${s.key}/blueprint.json`);
+        const bp = existsSync(bpPath) ? JSON.parse(read(bpPath)) : null;
+        const steps = bp?.definition?.steps ?? [];
+        return {
+          key: s.key,
+          profession: s.profession ?? null,
+          iconKey: s.iconKey ?? null,
+          pricing: s.pricing ?? null,
+          status: s.status ?? null,
+          estimatedCredits: bp?.estimatedCredits ?? null,
+          steps: steps.length,
+          stepKinds: [...new Set(steps.map((x) => x.kind))],
+          inputs: Object.entries(bp?.inputSchema?.properties ?? {}).map(([key, p]) => ({ key, title: p.title ?? null })),
+          outputs: (bp?.definition?.outputs ?? []).map((o) => ({ key: o.key, type: o.type ?? null })),
+          text: Object.fromEntries(locales.map((l) => [l, text(i18n[l]?.studios?.[s.key])])),
+        };
+      });
+      const rulesetsDir = join(root, "rulesets");
+      const rulesets = existsSync(rulesetsDir)
+        ? readdirSync(rulesetsDir)
+            .sort()
+            .map((id) => {
+              const versions = readdirSync(join(rulesetsDir, id)).filter((f) => f.endsWith(".json")).sort();
+              const latest = versions.length ? JSON.parse(read(join(rulesetsDir, id, versions.at(-1)))) : {};
+              return { id, label: latest.label ?? id, jurisdiction: latest.jurisdiction ?? null, versions: versions.map((v) => v.replace(/\.json$/, "")), rules: (latest.rules ?? []).length };
+            })
+        : [];
+      return {
+        key: m.key,
+        dir: name,
+        version: m.version ?? null,
+        tier: m.tier ?? null,
+        kind: m.kind ?? null,
+        distribution: m.distribution ?? null,
+        regulatoryClass: m.regulatoryClass ?? null,
+        status,
+        showcase: status !== "DRAFT",
+        category: m.catalog?.categoryKey ?? null,
+        iconKey: m.catalog?.iconKey ?? null,
+        sortWeight: m.catalog?.sortWeight ?? null,
+        pricing: m.pricing ? { priceCents: m.pricing.priceCents ?? 0, includedCredits: m.pricing.includedCredits ?? 0 } : null,
+        capabilities: (m.requires?.capabilities ?? []).map((c) => c.key),
+        workers: (m.requires?.workers ?? []).map((w) => w.name),
+        scopeGuard: Boolean(m.scopeGuard),
+        consent: Boolean(m.consent),
+        safety: Boolean(m.safety),
+        rulesets,
+        text: Object.fromEntries(locales.map((l) => [l, text(i18n[l]?.pack)])),
+        categoryText: Object.fromEntries(locales.map((l) => [l, i18n[l]?.category ? { label: i18n[l].category.label ?? null, description: i18n[l].category.description ?? null } : null])),
+        studios,
+      };
+    })
+    .sort((a, b) => (b.sortWeight ?? 0) - (a.sortWeight ?? 0) || a.key.localeCompare(b.key));
+}
+
+
+/** Top-level scalars and the `studios:` keys of a pack.yaml — the fields the catalogue table shows. */
+function packSummary(yaml) {
+  const scalar = (k) => yaml.match(new RegExp(String.raw`^${k}:\s*([^\s#]+)`, "m"))?.[1] ?? "—";
+  const block = (k) => yaml.match(new RegExp(String.raw`^${k}:\s*\n((?:[ \t]+.*\n|\s*\n)*)`, "m"))?.[1] ?? "";
+  const studios = [...block("studios").matchAll(/^  - key:\s*(\S+)/gm)].map((m) => m[1]);
+  const requires = block("requires");
+  const capabilities = [...requires.matchAll(/^    - key:\s*(\S+)/gm)].map((m) => m[1]);
+  const workers = [...requires.matchAll(/^    - name:\s*(\S+)/gm)].map((m) => m[1]);
+  return {
+    key: scalar("key"),
+    version: scalar("version"),
+    tier: scalar("tier"),
+    distribution: scalar("distribution"),
+    regulatoryClass: scalar("regulatoryClass"),
+    onShelf: /^catalog:/m.test(yaml),
+    studios,
+    capabilities,
+    workers,
+  };
+}
+
+function extractPacks() {
+  const repo = REPOSITORIES.find((r) => r.name === "orazaka-packs");
+  if (!repo) return null;
+  const dir = join(ROOT, repo.path);
+  const schema = JSON.parse(read(join(dir, "pack.schema.json")) || "{}");
+  const packs = (existsSync(dir) ? readdirSync(dir) : [])
+    .filter((n) => existsSync(join(dir, n, "pack.yaml")))
+    .sort()
+    .map((n) => ({ dir: n, ...packSummary(read(join(dir, n, "pack.yaml"))) }));
+  const fields = Object.entries(schema.properties ?? {}).map(([name, p]) => ({
+    name,
+    required: (schema.required ?? []).includes(name),
+    values: p.enum ?? null,
+    description: firstSentence((p.description ?? "").replace(/\s+/g, " ").trim()),
+  }));
+  const guide = read(join(dir, "CONTRIBUTING.md"));
+  return { repo: repo.name, packs, fields, guide };
+}
+
+const mdPacks = (p, cli, catalog) => {
+  const lines = [
+    frontmatter(
+      "Packs & Studios",
+      "The packs that extend Orazaka without code — the reference catalogue, every manifest field, and how to write, validate and install a pack — read from orazaka-packs.",
+      "Business",
+      5,
+    ),
+  ];
+  if (!p) return lines.join("\n") + "\n";
+  const code = (s) => `\`${s}\``;
+  lines.push(
+    "A **Studio** is a business workflow — a versioned DAG of steps (model calls, transforms, human approvals,",
+    "connectors) with its own input form. A **pack** is a directory that ships Studios: a `pack.yaml` manifest,",
+    "its translations, the blueprints and, for a `WORKER` pack, its own worker. Installing a pack writes data —",
+    "capability rows, a price, catalogue entries — and changes no code.",
+    "",
+    "> **Packs are not use-cases.** A pack is a business offer — Studios a customer installs and runs. A",
+    "> [use-case](USE_CASES.md) is a technical entry point of the engine (`chat.assistant`, `studio.run`…) declared",
+    "> in Java in `orazaka-business` ([business layer](BUSINESS.md)); every Studio run goes through the `studio.run` one.",
+    "",
+  );
+  const shown = catalog.filter((x) => x.showcase);
+  if (shown.length) {
+    lines.push("## The packs", "");
+    for (const x of shown) {
+      const t = x.text.en ?? {};
+      const title = t.label ?? x.studios[0]?.text.en?.label ?? x.key;
+      lines.push(`### ${title}`, "");
+      if (t.tagline) lines.push(`**${t.tagline}**`, "");
+      if (t.description) lines.push(t.description.trim(), "");
+      const facts = [
+        `Pack ${code(x.key)} ${x.version}`,
+        `tier ${x.tier}`,
+        x.kind ? `kind ${x.kind}` : null,
+        `${x.distribution}`,
+        `regulatory class ${x.regulatoryClass}`,
+        x.status === "UNLISTED" ? "installed without a catalogue entry" : null,
+        x.workers.length ? `own worker ${x.workers.map(code).join(", ")}` : null,
+      ].filter(Boolean);
+      lines.push(facts.join(" · ") + ".", "");
+      const controls = [x.scopeGuard && "a scope guard (refused domain)", x.consent && "versioned consent before install", x.safety && "a fixed, reviewed crisis response"].filter(Boolean);
+      if (controls.length) lines.push(`Declares ${controls.join(", ")}; the engine adds the controls of its regulatory class.`, "");
+      if (x.rulesets.length) {
+        lines.push(`Rulesets: ${x.rulesets.map((r) => `${r.label} (${r.jurisdiction ?? "—"}, ${r.rules} rules, versions ${r.versions.join(", ")})`).join("; ")}.`, "");
+      }
+      lines.push("| Studio | What it does | Asks for | Steps | Credits held |", "|:---|:---|:---|:---|:---|");
+      for (const st of x.studios) {
+        const st_t = st.text.en ?? {};
+        const what = [st_t.tagline, st_t.description].filter(Boolean).join(" ").replace(/\s+/g, " ").replace(/\|/g, "\\|") || "—";
+        const asks = st.inputs.map((i) => code(i.key)).join(", ") || "—";
+        lines.push(`| **${st_t.label ?? st.key}** (${code(st.key)}) | ${what} | ${asks} | ${st.steps} (${st.stepKinds.join(", ")}) | ${st.estimatedCredits ?? "—"} |`);
+      }
+      lines.push("");
+    }
+    const hidden = catalog.filter((x) => !x.showcase);
+    if (hidden.length) lines.push(`Kept off the shelf (\`catalog.status: DRAFT\`): ${hidden.map((x) => code(x.key)).join(", ")} — installable for the platform's tests, never sold.`, "");
+  }
+  lines.push(
+    `## The reference packs (${code(p.repo)})`,
+    "",
+    "| Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |",
+    "|:---|:---|:---|:---|:---|:---|:---|:---|",
+  );
+  for (const x of p.packs) {
+    lines.push(
+      `| ${code(x.key)} | ${x.version} | ${x.tier} | ${x.distribution} | ${x.regulatoryClass} | ${x.onShelf ? "yes" : "no"} | ${x.studios.map(code).join(", ") || "—"} | ${x.capabilities.length ? x.capabilities.map(code).join(", ") + (x.workers.length ? ` (worker ${x.workers.map(code).join(", ")})` : "") : "—"} |`,
+    );
+  }
+  const packCli = cli.filter((c) => (c.top === "pack" || c.top === "studio") && !c.isTop);
+  if (packCli.length) {
+    lines.push("", "## From the terminal", "", "| Command | What it does |", "|:---|:---|");
+    for (const c of packCli) lines.push(`| ${code(["orazaka", c.name, ...c.args.map((a) => a.name)].join(" "))} | ${c.description} |`);
+  }
+  lines.push("", "## Manifest fields", "", "From `pack.schema.json` — the schema `orazaka pack validate` checks against.", "", "| Field | Required | Values | Meaning |", "|:---|:---|:---|:---|");
+  for (const f of p.fields) lines.push(`| ${code(f.name)} | ${f.required ? "yes" : "—"} | ${f.values ? f.values.map(code).join(" · ") : "—"} | ${f.description.replace(/\|/g, "\\|") || "—"} |`);
+  if (p.guide) {
+    // The pack authors' guide, as written in orazaka-packs — one heading level down, under this page.
+    const body = p.guide
+      .replace(/^# .*\n+/, "")
+      .replace(/^(#{1,5}) /gm, "#$1 ")
+      // Its links are relative to the workspace root: docs → the sibling page, anything else → GitHub.
+      .replace(/\]\(docs\/([A-Z_]+\.md(?:#[^)]*)?)\)/g, "](../$1)")
+      .replace(/\]\((?!https?:|#|\.\.\/)([^)]+)\)/g, (_, path) => `](https://github.com/${WORKSPACE.org}/${p.repo}/tree/main/${path.replace(new RegExp(`^${p.repo}/`), "")})`);
+    lines.push("", "## Writing a pack", "", body.trim());
+  }
+  return lines.join("\n").trimEnd() + "\n";
+};
+
+// ── Administration ──────────────────────────────────────────────────────────
+
+function extractAdmin(api) {
+  const repo = REPOSITORIES.find((r) => r.name === "orazaka-web-admin");
+  const dir = repo ? join(ROOT, repo.path, "src") : null;
+  const screens = [];
+  const called = new Set();
+  let auth = { authority: null, provider: null };
+  if (dir && existsSync(dir)) {
+    for (const f of walk(join(dir, "app"), (p) => basename(p) === "page.tsx").sort()) {
+      const s = read(f);
+      const route = "/" + relative(join(dir, "app"), join(f, "..")).split(/[/\\]/).join("/");
+      const at = s.search(/export default function/);
+      const tabs = [...s.matchAll(/\{\s*id:\s*"(\w+)",\s*label:\s*"([^"]+)"\s*\}/g)].map((m) => m[2]);
+      screens.push({ route: route === "/." || route === "/" ? "/" : route.replace(/\/\.$/, ""), summary: firstSentence(javadocAbove(s, at)), tabs });
+    }
+    for (const f of walk(join(dir, "services"), (p) => p.endsWith(".ts"))) {
+      for (const m of read(f).matchAll(/["`](\/api\/v1\/[^"`?]+)/g)) called.add(m[1].replace(/\$\{[^}]+\}/g, "{}"));
+    }
+    const options = read(join(dir, "core/auth/auth-options.ts"));
+    auth = {
+      authority: options.match(/ADMIN_AUTHORITY\s*=\s*"([^"]+)"/)?.[1] ?? null,
+      provider: /CredentialsProvider/.test(options) ? "credentials" : null,
+    };
+  }
+  const norm = (path) => path.replace(/\{[^}]*\}/g, "{}");
+  const consoleRows = api.filter((r) => called.has(norm(r.path)));
+  const adminOnly = api.filter((r) => r.access === "ADMIN" || /then ADMIN$/.test(r.access));
+  screens.sort((x, y) => x.route.localeCompare(y.route));
+  return { repo: repo?.name, screens, consoleRows, adminOnly, auth };
+}
+
+const mdAdmin = (a) => {
+  const lines = [
+    frontmatter(
+      "Administration",
+      "What an Orazaka administrator controls — the SecOps console, every ADMIN-only endpoint, and how the console is secured — extracted from the code.",
+      "Operations",
+      2,
+    ),
+  ];
+  const code = (s) => `\`${s}\``;
+  lines.push(
+    "Everything commercial and operational in Orazaka is **data an administrator edits** — models, the",
+    "interceptor pipeline, capabilities, MCP servers, plans, prices, wallets, Studios — never a redeploy. An",
+    `administrator is an account holding \`${a.auth.authority ?? "ROLE_ADMIN"}\`, granted by the identity service; every`,
+    "administrative endpoint checks it on the server (`@PreAuthorize`), whatever client calls it.",
+    "",
+    `## The SecOps console (${code(a.repo ?? "orazaka-web-admin")})`,
+    "",
+    "A Next.js console (port 3001) started with the rest of the stack by `orazaka dev` (`--skip-admin` to leave it out).",
+    "",
+    "| Screen | What it is for | Tabs |",
+    "|:---|:---|:---|",
+  );
+  for (const s of a.screens) lines.push(`| ${code(s.route)} | ${s.summary || "—"} | ${s.tabs.join(" · ") || "—"} |`);
+  lines.push(
+    "",
+    "### How the console is secured",
+    "",
+    `- **Sign-in by credentials only** — no social login: the role that matters is granted by the identity service, and an account without \`${a.auth.authority ?? "ROLE_ADMIN"}\` is refused a console session.`,
+    "- **A backend-for-frontend** — the browser never reaches a service port: `/api/v1/**` is proxied server-side, the session token injected as `Authorization: Bearer`.",
+    "- **No internal surface** — `/internal/v1/**` (credit holds and settlements, registries) is not in the edge's route table, so the console cannot reach it by construction.",
+  );
+  if (a.consoleRows.length) {
+    lines.push("", "### What the console calls", "", "| Method | Path | Access | Summary |", "|:---|:---|:---|:---|");
+    for (const r of a.consoleRows) lines.push(`| ${r.method} | ${code(r.path)} | ${r.access} | ${r.summary || "—"} |`);
+  }
+  lines.push(
+    "",
+    "## Every ADMIN-only endpoint",
+    "",
+    "What an administrator can do, by service — from the console, the CLI or any HTTP client with an",
+    "administrator's token (through the edge, `http://localhost:8088` locally).",
+  );
+  let current = null;
+  for (const r of a.adminOnly) {
+    if (r.service !== current) {
+      current = r.service;
+      lines.push("", `### ${current}`, "", "| Method | Path | Summary |", "|:---|:---|:---|");
+    }
+    lines.push(`| ${r.method} | ${code(r.path)} | ${r.summary || "—"} |`);
+  }
+  return lines.join("\n").trimEnd() + "\n";
+};
+
+// ════════════════════════════════════════════════════════════════════════════
 // MAIN
 // ════════════════════════════════════════════════════════════════════════════
 
-const arch = extractArchitecture();
+const arch = { ...extractArchitecture(), packs: extractPackCatalog() };
+const api = extractApi();
+const cli = extractCli();
 const outputs = {
   "architecture.json": JSON.stringify(arch, null, 2) + "\n",
   "ARCHITECTURE.md": mdArchitecture(arch),
@@ -1384,8 +2515,13 @@ const outputs = {
   "INTERFACE_CONTRACTS.md": mdInterfaces(arch),
   "USE_CASES.md": mdUseCases(extractUseCases()),
   "INTERCEPTORS.md": mdInterceptors(extractInterceptors(arch.pipeline)),
-  "API_REFERENCE.md": mdApi(extractApi()),
-  "CLI.md": mdCli(extractCli()),
+  "API_REFERENCE.md": mdApi(api),
+  "CLI.md": mdCli(cli),
+  "BUSINESS.md": mdBusiness(extractBusiness()),
+  "TOOLS.md": mdTools(extractTools(), api, cli),
+  "JOBS.md": mdJobs(extractJobs(arch), api, cli),
+  "PACKS.md": mdPacks(extractPacks(), cli, arch.packs),
+  "ADMIN.md": mdAdmin(extractAdmin(api)),
   "GOVERNANCE.md": mdGovernance(extractGovernance()),
   "MODELS.md": mdModels(extractModels()),
   "ADRS.md": mdAdrs(extractAdrs()),

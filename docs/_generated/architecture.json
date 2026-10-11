@@ -2005,5 +2005,1100 @@
       "property": "krizaka.messaging.retry",
       "module": "krizaka-messaging"
     }
-  }
+  },
+  "packs": [
+    {
+      "key": "realestate-studio",
+      "dir": "realestate-studio",
+      "version": "1.0.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "OSS",
+      "regulatoryClass": "STANDARD",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "business",
+      "iconKey": "studio",
+      "sortWeight": 100,
+      "pricing": {
+        "priceCents": 4900,
+        "includedCredits": 5000
+      },
+      "capabilities": [],
+      "workers": [],
+      "scopeGuard": false,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Real-Estate Studio",
+          "tagline": "Your listings become Reels ready to publish.",
+          "description": "The real-estate agent's pack: the Real-Estate Reels Studio and the credits to run it."
+        },
+        "fr": {
+          "label": "Studio Immobilier",
+          "tagline": "Vos biens deviennent des Reels prêts à publier.",
+          "description": "Le pack métier de l'agent immobilier : le Studio Reels Immobilier et les crédits pour le faire tourner."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Business",
+          "description": "The packs that do the job: prospect, validate, produce."
+        },
+        "fr": {
+          "label": "Business",
+          "description": "Les packs qui font le travail : prospecter, valider, produire."
+        }
+      },
+      "studios": [
+        {
+          "key": "realestate-reels",
+          "profession": "real-estate",
+          "iconKey": "studio",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 2800,
+          "steps": 4,
+          "stepKinds": [
+            "CAPABILITY",
+            "APPROVAL"
+          ],
+          "inputs": [
+            {
+              "key": "photos",
+              "title": "Photos du bien"
+            },
+            {
+              "key": "clip",
+              "title": "Clip vidéo (optionnel)"
+            },
+            {
+              "key": "propertyBrief",
+              "title": "Le bien en 3 lignes"
+            },
+            {
+              "key": "platform",
+              "title": "Plateforme"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "reel",
+              "type": "VIDEO"
+            },
+            {
+              "key": "caption",
+              "type": "TEXT"
+            },
+            {
+              "key": "rooms",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Real-Estate Reels",
+              "tagline": "Five photos become a Reel ready to publish.",
+              "description": "Property photos, a three-line brief, and you leave with a 9:16 Reel, its caption and its hashtags."
+            },
+            "fr": {
+              "label": "Reels Immobilier",
+              "tagline": "Cinq photos deviennent un Reel prêt à publier.",
+              "description": "Photos du bien, brief en trois lignes, et vous repartez avec un Reel 9:16, sa légende et ses hashtags."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "orazaka-media",
+      "dir": "orazaka-media",
+      "version": "1.0.0",
+      "tier": "DATA",
+      "kind": "TOOLKIT",
+      "distribution": "OSS",
+      "regulatoryClass": "STANDARD",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "business",
+      "iconKey": "image",
+      "sortWeight": 90,
+      "pricing": {
+        "priceCents": 0,
+        "includedCredits": 0
+      },
+      "capabilities": [],
+      "workers": [],
+      "scopeGuard": false,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Media Studios",
+          "tagline": "Generate, listen, describe — without leaving a run.",
+          "description": null
+        },
+        "fr": {
+          "label": "Studios média",
+          "tagline": "Générer, écouter, décrire — sans quitter un run.",
+          "description": null
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "image-generation",
+          "profession": "general",
+          "iconKey": "image",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 200,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "prompt",
+              "title": "Ce que vous voulez voir"
+            },
+            {
+              "key": "size",
+              "title": "Format"
+            },
+            {
+              "key": "model",
+              "title": "Modèle (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "image",
+              "type": "IMAGE"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Image generation",
+              "tagline": "One sentence, one image.",
+              "description": null
+            },
+            "fr": {
+              "label": "Génération d'image",
+              "tagline": "Une phrase, une image.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "video-generation",
+          "profession": "general",
+          "iconKey": "video",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 3600,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "prompt",
+              "title": "Ce qui doit se passer à l'écran"
+            },
+            {
+              "key": "durationSeconds",
+              "title": "Durée (secondes)"
+            },
+            {
+              "key": "image",
+              "title": "Image d'amorce (facultatif)"
+            },
+            {
+              "key": "model",
+              "title": "Modèle (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "video",
+              "type": "VIDEO"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Video generation",
+              "tagline": "A few seconds of footage, described then rendered.",
+              "description": null
+            },
+            "fr": {
+              "label": "Génération vidéo",
+              "tagline": "Un plan de quelques secondes, décrit puis rendu.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "speech-synthesis",
+          "profession": "general",
+          "iconKey": "speech",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "text",
+              "title": "Le texte à lire"
+            },
+            {
+              "key": "voice",
+              "title": "Voix"
+            },
+            {
+              "key": "model",
+              "title": "Modèle (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "audio",
+              "type": "AUDIO"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Speech synthesis",
+              "tagline": "Your text, read aloud.",
+              "description": null
+            },
+            "fr": {
+              "label": "Synthèse vocale",
+              "tagline": "Votre texte, dit à voix haute.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "image-analysis",
+          "profession": "general",
+          "iconKey": "vision",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 30,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "assetId",
+              "title": "Votre image"
+            },
+            {
+              "key": "prompt",
+              "title": "Ce que vous voulez savoir"
+            },
+            {
+              "key": "model",
+              "title": "Modèle (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "analysis",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Image analysis",
+              "tagline": "What an image shows, in words.",
+              "description": null
+            },
+            "fr": {
+              "label": "Analyse d'image",
+              "tagline": "Ce que montre une image, en toutes lettres.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "audio-analysis",
+          "profession": "general",
+          "iconKey": "audio",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 60,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "assetId",
+              "title": "Votre fichier audio"
+            },
+            {
+              "key": "model",
+              "title": "Modèle (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "transcript",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Audio transcription",
+              "tagline": "What was said, written down.",
+              "description": null
+            },
+            "fr": {
+              "label": "Transcription audio",
+              "tagline": "Ce qui est dit, écrit.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "video-analysis",
+          "profession": "general",
+          "iconKey": "video",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 90,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "assetId",
+              "title": "Votre vidéo"
+            },
+            {
+              "key": "model",
+              "title": "Modèle (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "transcript",
+              "type": "TEXT"
+            },
+            {
+              "key": "keyframes",
+              "type": "JSON"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Video analysis",
+              "tagline": "A video's speech, and its keyframes.",
+              "description": null
+            },
+            "fr": {
+              "label": "Analyse vidéo",
+              "tagline": "La parole d'une vidéo, et ses images-clés.",
+              "description": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "outbound-prospection",
+      "dir": "outbound-prospection",
+      "version": "1.1.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "OSS",
+      "regulatoryClass": "STANDARD",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "business",
+      "iconKey": "target",
+      "sortWeight": 90,
+      "pricing": {
+        "priceCents": 0,
+        "includedCredits": 0
+      },
+      "capabilities": [],
+      "workers": [],
+      "scopeGuard": false,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Outbound Prospecting",
+          "tagline": "From a prospect list to a sequence that ships.",
+          "description": "The salesperson's pack: qualify a list, write each prospect's angle, and get the follow-ups out — three Studios over the same list."
+        },
+        "fr": {
+          "label": "Prospection Outbound",
+          "tagline": "De la liste de prospects à la séquence envoyée.",
+          "description": "Le pack du commercial : qualifier une liste, écrire l'angle de chacun, et faire partir les relances — trois Studios sur la même liste de prospects."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Business",
+          "description": "The packs that do the job: prospect, validate, produce."
+        },
+        "fr": {
+          "label": "Business",
+          "description": "Les packs qui font le travail : prospecter, valider, produire."
+        }
+      },
+      "studios": [
+        {
+          "key": "outbound-prospection",
+          "profession": "sales",
+          "iconKey": "studio",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 250,
+          "steps": 4,
+          "stepKinds": [
+            "CAPABILITY",
+            "TRANSFORM",
+            "APPROVAL",
+            "CONNECTOR"
+          ],
+          "inputs": [
+            {
+              "key": "prospects",
+              "title": "Vos prospects"
+            },
+            {
+              "key": "offer",
+              "title": "Votre offre en une phrase"
+            },
+            {
+              "key": "icp",
+              "title": "Votre client idéal"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "sequence",
+              "type": "TEXT"
+            },
+            {
+              "key": "angles",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Outbound Prospecting",
+              "tagline": "Your prospect list becomes a sequence ready to send.",
+              "description": "Describe your target and your offer: Orazaka writes a per-prospect angle, then a sequence ready to leave for your channel."
+            },
+            "fr": {
+              "label": "Prospection Outbound",
+              "tagline": "Votre liste de prospects devient une séquence prête à envoyer.",
+              "description": "Décrivez votre cible et votre offre : Orazaka rédige un angle par prospect, puis une séquence prête à partir dans votre canal."
+            }
+          }
+        },
+        {
+          "key": "lead-research",
+          "profession": "sales",
+          "iconKey": "search",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 380,
+          "steps": 3,
+          "stepKinds": [
+            "CAPABILITY",
+            "TRANSFORM"
+          ],
+          "inputs": [
+            {
+              "key": "prospects",
+              "title": "Vos prospects"
+            },
+            {
+              "key": "offer",
+              "title": "Votre offre en une phrase"
+            },
+            {
+              "key": "icp",
+              "title": "Votre client idéal"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "ranking",
+              "type": "TEXT"
+            },
+            {
+              "key": "briefs",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Lead Research",
+              "tagline": "Your raw list becomes a prioritised dossier.",
+              "description": "One brief per prospect — sector, buying trigger, expected objection — then a ranking so you know who to call first."
+            },
+            "fr": {
+              "label": "Qualification de Prospects",
+              "tagline": "Votre liste brute devient un dossier priorisé.",
+              "description": "Une fiche par prospect — secteur, déclencheur, objection attendue — puis un classement par priorité pour savoir qui appeler en premier."
+            }
+          }
+        },
+        {
+          "key": "followup-sequences",
+          "profession": "sales",
+          "iconKey": "send",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 510,
+          "steps": 5,
+          "stepKinds": [
+            "CAPABILITY",
+            "TRANSFORM",
+            "APPROVAL",
+            "CONNECTOR"
+          ],
+          "inputs": [
+            {
+              "key": "prospects",
+              "title": "Prospects à relancer"
+            },
+            {
+              "key": "offer",
+              "title": "Votre offre en une phrase"
+            },
+            {
+              "key": "context",
+              "title": "Ce qui s'est passé au premier contact"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "sequence",
+              "type": "TEXT"
+            },
+            {
+              "key": "ladders",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Follow-up Sequences",
+              "tagline": "Your first contacts become follow-ups that go out.",
+              "description": "A multi-touch follow-up per prospect, unified into one voice, approved by you, then posted to your channel."
+            },
+            "fr": {
+              "label": "Séquences de Relance",
+              "tagline": "Vos premiers contacts deviennent des relances qui partent.",
+              "description": "Une relance en plusieurs temps par prospect, uniformisée en un seul ton, validée par vous, puis postée dans votre canal."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "bien-etre",
+      "dir": "wellbeing",
+      "version": "1.0.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "REGULATED",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "lifestyle",
+      "iconKey": "sparkles",
+      "sortWeight": 30,
+      "pricing": {
+        "priceCents": 0,
+        "includedCredits": 0
+      },
+      "capabilities": [],
+      "workers": [],
+      "scopeGuard": true,
+      "consent": true,
+      "safety": true,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Wellbeing",
+          "tagline": "Put into words what you live through, and bring it to your sessions.",
+          "description": "Guided journaling, session preparation and mood tracking. Not care: no diagnosis, no advice on treatment, no emergency service — what you bring to a professional, not instead of one. Health data, kept 30 days at most, never used to train a model."
+        },
+        "fr": {
+          "label": "Bien-être",
+          "tagline": "Mettre en mots ce que vous vivez, et l'apporter à vos séances.",
+          "description": "Journaling guidé, préparation de séance et suivi d'humeur. Pas un soin : aucun diagnostic, aucun conseil de traitement, pas un service d'urgence — ce que vous apportez à un professionnel, pas à sa place. Données de santé, conservées 30 jours au plus, jamais utilisées pour entraîner un modèle."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Lifestyle",
+          "description": "The packs for you, not for your work."
+        },
+        "fr": {
+          "label": "Vie personnelle",
+          "description": "Les packs pour vous, pas pour votre travail."
+        }
+      },
+      "studios": [
+        {
+          "key": "guided-journaling",
+          "profession": "general",
+          "iconKey": "notebook",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "entry",
+              "title": "Ce que vous voulez mettre par écrit"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "journal",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Guided Journaling",
+              "tagline": "Your words, put in order — in your own voice.",
+              "description": "Write what you want to set down, as it comes: the Studio tidies it into a clean entry, in the first person, without adding advice or interpretation."
+            },
+            "fr": {
+              "label": "Journaling guidé",
+              "tagline": "Vos mots, mis en ordre — avec votre voix.",
+              "description": "Écrivez ce que vous voulez poser, comme ça vient : le Studio le met au propre, à la première personne, sans ajouter de conseil ni d'interprétation."
+            }
+          }
+        },
+        {
+          "key": "session-preparation",
+          "profession": "general",
+          "iconKey": "list-checks",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "notes",
+              "title": "Ce que vous avez noté depuis la dernière séance"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "agenda",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Session Preparation",
+              "tagline": "Your notes since the last session become the points to raise.",
+              "description": "Paste what you noted, in any order: the Studio turns it into the list of points to bring to your next session, without interpreting anything."
+            },
+            "fr": {
+              "label": "Préparation de séance",
+              "tagline": "Vos notes depuis la dernière séance deviennent les points à aborder.",
+              "description": "Collez ce que vous avez noté, en vrac : le Studio en fait la liste des points à apporter à votre prochaine séance, sans rien interpréter."
+            }
+          }
+        },
+        {
+          "key": "mood-tracking",
+          "profession": "general",
+          "iconKey": "chart-line",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "entries",
+              "title": "Vos relevés"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "summary",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Mood Tracking",
+              "tagline": "What your daily notes show, described — never concluded.",
+              "description": "One line a day is enough: the Studio describes what the entries show over time, and draws no conclusion from them."
+            },
+            "fr": {
+              "label": "Suivi d'humeur",
+              "tagline": "Ce que montrent vos relevés, décrit — jamais conclu.",
+              "description": "Une ligne par jour suffit : le Studio décrit ce que les relevés montrent dans le temps, et n'en tire aucune conclusion."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "document-validation",
+      "dir": "document-validation",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "business",
+      "iconKey": "shield-check",
+      "sortWeight": 20,
+      "pricing": {
+        "priceCents": 4900,
+        "includedCredits": 500
+      },
+      "capabilities": [
+        "orazaka.validation.document.screen",
+        "orazaka.validation.document.signals",
+        "orazaka.validation.document.assemble"
+      ],
+      "workers": [
+        "orazaka-worker-validation"
+      ],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [
+        {
+          "id": "be-residential-lease",
+          "label": "Bail de résidence principale — Région wallonne",
+          "jurisdiction": "BE-WAL",
+          "versions": [
+            "2025-01-01"
+          ],
+          "rules": 4
+        },
+        {
+          "id": "fr-residential-lease",
+          "label": "Bail d'habitation — France",
+          "jurisdiction": "FR",
+          "versions": [
+            "2024-07-01",
+            "2026-07-01"
+          ],
+          "rules": 10
+        }
+      ],
+      "text": {
+        "en": {
+          "label": "Document Verification",
+          "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
+          "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice."
+        },
+        "fr": {
+          "label": "Vérification de documents",
+          "tagline": "Un contrat contrôlé contre les règles, un PDF examiné pour ses retouches.",
+          "description": "Contrôlez un document contre un corpus de règles versionné — chaque constat cite sa règle, sa source et l'extrait qui le justifie — et examinez un fichier PDF pour les signes d'une modification. Des rapports, jamais un conseil juridique."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Business",
+          "description": "The packs that do the job: prospect, validate, produce."
+        },
+        "fr": {
+          "label": "Business",
+          "description": "Les packs qui font le travail : prospecter, valider, produire."
+        }
+      },
+      "studios": [
+        {
+          "key": "document-authenticity",
+          "profession": "legal",
+          "iconKey": "search",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 30,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "documentBase64",
+              "title": "Le fichier PDF"
+            },
+            {
+              "key": "expectedIssuer",
+              "title": "Émetteur attendu (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "TEXT"
+            },
+            {
+              "key": "signals",
+              "type": "JSON"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Document Authenticity",
+              "tagline": "A PDF's metadata, structure and fonts, examined for signs of tampering.",
+              "description": "Examines the file itself — who produced it, when, with what, and whether it was edited afterwards — and lists the points worth clearing up. It never judges what the document says."
+            },
+            "fr": {
+              "label": "Authenticité de document",
+              "tagline": "Les métadonnées, la structure et les polices d'un PDF, examinées pour ses retouches.",
+              "description": "Examine le fichier lui-même — qui l'a produit, quand, avec quoi, et s'il a été modifié ensuite — et liste les points à éclaircir. Il ne juge jamais ce que le document raconte."
+            }
+          }
+        },
+        {
+          "key": "compliance-check",
+          "profession": "legal",
+          "iconKey": "shield-check",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 120,
+          "steps": 3,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "document",
+              "title": "Document à contrôler"
+            },
+            {
+              "key": "jurisdiction",
+              "title": "Juridiction"
+            },
+            {
+              "key": "asOf",
+              "title": "Règles en vigueur à la date du"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "JSON"
+            },
+            {
+              "key": "ruleset",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Compliance Check",
+              "tagline": "Your lease or contract, checked against the rules of its jurisdiction.",
+              "description": "Runs a lease or a contract against the rules of its jurisdiction, as they stood on a date you pick. Each finding gives its rule, its source and the passage of the document."
+            },
+            "fr": {
+              "label": "Contrôle de conformité",
+              "tagline": "Votre bail ou votre contrat, passé aux règles de sa juridiction.",
+              "description": "Passe un bail ou un contrat au corpus de règles de sa juridiction, à la date de votre choix. Chaque constat donne sa règle, sa source et l'extrait du document."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "echo-toolkit",
+      "dir": "echo-toolkit",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "OSS",
+      "regulatoryClass": "STANDARD",
+      "status": "DRAFT",
+      "showcase": false,
+      "category": "business",
+      "iconKey": "repeat",
+      "sortWeight": 5,
+      "pricing": {
+        "priceCents": 0,
+        "includedCredits": 0
+      },
+      "capabilities": [
+        "orazaka.echo.text.reverse"
+      ],
+      "workers": [
+        "orazaka-worker-echo"
+      ],
+      "scopeGuard": false,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Mirror",
+          "tagline": "Your text, reversed.",
+          "description": null
+        },
+        "fr": {
+          "label": "Miroir",
+          "tagline": "Votre texte, à l'envers.",
+          "description": null
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "echo-reverse",
+          "profession": "general",
+          "iconKey": "studio",
+          "pricing": "FREE",
+          "status": "DRAFT",
+          "estimatedCredits": 30,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "text",
+              "title": "Texte"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "reversed",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Mirror",
+              "tagline": "Your text, reversed.",
+              "description": null
+            },
+            "fr": {
+              "label": "Miroir",
+              "tagline": "Votre texte, à l'envers.",
+              "description": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "trade-showcase",
+      "dir": "trade-showcase",
+      "version": "1.0.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "OSS",
+      "regulatoryClass": "STANDARD",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [],
+      "workers": [],
+      "scopeGuard": false,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": null,
+        "fr": null
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "trade-showcase",
+          "profession": "trades",
+          "iconKey": "studio",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 210,
+          "steps": 3,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "photos",
+              "title": "Photos de vos réalisations"
+            },
+            {
+              "key": "trade",
+              "title": "Votre métier"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "showcase",
+              "type": "IMAGE"
+            },
+            {
+              "key": "caption",
+              "type": "TEXT"
+            },
+            {
+              "key": "descriptions",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Trade Showcase",
+              "tagline": "Your job sites become a showcase that sells.",
+              "description": "Drop in photos of your work: Orazaka describes them, then composes a branded showcase visual."
+            },
+            "fr": {
+              "label": "Vitrine Artisan",
+              "tagline": "Vos chantiers deviennent une vitrine qui vend.",
+              "description": "Déposez les photos de vos réalisations : Orazaka les décrit, puis compose un visuel de vitrine à votre image."
+            }
+          }
+        }
+      ]
+    }
+  ]
 }
