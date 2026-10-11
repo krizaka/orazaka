@@ -1,7 +1,10 @@
 <!-- krizaka-header -->
 <div align="center">
 
-<img src=".github/assets/orazaka-logo.svg" alt="Orazaka" width="420">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/krizaka/.github/main/profile/assets/orazaka-dark.svg">
+  <img src="https://raw.githubusercontent.com/krizaka/.github/main/profile/assets/orazaka-light.svg" alt="Orazaka" width="96">
+</picture>
 
 # Orazaka
 
@@ -11,18 +14,22 @@ Sovereign AI platform by [Krizaka](https://krizaka.com) — and the **workspace*
 
 [![CI](https://github.com/krizaka/orazaka/actions/workflows/ci.yml/badge.svg)](https://github.com/krizaka/orazaka/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Orazaka](https://img.shields.io/badge/part%20of-Orazaka-f59e0b)](https://github.com/krizaka/orazaka#repositories)
-[![Docs](https://img.shields.io/badge/docs-krizaka.com-6366f1)](https://www.krizaka.com/en/products/orazaka)
+[![Orazaka](https://img.shields.io/badge/part%20of-Orazaka-f67e23)](https://github.com/krizaka/orazaka#repositories)
+[![Docs](https://img.shields.io/badge/docs-krizaka.com%2Fdocs%2Forazaka-f67e23)](https://www.krizaka.com/docs/orazaka)
 
-[Documentation](https://www.krizaka.com/en/products/orazaka) · [Website](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
+[Documentation](https://www.krizaka.com/docs/orazaka) · [How it works](https://www.krizaka.com/en/products/orazaka/architecture) · [Demos](https://www.krizaka.com/en/products/orazaka/demos) · [Website](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
 
 </div>
 <!-- /krizaka-header -->
 
 <p align="center">
-  <a href="https://www.krizaka.com/en/products/orazaka/demos"><img src="docs/assets/orazaka-chat.gif" alt="Orazaka — a sovereign chat answer, streamed from local models" width="760"></a>
-  <br><sub>Orazaka — a sovereign chat answer, streamed from local models · <a href="https://www.krizaka.com/en/products/orazaka/demos">more on krizaka.com</a></sub>
+  <a href="https://www.krizaka.com/en/products/orazaka/demos"><img src="https://raw.githubusercontent.com/krizaka/.github/main/profile/assets/orazaka-tour.gif" alt="Orazaka's web client, signed in as Eric: a customer's return request answered from his own returns policy, then a product photo generated locally" width="760"></a>
+  <br><sub>Eric answers a customer from his own returns policy, then generates the product photo — everything ran on one Mac, nothing left it. <a href="https://www.krizaka.com/en/products/orazaka/demos">More demos</a></sub>
 </p>
+
+A multimodal AI orchestration engine — chat, RAG, agents, image, audio, video — where every request crosses a
+deterministic interceptor pipeline to the best **local** model. Your documents, your models, your network: nothing
+leaves it. Law 25 and GDPR by design.
 
 This repository is the entry point of the Orazaka platform. It holds the governance contract
 ([AGENTS.md](AGENTS.md)), the workspace manifest ([`orazaka.workspace.json`](orazaka.workspace.json)),
@@ -32,22 +39,27 @@ Krizaka application can pick only what it needs.
 
 ## Repositories
 
-### Foundation — reusable by any application
+### Orazaka foundation
 
 | Repository | What it is |
 |:---|:---|
-| [`orazaka-build`](https://github.com/krizaka/orazaka-build) | Parent POM (Spring Boot / Spring AI BOMs, plugin management, Orazaka BOM) and the shared governance test kit (ArchUnit rules, Testcontainers base) for every Orazaka JVM repository. |
+| [`orazaka-build`](https://github.com/krizaka/orazaka-build) | Parent POM of every Orazaka JVM repository: inherits `krizaka-parent`, imports `krizaka-bom` 0.2.0 and the Spring AI BOM, and carries the Orazaka governance tests. |
 | [`orazaka-contracts`](https://github.com/krizaka/orazaka-contracts) | Tier-1 platform contracts shared by every Orazaka service: the job plane (jobs-api) and the application-persistence ports (persistence-app-api). Pure interfaces and records, zero implementation. |
 | [`orazaka-edge`](https://github.com/krizaka/orazaka-edge) | Transparent HTTP edge in front of every Orazaka service: routing, API-key → JWT exchange, CORS and tracing. Spring MVC + virtual threads. |
 | [`orazaka-ui-kit`](https://github.com/krizaka/orazaka-ui-kit) | @krizaka/orazaka-shared (TypeScript types, Zod schemas, design tokens) and @krizaka/orazaka-design-system (React components, Tailwind preset, theme, icon registry) for Next.js and React Native apps. |
 
-### Domain services — reusable by any application
+### Krizaka building blocks — reusable by any application
+
+Released on [Maven Central](https://central.sonatype.com/namespace/com.krizaka) (`com.krizaka`, BOM 0.2.0) and
+cloned under `krizaka/` so the reactor builds them from source. Documentation: [krizaka.com/docs/java](https://www.krizaka.com/docs/java).
 
 | Repository | What it is |
 |:---|:---|
-| [`krizaka-users`](https://github.com/krizaka/krizaka-users) | Reusable user management for any Krizaka application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance. |
-| [`krizaka-notifications`](https://github.com/krizaka/krizaka-notifications) | Channel-based notification delivery for any Krizaka application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP. |
-| [`krizaka-billing`](https://github.com/krizaka/krizaka-billing) | Credits, wallets, plans, subscriptions, pricebook and metering (hold → settle → release) as a reusable billing service, with its contract (billing-api) and a typed HTTP client (billing-client). |
+| [`krizaka-build`](https://github.com/krizaka/krizaka-build) | Parent POM, `krizaka-bom` and the test kit (ArchUnit rules, Testcontainers helpers) of every Krizaka JVM repository. |
+| [`krizaka-platform-kit`](https://github.com/krizaka/krizaka-platform-kit) | Web (problem details, correlation id), security (session JWT, `SERVICE` tokens), messaging (outbox, deduplication, retry / DLQ), observability — and their Spring Boot starters. |
+| [`krizaka-users`](https://github.com/krizaka/krizaka-users) | Reusable user management: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance. |
+| [`krizaka-notifications`](https://github.com/krizaka/krizaka-notifications) | Channel-based notification delivery: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events or explicit requests over AMQP. |
+| [`krizaka-billing`](https://github.com/krizaka/krizaka-billing) | Credits, wallets, plans, subscriptions, price book and metering (hold → settle → release), with its contract (billing-api) and a typed HTTP client (billing-client). |
 
 ### Orazaka AI engine
 
@@ -68,17 +80,22 @@ Krizaka application can pick only what it needs.
 | [`orazaka-web-client`](https://github.com/krizaka/orazaka-web-client) | Next.js (App Router) client of the Orazaka platform with its mandatory BFF. |
 | [`orazaka-web-admin`](https://github.com/krizaka/orazaka-web-admin) | Next.js SecOps & administration console of the Orazaka platform. |
 | [`orazaka-mobile-client`](https://github.com/krizaka/orazaka-mobile-client) | Expo / React Native client of the Orazaka platform (talks to the edge with Bearer tokens). |
-| [`orazaka-cli`](https://github.com/krizaka/orazaka-cli) | The `orazaka` developer CLI: install, start, dev, test, docs and pack tooling for the Orazaka workspace, with an offline SQLite queue. |
+| [`orazaka-cli`](https://github.com/krizaka/orazaka-cli) | The `orazaka` developer CLI: install, start, dev, `demo seed`, test, docs and pack tooling for the Orazaka workspace, with an offline SQLite queue. |
 | [`orazaka-packs`](https://github.com/krizaka/orazaka-packs) | Reference packs for the Orazaka Studio marketplace (document validation, media, prospection, real-estate, wellbeing…) and the pack manifest schema. |
 
 ## Dependency graph
 
 ```mermaid
 graph LR
+  krizaka_build --> krizaka_platform_kit
+  krizaka_build --> krizaka_users
+  krizaka_platform_kit --> krizaka_users
+  krizaka_build --> krizaka_notifications
+  krizaka_platform_kit --> krizaka_notifications
+  krizaka_build --> krizaka_billing
+  krizaka_platform_kit --> krizaka_billing
+  krizaka_build --> orazaka_build
   orazaka_build --> orazaka_contracts
-  orazaka_build --> users
-  orazaka_build --> orazaka_notifications
-  orazaka_build --> krizaka_billing
   orazaka_build --> orazaka_studio
   orazaka_contracts --> orazaka_studio
   krizaka_billing --> orazaka_studio
@@ -88,12 +105,12 @@ graph LR
   orazaka_studio --> orazaka_ai_engine
   orazaka_build --> orazaka_conversation_service
   orazaka_contracts --> orazaka_conversation_service
-  users --> orazaka_conversation_service
+  krizaka_users --> orazaka_conversation_service
   krizaka_billing --> orazaka_conversation_service
   orazaka_ai_engine --> orazaka_conversation_service
   orazaka_build --> orazaka_job_service
   orazaka_contracts --> orazaka_job_service
-  users --> orazaka_job_service
+  krizaka_users --> orazaka_job_service
   krizaka_billing --> orazaka_job_service
   orazaka_ai_engine --> orazaka_job_service
   orazaka_build --> orazaka_knowledge_service
@@ -118,9 +135,16 @@ inference.
 git clone https://github.com/krizaka/orazaka.git && cd orazaka
 node scripts/workspace.mjs clone       # clones every repository at its workspace path
 ./mvnw install                         # builds and tests every JVM repository in one reactor
-cd orazaka-apps/ui && npm install      # links @krizaka/* packages from source
-npx orazaka install && npx orazaka start && npx orazaka dev
+cd orazaka-apps/ui && npm install      # links the cloned UI repositories and the CLI
+npm run build -w orazaka-cli && npm install   # builds the CLI, then links its `orazaka` command
+npx orazaka install                    # setup wizard: verifies the tools, installs dependencies, configures the topology
+npx orazaka start                      # local infrastructure: Docker middleware and AI engines
+npx orazaka dev                        # the whole stack: every service, Web, Admin and Mobile
+npx orazaka demo seed                  # second terminal, stack up: Eric, the demo persona (account, plan, packs, Studios)
 ```
+
+Sign in on the web client as Eric — the account `orazaka demo seed` prints — and replay the demo above on your
+own machine. The CLI is not on npm yet: `npx orazaka` resolves the workspace copy, so run it from `orazaka-apps/ui`.
 
 `node scripts/workspace.mjs status` shows the branch and state of every repository;
 `node scripts/workspace.mjs pull` updates them all.
@@ -134,7 +158,8 @@ orazaka/                               ← this repository
 ├── docs/         architecture, ADRs, generated references
 ├── orazaka-end2end/                   hermetic E2E
 ├── orazaka-libs/                      ← cloned: orazaka-build, orazaka-contracts, orazaka-ai-engine
-├── orazaka-apps/services/             ← cloned: krizaka-users, krizaka-notifications, krizaka-billing, …
+├── krizaka/                           ← cloned: krizaka-build, krizaka-platform-kit, krizaka-users, krizaka-notifications, krizaka-billing
+├── orazaka-apps/services/             ← cloned: orazaka-studio, conversation, job, knowledge, automation, edge
 ├── orazaka-apps/workers/              ← cloned: orazaka-worker-media
 ├── orazaka-apps/ui/                   ← npm workspace root; cloned: orazaka-ui-kit, web, mobile, cli
 └── orazaka-packs/                     ← cloned: orazaka-packs
@@ -144,19 +169,27 @@ Cloned directories are ignored by this repository's git; each is its own reposit
 
 ## Building a new application from Orazaka components
 
-1. Inherit `com.krizaka.orazaka:orazaka-parent` (from [orazaka-build](https://github.com/krizaka/orazaka-build)) — same stack,
-   versions and quality gates.
+1. Import `com.krizaka:krizaka-bom` 0.2.0 from Maven Central and add the starters you need
+   (`krizaka-spring-boot-starter-web`, `-security`, `-rabbitmq`, `-observability`) — or inherit
+   `com.krizaka.orazaka:orazaka-parent` (from [orazaka-build](https://github.com/krizaka/orazaka-build)) for the
+   full Orazaka stack and quality gates.
 2. Run the services you need — e.g. [krizaka-users](https://github.com/krizaka/krizaka-users) for
    registration / login / forgot password / profile, [krizaka-notifications](https://github.com/krizaka/krizaka-notifications)
    for e-mail / SMS / webhook delivery, [krizaka-billing](https://github.com/krizaka/krizaka-billing) for credits and
    subscriptions, [orazaka-edge](https://github.com/krizaka/orazaka-edge) in front of them.
 3. Depend only on their contracts (`krizaka-users-api`, `krizaka-notifications-api`,
    `krizaka-billing-api`) or clients.
-4. Build the UI with [@krizaka/orazaka-design-system](https://github.com/krizaka/orazaka-ui-kit).
+4. Build the UI with [`@krizaka/ui`](https://www.krizaka.com/docs/ui) and the Orazaka identity,
+   [`@krizaka/orazaka-design-system`](https://www.npmjs.com/package/@krizaka/orazaka-design-system).
 
 ## Consuming packages
 
-Every repository publishes to GitHub Packages on a `v*` tag. Maven, in `~/.m2/settings.xml`:
+- **Krizaka building blocks** (`com.krizaka`) are on **Maven Central** — no repository to declare. Import the BOM:
+  `com.krizaka:krizaka-bom:0.2.0` ([all artifacts](https://central.sonatype.com/namespace/com.krizaka)).
+- **npm packages** (`@krizaka/ui`, `@krizaka/orazaka-design-system`, `@krizaka/orazaka-shared`, …) are on the
+  **public npm registry** — no `.npmrc`, no token.
+- **Orazaka JVM artifacts** (`com.krizaka.orazaka`) are still published to GitHub Packages on a `v*` tag. Maven, in
+  `~/.m2/settings.xml`:
 
 ```xml
 <servers>
@@ -165,8 +198,6 @@ Every repository publishes to GitHub Packages on a `v*` tag. Maven, in `~/.m2/se
 <!-- and a <repository> with id "github" per Orazaka repository you consume, e.g.
      https://maven.pkg.github.com/krizaka/orazaka-build -->
 ```
-
-npm: `@krizaka:registry=https://npm.pkg.github.com` in `.npmrc`.
 
 ## License
 
