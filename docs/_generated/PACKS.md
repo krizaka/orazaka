@@ -37,11 +37,15 @@ Pack `realestate-studio` 1.0.0 · tier DATA · OSS · regulatory class STANDARD.
 
 **Generate, listen, describe — without leaving a run.**
 
-Pack `orazaka-media` 1.0.0 · tier DATA · kind TOOLKIT · OSS · regulatory class STANDARD.
+Pack `orazaka-media` 1.1.0 · tier DATA · kind TOOLKIT · OSS · regulatory class STANDARD.
 
 | Studio | What it does | Asks for | Steps | Credits held |
 |:---|:---|:---|:---|:---|
-| **Image generation** (`image-generation`) | One sentence, one image. | `prompt`, `size`, `model` | 1 (CAPABILITY) | 200 |
+| **Image generation** (`image-generation`) | One sentence, one image. | `prompt`, `size`, `negativePrompt`, `seed`, `model` | 1 (CAPABILITY) | 200 |
+| **Golden-hour editorial** (`art-golden-hour`) | Your subject, in warm low light, shot like a magazine spread. Lifestyle photography at golden hour: raking sunlight, an 85 mm lens wide open, weathered wood, wool and brass, an amber and terracotta palette. Describe who and where — the light, the optics, the materials and the palette are taken care of. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
+| **Tilt-shift miniature** (`art-miniature`) | Your scene as a handcrafted diorama, shot in macro. A 1:24 diorama of figurines and props in felt, embroidered thread and painted resin, a razor-thin plane of focus and soft window light. Describe the scene; it becomes a miniature. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
+| **Artisanal still life** (`art-still-life`) | Objects and produce in single-window light. Chiaroscuro on a weathered table: hand-thrown ceramics, hammered copper, linen and fresh produce, a muted earthy palette. Name the objects; they are arranged and lit. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
+| **Montreal neon night** (`art-montreal-night`) | Wet streets, brick and spiral staircases under magenta and teal. Montreal after rain: cobblestones mirroring window light and neon, light mist, a 35 mm lens wide open, cinematic grading. Describe the place and the moment. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
 | **Video generation** (`video-generation`) | A few seconds of footage, described then rendered. | `prompt`, `durationSeconds`, `image`, `model` | 1 (CAPABILITY) | 3600 |
 | **Speech synthesis** (`speech-synthesis`) | Your text, read aloud. | `text`, `voice`, `model` | 1 (CAPABILITY) | 40 |
 | **Image analysis** (`image-analysis`) | What an image shows, in words. | `assetId`, `prompt`, `model` | 1 (CAPABILITY) | 30 |
@@ -111,7 +115,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | `document-validation` | 1.0.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
 | `echo-toolkit` | 1.0.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
-| `orazaka-media` | 1.0.0 | DATA | OSS | STANDARD | yes | `image-generation`, `video-generation`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
+| `orazaka-media` | 1.1.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.1.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
 | `realestate-studio` | 1.0.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
 | `trade-showcase` | 1.0.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |
@@ -128,7 +132,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | `orazaka studio list` | Browse the Studio catalogue |
 | `orazaka studio installed` | List the Studios you have installed |
 | `orazaka studio install <studioKey>` | Install a Studio into your workspace |
-| `orazaka studio run <installationId>` | Run an installed Studio |
+| `orazaka studio run <target>` | Run an installed Studio — or, with --studio, a toolkit Studio by its key |
 | `orazaka studio logs <runId>` | Show a run's per-step state and results |
 
 ## Manifest fields
@@ -221,7 +225,9 @@ studios:
 > ⚠ **There is no `i18n:` key.** The `i18n/` directory is found by convention. The manifest rejects
 > unknown properties outright, so an invented key fails validation rather than being ignored.
 >
-> ⚠ **`pricing` is `priceCents` + `includedCredits`.** Not `bundledCredits`.
+> ⚠ **`pricing` is `priceCents` + `includedCredits`.** Not `bundledCredits`. `priceCents` is in cents of the
+> billing service's currency (`billing.currency` — Canadian dollars for Orazaka: `7900` is 79 $ CA); a manifest never
+> names a currency.
 
 Everything else is optional and has a default. `orazaka pack validate` names the exact line when
 something is wrong, so run it before you run anything else.
