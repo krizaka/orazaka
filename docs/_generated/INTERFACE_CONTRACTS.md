@@ -83,6 +83,7 @@ generated: true
 - `PlatformMcpServerPersistenceProvider`
 - `PlatformToolConfigPersistenceProvider`
 - `RuntimeConfigProvider`
+- `SpeechVoiceManager`
 - `UserMcpServerPersistenceProvider`
 - `ValidationPipelineManager`
 

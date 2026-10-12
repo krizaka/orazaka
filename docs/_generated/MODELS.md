@@ -18,4 +18,6 @@ generated: true
 | `piper-en-low` | Piper Low (en) | speech |
 | `piper-en-medium-ryan` | Piper Ryan (en) | speech |
 | `piper-fr-medium` | Piper Medium (fr) | speech |
+| `piper-fr-siwis-medium` | Piper Siwis (fr-FR, féminine) | speech |
+| `piper-fr-tom-medium` | Piper Tom (fr-FR, masculine) | speech |
 | `tts-1` | OpenAI TTS-1 | speech |

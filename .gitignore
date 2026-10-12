@@ -96,6 +96,8 @@ out/
 *.log
 # Audio and video files
 *.wav
+# The voice turn's e2e fixture is synthesised, not recorded (ADR-076).
+!orazaka-end2end/src/test/resources/voice/*.wav
 *.mp3
 *.aac
 *.m4a

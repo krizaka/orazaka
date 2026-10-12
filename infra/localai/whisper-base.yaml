@@ -1,0 +1,4 @@
+name: whisper-base
+backend: whisper
+parameters:
+  model: ggml-base.bin

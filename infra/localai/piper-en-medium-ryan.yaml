@@ -1,0 +1,4 @@
+name: piper-en-medium-ryan
+backend: piper
+parameters:
+  model: en/en_US/ryan/medium/en_US-ryan-medium.onnx

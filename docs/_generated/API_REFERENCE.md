@@ -69,6 +69,8 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/status/graph` | ADMIN + USER | StatusController | Compiles and outputs the operations graph. |
 | GET | `/api/v1/status/health` | public | StatusController | Returns sovereign readiness health details (public probe). |
 | GET | `/api/v1/status/infrastructure` | authenticated | StatusController | Returns the current online/offline snapshot of the local inference engines. |
+| GET | `/api/v1/voice/clips/{clipId}` | public | VoiceController | One spoken sentence, by its signed URL — no bearer token, because an <audio> element cannot send one; the signature and its five-minute expiry are the authorisation. |
+| POST | `/api/v1/voice/turns` | ADMIN + USER | VoiceController | Takes a turn: audio (WAV, Ogg/Opus, WebM, MP3; ~30 s at most) or text, answered over SSE — transcript, delta, sentence (text and a signed audio URL valid 300 s), safety.crisis or scope.refused when a guard answers, then done with the turn's usage and timings. |
 
 ## edge
 
@@ -197,3 +199,4 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/studios/runs/{runId}` | authenticated | StudioRunController | One run with its per-step states and outputs. |
 | POST | `/api/v1/studios/runs/{runId}/approve` | authenticated | StudioRunController | Resolves an approval step, resuming the run. |
 | POST | `/api/v1/studios/runs/{runId}/cancel` | authenticated | StudioRunController | Cancels a run and releases its hold. |
+| GET | `/internal/v1/installations/{installationId}/turn-declarations` | SERVICE | InstallationDeclarationController | What a turn taken under this installation must carry: the pack's guards, the reviewed crisis reply for the installation's region, and the pack's system prompt. |

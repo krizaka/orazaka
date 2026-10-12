@@ -19,6 +19,12 @@
         mobile validation runs in the CI mobile-validation track (ESLint + tsc --noEmit).</description>
     <packaging>jar</packaging>
 
+    <properties>
+        <!-- The compose file's own default for the Postgres host port; .env (read below by
+             read-project-properties) overrides it, exactly as `orazaka start` does. -->
+        <POSTGRES_PORT>5432</POSTGRES_PORT>
+    </properties>
+
     <!-- ====================================================================
          Reactor Dependency: forces orazaka-conversation-service to be compiled, packaged,
          and its repackaged Spring Boot JAR to exist before this module enters
@@ -212,7 +218,9 @@
                      and local AI runtimes that depend on the host machine. By default
                      the @Tag("ui") tests are excluded and the UI server is not started.
                      Enable the full suite with -De2e.ui (activates the e2e-ui profile). -->
-                <e2e.excludedGroups>ui</e2e.excludedGroups>
+                <!-- `voice` needs the native runtimes too (LocalAI: whisper-base and the Piper
+                     voices; Ollama: a chat model) — ADR-076. -De2e.voice runs it without the UI. -->
+                <e2e.excludedGroups>ui,voice</e2e.excludedGroups>
                 <e2e.ui.phase>none</e2e.ui.phase>
             </properties>
             <build>
@@ -431,7 +439,7 @@
                                              router crash on startup ("Could not resolve placeholder
                                              'spring.ai.ollama.base-url'"). REDIS_URL + datasource + port are pinned AFTER
                                              the source so the e2e infra (local containers) always wins over .env. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; export REDIS_URL=redis://localhost:6379 RATE_LIMIT_ENABLED=true &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-conversation-service/target/orazaka-conversation-service-${project.version}.jar --spring.datasource.url=jdbc:postgresql://localhost:5432/${DB_NAME} --spring.datasource.username=${DB_USERNAME} --spring.datasource.password=${DB_PASSWORD} --server.port=${PORT}</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; export REDIS_URL=redis://localhost:6379 RATE_LIMIT_ENABLED=true &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-conversation-service/target/orazaka-conversation-service-${project.version}.jar --spring.datasource.url=jdbc:postgresql://localhost:${POSTGRES_PORT}/${DB_NAME} --spring.datasource.username=${DB_USERNAME} --spring.datasource.password=${DB_PASSWORD} --server.port=${PORT}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -799,12 +807,15 @@
                                 <admin.email>${ADMIN_EMAIL}</admin.email>
                                 <admin.password>${ADMIN_PASSWORD}</admin.password>
                                 <!-- JDBC live infrastructure — targets the compose db-vector
-                                     published on localhost:5432 (DB_LOCAL_* describes a
-                                     separate host DB that the compose does not provision). -->
-                                <db.url>jdbc:postgresql://localhost:5432/orazaka_db</db.url>
+                                     published on localhost:${POSTGRES_PORT} (DB_LOCAL_* describes a
+                                     separate host DB that the compose does not provision). The
+                                     port follows POSTGRES_PORT, as the compose file does: on a
+                                     host whose 5432 is another product's Postgres, a literal 5432
+                                     points the gate at the wrong database. -->
+                                <db.url>jdbc:postgresql://localhost:${POSTGRES_PORT}/orazaka_db</db.url>
                                 <db.username>orazaka_app</db.username>
                                 <db.password>orazaka_pass</db.password>
-                                <identity.db.url>jdbc:postgresql://localhost:5432/krizaka_users_db</identity.db.url>
+                                <identity.db.url>jdbc:postgresql://localhost:${POSTGRES_PORT}/krizaka_users_db</identity.db.url>
                                 <identity.db.username>krizaka_users</identity.db.username>
                                 <identity.db.password>krizaka_users_pass</identity.db.password>
                                 <!-- Redis live infrastructure -->
@@ -868,6 +879,19 @@
             <properties>
                 <e2e.excludedGroups></e2e.excludedGroups>
                 <e2e.ui.phase>pre-integration-test</e2e.ui.phase>
+            </properties>
+        </profile>
+        <!-- The voice turn's scenarios (ADR-076): -De2e.voice includes @Tag("voice"), and only it,
+             beside the default gate. Needs LocalAI and Ollama running natively. -->
+        <profile>
+            <id>e2e-voice</id>
+            <activation>
+                <property>
+                    <name>e2e.voice</name>
+                </property>
+            </activation>
+            <properties>
+                <e2e.excludedGroups>ui</e2e.excludedGroups>
             </properties>
         </profile>
     </profiles>

@@ -111,3 +111,25 @@ Before the first request, `scripts/verify-stack-identity.mjs` compares each serv
 `/actuator/info` `build.time` against what this tree packaged, and refuses a stack that is not this
 build. **Its limit:** it compares *builds*, so a stale stack from the *same* build would pass — that
 case is covered by the reset, not by the check.
+
+## The voice scenarios (ADR-076)
+
+`VoiceTurnIT` is tagged `voice` and excluded from the default gate, like `ui`: it needs the native
+runtimes the hermetic stack does not start — LocalAI on `:8085` with `whisper-base` and the Piper
+voices (`infra/localai/`), and Ollama with a chat model (`ORAZAKA_OLLAMA_MODEL`, measured with
+`qwen2.5:7b`). Run it with the gate:
+
+```bash
+./mvnw verify -P staging -pl orazaka-end2end -De2e.voice
+```
+
+or alone, against a stack already running (`orazaka dev`), **without the reset** — the gate's
+`down -v` drops the same volume `orazaka start` uses, local data included:
+
+```bash
+./mvnw -f orazaka-end2end/pom.xml test-compile failsafe:integration-test failsafe:verify \
+  -Dit.test=VoiceTurnIT -Dskip.e2e=false
+```
+
+It fails, rather than skips, when a runtime is missing: a voice gate that passes without a voice
+proves nothing. The audio fixture (`src/test/resources/voice/`) is synthesised, not recorded.

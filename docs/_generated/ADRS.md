@@ -69,3 +69,4 @@ generated: true
 | ADR-073 | ADR-073 — The kit is a product | `adr/ADR-073-the-kit-is-a-product.md` |
 | ADR-074 | ADR-074 — Krizaka starters and event contracts | `adr/ADR-074-krizaka-starters-and-event-contracts.md` |
 | ADR-075 | ADR-075 — The local image engine: FLUX.2 [klein] 4B, recipes, art direction | `adr/ADR-075-local-image-engine.md` |
+| ADR-076 | ADR-076 — The voice turn | `adr/ADR-076-the-voice-turn.md` |

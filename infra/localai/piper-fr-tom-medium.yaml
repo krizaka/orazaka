@@ -1,0 +1,4 @@
+name: piper-fr-tom-medium
+backend: piper
+parameters:
+  model: fr/fr_FR/tom/medium/fr_FR-tom-medium.onnx
