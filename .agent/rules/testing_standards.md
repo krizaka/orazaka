@@ -1,6 +1,7 @@
 # Rule: Testing Standards (local)
 
-> Local phase: no CI, no deployed environments. **Hermetic E2E** is the quality gate. See `AGENTS.md` §9.
+> Local phase: no deployed environments, so **hermetic E2E** is the quality gate — and CI runs every tier on each
+> pull request. **No test, not done; a fix starts with a failing test.** See `AGENTS.md` §9.
 
 ## §1 Pyramid
 - **unit**: pure logic, mappers, self-validating records. No external dependency. 1 test file per type (`[ERR-103]`).
