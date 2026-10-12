@@ -5,14 +5,14 @@ Native 0.79, React Navigation, cloned in the workspace at `orazaka-apps/ui/oraza
 **edge** (`:8088`) with `Authorization: Bearer` — the same services, the same interceptor pipeline and the same
 entitlements as the web client.
 
-What this page describes was **run on 2026-10-12** on the iOS 27 simulator (iPhone 17, Xcode 27) against the local
-Orazaka stack, signed in as the demo persona (Eric, `orazaka demo seed`). Where a screen shows something that does not
+What this page describes was **run on 2026-10-12** on the iOS 27 simulator (iPhone 17, Xcode 27) and the Android 16
+emulator (Pixel 8 image) against the local Orazaka stack, signed in as the demo persona (Eric, `orazaka demo seed`). Where a screen shows something that does not
 come from the server, it says so.
 
 | Platform | State |
 | :--- | :--- |
 | iOS simulator (iOS 27) | ✅ builds and runs against the local stack — sign-in, Studios, chat, jobs, connectors, profile |
-| Android | ⚠️ not run on an emulator yet |
+| Android emulator (Android 16) | ✅ development build runs against the local stack — sign-in, Studios, jobs, profile |
 | iPhone / store builds | ❌ no EAS project, no signing — the app runs from a development build only |
 | Expo SDK | ⚠️ 53 — the move to SDK 57 (the other Krizaka apps) is planned; two stopgaps below keep 53 building and launching on Xcode 27 / iOS 27 |
 
@@ -70,6 +70,11 @@ its status and its age.
 
 ![Système — fixed values, not a measure](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/07-system.7958874204.webp)
 
+On Android (development build, Android 16 emulator):
+
+![The Studios on Android](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/android-studios.f4731b5d1d.webp)
+![Jobs on Android](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/android-jobs.958e8b8d92.webp)
+
 A short recording of the smoke run (sign in → a Studio → jobs → profile → sign out):
 [ios-smoke.mp4](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/ios-smoke.bb7004733c.mp4).
 
@@ -92,7 +97,8 @@ npx expo run:ios                       # prebuild, pods, build, install, Metro
 ```
 
 The iOS simulator shares the Mac's network, so the default edge address (`http://localhost:8088`) works. On a phone or
-the Android emulator, set `EXPO_PUBLIC_EDGE_URL` (e.g. `http://10.0.2.2:8088` for the emulator).
+the Android emulator, set `EXPO_PUBLIC_EDGE_URL` (`http://10.0.2.2:8088` for the emulator, then
+`npx expo run:android`; a development build allows plain HTTP).
 
 Two stopgaps keep SDK 53 working with today's tools, both to delete with the move to SDK 57:
 
@@ -125,7 +131,7 @@ maestro test .maestro/smoke.yaml -e ORAZAKA_EMAIL=eric.morel@example.com -e ORAZ
 ## 4. What is missing
 
 - **Expo SDK 57** — and with it the end of the two stopgaps above.
-- **Android**: run on an emulator and on a phone.
+- **Android**: a run on a phone.
 - **Builds for a phone**: an EAS project, signing, TestFlight / an APK.
 - **Words**: the screens mix English and French written in the code; the app has no message catalogue yet.
 - **Système, Gouvernance, Abonnement**: read from the server instead of values written in the app.
