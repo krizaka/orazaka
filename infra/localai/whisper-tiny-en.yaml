@@ -1,0 +1,4 @@
+name: whisper-tiny-en
+backend: whisper
+parameters:
+  model: ggml-tiny.en.bin

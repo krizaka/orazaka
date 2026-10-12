@@ -81,6 +81,7 @@ Declares a scope guard (refused domain), versioned consent before install, a fix
 | **Guided Journaling** (`guided-journaling`) | Your words, put in order — in your own voice. Write what you want to set down, as it comes: the Studio tidies it into a clean entry, in the first person, without adding advice or interpretation. | `entry` | 1 (CAPABILITY) | 40 |
 | **Session Preparation** (`session-preparation`) | Your notes since the last session become the points to raise. Paste what you noted, in any order: the Studio turns it into the list of points to bring to your next session, without interpreting anything. | `notes` | 1 (CAPABILITY) | 40 |
 | **Mood Tracking** (`mood-tracking`) | What your daily notes show, described — never concluded. One line a day is enough: the Studio describes what the entries show over time, and draws no conclusion from them. | `entries` | 1 (CAPABILITY) | 40 |
+| **Session Summary** (`session-summary`) | What you keep of a conversation — themes, what helped, one small step. Hand over the turns of a conversation: the Studio returns what you keep of it — up to three themes, what helped, one small step, and what to bring to your therapist — described in your words, never explained. | `turns`, `thread`, `moodBefore`, `moodAfter`, `locale` | 1 (CAPABILITY) | 40 |
 
 ### Document Verification
 
@@ -119,7 +120,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | `outbound-prospection` | 1.1.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
 | `realestate-studio` | 1.0.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
 | `trade-showcase` | 1.0.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |
-| `bien-etre` | 1.0.0 | DATA | CLOUD | REGULATED | yes | `guided-journaling`, `session-preparation`, `mood-tracking` | — |
+| `bien-etre` | 1.0.0 | DATA | CLOUD | REGULATED | yes | `guided-journaling`, `session-preparation`, `mood-tracking`, `session-summary` | — |
 
 ## From the terminal
 

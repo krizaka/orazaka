@@ -753,6 +753,7 @@
           "PlatformMcpServerPersistenceProvider",
           "PlatformToolConfigPersistenceProvider",
           "RuntimeConfigProvider",
+          "SpeechVoiceManager",
           "UserMcpServerPersistenceProvider",
           "ValidationPipelineManager"
         ],
@@ -1088,6 +1089,10 @@
     {
       "from": "orazaka-conversation-service",
       "to": "orazaka-persistence-bridge"
+    },
+    {
+      "from": "orazaka-conversation-service",
+      "to": "orazaka-studio-client"
     },
     {
       "from": "orazaka-conversation-service",
@@ -3592,6 +3597,58 @@
               "label": "Suivi d'humeur",
               "tagline": "Ce que montrent vos relevés, décrit — jamais conclu.",
               "description": "Une ligne par jour suffit : le Studio décrit ce que les relevés montrent dans le temps, et n'en tire aucune conclusion."
+            }
+          }
+        },
+        {
+          "key": "session-summary",
+          "profession": "general",
+          "iconKey": "notebook",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "turns",
+              "title": "Le moment"
+            },
+            {
+              "key": "thread",
+              "title": "Le fil"
+            },
+            {
+              "key": "moodBefore",
+              "title": "Humeur avant (auto-déclarée)"
+            },
+            {
+              "key": "moodAfter",
+              "title": "Humeur après (auto-déclarée)"
+            },
+            {
+              "key": "locale",
+              "title": "Langue du résumé"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "summary",
+              "type": "JSON"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Session Summary",
+              "tagline": "What you keep of a conversation — themes, what helped, one small step.",
+              "description": "Hand over the turns of a conversation: the Studio returns what you keep of it — up to three themes, what helped, one small step, and what to bring to your therapist — described in your words, never explained."
+            },
+            "fr": {
+              "label": "Résumé de séance",
+              "tagline": "Ce que vous gardez d'un échange — thèmes, ce qui a aidé, un petit pas.",
+              "description": "Confiez les tours d'un échange : le Studio en rend ce que vous gardez — au plus trois thèmes, ce qui a aidé, un petit pas, et ce que vous voulez apporter à votre thérapeute — décrit avec vos mots, jamais expliqué."
             }
           }
         }

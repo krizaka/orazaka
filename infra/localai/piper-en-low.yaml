@@ -1,0 +1,5 @@
+name: piper-en-low
+backend: piper
+parameters:
+  model: en/en_US/lessac/low/en_US-lessac-low.onnx
+
