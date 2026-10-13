@@ -33,6 +33,7 @@ the machine holds for clinical, legal or security work, and keep a professional 
 | `dolphin-llama3:8b` | Dolphin Llama 3 8B — unfiltered | chat | Dolphin 2.9 on Llama 3 8B (Meta Llama 3 Community Licence) — fine-tuned without a refusal layer. Frank, compliant answers; the operator's packs set the rules. |
 | `huihui_ai/qwen2.5-abliterate:7b` | Qwen 2.5 7B — unfiltered | chat | Qwen 2.5 7B Instruct with the refusal direction removed (abliterated), Apache-2.0. Answers legitimate professional questions — security, medicine, law, fiction — without a vendor's refusals; your packs set the rules. French and English. |
 | `mdq100/Gemma3-Instruct-Abliterated:27b` | Gemma 3 27B — unfiltered | chat | Gemma 3 27B Instruct with the refusal direction removed (abliterated), Gemma Terms of Use. The most accurate unfiltered model of the catalogue — the one behind the krizaka.com demos. ~17 GB: a 32 GB+ machine. |
+| `qwen2.5:7b` | Qwen 2.5 7B Instruct | chat | Qwen 2.5 7B Instruct (Apache-2.0) — fluent French and English, the model the voice turn is measured with: first spoken sentence in about two seconds on an M1 Max. |
 | `tinyllama:latest` | TinyLlama (latest) | chat | TinyLlama — tiny, fast chat model for local testing. Limited reasoning. |
 | `codellama:7b` | CodeLlama 7B | code | Code Llama 7B — code generation and explanation (q4_K_M). |
 | `qwen2.5-coder:7b` | Qwen 2.5 Coder 7B | code | Qwen 2.5 Coder 7B — code generation and completion (q4_K_M). Local code default. |
@@ -43,6 +44,8 @@ the machine holds for clinical, legal or security work, and keep a professional 
 | `piper-en-low` | Piper Low (en) | speech | Fast, lightweight English neural TTS (Piper). Low fidelity, minimal memory — quick local voice checks. |
 | `piper-en-medium-ryan` | Piper Ryan (en) | speech | Balanced English neural TTS (Piper, Ryan voice). Natural prosody at modest CPU cost. Local speech default. |
 | `piper-fr-medium` | Piper Medium (fr) | speech | French neural TTS (Piper). Natural French speech, medium quality, CPU-friendly. |
+| `piper-fr-siwis-medium` | Piper Siwis (fr-FR, féminine) | speech | French neural TTS (Piper, Siwis voice, female, CC-BY 4.0). Clear, natural French — the fr-FR voice of the voice turn. |
+| `piper-fr-tom-medium` | Piper Tom (fr-FR, masculine) | speech | French neural TTS (Piper, Tom voice, male, AGPL-3.0 weights). 44.1 kHz, warm timbre — the second fr-FR voice of the voice turn. |
 | `tts-1` | OpenAI TTS-1 | speech | OpenAI-compatible TTS with six selectable voices (Alloy, Echo, Fable, Onyx, Nova, Shimmer), served locally via LocalAI. |
 | `amber` | Amber Accent | theme |  |
 | `emerald` | Emerald Accent | theme |  |
