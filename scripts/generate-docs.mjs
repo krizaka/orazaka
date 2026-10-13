@@ -1259,12 +1259,23 @@ function extractGovernance() {
 
 /** AI model catalog from the infra/initdb seed. */
 function extractModels() {
-  const sql = readInitDb();
-  const block = sql.match(/INSERT INTO orazaka_models[^;]*;/s)?.[0] ?? "";
-  return [...block.matchAll(/\(\s*'([^']*)',\s*'([^']*)',\s*'([^']*)'/g)]
-    .map((m) => ({ name: m[1], label: m[2], category: m[3] }))
-    .filter((m) => m.name && !/^https?:/.test(m.name))
-    .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+  // Line comments dropped first: a comment inside a VALUES list holds apostrophes and semicolons, and
+  // the block below ended at the first of them — the catalogue lost every row after it.
+  const sql = readInitDb().replace(/--[^\n]*/g, "");
+  // Every INSERT block, not the first: the seed adds models in several statements (speech/image/…,
+  // chat, the unfiltered chat models), and reading one block published a third of the catalogue.
+  const rows = new Map();
+  for (const [block] of sql.matchAll(/INSERT INTO orazaka_models[^;]*;/gs)) {
+    for (const m of block.matchAll(/\(\s*'([^']*)',\s*'([^']*)',\s*'([^']*)'/g)) {
+      if (m[1] && !/^https?:/.test(m[1]) && !rows.has(m[1])) rows.set(m[1], { name: m[1], label: m[2], category: m[3], description: "" });
+    }
+  }
+  // Descriptions are seeded as UPDATEs, one line per model (30-jobs-config.sql).
+  for (const m of sql.matchAll(/UPDATE orazaka_models SET description = '((?:[^']|'')*)' WHERE model_name = '([^']*)';/g)) {
+    const row = rows.get(m[2]);
+    if (row) row.description = m[1].replace(/''/g, "'");
+  }
+  return [...rows.values()].sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 }
 
 /** ADR ledger: dedup ADR-NNN citations across code + the adr/ source files. */
@@ -1580,8 +1591,27 @@ const mdGovernance = (rows) => {
 
 const mdModels = (rows) => {
   const lines = [frontmatter("AI Model Catalog", "Models seeded in infra/initdb.", "Models", 8)];
-  lines.push("| Model | Label | Category |", "|:---|:---|:---|");
-  for (const m of rows) lines.push(`| \`${m.name}\` | ${m.label} | ${m.category} |`);
+  lines.push(
+    "## Unfiltered models, your rules",
+    "",
+    "The catalogue carries open-weight chat models without a vendor's refusal layer — fine-tuned without refusals or",
+    "abliterated (the refusal direction removed from the weights). They answer legitimate professional work plainly: a",
+    "security team reading a malicious command, a nurse asking for a dose limit, a reporter on a fraud scheme, a novelist",
+    "writing a dark scene. None of them is a default; the operator chooses to serve one.",
+    "",
+    "They are not the policy. The policy is the operator's: a pack declares the domain it refuses (`scopeGuard`) and the",
+    "crisis text it answers (`safety`); the engine enforces both first in the pipeline, before any model runs and even when",
+    "the AI kill-switch is pulled, and every turn is accounted for. \"Uncensored\" means not over-refusing legitimate work —",
+    "it never covers content sexualising minors, explicit sexual content, real persons, weapons or bio-chemical procedures,",
+    "working malware, or anything that enables serious harm. Unfiltered is not infallible either: serve the largest model",
+    "the machine holds for clinical, legal or security work, and keep a professional in the loop.",
+    "",
+    "## Catalogue",
+    "",
+    "| Model | Label | Category | Description |",
+    "|:---|:---|:---|:---|",
+  );
+  for (const m of rows) lines.push(`| \`${m.name}\` | ${m.label} | ${m.category} | ${m.description.replace(/\\/g, "\\\\").replace(/\|/g, "\\|")} |`);
   return lines.join("\n") + "\n";
 };
 

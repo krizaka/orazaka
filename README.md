@@ -32,6 +32,15 @@ A multimodal AI orchestration engine — chat, RAG, agents, image, audio, video 
 deterministic interceptor pipeline to the best **local** model. Your documents, your models, your network: nothing
 leaves it. Law 25 and GDPR by design.
 
+**Unfiltered models, your rules.** Hosted assistants apply their vendor's refusal policy to every answer. Orazaka
+serves open-weight models without that layer — Qwen 2.5, Dolphin Llama 3 and Gemma 3, abliterated or fine-tuned
+without refusals ([`infra/migrations/2026-10-11-uncensored-models.sql`](infra/migrations/2026-10-11-uncensored-models.sql))
+— so a security team, a clinician, a reporter or a novelist gets a straight answer, on your own machines. The policy
+is the operator's: a pack declares what it refuses (`scopeGuard`) and the crisis text it answers (`safety`), the engine
+enforces both before any model runs, and every turn is accounted for. "Uncensored" means not over-refusing legitimate
+work; it never covers content sexualising minors, explicit sexual content, real persons, weapons or bio-chemical
+procedures, working malware, or anything that enables serious harm. [See the answers](https://www.krizaka.com/en/products/orazaka/demos#unfiltered).
+
 This repository is the entry point of the Orazaka platform. It holds the governance contract
 ([AGENTS.md](AGENTS.md)), the workspace manifest ([`orazaka.workspace.json`](orazaka.workspace.json)),
 the local infrastructure (`infra/`), the hermetic end-to-end suite (`orazaka-end2end/`) and the
