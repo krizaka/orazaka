@@ -255,8 +255,14 @@ All clients live under `orazaka-apps/ui/` — one repository each, linked by the
 
 ---
 
-## 9. Testing (local)
+## 9. Testing
 
+- **No test, not done.** Every feature and every fix ships with its tests in the same pull request, in every
+  repository of the workspace: a unit test for logic, a Testcontainers integration test for an adapter or an endpoint,
+  a hermetic E2E journey for a flow, a render test for a UI component (web: Jest + Testing Library, mobile: `jest-expo`).
+- **A fix starts with a failing test** that reproduces the bug; the fix turns it green and the test stays as the guard.
+- **CI runs them on every pull request** (each repository's `component.yml` job, the workspace's full reactor) and must
+  be green before merge. A test is never skipped, `@Disabled`, weakened or deleted to get there.
 - **Pyramid**: unit (per module) → integration (**Testcontainers**, `AbstractContainerIntegrationTest`, singleton per JVM, ports via `@DynamicPropertySource`) → **hermetic E2E** (`orazaka-end2end`).
 - **ArchUnit**: `GovernanceTest` validates the ring rules on **every build**. Pre-commit: `./mvnw test -pl orazaka-libs/orazaka-ai-engine/orazaka-core -Dtest=GovernanceTest`.
 - In the local phase, **hermetic E2E is the quality gate** (no staging/prod). `orazaka test e2e`.
