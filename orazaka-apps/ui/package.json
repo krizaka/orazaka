@@ -24,6 +24,10 @@
     "validate:admin": "npm run validate --workspace=orazaka-web-admin",
     "validate": "npm run validate:cli && npm run validate:ds && npm run validate:web && npm run validate:mobile"
   },
+  "devDependencies": {
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
   "overrides": {
     "react": "19.2.4",
     "react-dom": "19.2.4",
