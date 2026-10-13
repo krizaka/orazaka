@@ -28,15 +28,20 @@ secure storage only (`expo-secure-store`); the navigator shows the app stack onl
 
 ![Sign in](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/01-sign-in.f80eff4a35.webp)
 
+[![Eric signs in and lands on the Studios (12 s)](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/clip-sign-in-poster.1a2b0990e4.webp)](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/clip-sign-in.7e146c1fcc.mp4)
+
 ### Studios
 
 The Studio catalogue (`GET /api/v1/studios`) — locked Studios listed, not hidden, exactly as on the web — then a
 Studio's page (`GET /api/v1/studios/<key>`: price per run, install) and its run screen (the Studio's input form, the
-run started and polled: `/api/v1/studios/installations/<id>/runs`, `/api/v1/studios/runs/<id>`). This run opened the
-catalogue and a Studio's page; it did not start a Studio run.
+run started and polled: `/api/v1/studios/installations/<id>/runs`, `/api/v1/studios/runs/<id>`). The run screen shows
+each step's status while it works, then the outputs. Today the outputs are the model's text as it comes: Markdown is
+not rendered (`**Nom:**` shows as is) and a step's metadata (`provider`, `durationMs`) is printed with its content.
 
 ![The Studio catalogue](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/02-studios.c219e3160e.webp)
 ![A Studio's page](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/03-studio-detail.d43b3a0d83.webp)
+
+[![Eric runs “Qualification de Prospects” from the phone: the form, the steps running, the results (typing and the model’s wait cut, 28 s)](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/clip-studio-run-poster.0b7a5a32f8.webp)](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/clip-studio-run.032b3d4bc8.mp4)
 
 ### Chat
 
@@ -47,12 +52,16 @@ conversation.
 
 ![A streamed answer, on the local stack](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/09-chat-answer.0bb9fc7895.webp)
 
+[![Eric asks for a note and the answer streams in, from a model on the local stack (24 s)](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/clip-ask-poster.6941d8745f.webp)](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/clip-ask.3ac10ddbf6.mp4)
+
 ### Jobs
 
 The account's jobs (`GET /api/v1/jobs`): jobs per day and by kind (charts from `@krizaka/charts`), then each job with
 its status and its age.
 
 ![Jobs](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/05-jobs.1901326573.webp)
+
+[![Eric's jobs: per day, by kind, then each one (6 s)](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/clip-jobs-poster.232aa9995c.webp)](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/clip-jobs.fda5e4931d.mp4)
 
 ### Connectors and profile
 
