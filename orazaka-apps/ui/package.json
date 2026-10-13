@@ -25,12 +25,12 @@
     "validate": "npm run validate:cli && npm run validate:ds && npm run validate:web && npm run validate:mobile"
   },
   "devDependencies": {
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "overrides": {
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "jest-mock": "^30.4.1",
     "jest-environment-node": "^30.4.1",
     "orazaka-mobile-client": {
