@@ -63,7 +63,7 @@ services:
 
   # ── Redis (cache / read projections / rate-limit counters) ──────────────────
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     container_name: orazaka-redis
     restart: always
     # Loopback-only publish for host-run E2E tests (E2eRedisClient → localhost:6379).
@@ -128,7 +128,7 @@ services:
   # default localhost:1025). Locally every message lands here instead of a real
   # inbox: verification and password-reset links are read at http://localhost:8025.
   mailpit:
-    image: axllent/mailpit:v1.21
+    image: axllent/mailpit:v1.30
     container_name: orazaka-mailpit
     restart: always
     ports:
@@ -159,7 +159,7 @@ services:
   # in for real needs a partman-capable pinned image here; until then these services
   # exist only to prove the seam is wired and stays inert.
   lago-db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: orazaka-lago-db
     profiles: [billing]
     restart: always
@@ -180,7 +180,7 @@ services:
       - orazaka-isolated
 
   lago-redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     container_name: orazaka-lago-redis
     profiles: [billing]
     restart: always
@@ -195,7 +195,7 @@ services:
       - orazaka-isolated
 
   lago-api:
-    image: getlago/api:v1.45.1
+    image: getlago/api:v1.55.0
     container_name: orazaka-lago-api
     profiles: [billing]
     restart: always
@@ -221,7 +221,7 @@ services:
       - orazaka-isolated
 
   lago-worker:
-    image: getlago/api:v1.45.1
+    image: getlago/api:v1.55.0
     container_name: orazaka-lago-worker
     profiles: [billing]
     restart: always
@@ -234,7 +234,7 @@ services:
       - orazaka-isolated
 
   lago-front:
-    image: getlago/front:v1.45.1
+    image: getlago/front:v1.55.0
     container_name: orazaka-lago-front
     profiles: [billing]
     restart: always
