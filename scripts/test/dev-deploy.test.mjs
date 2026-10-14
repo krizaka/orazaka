@@ -42,6 +42,8 @@ test("orazaka-dev: only the edge, the web and the GPU relay are routed; the brok
 
 test("broker cloud-init: TLS only, bound to the private address, secrets as placeholders", () => {
   const text = readFileSync(new URL("../../infra/deploy/broker/cloud-init.yaml", import.meta.url), "utf8");
+  // cloud-init drops the whole file on a non-ASCII byte ("unacceptable character #x0080").
+  assert.match(text, /^[\x00-\x7f]*$/);
   assert.match(text, /listeners\.tcp = none/);
   assert.match(text, /listeners\.ssl\.default = 5671/);
   assert.match(text, /-p \$\{PRIVATE_IP\}:5671:5671/);
