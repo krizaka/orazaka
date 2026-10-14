@@ -37,7 +37,7 @@ Pack `realestate-studio` 1.0.0 · tier DATA · OSS · regulatory class STANDARD.
 
 **Generate, listen, describe — without leaving a run.**
 
-Pack `orazaka-media` 1.1.0 · tier DATA · kind TOOLKIT · OSS · regulatory class STANDARD.
+Pack `orazaka-media` 1.2.0 · tier DATA · kind TOOLKIT · OSS · regulatory class STANDARD.
 
 | Studio | What it does | Asks for | Steps | Credits held |
 |:---|:---|:---|:---|:---|
@@ -46,7 +46,7 @@ Pack `orazaka-media` 1.1.0 · tier DATA · kind TOOLKIT · OSS · regulatory cla
 | **Tilt-shift miniature** (`art-miniature`) | Your scene as a handcrafted diorama, shot in macro. A 1:24 diorama of figurines and props in felt, embroidered thread and painted resin, a razor-thin plane of focus and soft window light. Describe the scene; it becomes a miniature. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
 | **Artisanal still life** (`art-still-life`) | Objects and produce in single-window light. Chiaroscuro on a weathered table: hand-thrown ceramics, hammered copper, linen and fresh produce, a muted earthy palette. Name the objects; they are arranged and lit. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
 | **Montreal neon night** (`art-montreal-night`) | Wet streets, brick and spiral staircases under magenta and teal. Montreal after rain: cobblestones mirroring window light and neon, light mist, a 35 mm lens wide open, cinematic grading. Describe the place and the moment. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
-| **Video generation** (`video-generation`) | A few seconds of footage, described then rendered. | `prompt`, `durationSeconds`, `image`, `model` | 1 (CAPABILITY) | 3600 |
+| **Video generation** (`video-generation`) | A vertical short (9:16) or a wide shot, described then rendered. | `prompt`, `durationSeconds`, `aspect`, `image`, `model`, `seed` | 1 (CAPABILITY) | 3600 |
 | **Speech synthesis** (`speech-synthesis`) | Your text, read aloud. | `text`, `voice`, `model` | 1 (CAPABILITY) | 40 |
 | **Image analysis** (`image-analysis`) | What an image shows, in words. | `assetId`, `prompt`, `model` | 1 (CAPABILITY) | 30 |
 | **Audio transcription** (`audio-analysis`) | What was said, written down. | `assetId`, `model` | 1 (CAPABILITY) | 60 |
@@ -116,7 +116,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | `document-validation` | 1.0.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
 | `echo-toolkit` | 1.0.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
-| `orazaka-media` | 1.1.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
+| `orazaka-media` | 1.2.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.1.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
 | `realestate-studio` | 1.0.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
 | `trade-showcase` | 1.0.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |

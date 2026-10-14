@@ -2700,7 +2700,7 @@
     {
       "key": "orazaka-media",
       "dir": "orazaka-media",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tier": "DATA",
       "kind": "TOOLKIT",
       "distribution": "OSS",
@@ -3046,12 +3046,20 @@
               "title": "Durée (secondes)"
             },
             {
+              "key": "aspect",
+              "title": "Format"
+            },
+            {
               "key": "image",
               "title": "Image d'amorce (facultatif)"
             },
             {
               "key": "model",
               "title": "Modèle (facultatif)"
+            },
+            {
+              "key": "seed",
+              "title": "Graine (facultatif)"
             }
           ],
           "outputs": [
@@ -3063,12 +3071,12 @@
           "text": {
             "en": {
               "label": "Video generation",
-              "tagline": "A few seconds of footage, described then rendered.",
+              "tagline": "A vertical short (9:16) or a wide shot, described then rendered.",
               "description": null
             },
             "fr": {
               "label": "Génération vidéo",
-              "tagline": "Un plan de quelques secondes, décrit puis rendu.",
+              "tagline": "Un short vertical (9:16) ou un plan large, décrit puis rendu.",
               "description": null
             }
           }
