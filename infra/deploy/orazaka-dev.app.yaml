@@ -9,6 +9,9 @@ domains:
     type: PRIMARY
 features:
   - buildpack-stack=ubuntu-22
+# The tor1 VPC: core reaches the broker Droplet (broker-dev.orazaka.com → its private IP) over it.
+vpc:
+  id: 60296b32-efad-49be-bb41-321b1b6cc328
 ingress:
   rules:
     # The edge, public for the admin console and the mobile client: /edge/api/v1/... → edge /api/v1/...
@@ -73,10 +76,16 @@ services:
       - { key: STUDIO_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/orazaka_studio_db?sslmode=require" }
       - { key: STUDIO_DB_USER, scope: RUN_TIME, value: orazaka_studio_db }
       - { key: STUDIO_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_STUDIO_DB__" }
-      # Broker: the internal rabbitmq service below.
-      - { key: RABBITMQ_HOST, scope: RUN_TIME, value: rabbitmq }
+      # Broker: RabbitMQ on the orazaka-broker-dev Droplet, TLS only, VPC only (`dev-deploy.mjs broker`).
+      # The GPU workers reach the same broker over the VPC with their own, narrower user.
+      - { key: RABBITMQ_HOST, scope: RUN_TIME, value: broker-dev.orazaka.com }
+      - { key: RABBITMQ_PORT, scope: RUN_TIME, value: "5671" }
       - { key: RABBITMQ_USER, scope: RUN_TIME, value: orazaka }
       - { key: RABBITMQ_PASS, scope: RUN_TIME, type: SECRET, value: "__RABBITMQ_PASS__" }
+      - { key: RABBITMQ_CA_CERT_BASE64, scope: RUN_TIME, value: "__RABBITMQ_CA_CERT_BASE64__" }
+      - { key: SPRING_RABBITMQ_SSL_ENABLED, scope: RUN_TIME, value: "true" }
+      - { key: SPRING_RABBITMQ_SSL_BUNDLE, scope: RUN_TIME, value: broker }
+      - { key: SPRING_SSL_BUNDLE_PEM_BROKER_TRUSTSTORE_CERTIFICATE, scope: RUN_TIME, value: "file:/app/var/broker-ca.pem" }
       # Identity: one HS256 secret every service validates with; users' column encryption.
       - { key: IDENTITY_JWT_SECRET, scope: RUN_TIME, type: SECRET, value: "__IDENTITY_JWT_SECRET__" }
       - { key: CRYPTO_KEY, scope: RUN_TIME, type: SECRET, value: "__CRYPTO_KEY__" }
@@ -100,17 +109,3 @@ services:
       - { key: MANAGEMENT_TRACING_SAMPLING_PROBABILITY, scope: RUN_TIME, value: "0" }
       - { key: TRACING_SAMPLING_PROBABILITY, scope: RUN_TIME, value: "0" }
       - { key: LOGGING_LEVEL_ORAZAKA, scope: RUN_TIME, value: INFO }
-
-  # RabbitMQ, internal only, no volume: queues are rebuilt on restart (dev).
-  - name: rabbitmq
-    image:
-      registry_type: DOCKER_HUB
-      registry: library
-      repository: rabbitmq
-      tag: 4.2-alpine
-    internal_ports: [5672]
-    instance_count: 1
-    instance_size_slug: apps-s-1vcpu-0.5gb
-    envs:
-      - { key: RABBITMQ_DEFAULT_USER, scope: RUN_TIME, value: orazaka }
-      - { key: RABBITMQ_DEFAULT_PASS, scope: RUN_TIME, type: SECRET, value: "__RABBITMQ_PASS__" }

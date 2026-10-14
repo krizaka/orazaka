@@ -31,11 +31,23 @@ for (const name of ["orazaka-dev", "orazaka-admin-dev"]) {
   });
 }
 
-test("orazaka-dev: only the edge and the web are routed; the broker stays internal", () => {
+test("orazaka-dev: only the edge and the web are routed; the broker is reached over TLS in the VPC", () => {
   const text = spec("orazaka-dev");
   const routed = [...text.matchAll(/- component:\n\s+name: (\S+)/g)].map((m) => m[1]);
   assert.deepEqual(routed.sort(), ["core", "web"]);
-  assert.match(text, /name: rabbitmq[\s\S]*internal_ports: \[5672\]/);
+  assert.match(text, /^vpc:\n  id: \S+/m);
+  assert.match(text, /RABBITMQ_PORT, scope: RUN_TIME, value: "5671"/);
+  assert.match(text, /SPRING_RABBITMQ_SSL_ENABLED, scope: RUN_TIME, value: "true"/);
+});
+
+test("broker cloud-init: TLS only, bound to the private address, secrets as placeholders", () => {
+  const text = readFileSync(new URL("../../infra/deploy/broker/cloud-init.yaml", import.meta.url), "utf8");
+  assert.match(text, /listeners\.tcp = none/);
+  assert.match(text, /listeners\.ssl\.default = 5671/);
+  assert.match(text, /-p \$\{PRIVATE_IP\}:5671:5671/);
+  for (const p of ["BROKER_DEFINITIONS_B64", "BROKER_CA_PEM_B64", "BROKER_SERVER_PEM_B64", "BROKER_SERVER_KEY_B64"]) {
+    assert.match(text, new RegExp(`__${p}__`));
+  }
 });
 
 test("password: long, mixed, different each time", () => {
@@ -53,4 +65,23 @@ test("seedSql gives the admin ROLE_ADMIN, the user only ROLE_USER, and quotes va
   assert.equal((sql.match(/'ROLE_ADMIN'/g) ?? []).length, 1);
   assert.match(sql, /'o''q'/);
   assert.match(sql, /ON CONFLICT \(username\) DO UPDATE/);
+});
+
+test("rabbitPasswordHash is RabbitMQ's salted SHA-256 (salt ‖ sha256(salt ‖ password))", async () => {
+  const { rabbitPasswordHash } = await import("../dev-deploy.mjs");
+  assert.equal(
+    rabbitPasswordHash("test12", Buffer.from([1, 2, 3, 4])),
+    "AQIDBAO9p3dPKhIHOt/iH3FWOTm8ShLDdng5mu4y0QLb6Cq5", // python: b64(salt + sha256(salt + pw)),
+  );
+});
+
+test("brokerDefinitions: the GPU worker is confined to orazaka.* names, no plaintext password", async () => {
+  const { brokerDefinitions } = await import("../dev-deploy.mjs");
+  const d = brokerDefinitions("core-secret", "gpu-secret");
+  assert.doesNotMatch(JSON.stringify(d), /core-secret|gpu-secret/);
+  const gpu = d.permissions.find((p) => p.user === "gpu-worker");
+  for (const k of ["configure", "write", "read"]) {
+    assert.match("orazaka.jobs.batch", new RegExp(gpu[k]));
+    assert.doesNotMatch("amq.rabbitmq.log", new RegExp(gpu[k]));
+  }
 });
