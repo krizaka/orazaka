@@ -1,53 +1,42 @@
-# The dev database (App Platform)
+# The dev database — one PostgreSQL cluster for every Krizaka dev app
 
-`orazaka-dev` (DigitalOcean App Platform, project `orazaka`) carries an **attached dev database** — `orazaka-db`,
-PostgreSQL 16, `production: false`, the smallest there is. No managed cluster, and no JVM service is deployed
-against it: it only holds the schema the services will use.
+`krizaka-dev-pg` (DigitalOcean managed PostgreSQL 16, `db-s-1vcpu-1gb`, one node, Toronto, project `krizaka`) is the
+**one** dev cluster (decision 2026-10-14): one database **and one role of the same name** per bounded context —
+Orazaka: `orazaka_db`, `krizaka_users_db`, `krizaka_billing_db`, `orazaka_studio_db`, `orazaka_knowledge_db`,
+`orazaka_automation_db`; Orochia: `orochia_db`, `orochia_admin_db`. It replaces the App Platform dev databases (which a
+laptop could not reach and which forbid `CREATE SCHEMA`). Never a second cluster, never production on it.
 
-## What a dev database allows (measured 2026-10-14)
+Access: **trusted sources** are the dev apps (`orochia-dev`, `orochia-admin-dev`, `orazaka-dev`) and the maintainer's
+IP, so `psql` and DBeaver work from there with `sslmode=require` (`verify-full` with the cluster CA). pgvector is
+available (`CREATE EXTENSION vector` in `orazaka_knowledge_db`, done).
 
-| Question | Answer |
-|---|---|
-| Reachable from a laptop (DBeaver, psql)? | **No.** The connection times out: its firewall admits the app's containers only, and it is not in `doctl databases list`, so the trusted sources cannot be edited. |
-| `CREATE SCHEMA` / `CREATE DATABASE` / `CREATE ROLE`? | **Denied** — one database, one user, objects in `public` only. |
-| pgvector? | Available (`vector` 0.8.6), `CREATE EXTENSION vector` works for the app user. |
-| Where do I get `DATABASE_URL`? | The `web` component binds `DATABASE_URL` and `DATABASE_CA_CERT` (`${orazaka-db.DATABASE_URL}`, `${orazaka-db.CA_CERT}`) — read them in `doctl apps console <app-id> web`, never print them. |
+## The schema: initdb, one file per context, its own database
 
-## The schema: initdb, mapped flat
+The services have **no Flyway** (`spring.flyway.enabled=false`): each context owns `infra/initdb/NN-*.sql`
+(AGENTS.md §5), applied in the order of `infra/docker-compose.yml` — the same layout as locally. `infra/migrations/`
+holds the incremental scripts for an *existing* database; a fresh one gets the same from the initdb files.
 
-The services have **no Flyway** (`spring.flyway.enabled=false`): each bounded context owns `infra/initdb/NN-*.sql`
-(AGENTS.md §5), run in order by `infra/docker-compose.yml` into **six databases with six roles**
-(`orazaka_db` for conversation/jobs/governance, plus `krizaka_users_db`, `orazaka_knowledge_db`,
-`orazaka_automation_db`, `krizaka_billing_db`, `orazaka_studio_db`). `infra/migrations/` holds the incremental
-scripts for an *existing* local database; a fresh database gets the same from the initdb files, so only those run.
+| Database | Files | Tables (2026-10-14) |
+|---|---|---|
+| `krizaka_users_db` | 10-identity | 11 |
+| `orazaka_db` | 20-conversation, 30-jobs-config, 60-governance | 21 |
+| `orazaka_knowledge_db` | 40-knowledge (+ `vector`) | 2 |
+| `orazaka_automation_db` | 50-automation | 3 |
+| `krizaka_billing_db` | 70-billing | 17 |
+| `orazaka_studio_db` | 80-studio | 15 |
 
-A dev database cannot host six databases, nor six schemas. `scripts/dev-db-migrate.sh` therefore applies the eight
-files **flat in `public`**: `CREATE ROLE`, `CREATE DATABASE`, `\c` and `SET ROLE` lines are dropped, everything else
-runs as written, in one transaction. Result: **65 tables** and the `vector` extension. Reference data is what the
-files themselves `INSERT` (plans, price book, models, capabilities, policies…); `00-reset.sql` and
-`90-dev-fixtures.sql` (demo users) are never run.
-
-**The compromise, to decide before `--apply`:** six contexts share one namespace. Only `processed_messages` exists in
-several (jobs, knowledge, automation, billing, studio — same shape, keyed by `consumer`): they merge into one table.
-That breaks the "one context, one database" boundary of the contract (SqlBoundaryRules) for this environment: every
-service would see every context's tables. Alternatives: a second dev
-database (another app), or a deployment where each context has its own database.
-
-## Run it
+`00-reset.sql` and `90-dev-fixtures.sql` (demo users) never run; the reference data is what the files `INSERT`.
 
 ```bash
-# dry run: the whole schema in a transaction that is rolled back, then the table count
-scripts/dev-db-migrate.sh --app 4f0f45c4-3e6f-4f75-9f47-2b4454ed4ab6
-
-# commit it (all or nothing; a database that already has the tables is refused)
-scripts/dev-db-migrate.sh --app 4f0f45c4-3e6f-4f75-9f47-2b4454ed4ab6 --apply
+export DATABASE_HOST=… DATABASE_CA_CERT_FILE=… DATABASE_PASSWORD_ORAZAKA_DB=… # one DATABASE_PASSWORD_<DB> each
+scripts/dev-db-migrate.sh            # dry run: every database in a rolled-back transaction, table counts
+scripts/dev-db-migrate.sh --apply    # commits (all or nothing per database; a database that has the tables is refused)
+scripts/dev-db-migrate.sh --apply --only orazaka_db
 ```
 
-`--app` runs `psql` inside the `web` container through `doctl apps console` (the only path to a dev database).
-Without `--app` the script uses `DATABASE_URL` (+ optional `DATABASE_CA_CERT_FILE`) from the environment — for any
-PostgreSQL you can reach, e.g. a scratch local PostgreSQL.
+Passwords live in the maintainer's `CREDENTIALS.local.md`, never in the repository.
 
 ## Looking at it from DBeaver
 
-Not possible directly (see above). Cheapest options, no cluster: run queries through `doctl apps console`, or restore
-a dump into the local Docker PostgreSQL (`orazaka start`) and browse that.
+New connection → PostgreSQL: host and port of the cluster (25060), the database and its role, SSL tab → *Use SSL*,
+mode `verify-full`, root certificate = the cluster CA. Your IP must be a trusted source.
