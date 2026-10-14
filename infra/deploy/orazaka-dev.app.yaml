@@ -94,7 +94,7 @@ services:
       - { key: USERS_RESERVED_PREFERENCE_PREFIXES, scope: RUN_TIME, value: "orazaka." }
       # No Ollama in dev (chat is on serverless inference): its catalogue answers empty.
       - { key: SPRING_AI_OLLAMA_BASE_URL, scope: RUN_TIME, value: "http://localhost:11434" }
-      # Image engine = the hourly GPU droplet (scripts/gpu-dev.sh); greyed out while it is off.
+      # Image engine = the hourly GPU droplet (ORA-GPU); greyed out while it is off.
       - { key: ORAZAKA_CORE_IMAGE_GENERATION_BASE_URL, scope: RUN_TIME, value: "http://gpu-dev.orazaka.com:8086/v1" }
       # No collector in dev: no trace export, logs on stdout.
       - { key: MANAGEMENT_TRACING_SAMPLING_PROBABILITY, scope: RUN_TIME, value: "0" }

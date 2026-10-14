@@ -21,7 +21,7 @@ VALUES ('mistral-3-14B', 'Mistral 3 14B', 'chat', NULL, 'do-inference', FALSE,
 ON CONFLICT (model_name) DO NOTHING;
 UPDATE orazaka_models SET is_default = (model_name = 'mistral-3-14B') WHERE category = 'chat';
 
--- The image engine is the hourly GPU droplet (scripts/gpu-dev.sh); while it is off the image
+-- The image engine is the hourly GPU droplet (ORA-GPU); while it is off the image
 -- capability is greyed out (degraded mode), nothing else changes.
 UPDATE ai_providers SET base_url = 'http://gpu-dev.orazaka.com:8086/v1' WHERE name = 'localai-image';
 

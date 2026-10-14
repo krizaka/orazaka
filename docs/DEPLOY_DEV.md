@@ -14,7 +14,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | `orazaka-admin-dev` | `web` | `krizaka/orazaka-web-admin`, `admin.orazaka.com`, BFF → `https://dev.orazaka.com/edge` | `apps-s-1vcpu-0.5gb` | 5 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
 | — | chat | DigitalOcean serverless inference, `mistral-3-14B`, per token | — | ≈ 0 at test volume |
-| — | images | `scripts/gpu-dev.sh` — only while started | `gpu-4000adax1-20gb` | 0.76 **per hour** |
+| — | images | an hourly GPU droplet (ORA-GPU), only while started | e.g. `gpu-4000adax1-20gb` | 0.76 **per hour** |
 
 **Total: $35/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens). Upgrading `core` to
 `basic-m` (4 GB, 2 vCPU, $40) is the first lever if it restarts under load: still $55.
@@ -72,17 +72,11 @@ Logs: `doctl apps logs <id> core --type run` (each line prefixed by its service:
 `mistral-3-14B`; `localai-image` at `http://gpu-dev.orazaka.com:8086/v1`. Change a model or a provider in the admin
 console or in that file — never in a service's configuration.
 
-## GPU (images) — billed by the hour, never left on
+## GPU (images)
 
-```bash
-scripts/gpu-dev.sh start    # RTX 4000 Ada droplet (≈ $0.76/hour), LocalAI (CUDA) on :8086, gpu-dev.orazaka.com → it
-scripts/gpu-dev.sh status   # running since when, cost so far
-scripts/gpu-dev.sh stop     # destroy — billing stops
-```
-
-While it is off, the image capability is greyed out (degraded mode, `InfrastructureProber`). The first start is
-Oussama's decision. The droplet serves `v1-5-pruned-emaonly` (Stable Diffusion 1.5, diffusers) under the name the
-catalogue already uses; `GPU_SIZE`, `GPU_REGION`, `GPU_IMAGE_MODEL_*` override the defaults.
+Image and video generation run on an hourly GPU droplet, owned by the ORA-GPU work (CUDA worker-media, start/stop
+script with an auto-destroy watchdog) — never left on. While none is running, the image capability is greyed out
+(degraded mode, `InfrastructureProber`); nothing else changes.
 
 ## What works in dev
 

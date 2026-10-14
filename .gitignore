@@ -132,9 +132,8 @@ ehthumbs.db
 .gemini/
 *.sh
 !ops/local/scripts/*.sh
-# The dev deployment's two shell exceptions to ERR-125 (cloud resources, not the local workspace).
+# The dev deployment's container entrypoint: an exception to ERR-125 (it runs in the cloud image).
 !infra/deploy/*.sh
-!scripts/gpu-dev.sh
 .idea
 .sonarlint
 
