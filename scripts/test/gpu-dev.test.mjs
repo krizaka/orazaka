@@ -73,6 +73,8 @@ test("the droplet opens no port but SSH from the caller, and reaches the platfor
   assert.doesNotMatch(host, /\s-p\s+\d+:\d+/, "no published port");
   assert.match(host, /iptables -I DOCKER-USER -d 169\.254\.169\.254 -j DROP/);
   assert.match(host, /client .*"\$RELAY_URL"[\s\S]*0\.0\.0\.0:5671:broker-dev\.orazaka\.com:5671 0\.0\.0\.0:8090:core:8090[\s\S]*R:0\.0\.0\.0:8086:sd-server:8086 R:0\.0\.0\.0:8188:worker:8188 R:0\.0\.0\.0:11434:ollama:11434/);
+  // A private registry never blocks a start: the image is built once per worker commit and kept on the volume.
+  assert.match(host, /docker pull -q "\$WORKER_IMAGE"[\s\S]*docker load -q -i[\s\S]*docker build -q -f "\$src\/Dockerfile\.cuda"[\s\S]*docker save/);
   // The watchdog is armed before anything that can fail.
   assert.ok(host.indexOf("orazaka-gpu-watchdog.timer") < host.indexOf("--name orazaka-fetch"));
 });

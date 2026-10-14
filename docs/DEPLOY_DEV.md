@@ -123,13 +123,15 @@ listens on `gpu-relay:8086/8188`, which is exactly what greys the image and vide
 leaves this machine — and expiring with the droplet), which seals it with the platform's key, adopts the job's row if a
 Studio step left none, and serves it at `/api/v1/assets/{id}/video.mp4`.
 
+**The image** is pulled from GHCR; while that package is private, the droplet builds it from the worker's public repository at its `main` commit (~20 min, once) and keeps it on the Volume (`/models/images`), so later starts load it in a minute. Making the package public (GitHub → Packages → orazaka-worker-media → visibility) removes the build.
+
 **Weights** live on the Volume `orazaka-gpu-models-<region>` (80 GB, created on the first start in a region): Wan 2.2
 5B 34 GB, Wan 2.1 1.3B 6 GB (its text encoder is the 5B's), FLUX.2 [klein] 8.7 GB. Fetched once, pinned (revisions,
 SHA-256), then every start finds them in place.
 
 **The watchdog** (`infra/gpu/watchdog.sh`, every minute, armed before anything else can fail) destroys the droplet
 through the API after **30 min without a job** (a job start or end, an image request, the GPU busy), after
-`GPU_MAX_HOURS` (8) whatever it does, or when setup has not finished after 60 min. It uses `GPU_WATCHDOG_DO_TOKEN`
+`GPU_MAX_HOURS` (8) whatever it does, or when setup has not finished after 90 min. It uses `GPU_WATCHDOG_DO_TOKEN`
 from the secrets file when present — a token scoped to `droplet:read` + `droplet:delete`, to create in the control
 panel — else the doctl token. Containers cannot read the droplet's metadata (and so its user-data).
 

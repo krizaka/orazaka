@@ -17,7 +17,7 @@ STATE=/var/lib/orazaka-gpu
 source "$CONF/host.env"
 IDLE_MINUTES="${IDLE_MINUTES:-30}"
 MAX_HOURS="${MAX_HOURS:-8}"
-SETUP_MAX_MINUTES="${SETUP_MAX_MINUTES:-60}"
+SETUP_MAX_MINUTES="${SETUP_MAX_MINUTES:-90}"
 ACTIVITY="$STATE/state/last-activity"
 
 log() { logger -t orazaka-gpu-watchdog "$*"; }
