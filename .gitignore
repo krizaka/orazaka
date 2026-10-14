@@ -132,6 +132,8 @@ ehthumbs.db
 .gemini/
 *.sh
 !ops/local/scripts/*.sh
+# The dev deployment's container entrypoint: an exception to ERR-125 (it runs in the cloud image).
+!infra/deploy/*.sh
 .idea
 .sonarlint
 
