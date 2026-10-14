@@ -13,7 +13,7 @@
  * filled from it and App Platform stores the SECRET ones encrypted.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -215,26 +215,21 @@ const BROKER = {
 };
 const BROKER_DIR = join(dirname(ENV_FILE), "orazaka-broker");
 
-/** RabbitMQ's rabbit_password_hashing_sha256: base64(salt ‖ sha256(salt ‖ password)), 4-byte salt. */
-export function rabbitPasswordHash(password, salt = randomBytes(4)) {
-  const digest = createHash("sha256").update(Buffer.concat([salt, Buffer.from(password, "utf8")])).digest();
-  return Buffer.concat([salt, digest]).toString("base64");
-}
-
 /** The platform user has everything on `/`; the GPU worker only touches `orazaka.*` names. */
-export function brokerDefinitions(corePassword, gpuPassword) {
-  const user = (name, pw) => ({
-    name,
-    password_hash: rabbitPasswordHash(pw),
-    hashing_algorithm: "rabbit_password_hashing_sha256",
-    tags: [],
-  });
-  const allow = (u, re) => ({ user: u, vhost: "/", configure: re, write: re, read: re });
-  return {
-    users: [user("orazaka", corePassword), user("gpu-worker", gpuPassword)],
-    vhosts: [{ name: "/" }],
-    permissions: [allow("orazaka", ".*"), allow("gpu-worker", "^orazaka\\..*")],
-  };
+export const BROKER_PERMISSIONS = { orazaka: ".*", "gpu-worker": "^orazaka\\..*" };
+
+/**
+ * The one-shot script cloud-init runs once RabbitMQ is up: users through rabbitmqctl (the broker
+ * hashes the passwords itself), permissions, no guest. Deleted (shred) after it ran.
+ */
+export function brokerUsersScript(passwords) {
+  const q = (v) => `'${String(v).replace(/'/g, "'\\''")}'`;
+  const lines = ["set -e", "docker exec rabbitmq rabbitmqctl delete_user guest || true"];
+  for (const [user, re] of Object.entries(BROKER_PERMISSIONS)) {
+    lines.push(`docker exec rabbitmq rabbitmqctl add_user ${q(user)} ${q(passwords[user])}`);
+    lines.push(`docker exec rabbitmq rabbitmqctl set_permissions -p / ${q(user)} ${q(re)} ${q(re)} ${q(re)}`);
+  }
+  return `${lines.join("\n")}\n`;
 }
 
 function ensureTls() {
@@ -271,7 +266,7 @@ function broker() {
   let droplet = json(["compute", "droplet", "list", "--tag-name", BROKER.tag])[0];
   if (!droplet) {
     const userData = render(readFileSync(join(DEPLOY, "broker/cloud-init.yaml"), "utf8"), {
-      BROKER_DEFINITIONS_B64: Buffer.from(JSON.stringify(brokerDefinitions(env.RABBITMQ_PASS, env.RABBITMQ_PASS_GPU))).toString("base64"),
+      BROKER_USERS_SCRIPT_B64: Buffer.from(brokerUsersScript({ orazaka: env.RABBITMQ_PASS, "gpu-worker": env.RABBITMQ_PASS_GPU })).toString("base64"),
       BROKER_CA_PEM_B64: b64("ca.pem"),
       BROKER_SERVER_PEM_B64: b64("server.pem"),
       BROKER_SERVER_KEY_B64: b64("server.key"),

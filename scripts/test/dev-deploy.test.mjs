@@ -45,7 +45,7 @@ test("broker cloud-init: TLS only, bound to the private address, secrets as plac
   assert.match(text, /listeners\.tcp = none/);
   assert.match(text, /listeners\.ssl\.default = 5671/);
   assert.match(text, /-p \$\{PRIVATE_IP\}:5671:5671/);
-  for (const p of ["BROKER_DEFINITIONS_B64", "BROKER_CA_PEM_B64", "BROKER_SERVER_PEM_B64", "BROKER_SERVER_KEY_B64"]) {
+  for (const p of ["BROKER_USERS_SCRIPT_B64", "BROKER_CA_PEM_B64", "BROKER_SERVER_PEM_B64", "BROKER_SERVER_KEY_B64"]) {
     assert.match(text, new RegExp(`__${p}__`));
   }
 });
@@ -67,21 +67,13 @@ test("seedSql gives the admin ROLE_ADMIN, the user only ROLE_USER, and quotes va
   assert.match(sql, /ON CONFLICT \(username\) DO UPDATE/);
 });
 
-test("rabbitPasswordHash is RabbitMQ's salted SHA-256 (salt ‖ sha256(salt ‖ password))", async () => {
-  const { rabbitPasswordHash } = await import("../dev-deploy.mjs");
-  assert.equal(
-    rabbitPasswordHash("test12", Buffer.from([1, 2, 3, 4])),
-    "AQIDBAO9p3dPKhIHOt/iH3FWOTm8ShLDdng5mu4y0QLb6Cq5", // python: b64(salt + sha256(salt + pw)),
-  );
-});
 
-test("brokerDefinitions: the GPU worker is confined to orazaka.* names, no plaintext password", async () => {
-  const { brokerDefinitions } = await import("../dev-deploy.mjs");
-  const d = brokerDefinitions("core-secret", "gpu-secret");
-  assert.doesNotMatch(JSON.stringify(d), /core-secret|gpu-secret/);
-  const gpu = d.permissions.find((p) => p.user === "gpu-worker");
-  for (const k of ["configure", "write", "read"]) {
-    assert.match("orazaka.jobs.batch", new RegExp(gpu[k]));
-    assert.doesNotMatch("amq.rabbitmq.log", new RegExp(gpu[k]));
-  }
+test("brokerUsersScript: two users, the GPU worker confined to orazaka.* names, guest removed, quoting safe", async () => {
+  const { brokerUsersScript, BROKER_PERMISSIONS } = await import("../dev-deploy.mjs");
+  const script = brokerUsersScript({ orazaka: "core'pw", "gpu-worker": "gpu-pw" });
+  assert.match(script, /delete_user guest/);
+  assert.match(script, /add_user 'orazaka' 'core'\\''pw'/);
+  assert.match(script, /set_permissions -p \/ 'gpu-worker' '\^orazaka\\\..\*'/);
+  const re = new RegExp(BROKER_PERMISSIONS["gpu-worker"]);
+  assert.ok(re.test("orazaka.jobs.batch") && !re.test("amq.rabbitmq.log"));
 });
