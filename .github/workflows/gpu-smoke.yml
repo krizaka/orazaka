@@ -1,0 +1,92 @@
+# The sovereign smoke (docs/DEPLOY_DEV.md § GPU): once a week, and by hand, start the `small` GPU, run Orazaka's own
+# engines through its routing on dev.orazaka.com (chat on Ollama, an image on sd-server, a 9:16 clip on the media
+# worker), keep the JSON report, and destroy the droplet whatever happens. Target: under $0.50 a run.
+#
+# It needs the dev environment's secrets, which only the maintainer adds (Settings → Secrets → Actions):
+#   DIGITALOCEAN_ACCESS_TOKEN  a token able to create/delete droplets and volumes (a scoped one is best)
+#   ORAZAKA_DEV_ENV            the content of ~/Documents/krizaka/orazaka-dev.env
+#   ORAZAKA_BROKER_CA_PEM      the dev broker's CA (~/Documents/krizaka/orazaka-broker/ca.pem)
+#   ORAZAKA_QA_EMAIL / ORAZAKA_QA_PASSWORD  the seeded test user of dev.orazaka.com
+# Without them the job says so and stops: nothing is started.
+name: GPU smoke (sovereign)
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"   # Monday 07:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gpu-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    env:
+      DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      ORAZAKA_QA_EMAIL: ${{ secrets.ORAZAKA_QA_EMAIL }}
+      ORAZAKA_QA_PASSWORD: ${{ secrets.ORAZAKA_QA_PASSWORD }}
+      ORAZAKA_DEV_ENV_FILE: ${{ runner.temp }}/secrets/orazaka-dev.env
+      GPU_LEDGER: ${{ runner.temp }}/secrets/orazaka-gpu-ledger.tsv
+      GPU_LOCAL_DIR: ${{ runner.temp }}/gpu-dev
+      GPU_SMOKE_OUT: ${{ runner.temp }}/smoke/last.json
+    steps:
+      - name: Configured?
+        id: configured
+        env:
+          DEV_ENV: ${{ secrets.ORAZAKA_DEV_ENV }}
+        run: |
+          if [ -z "$DIGITALOCEAN_ACCESS_TOKEN" ] || [ -z "$DEV_ENV" ] || [ -z "$ORAZAKA_QA_EMAIL" ]; then
+            echo "::notice::GPU smoke not configured (secrets missing) — nothing started."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.configured.outputs.ok == 'true'
+
+      - uses: digitalocean/action-doctl@v2
+        if: steps.configured.outputs.ok == 'true'
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Secrets into files (0600, never printed)
+        if: steps.configured.outputs.ok == 'true'
+        env:
+          DEV_ENV: ${{ secrets.ORAZAKA_DEV_ENV }}
+          BROKER_CA: ${{ secrets.ORAZAKA_BROKER_CA_PEM }}
+        run: |
+          umask 077
+          mkdir -p "$RUNNER_TEMP/secrets/orazaka-broker"
+          printf '%s\n' "$DEV_ENV" > "$ORAZAKA_DEV_ENV_FILE"
+          printf '%s\n' "$BROKER_CA" > "$RUNNER_TEMP/secrets/orazaka-broker/ca.pem"
+          grep -q '^GPU_WATCHDOG_DO_TOKEN=' "$ORAZAKA_DEV_ENV_FILE" || echo "GPU_WATCHDOG_DO_TOKEN=$DIGITALOCEAN_ACCESS_TOKEN" >> "$ORAZAKA_DEV_ENV_FILE"
+
+      - name: Smoke (start small → assert → destroy)
+        if: steps.configured.outputs.ok == 'true'
+        run: bash scripts/gpu-dev.sh smoke small
+
+      - name: Report
+        if: always() && steps.configured.outputs.ok == 'true'
+        run: |
+          [ -f "$GPU_SMOKE_OUT" ] && { echo '```json'; cat "$GPU_SMOKE_OUT"; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.configured.outputs.ok == 'true'
+        with:
+          name: gpu-smoke-report
+          path: ${{ runner.temp }}/smoke/last.json
+          if-no-files-found: ignore
+
+      - name: Never leave a GPU running (destroy any droplet of the tag, and this run's SSH key)
+        if: always() && steps.configured.outputs.ok == 'true'
+        run: |
+          ids=$(doctl compute droplet list --tag-name orazaka-gpu-dev --format ID --no-header | tr '\n' ' ')
+          [ -z "$ids" ] || doctl compute droplet delete $ids --force
+          fp=$(ssh-keygen -E md5 -lf "$GPU_LOCAL_DIR/id_ed25519.pub" 2>/dev/null | awk '{print $2}' | sed 's/^MD5://')
+          [ -z "$fp" ] || doctl compute ssh-key delete "$fp" --force || true
