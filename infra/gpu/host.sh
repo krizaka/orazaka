@@ -66,9 +66,31 @@ step "models volume mounted ($(df -h /models | awk 'NR==2 {print $3 " used of " 
 # --- 2. the metadata service is the host's, not the containers' -------------------------------------
 iptables -C DOCKER-USER -d 169.254.169.254 -j DROP 2>/dev/null || iptables -I DOCKER-USER -d 169.254.169.254 -j DROP
 
-# --- 3. Docker sees the GPU ------------------------------------------------------------------------
+# --- 3. the worker image, then Docker sees the GPU ------------------------------------------------
+# GHCR first (CI publishes it); while the package is not public, the image built from the worker's own
+# public repository at its main commit, kept on the volume so it is built once per commit, not per start.
+worker_image() {
+  if docker pull -q "$WORKER_IMAGE" >/dev/null 2>&1; then step "image pulled: $WORKER_IMAGE"; return; fi
+  local sha; sha=$(git ls-remote https://github.com/krizaka/orazaka-worker-media.git refs/heads/main | cut -c1-12)
+  local tar="/models/images/orazaka-worker-media-${sha}.tar"
+  mkdir -p /models/images
+  if [[ -f "$tar" ]]; then
+    docker load -q -i "$tar" >/dev/null && docker tag "orazaka-worker-media:${sha}" "$WORKER_IMAGE"
+    step "image loaded from the volume (worker-media ${sha})"; return
+  fi
+  step "building the worker image from krizaka/orazaka-worker-media@${sha} (once per commit, ~20 min)"
+  local src; src=$(mktemp -d)
+  git clone -q --depth 1 https://github.com/krizaka/orazaka-worker-media.git "$src"
+  DOCKER_BUILDKIT=1 docker build -q -f "$src/Dockerfile.cuda" -t "orazaka-worker-media:${sha}" "$src" >/dev/null
+  rm -rf "$src"
+  docker tag "orazaka-worker-media:${sha}" "$WORKER_IMAGE"
+  rm -f /models/images/orazaka-worker-media-*.tar
+  docker save -o "$tar.part" "orazaka-worker-media:${sha}" && mv "$tar.part" "$tar"
+  step "image built and kept on the volume ($(du -h "$tar" | cut -f1))"
+}
+worker_image
+
 if ! docker run --rm --gpus all "$WORKER_IMAGE" nvidia-smi -L 2>/dev/null; then
-  docker pull -q "$WORKER_IMAGE" >/dev/null
   if ! docker run --rm --gpus all "$WORKER_IMAGE" nvidia-smi -L; then
     step "installing the NVIDIA container toolkit"
     curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
