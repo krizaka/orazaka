@@ -10,14 +10,14 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 |---|---|---|---|---|
 | `orazaka-dev` | `web` | `krizaka/orazaka-web-client` (Next.js + BFF), `dev.orazaka.com/` | `apps-s-1vcpu-0.5gb` | 5 |
 | `orazaka-dev` | `core` | one image, five JVMs (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
-| `orazaka-dev` | `rabbitmq` | `rabbitmq:4.2-alpine`, internal (`rabbitmq:5672`), no volume | `apps-s-1vcpu-0.5gb` | 5 |
+| Droplet | `orazaka-broker-dev` | RabbitMQ 4.2, **TLS only** (5671), bound to its private IP, cloud firewall: VPC `10.118.0.0/20` only | `s-1vcpu-512mb-10gb` | 4 |
 | `orazaka-admin-dev` | `web` | `krizaka/orazaka-web-admin`, `admin.orazaka.com`, BFF → `https://dev.orazaka.com/edge` | `apps-s-1vcpu-0.5gb` | 5 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
 | — | chat | DigitalOcean serverless inference, `mistral-3-14B`, per token | — | ≈ 0 at test volume |
 | — | images | an hourly GPU droplet (ORA-GPU), only while started | e.g. `gpu-4000adax1-20gb` | 0.76 **per hour** |
 
-**Total: $35/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens). Upgrading `core` to
-`basic-m` (4 GB, 2 vCPU, $40) is the first lever if it restarts under load: still $55.
+**Total: $34/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens). Upgrading `core` to
+`basic-m` (4 GB, 2 vCPU, $40) is the first lever if it restarts under load: still $54.
 
 ### The `core` container
 
@@ -64,6 +64,21 @@ doctl apps create-deployment <orazaka-dev id> --force-rebuild   # --force-rebuil
 ```
 
 Logs: `doctl apps logs <id> core --type run` (each line prefixed by its service: `[users]`, `[conversation]`…).
+
+## Broker — reachable from the GPU workers, safely
+
+App Platform cannot expose AMQP, and a GPU droplet must reach the job lanes — so RabbitMQ lives on its own small
+Droplet in the `default-tor1` VPC (`node scripts/dev-deploy.mjs broker`, idempotent):
+
+- **TLS only**: `listeners.tcp = none`, 5671 with a certificate for `broker-dev.orazaka.com` signed by a dev CA kept in
+  `~/Documents/krizaka/orazaka-broker/` (the CA key never leaves it). Clients verify the host name; the services trust
+  the CA through Spring's SSL bundle `broker` (`RABBITMQ_CA_CERT_BASE64` → `/app/var/broker-ca.pem`).
+- **Private**: bound to the Droplet's private IP; `broker-dev.orazaka.com` resolves to it; the cloud firewall admits 5671
+  from the VPC range only (SSH from the maintainer's IP). `orazaka-dev` joins the VPC (`vpc.id` in its spec).
+- **Two users**, strong random passwords in the secrets file: `orazaka` (the platform, everything on `/`) and
+  `gpu-worker` (`RABBITMQ_PASS_GPU`: configure/write/read on `orazaka.*` names only). A GPU droplet must be created in
+  the same VPC (`--vpc-uuid` of `default-tor1`; another region needs VPC peering).
+- No volume worth keeping: queues are re-declared by the services and workers at start (AGENTS.md §6).
 
 ## Routing is data
 

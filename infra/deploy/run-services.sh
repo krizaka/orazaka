@@ -19,6 +19,12 @@ if [[ -n "${MEDIA_ENCRYPTION_KEY:-}" ]]; then
 fi
 unset MEDIA_ENCRYPTION_KEY
 
+# The broker's CA (TLS to the broker Droplet): Spring's SSL bundle `broker` reads this file.
+if [[ -n "${RABBITMQ_CA_CERT_BASE64:-}" ]]; then
+  mkdir -p "${ORAZAKA_APP_DIR:-/app}/var"
+  printf '%s' "$RABBITMQ_CA_CERT_BASE64" | base64 -d > "${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem"
+fi
+
 # Shared JVM settings: small footprint first (serial GC, C1 only, bounded code cache), heap per service.
 COMMON_OPTS="${ORAZAKA_JAVA_OPTS:--XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=64m -Xss512k -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom}"
 

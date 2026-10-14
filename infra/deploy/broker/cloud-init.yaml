@@ -1,0 +1,48 @@
+#cloud-config
+# Orazaka dev broker — RabbitMQ on a small Droplet in the tor1 VPC (docs/DEPLOY_DEV.md § Broker).
+# TLS only (5671), bound to the private interface, reachable from the VPC alone (cloud firewall).
+# Rendered by `node scripts/dev-deploy.mjs broker`; certificates and the users' passwords come from the
+# maintainer's local files, never from the repository.
+package_update: true
+packages: [docker.io]
+write_files:
+  - path: /etc/orazaka-broker/rabbitmq.conf
+    permissions: "0644"
+    content: |
+      listeners.tcp = none
+      listeners.ssl.default = 5671
+      ssl_options.cacertfile = /etc/rabbitmq/tls/ca.pem
+      ssl_options.certfile = /etc/rabbitmq/tls/server.pem
+      ssl_options.keyfile = /etc/rabbitmq/tls/server.key
+      ssl_options.verify = verify_none
+      ssl_options.fail_if_no_peer_cert = false
+      ssl_options.versions.1 = tlsv1.3
+      ssl_options.versions.2 = tlsv1.2
+      loopback_users = none
+      vm_memory_high_watermark.relative = 0.6
+  - path: /root/broker-users.sh
+    permissions: "0700"
+    encoding: b64
+    content: __BROKER_USERS_SCRIPT_B64__
+  - path: /etc/orazaka-broker/tls/ca.pem
+    permissions: "0644"
+    encoding: b64
+    content: __BROKER_CA_PEM_B64__
+  - path: /etc/orazaka-broker/tls/server.pem
+    permissions: "0644"
+    encoding: b64
+    content: __BROKER_SERVER_PEM_B64__
+  - path: /etc/orazaka-broker/tls/server.key
+    permissions: "0644"
+    encoding: b64
+    content: __BROKER_SERVER_KEY_B64__
+runcmd:
+  - fallocate -l 1G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+  - PRIVATE_IP=$(curl -s http://169.254.169.254/metadata/v1/interfaces/private/0/ipv4/address)
+  - >-
+    docker run -d --name rabbitmq --restart unless-stopped --memory 400m
+    -p ${PRIVATE_IP}:5671:5671
+    -v /etc/orazaka-broker/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    -v /etc/orazaka-broker/tls:/etc/rabbitmq/tls:ro
+    rabbitmq:4.2-alpine
+  - docker exec rabbitmq rabbitmqctl await_startup --timeout 120 && sh /root/broker-users.sh && shred -u /root/broker-users.sh

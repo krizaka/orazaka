@@ -5,6 +5,7 @@
  *   node scripts/dev-deploy.mjs apply <orazaka-dev|orazaka-admin-dev> [--dry-run] [--drop-attached-db]
  *   node scripts/dev-deploy.mjs data        # infra/deploy/dev-data.sql into orazaka_db (routing is data)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
+ *   node scripts/dev-deploy.mjs broker      # the TLS RabbitMQ Droplet in the tor1 VPC (once; idempotent)
  *   node scripts/dev-deploy.mjs status
  *
  * Secrets come from a local file (default ~/Documents/krizaka/orazaka-dev.env, or ORAZAKA_DEV_ENV_FILE),
@@ -13,7 +14,7 @@
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -201,6 +202,121 @@ _Injectés dans \`krizaka_users_db\` (cluster \`krizaka-dev-pg\`) par \`node scr
   console.log(`seeded ${accounts.map((a) => a.email).join(", ")} — passwords written to ${QA_FILE} only`);
 }
 
+// ── Broker: RabbitMQ on a Droplet in the tor1 VPC, TLS only, VPC-only (cloud firewall) ─────────────
+const BROKER = {
+  name: "orazaka-broker-dev",
+  tag: "orazaka-broker-dev",
+  region: "tor1",
+  size: "s-1vcpu-512mb-10gb",
+  image: "ubuntu-24-04-x64",
+  vpc: "default-tor1",
+  host: "broker-dev.orazaka.com",
+  adminIp: process.env.BROKER_ADMIN_IP ?? "142.122.41.109",
+};
+const BROKER_DIR = join(dirname(ENV_FILE), "orazaka-broker");
+
+/** The platform user has everything on `/`; the GPU worker only touches `orazaka.*` names. */
+export const BROKER_PERMISSIONS = { orazaka: ".*", "gpu-worker": "^orazaka\\..*" };
+
+/**
+ * The one-shot script cloud-init runs once RabbitMQ is up: users through rabbitmqctl (the broker
+ * hashes the passwords itself), permissions, no guest. Deleted (shred) after it ran.
+ */
+export function brokerUsersScript(passwords) {
+  const q = (v) => `'${String(v).replace(/'/g, "'\\''")}'`;
+  const lines = ["set -e", "docker exec rabbitmq rabbitmqctl delete_user guest || true"];
+  for (const [user, re] of Object.entries(BROKER_PERMISSIONS)) {
+    lines.push(`docker exec rabbitmq rabbitmqctl add_user ${q(user)} ${q(passwords[user])}`);
+    lines.push(`docker exec rabbitmq rabbitmqctl set_permissions -p / ${q(user)} ${q(re)} ${q(re)} ${q(re)}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function ensureTls() {
+  mkdirSync(BROKER_DIR, { recursive: true, mode: 0o700 });
+  const f = (n) => join(BROKER_DIR, n);
+  if (existsSync(f("server.pem"))) return;
+  const ossl = (args) => execFileSync("openssl", args, { stdio: ["ignore", "ignore", "inherit"] });
+  ossl(["req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:P-256", "-nodes", "-days", "3650",
+    "-subj", "/CN=Orazaka dev broker CA", "-keyout", f("ca.key"), "-out", f("ca.pem")]);
+  ossl(["req", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:P-256", "-nodes", "-subj", `/CN=${BROKER.host}`,
+    "-keyout", f("server.key"), "-out", f("server.csr")]);
+  writeFileSync(f("san.ext"), `subjectAltName=DNS:${BROKER.host}\nextendedKeyUsage=serverAuth\n`);
+  ossl(["x509", "-req", "-in", f("server.csr"), "-CA", f("ca.pem"), "-CAkey", f("ca.key"), "-CAcreateserial",
+    "-days", "825", "-extfile", f("san.ext"), "-out", f("server.pem")]);
+  execFileSync("chmod", ["600", f("ca.key"), f("server.key")]);
+}
+
+function ensureEnv(env, key, make) {
+  if (env[key]) return env[key];
+  const value = make();
+  appendFileSync(ENV_FILE, `${key}=${value}\n`);
+  env[key] = value;
+  return value;
+}
+
+function broker() {
+  const env = secrets();
+  ensureTls();
+  const b64 = (n) => readFileSync(join(BROKER_DIR, n)).toString("base64");
+  ensureEnv(env, "RABBITMQ_PASS_GPU", () => randomBytes(24).toString("base64url"));
+  ensureEnv(env, "RABBITMQ_CA_CERT_BASE64", () => b64("ca.pem"));
+
+  const json = (args) => JSON.parse(doctl([...args, "-o", "json"]) || "[]");
+  let droplet = json(["compute", "droplet", "list", "--tag-name", BROKER.tag])[0];
+  if (!droplet) {
+    const userData = render(readFileSync(join(DEPLOY, "broker/cloud-init.yaml"), "utf8"), {
+      BROKER_USERS_SCRIPT_B64: Buffer.from(brokerUsersScript({ orazaka: env.RABBITMQ_PASS, "gpu-worker": env.RABBITMQ_PASS_GPU })).toString("base64"),
+      BROKER_CA_PEM_B64: b64("ca.pem"),
+      BROKER_SERVER_PEM_B64: b64("server.pem"),
+      BROKER_SERVER_KEY_B64: b64("server.key"),
+    });
+    const tmp = join(BROKER_DIR, "user-data.yaml");
+    writeFileSync(tmp, userData, { mode: 0o600 });
+    const vpc = json(["vpcs", "list"]).find((v) => v.name === BROKER.vpc);
+    const keys = json(["compute", "ssh-key", "list"]).map((k) => String(k.id));
+    try {
+      doctl(["compute", "droplet", "create", BROKER.name, "--region", BROKER.region, "--size", BROKER.size,
+        "--image", BROKER.image, "--vpc-uuid", vpc.id, "--tag-name", BROKER.tag, "--user-data-file", tmp,
+        ...(keys.length ? ["--ssh-keys", keys.join(",")] : []), "--wait", "--format", "ID", "--no-header"]);
+    } finally {
+      writeFileSync(tmp, "");
+    }
+    droplet = json(["compute", "droplet", "list", "--tag-name", BROKER.tag])[0];
+    const project = json(["projects", "list"]).find((p) => p.name === PROJECT);
+    doctl(["projects", "resources", "assign", project.id, `--resource=do:droplet:${droplet.id}`]);
+  }
+  if (!json(["compute", "firewall", "list"]).some((f) => f.name === BROKER.name)) {
+    const vpc = json(["vpcs", "list"]).find((v) => v.name === BROKER.vpc);
+    doctl(["compute", "firewall", "create", "--name", BROKER.name, "--tag-names", BROKER.tag,
+      "--inbound-rules", `protocol:tcp,ports:5671,address:${vpc.ip_range} protocol:tcp,ports:22,address:${BROKER.adminIp}`,
+      "--outbound-rules", "protocol:tcp,ports:all,address:0.0.0.0/0 protocol:udp,ports:all,address:0.0.0.0/0 protocol:icmp,address:0.0.0.0/0",
+      "--format", "ID", "--no-header"]);
+  }
+  const privateIp = droplet.networks.v4.find((n) => n.type === "private").ip_address;
+  console.log(`broker: ${BROKER.name} (${droplet.id}) private ${privateIp}, TLS :5671, VPC-only`);
+  pointDns(BROKER.host.split(".")[0], privateIp);
+}
+
+/** orazaka.com is on Porkbun: the maintainer's local helper (DNS_HELPER) upserts the A record. */
+function pointDns(name, ip) {
+  const helper = process.env.DNS_HELPER ?? join(homedir(), ".krizaka-worktrees/tools/pb.py");
+  if (!existsSync(helper)) {
+    console.log(`broker: set ${name}.orazaka.com A → ${ip} by hand (no DNS helper)`);
+    return;
+  }
+  const py = `import importlib.util,sys
+s=importlib.util.spec_from_file_location("pb",sys.argv[1]);pb=importlib.util.module_from_spec(s);s.loader.exec_module(pb)
+pb.call(f"dns/editByNameType/orazaka.com/A/{sys.argv[2]}",{"content":sys.argv[3],"ttl":"600"})
+rr=pb.call(f"dns/retrieveByNameType/orazaka.com/A/{sys.argv[2]}")
+if not rr.get("records"):
+    r=pb.call("dns/create/orazaka.com",{"name":sys.argv[2],"type":"A","content":sys.argv[3],"ttl":"600"})
+rr=pb.call(f"dns/retrieveByNameType/orazaka.com/A/{sys.argv[2]}")
+print("dns:",[x["content"] for x in rr.get("records",[])])`;
+  const r = spawnSync("python3", ["-c", py, helper, name, ip], { encoding: "utf8" });
+  console.log(`broker: ${name}.orazaka.com ${r.stdout.trim() || r.stderr.trim().split("\n").pop()}`);
+}
+
 function status() {
   for (const name of ["orazaka-dev", "orazaka-admin-dev"]) {
     const id = appId(name);
@@ -214,9 +330,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (command === "apply") apply(rest[0], rest.slice(1));
     else if (command === "data") data();
     else if (command === "seed") seed();
+    else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | seed | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | seed | broker | status");
       process.exit(2);
     }
   } catch (e) {

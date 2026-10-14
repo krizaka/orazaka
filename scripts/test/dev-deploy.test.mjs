@@ -31,11 +31,23 @@ for (const name of ["orazaka-dev", "orazaka-admin-dev"]) {
   });
 }
 
-test("orazaka-dev: only the edge and the web are routed; the broker stays internal", () => {
+test("orazaka-dev: only the edge and the web are routed; the broker is reached over TLS in the VPC", () => {
   const text = spec("orazaka-dev");
   const routed = [...text.matchAll(/- component:\n\s+name: (\S+)/g)].map((m) => m[1]);
   assert.deepEqual(routed.sort(), ["core", "web"]);
-  assert.match(text, /name: rabbitmq[\s\S]*internal_ports: \[5672\]/);
+  assert.match(text, /^vpc:\n  id: \S+/m);
+  assert.match(text, /RABBITMQ_PORT, scope: RUN_TIME, value: "5671"/);
+  assert.match(text, /SPRING_RABBITMQ_SSL_ENABLED, scope: RUN_TIME, value: "true"/);
+});
+
+test("broker cloud-init: TLS only, bound to the private address, secrets as placeholders", () => {
+  const text = readFileSync(new URL("../../infra/deploy/broker/cloud-init.yaml", import.meta.url), "utf8");
+  assert.match(text, /listeners\.tcp = none/);
+  assert.match(text, /listeners\.ssl\.default = 5671/);
+  assert.match(text, /-p \$\{PRIVATE_IP\}:5671:5671/);
+  for (const p of ["BROKER_USERS_SCRIPT_B64", "BROKER_CA_PEM_B64", "BROKER_SERVER_PEM_B64", "BROKER_SERVER_KEY_B64"]) {
+    assert.match(text, new RegExp(`__${p}__`));
+  }
 });
 
 test("password: long, mixed, different each time", () => {
@@ -53,4 +65,15 @@ test("seedSql gives the admin ROLE_ADMIN, the user only ROLE_USER, and quotes va
   assert.equal((sql.match(/'ROLE_ADMIN'/g) ?? []).length, 1);
   assert.match(sql, /'o''q'/);
   assert.match(sql, /ON CONFLICT \(username\) DO UPDATE/);
+});
+
+
+test("brokerUsersScript: two users, the GPU worker confined to orazaka.* names, guest removed, quoting safe", async () => {
+  const { brokerUsersScript, BROKER_PERMISSIONS } = await import("../dev-deploy.mjs");
+  const script = brokerUsersScript({ orazaka: "core'pw", "gpu-worker": "gpu-pw" });
+  assert.match(script, /delete_user guest/);
+  assert.match(script, /add_user 'orazaka' 'core'\\''pw'/);
+  assert.match(script, /set_permissions -p \/ 'gpu-worker' '\^orazaka\\\..\*'/);
+  const re = new RegExp(BROKER_PERMISSIONS["gpu-worker"]);
+  assert.ok(re.test("orazaka.jobs.batch") && !re.test("amq.rabbitmq.log"));
 });
