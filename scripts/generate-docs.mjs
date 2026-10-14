@@ -31,6 +31,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, basename, relative } from "node:path";
+import { buildModels, catalogue } from "./lib/model-registry.mjs";
 
 const ROOT = process.cwd();
 const GEN_DIR = join(ROOT, "docs", "_generated");
@@ -1297,25 +1298,33 @@ function extractGovernance() {
   return all.sort((a, b) => a.holder.localeCompare(b.holder) || a.name.localeCompare(b.name));
 }
 
-/** AI model catalog from the infra/initdb seed. */
+/**
+ * The SQL that builds the model registry, in the order a database sees it: the initdb seeds of every repository, then the
+ * workspace's migrations (existing databases), then the deployment data. Nothing in it is typed twice.
+ */
+const readModelSql = () => {
+  const dir = (d) => {
+    const p = join(ROOT, d);
+    return existsSync(p) ? readdirSync(p).filter((n) => n.endsWith(".sql")).sort().map((n) => read(join(p, n))) : [];
+  };
+  return [readInitDb(), ...dir("infra/migrations"), ...dir("infra/deploy")].join("\n");
+};
+
+/** The last sovereign smoke report, when one is committed (docs/evaluations/sovereign-smoke.json): a model is verified on its date. */
+const readSmoke = () => {
+  const raw = read(join(ROOT, "docs", "evaluations", "sovereign-smoke.json"));
+  return raw ? JSON.parse(raw) : null;
+};
+
+/** The models Orazaka supports (registry metadata required — see scripts/lib/model-registry.mjs). */
+const extractRegistry = () => buildModels(readModelSql(), { smoke: readSmoke() });
+
+/** The full catalogue for MODELS.md: every non-theme row of orazaka_models with its description. */
 function extractModels() {
-  // Line comments dropped first: a comment inside a VALUES list holds apostrophes and semicolons, and
-  // the block below ended at the first of them — the catalogue lost every row after it.
-  const sql = readInitDb().replace(/--[^\n]*/g, "");
-  // Every INSERT block, not the first: the seed adds models in several statements (speech/image/…,
-  // chat, the unfiltered chat models), and reading one block published a third of the catalogue.
-  const rows = new Map();
-  for (const [block] of sql.matchAll(/INSERT INTO orazaka_models[^;]*;/gs)) {
-    for (const m of block.matchAll(/\(\s*'([^']*)',\s*'([^']*)',\s*'([^']*)'/g)) {
-      if (m[1] && !/^https?:/.test(m[1]) && !rows.has(m[1])) rows.set(m[1], { name: m[1], label: m[2], category: m[3], description: "" });
-    }
-  }
-  // Descriptions are seeded as UPDATEs, one line per model (30-jobs-config.sql).
-  for (const m of sql.matchAll(/UPDATE orazaka_models SET description = '((?:[^']|'')*)' WHERE model_name = '([^']*)';/g)) {
-    const row = rows.get(m[2]);
-    if (row) row.description = m[1].replace(/''/g, "'");
-  }
-  return [...rows.values()].sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+  return catalogue(readModelSql())
+    .filter((r) => r.category !== "theme")
+    .map((r) => ({ name: r.model_name, label: r.model_label, category: r.category, description: r.description ?? "", status: r.status ?? "internal" }))
+    .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 }
 
 /** ADR ledger: dedup ADR-NNN citations across code + the adr/ source files. */
@@ -1673,9 +1682,19 @@ const mdGovernance = (rows) => {
   return lines.join("\n") + "\n";
 };
 
-const mdModels = (rows) => {
-  const lines = [frontmatter("AI Model Catalog", "Models seeded in infra/initdb.", "Models", 8)];
+const CAP_LABEL = { chat: "Chat", reasoning: "Reasoning", vision: "Vision", code: "Code", embeddings: "Embeddings", image: "Image", video: "Video", "speech-to-text": "Speech to text", "text-to-speech": "Text to speech" };
+const mdModels = (models, rows) => {
+  const lines = [frontmatter("Supported Models", "Every model Orazaka supports: where it runs, its licence, its context window — read from the registry the routing reads.", "Models", 8)];
+  const local = models.filter((m) => m.runsOn === "local");
+  const provider = models.filter((m) => m.runsOn === "provider");
   lines.push(
+    "## Local first",
+    "",
+    `Orazaka supports **${models.length} models**: **${local.length} run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker)` +
+      ` and **${provider.length} are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.`,
+    "",
+    "Every figure below is read from `orazaka_models` (the table the routing reads): the vendor, licence and context window are those of each model's own card; `last verified` is the date of the last passing sovereign smoke that named the model, empty until one is recorded.",
+    "",
     "## Unfiltered models, your rules",
     "",
     "The catalogue carries open-weight chat models without a vendor's refusal layer — fine-tuned without refusals or",
@@ -1689,13 +1708,18 @@ const mdModels = (rows) => {
     "it never covers content sexualising minors, explicit sexual content, real persons, weapons or bio-chemical procedures,",
     "working malware, or anything that enables serious harm. Unfiltered is not infallible either: serve the largest model",
     "the machine holds for clinical, legal or security work, and keep a professional in the loop.",
-    "",
-    "## Catalogue",
-    "",
-    "| Model | Label | Category | Description |",
-    "|:---|:---|:---|:---|",
   );
-  for (const m of rows) lines.push(`| \`${m.name}\` | ${m.label} | ${m.category} | ${m.description.replace(/\\/g, "\\\\").replace(/\|/g, "\\|")} |`);
+  const table = (title, list) => {
+    lines.push("", `## ${title}`, "", "| Model | Vendor · family | Does | Runs | Licence | Context | Status | Last verified |", "|:---|:---|:---|:---|:---|---:|:---|:---|");
+    for (const m of list) {
+      const lic = m.licence.url ? `[${m.licence.name}](${m.licence.url})` : m.licence.name;
+      lines.push(`| \`${m.id}\` — ${m.name} | ${m.vendor} · ${m.family} | ${m.capabilities.map((c) => CAP_LABEL[c]).join(", ")} | ${m.runtime} | ${lic}${m.openWeights ? "" : " (proprietary)"} | ${m.contextWindow ? m.contextWindow.toLocaleString("en-US") : "—"} | ${m.status} | ${m.lastVerified ?? "—"} |`);
+    }
+  };
+  table("On your hardware", local);
+  table("Optional: served by a provider", provider);
+  const hidden = rows.filter((r) => r.status === "internal");
+  lines.push("", "## In the catalogue, not published", "", `${hidden.length} rows are aliases, runtime variants or test fixtures of the models above (\`status = 'internal'\`): ${hidden.map((r) => `\`${r.name}\``).join(", ")}.`);
   return lines.join("\n") + "\n";
 };
 
@@ -2760,7 +2784,8 @@ const mdAdmin = (a) => {
 
 const api = extractApi();
 const cli = extractCli();
-const arch = { ...extractArchitecture(), packs: extractPackCatalog(), cli: cliModel(cli) };
+const registry = extractRegistry();
+const arch = { ...extractArchitecture(), packs: extractPackCatalog(), models: registry, cli: cliModel(cli) };
 const outputs = {
   "architecture.json": JSON.stringify(arch, null, 2) + "\n",
   "ARCHITECTURE.md": mdArchitecture(arch),
@@ -2776,7 +2801,7 @@ const outputs = {
   "PACKS.md": mdPacks(extractPacks(), cli, arch.packs),
   "ADMIN.md": mdAdmin(extractAdmin(api)),
   "GOVERNANCE.md": mdGovernance(extractGovernance()),
-  "MODELS.md": mdModels(extractModels()),
+  "MODELS.md": mdModels(registry, extractModels()),
   "ADRS.md": mdAdrs(extractAdrs()),
 };
 

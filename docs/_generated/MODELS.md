@@ -1,14 +1,20 @@
 ---
-title: AI Model Catalog
-description: Models seeded in infra/initdb.
+title: Supported Models
+description: "Every model Orazaka supports: where it runs, its licence, its context window — read from the registry the routing reads."
 category: Models
 order: 8
 generated: true
 ---
 
-# AI Model Catalog
+# Supported Models
 
 > 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
+
+## Local first
+
+Orazaka supports **27 models**: **22 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **5 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
+
+Every figure below is read from `orazaka_models` (the table the routing reads): the vendor, licence and context window are those of each model's own card; `last verified` is the date of the last passing sovereign smoke that named the model, empty until one is recorded.
 
 ## Unfiltered models, your rules
 
@@ -24,43 +30,43 @@ it never covers content sexualising minors, explicit sexual content, real person
 working malware, or anything that enables serious harm. Unfiltered is not infallible either: serve the largest model
 the machine holds for clinical, legal or security work, and keep a professional in the loop.
 
-## Catalogue
+## On your hardware
 
-| Model | Label | Category | Description |
-|:---|:---|:---|:---|
-| `whisper-base` | Whisper Base | audio | Whisper Base speech-to-text. Balanced accuracy and speed for transcription. Local audio default. |
-| `whisper-tiny-en` | Whisper Tiny (en) | audio | Whisper Tiny (English) STT. Fastest, smallest footprint — quick English transcriptions. |
-| `dolphin-llama3:8b` | Dolphin Llama 3 8B — unfiltered | chat | Dolphin 2.9 on Llama 3 8B (Meta Llama 3 Community Licence) — fine-tuned without a refusal layer. Frank, compliant answers; the operator's packs set the rules. |
-| `huihui_ai/qwen2.5-abliterate:7b` | Qwen 2.5 7B — unfiltered | chat | Qwen 2.5 7B Instruct with the refusal direction removed (abliterated), Apache-2.0. Answers legitimate professional questions — security, medicine, law, fiction — without a vendor's refusals; your packs set the rules. French and English. |
-| `mdq100/Gemma3-Instruct-Abliterated:27b` | Gemma 3 27B — unfiltered | chat | Gemma 3 27B Instruct with the refusal direction removed (abliterated), Gemma Terms of Use. The most accurate unfiltered model of the catalogue — the one behind the krizaka.com demos. ~17 GB: a 32 GB+ machine. |
-| `qwen2.5:7b` | Qwen 2.5 7B Instruct | chat | Qwen 2.5 7B Instruct (Apache-2.0) — fluent French and English, the model the voice turn is measured with: first spoken sentence in about two seconds on an M1 Max. |
-| `tinyllama:latest` | TinyLlama (latest) | chat | TinyLlama — tiny, fast chat model for local testing. Limited reasoning. |
-| `codellama:7b` | CodeLlama 7B | code | Code Llama 7B — code generation and explanation (q4_K_M). |
-| `qwen2.5-coder:7b` | Qwen 2.5 Coder 7B | code | Qwen 2.5 Coder 7B — code generation and completion (q4_K_M). Local code default. |
-| `argmaxinc/mlx-FLUX.1-schnell-4bit-quantized` | FLUX.1 Schnell 4-bit (MLX) | image | FLUX.1 Schnell, 4-bit quantized for Apple MLX. Fast, high-quality images natively on Apple Silicon. |
-| `flux-2-klein-4b` | FLUX.2 [klein] 4B | image | FLUX.2 [klein] 4B (Apache-2.0) — editorial photographs, illustrations and miniatures in 4 steps, 1024 px in about 80 s on an M1 Max. Local image default. |
-| `v1-5-pruned-emaonly` | Stable Diffusion 1.5 | image | Stable Diffusion 1.5 (CreativeML OpenRAIL-M) — the former default: 512 px, short prompts. For small machines. |
-| `z-image-turbo` | Z-Image Turbo | image | Z-Image Turbo (Apache-2.0) — the most detailed photographs, about three times slower than FLUX.2 [klein]. Renders lettering readily: keep words out of the prompt. |
-| `piper-en-low` | Piper Low (en) | speech | Fast, lightweight English neural TTS (Piper). Low fidelity, minimal memory — quick local voice checks. |
-| `piper-en-medium-ryan` | Piper Ryan (en) | speech | Balanced English neural TTS (Piper, Ryan voice). Natural prosody at modest CPU cost. Local speech default. |
-| `piper-fr-medium` | Piper Medium (fr) | speech | French neural TTS (Piper). Natural French speech, medium quality, CPU-friendly. |
-| `piper-fr-siwis-medium` | Piper Siwis (fr-FR, féminine) | speech | French neural TTS (Piper, Siwis voice, female, CC-BY 4.0). Clear, natural French — the fr-FR voice of the voice turn. |
-| `piper-fr-tom-medium` | Piper Tom (fr-FR, masculine) | speech | French neural TTS (Piper, Tom voice, male, AGPL-3.0 weights). 44.1 kHz, warm timbre — the second fr-FR voice of the voice turn. |
-| `tts-1` | OpenAI TTS-1 | speech | OpenAI-compatible TTS with six selectable voices (Alloy, Echo, Fable, Onyx, Nova, Shimmer), served locally via LocalAI. |
-| `amber` | Amber Accent | theme |  |
-| `emerald` | Emerald Accent | theme |  |
-| `rose` | Rose Accent | theme |  |
-| `zinc` | Zinc Accent | theme |  |
-| `animatediff-lightning-mps` | AnimateDiff Lightning (MPS) | video | AnimateDiff Lightning on Apple Metal (MPS). Fast 8-step text-to-video that fits a 64GB Mac. Local video default. |
-| `apple-coreml-video-pipeline` | Apple CoreML Video Pipeline | video | Apple CoreML video pipeline. Native Apple Silicon acceleration for short clips. |
-| `ByteDance/AnimateDiff-Lightning` | AnimateDiff Lightning | video | ByteDance AnimateDiff Lightning weights (MLX). Fast 8-step text-to-video at ~12fps. |
-| `mlx-animatediff-lightning` | MLX Native AnimateDiff | video | AnimateDiff Lightning on Apple MLX. Native Apple-Silicon 8-step video at ~12fps. |
-| `mlx-stable-diffusion-video` | MLX Native Video | video | Stable Diffusion video on Apple MLX. Higher quality (25 steps, ~14fps); heavier than AnimateDiff. |
-| `stable-video-diffusion-img2vid-xt` | Stable Video Diffusion XT (heavy, >64GB) | video | Stable Video Diffusion XT — highest-quality image-to-video. Heavy: needs >64GB unified memory or CUDA. Not recommended on a 64GB Mac. |
-| `stable-video-diffusion-img2vid-xt-mps-fp32` | SVD XT (PyTorch MPS Float32) | video | SVD XT in PyTorch MPS float32. Highest fidelity but ~96GB memory — will fail on a 64GB Mac. |
-| `wan2.1-t2v-1.3b` | Wan 2.1 T2V 1.3B (9:16, GPU) | video | Wan 2.1 T2V 1.3B (Apache-2.0) — vertical clips at 480x832, 5 s at 16 fps, on the small GPU host (20 GB). Fast drafts. |
-| `wan2.2-ti2v-5b` | Wan 2.2 TI2V 5B (9:16, GPU) | video | Wan 2.2 TI2V 5B (Apache-2.0) — vertical shorts at 704x1280, 5 s at 24 fps, on the GPU host (48 GB). The 9:16 model of the demos. |
-| `bakllava:latest` | BakLLaVA (latest) | vision | BakLLaVA (Mistral-based) vision model. Compact image understanding. |
-| `llama3.2-vision:latest` | Llama 3.2 Vision (latest) | vision | Llama 3.2 Vision — strong general image understanding. Local vision default. |
-| `llava:latest` | LLaVA (latest) | vision | LLaVA multimodal model — describe and answer questions about images. |
-| `llava:v1.6` | LLaVA (v1.6) | vision | LLaVA v1.6 — improved image understanding and OCR over base LLaVA. |
+| Model | Vendor · family | Does | Runs | Licence | Context | Status | Last verified |
+|:---|:---|:---|:---|:---|---:|:---|:---|
+| `whisper-base` — Whisper Base | OpenAI · Whisper | Speech to text | LocalAI · whisper.cpp | [MIT](https://github.com/openai/whisper/blob/main/LICENSE) | — | default | — |
+| `qwen2.5-coder:7b` — Qwen 2.5 Coder 7B | Alibaba Cloud · Qwen 2.5 Coder | Code | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct/blob/main/LICENSE) | 32,768 | default | — |
+| `flux-2-klein-4b` — FLUX.2 [klein] 4B | Black Forest Labs · FLUX.2 klein | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/README.md) | — | default | — |
+| `piper-en-medium-ryan` — Piper Ryan (en) | Rhasspy · Piper (en-US, Ryan) | Text to speech | LocalAI · Piper | [CC BY-NC-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ryan/medium/MODEL_CARD) | — | default | — |
+| `animatediff-lightning-mps` — AnimateDiff Lightning | ByteDance · AnimateDiff-Lightning | Video | PyTorch MPS · Apple Metal | [CreativeML OpenRAIL-M](https://huggingface.co/ByteDance/AnimateDiff-Lightning/blob/main/README.md) | — | default | — |
+| `llava:latest` — LLaVA (latest) | LLaVA team · LLaVA 1.6 | Vision | Ollama | [Apache-2.0](https://ollama.com/library/llava) | — | default | — |
+| `whisper-tiny-en` — Whisper Tiny (en) | OpenAI · Whisper | Speech to text | LocalAI · whisper.cpp | [MIT](https://github.com/openai/whisper/blob/main/LICENSE) | — | available | — |
+| `dolphin-llama3:8b` — Dolphin Llama 3 8B — unfiltered | Cognitive Computations · Dolphin 2.9 (Llama 3, unfiltered) | Chat | Ollama | [Meta Llama 3 Community Licence](https://www.llama.com/llama3/license/) | 8,192 | available | — |
+| `huihui_ai/qwen2.5-abliterate:7b` — Qwen 2.5 7B — unfiltered | Alibaba Cloud · Qwen 2.5 (unfiltered) | Chat | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/blob/main/LICENSE) | 32,768 | available | — |
+| `mdq100/Gemma3-Instruct-Abliterated:27b` — Gemma 3 27B — unfiltered | Google · Gemma 3 (unfiltered) | Chat | Ollama | [Gemma Terms of Use](https://ai.google.dev/gemma/terms) | 131,072 | available | — |
+| `qwen2.5:7b` — Qwen 2.5 7B Instruct | Alibaba Cloud · Qwen 2.5 | Chat | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/blob/main/LICENSE) | 32,768 | available | — |
+| `codellama:7b` — CodeLlama 7B | Meta · Code Llama | Code | Ollama | [Llama 2 Community Licence](https://ai.meta.com/llama/license/) | 16,384 | available | — |
+| `argmaxinc/mlx-FLUX.1-schnell-4bit-quantized` — FLUX.1 Schnell 4-bit (MLX) | Black Forest Labs · FLUX.1 schnell | Image | MLX · Apple Silicon | [Apache-2.0](https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md) | — | available | — |
+| `v1-5-pruned-emaonly` — Stable Diffusion 1.5 | Stability AI · Stable Diffusion 1.5 | Image | stable-diffusion.cpp · Metal, CUDA | [CreativeML OpenRAIL-M](https://huggingface.co/spaces/CompVis/stable-diffusion-license) | — | available | — |
+| `z-image-turbo` — Z-Image Turbo | Tongyi Lab (Alibaba) · Z-Image | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/README.md) | — | available | — |
+| `piper-en-low` — Piper Low (en) | Rhasspy · Piper (en-US, Lessac) | Text to speech | LocalAI · Piper | [Lessac Blizzard 2013 data licence](https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html) | — | available | — |
+| `piper-fr-medium` — Piper Medium (fr) | Rhasspy · Piper (fr-FR, UPMC) | Text to speech | LocalAI · Piper | [CC BY-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/upmc/medium/MODEL_CARD) | — | available | — |
+| `piper-fr-siwis-medium` — Piper Siwis (fr-FR, féminine) | Rhasspy · Piper (fr-FR, Siwis) | Text to speech | LocalAI · Piper | [CC BY 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/siwis/medium/MODEL_CARD) | — | available | — |
+| `piper-fr-tom-medium` — Piper Tom (fr-FR, masculine) | Rhasspy · Piper (fr-FR, Tom) | Text to speech | LocalAI · Piper | [AGPL-3.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/tom/medium/MODEL_CARD) | — | available | — |
+| `stable-video-diffusion-img2vid-xt` — Stable Video Diffusion XT (heavy, >64GB) | Stability AI · Stable Video Diffusion | Video | CUDA, more than 64 GB of memory | [Stability AI Community Licence](https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/blob/main/LICENSE.md) | — | available | — |
+| `wan2.1-t2v-1.3b` — Wan 2.1 T2V 1.3B | Alibaba (Wan-AI) · Wan 2.1 | Video | worker-media · CUDA | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B-Diffusers/blob/main/README.md) | — | available | — |
+| `wan2.2-ti2v-5b` — Wan 2.2 TI2V 5B | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers/blob/main/README.md) | — | available | — |
+
+## Optional: served by a provider
+
+| Model | Vendor · family | Does | Runs | Licence | Context | Status | Last verified |
+|:---|:---|:---|:---|:---|---:|:---|:---|
+| `mistral-3-14B` — Mistral 3 14B | Mistral AI · Mistral 3 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/mistralai/Ministral-3-14B-Instruct-2512/blob/main/README.md) | 262,144 | available | — |
+| `deepseek-v4-pro` — DeepSeek V4 Pro | DeepSeek · DeepSeek V4 | Chat, Reasoning | DigitalOcean serverless inference | [MIT](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/blob/main/LICENSE) | 1,048,576 | planned | — |
+| `gemma-4-31B-it` — Gemma 4 31B | Google · Gemma 4 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/google/gemma-4-31B-it/blob/main/README.md) | 262,144 | planned | — |
+| `llama-4-maverick` — Llama 4 Maverick | Meta · Llama 4 | Chat | DigitalOcean serverless inference | [Llama 4 Community Licence](https://github.com/meta-llama/llama-models/blob/main/models/llama4/LICENSE) | 1,048,576 | planned | — |
+| `gte-large-en-v1.5` — GTE Large (en) v1.5 | Alibaba-NLP · GTE | Embeddings | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md) | 8,192 | planned | — |
+
+## In the catalogue, not published
+
+10 rows are aliases, runtime variants or test fixtures of the models above (`status = 'internal'`): `tinyllama:latest`, `tts-1`, `apple-coreml-video-pipeline`, `ByteDance/AnimateDiff-Lightning`, `mlx-animatediff-lightning`, `mlx-stable-diffusion-video`, `stable-video-diffusion-img2vid-xt-mps-fp32`, `bakllava:latest`, `llama3.2-vision:latest`, `llava:v1.6`.
