@@ -6,8 +6,9 @@
 #   2. closes the metadata service to containers (it holds this droplet's user-data);
 #   3. checks Docker reaches the GPU (installs the NVIDIA container toolkit if the image lacks it);
 #   4. fetches the profile's weights onto the volume, once (python -m app.fetch_models);
-#   5. starts, on a private bridge network: sd-server (images), the media worker (video), and the
-#      chisel client that dials OUT to the relay of dev.orazaka.com — the droplet opens no port;
+#   5. starts, on a private bridge network: sd-server (images), the media worker (video), Ollama (chat,
+#      vision) and the chisel client that dials OUT to the relay of dev.orazaka.com — the droplet opens no
+#      port; the broker (TLS, private CA) is reached through it and verified end to end;
 #   0. first of all, arms the watchdog (every minute): 30 min without a job, or the hard lifetime, and it destroys
 #      the droplet through the API. A stopped droplet is still billed; this one never stops, it ends.
 #
@@ -101,7 +102,9 @@ docker run -d --name worker --network orz --restart unless-stopped --gpus all --
   -v /models:/models:ro -v "$STATE/state":/var/lib/orazaka/state -v "$STATE/uploads":/var/lib/orazaka/uploads \
   --env-file "$CONF/worker.env" \
   -e MEDIA_GPU_PROFILE="$PROFILE" -e MEDIA_ACTIVITY_FILE=/var/lib/orazaka/state/last-activity \
-  -e SPRING_RABBITMQ_HOST=relay -e SPRING_RABBITMQ_PORT=5672 \
+  -v "$CONF/broker-ca.pem":/etc/orazaka/broker-ca.pem:ro \
+  -e SPRING_RABBITMQ_HOST=relay -e SPRING_RABBITMQ_PORT=5671 -e SPRING_RABBITMQ_SSL_ENABLED=true \
+  -e SPRING_RABBITMQ_SSL_CA_FILE=/etc/orazaka/broker-ca.pem -e SPRING_RABBITMQ_SSL_SERVER_NAME=broker-dev.orazaka.com \
   -e MEDIA_ASSET_SINK_URL=http://relay:8090 -e JOB_SERVICE_INTERNAL_URL=http://relay:8090 \
   -e ORAZAKA_MEDIA_MEM_HEADROOM_GB=4 \
   "$WORKER_IMAGE" >/dev/null
@@ -118,7 +121,7 @@ for model in $OLLAMA_MODELS; do docker exec ollama ollama pull "$model" >/dev/nu
 # the video pipeline back inside the app. Its credential is read from the environment, not the argv.
 docker run -d --name relay --network orz --restart unless-stopped --env-file "$CONF/relay.env" \
   "$CHISEL_IMAGE" client --keepalive 25s --max-retry-interval 30s "$RELAY_URL" \
-  0.0.0.0:5672:rabbitmq:5672 0.0.0.0:8090:core:8090 \
+  0.0.0.0:5671:broker-dev.orazaka.com:5671 0.0.0.0:8090:core:8090 \
   R:0.0.0.0:8086:sd-server:8086 R:0.0.0.0:8188:worker:8188 R:0.0.0.0:11434:ollama:11434 >/dev/null
 
 touch "$STATE/ready" "$STATE/state/last-activity"

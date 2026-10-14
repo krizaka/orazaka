@@ -2,12 +2,12 @@
 #
 # The GPU droplet (or the Mac's worker) dials OUT to https://dev.orazaka.com/gpu-relay and, through one
 # authenticated WebSocket, gets exactly five things and nothing else (the allow-list in entrypoint.sh):
-#   forward  rabbitmq:5672   the broker, for the media worker's queue
+#   forward  broker-dev.orazaka.com:5671   the TLS broker (VPC), for the media worker's queue — TLS end to end
 #   forward  core:8090       the job service, for the worker registry and the output hand-over
 #   reverse  :8086           the droplet's sd-server, reachable inside the app as gpu-relay:8086
 #   reverse  :8188           the droplet's video pipeline (health probe), gpu-relay:8188
 #   reverse  :11434          the droplet's Ollama (chat and vision of the Studios), gpu-relay:11434
-# RabbitMQ is never exposed, the droplet has no public port, and while no GPU is connected gpu-relay:8086
+# The broker is never exposed (VPC-only Droplet, krizaka/orazaka#70), the GPU droplet has no public port, and while no GPU is connected gpu-relay:8086
 # refuses connections — which is exactly what greys the image capability out.
 FROM alpine:3.22
 ARG CHISEL_VERSION=1.12.0

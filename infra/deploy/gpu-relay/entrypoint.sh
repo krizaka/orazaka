@@ -16,7 +16,7 @@ AUTHFILE=/tmp/gpu-relay-users.json
 cat > "$AUTHFILE" <<JSON
 {
   "gpu:${AI_GPU_RELAY_PASSWORD}": [
-    "^rabbitmq:5672\$",
+    "^broker-dev\\\\.orazaka\\\\.com:5671\$",
     "^core:8090\$",
     "^R:0\\\\.0\\\\.0\\\\.0:(8086|8188|11434)\$"
   ]

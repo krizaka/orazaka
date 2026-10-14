@@ -112,10 +112,10 @@ scripts/gpu-dev.sh cost                  # every session (ledger in ~/Documents/
 
 **How it connects — nothing is exposed.** The droplet opens no port (SSH from the caller's IP only). A chisel client
 on it dials **out** to `https://dev.orazaka.com/gpu-relay` (App Platform's TLS, a 256-bit credential
-`AI_GPU_RELAY_PASSWORD`) and may open exactly five remotes — the relay's allow-list: `rabbitmq:5672` (the queue),
+`AI_GPU_RELAY_PASSWORD`) and may open exactly five remotes — the relay's allow-list: `broker-dev.orazaka.com:5671` (the TLS broker of the VPC, as the narrow `gpu-worker` user, verified end to end against the dev CA),
 `core:8090` (the job service: worker registry and output hand-over), and back inside the app `gpu-relay:8086`
 (sd-server), `gpu-relay:8188` (the video pipeline) and `gpu-relay:11434` (Ollama: `qwen2.5:7b` for the Studios'
-text steps, `llava` for their photo steps — sovereign, Apache-2.0 / open weights, while the GPU runs). RabbitMQ is never routed. While no GPU is connected nothing
+text steps, `llava` for their photo steps — sovereign, Apache-2.0 / open weights, while the GPU runs). The broker stays VPC-only. While no GPU is connected nothing
 listens on `gpu-relay:8086/8188`, which is exactly what greys the image and video capabilities out.
 
 **Outputs.** The droplet keeps nothing: the worker hands each clip to the job service (`PUT

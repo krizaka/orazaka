@@ -122,14 +122,15 @@ render_user_data() {
   local profile="$1" volume="$2" out="$3" pubkey="$4" myip="$5"
   local image_offload="false"; [[ "$profile" == "small" ]] && image_offload="true"
   RELAY_PASSWORD="$(secret AI_GPU_RELAY_PASSWORD)" \
-  RABBIT_PASSWORD="$(secret RABBITMQ_PASS)" \
+  RABBIT_PASSWORD="$(secret RABBITMQ_PASS_GPU)" \
+  BROKER_CA_B64="$(secret RABBITMQ_CA_CERT_BASE64)" \
   SERVICE_TOKEN="$(mint_service_token "$MAX_HOURS")" \
   WATCHDOG_TOKEN="$(do_token)" \
   python3 - "$ROOT" "$out" "$profile" "$volume" "$WORKER_IMAGE" "$CHISEL_IMAGE" "$RELAY_URL" \
     "$IDLE_MINUTES" "$MAX_HOURS" "$image_offload" "$pubkey" "$myip" "$OLLAMA_IMAGE" "$OLLAMA_MODELS" <<'PY'
 import base64, os, sys
 root, out, profile, volume, worker, chisel, relay, idle, max_hours, offload, pubkey, myip, ollama, ollama_models = sys.argv[1:]
-for name in ("RELAY_PASSWORD", "RABBIT_PASSWORD", "SERVICE_TOKEN", "WATCHDOG_TOKEN"):
+for name in ("RELAY_PASSWORD", "RABBIT_PASSWORD", "BROKER_CA_B64", "SERVICE_TOKEN", "WATCHDOG_TOKEN"):
     if not os.environ.get(name):
         sys.exit(f"gpu-dev: {name} is empty — is the secrets file complete?")
 def file(path, content, mode):
@@ -138,7 +139,7 @@ def file(path, content, mode):
 host_env = (f"PROFILE={profile}\nWORKER_IMAGE={worker}\nCHISEL_IMAGE={chisel}\nRELAY_URL={relay}\n"
             f"VOLUME_NAME={volume}\nIMAGE_MODEL=flux-2-klein-4b\nIMAGE_OFFLOAD={offload}\n"
             f"IDLE_MINUTES={idle}\nMAX_HOURS={max_hours}\nOLLAMA_IMAGE={ollama}\nOLLAMA_MODELS=\"{ollama_models}\"\n")
-worker_env = (f"SPRING_RABBITMQ_USERNAME=orazaka\nSPRING_RABBITMQ_PASSWORD={os.environ['RABBIT_PASSWORD']}\n"
+worker_env = (f"SPRING_RABBITMQ_USERNAME=gpu-worker\nSPRING_RABBITMQ_PASSWORD={os.environ['RABBIT_PASSWORD']}\n"
               f"ORAZAKA_SERVICE_TOKEN={os.environ['SERVICE_TOKEN']}\n")
 relay_env = f"AUTH=gpu:{os.environ['RELAY_PASSWORD']}\n"
 parts = ["#cloud-config\n", "ssh_pwauth: false\n", f"ssh_authorized_keys:\n  - {pubkey}\n", "write_files:\n",
@@ -147,6 +148,7 @@ parts = ["#cloud-config\n", "ssh_pwauth: false\n", f"ssh_authorized_keys:\n  - {
          file("/etc/orazaka-gpu/host.env", host_env, "0644"),
          file("/etc/orazaka-gpu/worker.env", worker_env, "0600"),
          file("/etc/orazaka-gpu/relay.env", relay_env, "0600"),
+         file("/etc/orazaka-gpu/broker-ca.pem", base64.b64decode(os.environ["BROKER_CA_B64"]).decode(), "0644"),
          file("/etc/orazaka-gpu/do-token", os.environ["WATCHDOG_TOKEN"], "0600"),
          "runcmd:\n",
          "  - [sh, -c, 'ufw default deny incoming && ufw default allow outgoing && ufw allow from %s to any port 22 proto tcp && ufw --force enable']\n" % myip,
@@ -292,21 +294,25 @@ logs() {
 mac() {
   mkdir -p "$LOCAL"; chmod 700 "$LOCAL"
   local out="$LOCAL/mac-worker.env"
-  RELAY_PASSWORD="$(secret AI_GPU_RELAY_PASSWORD)" RABBIT_PASSWORD="$(secret RABBITMQ_PASS)" \
-  SERVICE_TOKEN="$(mint_service_token 12)" python3 - "$out" <<'PY'
-import os, sys
+  RELAY_PASSWORD="$(secret AI_GPU_RELAY_PASSWORD)" RABBIT_PASSWORD="$(secret RABBITMQ_PASS_GPU)" \
+  BROKER_CA_B64="$(secret RABBITMQ_CA_CERT_BASE64)" \
+  SERVICE_TOKEN="$(mint_service_token 12)" python3 - "$out" "$LOCAL/broker-ca.pem" <<'PY'
+import base64, os, sys
+with open(sys.argv[2], "w") as ca:
+    ca.write(base64.b64decode(os.environ["BROKER_CA_B64"]).decode())
 fd = os.open(sys.argv[1], os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
 with os.fdopen(fd, "w") as handle:
     handle.write(
         f"AUTH=gpu:{os.environ['RELAY_PASSWORD']}\n"
-        "SPRING_RABBITMQ_HOST=127.0.0.1\nSPRING_RABBITMQ_PORT=15672\nSPRING_RABBITMQ_USERNAME=orazaka\n"
+        "SPRING_RABBITMQ_HOST=127.0.0.1\nSPRING_RABBITMQ_PORT=15671\nSPRING_RABBITMQ_USERNAME=gpu-worker\n"
+        f"SPRING_RABBITMQ_SSL_ENABLED=true\nSPRING_RABBITMQ_SSL_CA_FILE={sys.argv[2]}\nSPRING_RABBITMQ_SSL_SERVER_NAME=broker-dev.orazaka.com\n"
         f"SPRING_RABBITMQ_PASSWORD={os.environ['RABBIT_PASSWORD']}\n"
         f"ORAZAKA_SERVICE_TOKEN={os.environ['SERVICE_TOKEN']}\n"
         "MEDIA_ASSET_SINK_URL=http://127.0.0.1:18090\nJOB_SERVICE_INTERNAL_URL=http://127.0.0.1:18090\n"
     )
 PY
   say "wrote $out (0600, valid 12 h). Then, in two terminals:"
-  echo "  set -a; . $out; set +a; chisel client --keepalive 25s $RELAY_URL 127.0.0.1:15672:rabbitmq:5672 127.0.0.1:18090:core:8090"
+  echo "  set -a; . $out; set +a; chisel client --keepalive 25s $RELAY_URL 127.0.0.1:15671:broker-dev.orazaka.com:5671 127.0.0.1:18090:core:8090"
   echo "  set -a; . $out; set +a; cd orazaka-apps/workers/orazaka-worker-media && .venv/bin/python -u -m app.consumer"
 }
 

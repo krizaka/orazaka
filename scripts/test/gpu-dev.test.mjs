@@ -18,7 +18,8 @@ function render(profile) {
     env,
     [
       `IDENTITY_JWT_SECRET=${JWT}`,
-      "RABBITMQ_PASS=rabbit-secret-value",
+      "RABBITMQ_PASS_GPU=rabbit-secret-value",
+      `RABBITMQ_CA_CERT_BASE64=${Buffer.from("-----BEGIN CERTIFICATE-----\nTEST\n-----END CERTIFICATE-----\n").toString("base64")}`,
       "AI_GPU_RELAY_PASSWORD=relay-secret-value-0123456789abcdef",
       "GPU_WATCHDOG_DO_TOKEN=dop_v1_watchdog",
     ].join("\n"),
@@ -49,6 +50,9 @@ test("user-data: the host scripts are the repository's, secrets are 0600 and the
   assert.match(files["/etc/orazaka-gpu/host.env"].content, /^VOLUME_NAME=orazaka-gpu-models-tor1$/m);
   assert.match(files["/etc/orazaka-gpu/host.env"].content, /^IDLE_MINUTES=30$/m);
   assert.match(files["/etc/orazaka-gpu/relay.env"].content, /^AUTH=gpu:relay-secret-value/);
+  // The narrow broker user, never the platform's; the dev CA to verify the broker with.
+  assert.match(files["/etc/orazaka-gpu/worker.env"].content, /^SPRING_RABBITMQ_USERNAME=gpu-worker$/m);
+  assert.match(files["/etc/orazaka-gpu/broker-ca.pem"].content, /BEGIN CERTIFICATE/);
   assert.match(text, /ufw allow from 127\.0\.0\.1 to any port 22/);
 });
 
@@ -68,7 +72,7 @@ test("the droplet opens no port but SSH from the caller, and reaches the platfor
   const host = read("infra/gpu/host.sh");
   assert.doesNotMatch(host, /\s-p\s+\d+:\d+/, "no published port");
   assert.match(host, /iptables -I DOCKER-USER -d 169\.254\.169\.254 -j DROP/);
-  assert.match(host, /client .*"\$RELAY_URL"[\s\S]*0\.0\.0\.0:5672:rabbitmq:5672 0\.0\.0\.0:8090:core:8090[\s\S]*R:0\.0\.0\.0:8086:sd-server:8086 R:0\.0\.0\.0:8188:worker:8188 R:0\.0\.0\.0:11434:ollama:11434/);
+  assert.match(host, /client .*"\$RELAY_URL"[\s\S]*0\.0\.0\.0:5671:broker-dev\.orazaka\.com:5671 0\.0\.0\.0:8090:core:8090[\s\S]*R:0\.0\.0\.0:8086:sd-server:8086 R:0\.0\.0\.0:8188:worker:8188 R:0\.0\.0\.0:11434:ollama:11434/);
   // The watchdog is armed before anything that can fail.
   assert.ok(host.indexOf("orazaka-gpu-watchdog.timer") < host.indexOf("--name orazaka-fetch"));
 });
