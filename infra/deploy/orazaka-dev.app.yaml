@@ -110,8 +110,10 @@ services:
       - { key: EVENTS_EXCHANGE, scope: RUN_TIME, value: orazaka.events }
       - { key: DLX_EXCHANGE, scope: RUN_TIME, value: orazaka.dlx }
       - { key: USERS_RESERVED_PREFERENCE_PREFIXES, scope: RUN_TIME, value: "orazaka." }
-      # No Ollama in dev (chat is on serverless inference): its catalogue answers empty.
-      - { key: SPRING_AI_OLLAMA_BASE_URL, scope: RUN_TIME, value: "http://localhost:11434" }
+      # Ollama = the GPU droplet's, through the relay (chat and vision of the Studios while it runs; serverless
+      # inference stays the chat default once its key is set). Its chat model is declared, never the first one listed.
+      - { key: SPRING_AI_OLLAMA_BASE_URL, scope: RUN_TIME, value: "http://gpu-relay:11434" }
+      - { key: ORAZAKA_OLLAMA_MODEL, scope: RUN_TIME, value: "qwen2.5:7b" }
       # Image and video engines = the hourly GPU droplet, reached through the relay (gpu-relay:8086 is its
       # sd-server, :8188 its video pipeline); nothing listens there while it is off, which greys them out.
       - { key: ORAZAKA_CORE_IMAGE_GENERATION_BASE_URL, scope: RUN_TIME, value: "http://gpu-relay:8086/v1" }
@@ -121,8 +123,9 @@ services:
       - { key: TRACING_SAMPLING_PROBABILITY, scope: RUN_TIME, value: "0" }
       - { key: LOGGING_LEVEL_ORAZAKA, scope: RUN_TIME, value: INFO }
 
-  # The GPU relay (infra/deploy/gpu-relay): a chisel server. Forwards the broker (broker-dev.orazaka.com:5671, TLS end to end) and core:8090 to the GPU
-  # host, and exposes the GPU host's sd-server and video pipeline inside the app as gpu-relay:8086/:8188.
+  # The GPU relay (infra/deploy/gpu-relay): a chisel server. Forwards the broker (broker-dev.orazaka.com:5671, TLS
+  # end to end) and core:8090 to the GPU host, and exposes the GPU host's sd-server, video pipeline and Ollama
+  # inside the app as gpu-relay:8086/:8188/:11434.
   - name: gpu-relay
     github:
       repo: krizaka/orazaka
@@ -131,7 +134,7 @@ services:
     dockerfile_path: infra/deploy/gpu-relay/Dockerfile
     source_dir: infra/deploy/gpu-relay
     http_port: 8080
-    internal_ports: [8086, 8188]
+    internal_ports: [8086, 8188, 11434]
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
     health_check:

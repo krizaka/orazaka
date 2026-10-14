@@ -20,7 +20,7 @@ exec > >(logger -t orazaka-gpu -s 2>/dev/console) 2>&1
 CONF=/etc/orazaka-gpu
 STATE=/var/lib/orazaka-gpu
 # shellcheck disable=SC1091
-source "$CONF/host.env"   # PROFILE, WORKER_IMAGE, RELAY_URL, VOLUME_NAME, IMAGE_MODEL, IMAGE_OFFLOAD, CHISEL_IMAGE
+source "$CONF/host.env"   # PROFILE, WORKER_IMAGE, RELAY_URL, VOLUME_NAME, IMAGE_MODEL, IMAGE_OFFLOAD, CHISEL_IMAGE, OLLAMA_*
 mkdir -p "$STATE/state" "$STATE/uploads"
 
 step() { echo "orazaka-gpu: $*"; }
@@ -91,7 +91,7 @@ step "weights ready in $(( $(date +%s) - started ))s"
 
 # --- 5. the three containers -----------------------------------------------------------------------
 docker network inspect orz >/dev/null 2>&1 || docker network create orz >/dev/null
-for name in sd-server worker relay; do docker rm -f "$name" >/dev/null 2>&1 || true; done
+for name in sd-server worker ollama relay; do docker rm -f "$name" >/dev/null 2>&1 || true; done
 
 docker run -d --name sd-server --network orz --restart unless-stopped --gpus all \
   -v /models:/models:ro -e MEDIA_IMAGE_OFFLOAD="$IMAGE_OFFLOAD" \
@@ -106,12 +106,20 @@ docker run -d --name worker --network orz --restart unless-stopped --gpus all --
   -e ORAZAKA_MEDIA_MEM_HEADROOM_GB=4 \
   "$WORKER_IMAGE" >/dev/null
 
+# Ollama: chat and vision for the Studios' text and photo steps while this GPU runs (the core reaches it as
+# gpu-relay:11434). It unloads a model after 2 idle minutes so the video model gets the card back.
+mkdir -p /models/ollama
+docker run -d --name ollama --network orz --restart unless-stopped --gpus all \
+  -v /models/ollama:/root/.ollama -e OLLAMA_KEEP_ALIVE=2m -e OLLAMA_NUM_PARALLEL=1 "$OLLAMA_IMAGE" >/dev/null
+for _ in $(seq 1 30); do docker exec ollama ollama list >/dev/null 2>&1 && break; sleep 2; done
+for model in $OLLAMA_MODELS; do docker exec ollama ollama pull "$model" >/dev/null && step "ollama: $model ready"; done
+
 # The chisel client: forwards the broker and the job service INTO this network, exposes sd-server and
 # the video pipeline back inside the app. Its credential is read from the environment, not the argv.
 docker run -d --name relay --network orz --restart unless-stopped --env-file "$CONF/relay.env" \
   "$CHISEL_IMAGE" client --keepalive 25s --max-retry-interval 30s "$RELAY_URL" \
   0.0.0.0:5672:rabbitmq:5672 0.0.0.0:8090:core:8090 \
-  R:0.0.0.0:8086:sd-server:8086 R:0.0.0.0:8188:worker:8188 >/dev/null
+  R:0.0.0.0:8086:sd-server:8086 R:0.0.0.0:8188:worker:8188 R:0.0.0.0:11434:ollama:11434 >/dev/null
 
 touch "$STATE/ready" "$STATE/state/last-activity"
-step "serving: sd-server ($IMAGE_MODEL), worker ($PROFILE), relay → $RELAY_URL"
+step "serving: sd-server ($IMAGE_MODEL), worker ($PROFILE), ollama ($OLLAMA_MODELS), relay → $RELAY_URL"

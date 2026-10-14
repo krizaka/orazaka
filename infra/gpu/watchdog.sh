@@ -26,6 +26,7 @@ boot=$(( now - $(cut -d. -f1 /proc/uptime) ))
 
 # Signals of work in the last two minutes, folded into the activity file.
 if docker logs --since 2m sd-server 2>&1 | grep -qiE 'generate|/v1/images|sampling'; then touch "$ACTIVITY"; fi
+if docker logs --since 2m ollama 2>&1 | grep -qE 'POST +"/api/(chat|generate)|/v1/chat'; then touch "$ACTIVITY"; fi
 util=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
 if [[ "${util:-0}" =~ ^[0-9]+$ ]] && (( util >= 20 )); then touch "$ACTIVITY"; fi
 if [[ ! -e "$STATE/ready" ]] && (( now - boot < SETUP_MAX_MINUTES * 60 )); then touch "$ACTIVITY"; fi

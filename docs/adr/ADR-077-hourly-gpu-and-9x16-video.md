@@ -34,8 +34,9 @@ render.
    and `aspect` (`9:16` default, `16:9`, `1:1`); the worker's `models.yaml` only says how each is fetched (pinned) and
    shaped, and refuses by name a model it does not describe. The host default is the deployment's (`MEDIA_GPU_PROFILE`).
 4. **Network: the GPU dials out.** A chisel server (`gpu-relay`, $5/month) behind App Platform's TLS, one 256-bit
-   credential, an allow-list of four remotes: `rabbitmq:5672`, `core:8090` forward; `:8086` (sd-server) and `:8188`
-   reverse, so the core reaches the GPU at `gpu-relay:8086`. Refused: exposing RabbitMQ (App Platform has no TCP
+   credential, an allow-list of five remotes: `rabbitmq:5672`, `core:8090` forward; `:8086` (sd-server), `:8188` (video) and
+   `:11434` (Ollama — the Studios' chat and vision steps while the GPU runs) reverse, so the core reaches the GPU at
+   `gpu-relay:8086`. Refused: exposing RabbitMQ (App Platform has no TCP
    ingress, and TLS + credentials + IP restriction on a broker is more surface than a tunnel), a managed broker, a VPN.
    An IP allow-list was dropped on purpose: the Mac worker uses the same relay.
 5. **Outputs are handed over**, not kept: `PUT /internal/v1/jobs/{id}/output/{file}` (SERVICE), sealed by the job

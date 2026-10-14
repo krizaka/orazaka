@@ -68,7 +68,7 @@ test("the droplet opens no port but SSH from the caller, and reaches the platfor
   const host = read("infra/gpu/host.sh");
   assert.doesNotMatch(host, /\s-p\s+\d+:\d+/, "no published port");
   assert.match(host, /iptables -I DOCKER-USER -d 169\.254\.169\.254 -j DROP/);
-  assert.match(host, /client .*"\$RELAY_URL"[\s\S]*0\.0\.0\.0:5672:rabbitmq:5672 0\.0\.0\.0:8090:core:8090[\s\S]*R:0\.0\.0\.0:8086:sd-server:8086 R:0\.0\.0\.0:8188:worker:8188/);
+  assert.match(host, /client .*"\$RELAY_URL"[\s\S]*0\.0\.0\.0:5672:rabbitmq:5672 0\.0\.0\.0:8090:core:8090[\s\S]*R:0\.0\.0\.0:8086:sd-server:8086 R:0\.0\.0\.0:8188:worker:8188 R:0\.0\.0\.0:11434:ollama:11434/);
   // The watchdog is armed before anything that can fail.
   assert.ok(host.indexOf("orazaka-gpu-watchdog.timer") < host.indexOf("--name orazaka-fetch"));
 });

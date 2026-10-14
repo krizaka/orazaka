@@ -33,7 +33,10 @@ PROJECT="orazaka"
 IMAGE="${GPU_IMAGE:-gpu-h100x1-base}"          # DigitalOcean's NVIDIA AI/ML-ready Ubuntu (drivers, Docker)
 REGIONS="${GPU_REGIONS:-tor1 nyc2 atl1 ams3}"   # tor1 first (the app and the cluster are in Toronto)
 WORKER_IMAGE="${GPU_WORKER_IMAGE:-ghcr.io/krizaka/orazaka-worker-media:cuda-latest}"
-CHISEL_IMAGE="${GPU_CHISEL_IMAGE:-jpillora/chisel:1.12.0}"
+CHISEL_IMAGE="${GPU_CHISEL_IMAGE:-jpillora/chisel:1.12.1}"
+OLLAMA_IMAGE="${GPU_OLLAMA_IMAGE:-ollama/ollama:0.40.4}"
+# Chat and vision for the Studios while the GPU runs (sovereign: Apache-2.0 models on our GPU, no third party).
+OLLAMA_MODELS="${GPU_OLLAMA_MODELS:-qwen2.5:7b llava:latest}"
 RELAY_URL="${GPU_RELAY_URL:-https://dev.orazaka.com/gpu-relay}"
 VOLUME_GB="${GPU_VOLUME_GB:-80}"
 IDLE_MINUTES="${GPU_IDLE_MINUTES:-30}"
@@ -123,9 +126,9 @@ render_user_data() {
   SERVICE_TOKEN="$(mint_service_token "$MAX_HOURS")" \
   WATCHDOG_TOKEN="$(do_token)" \
   python3 - "$ROOT" "$out" "$profile" "$volume" "$WORKER_IMAGE" "$CHISEL_IMAGE" "$RELAY_URL" \
-    "$IDLE_MINUTES" "$MAX_HOURS" "$image_offload" "$pubkey" "$myip" <<'PY'
+    "$IDLE_MINUTES" "$MAX_HOURS" "$image_offload" "$pubkey" "$myip" "$OLLAMA_IMAGE" "$OLLAMA_MODELS" <<'PY'
 import base64, os, sys
-root, out, profile, volume, worker, chisel, relay, idle, max_hours, offload, pubkey, myip = sys.argv[1:]
+root, out, profile, volume, worker, chisel, relay, idle, max_hours, offload, pubkey, myip, ollama, ollama_models = sys.argv[1:]
 for name in ("RELAY_PASSWORD", "RABBIT_PASSWORD", "SERVICE_TOKEN", "WATCHDOG_TOKEN"):
     if not os.environ.get(name):
         sys.exit(f"gpu-dev: {name} is empty — is the secrets file complete?")
@@ -134,7 +137,7 @@ def file(path, content, mode):
     return f"  - path: {path}\n    encoding: b64\n    permissions: '{mode}'\n    owner: root:root\n    content: {data}\n"
 host_env = (f"PROFILE={profile}\nWORKER_IMAGE={worker}\nCHISEL_IMAGE={chisel}\nRELAY_URL={relay}\n"
             f"VOLUME_NAME={volume}\nIMAGE_MODEL=flux-2-klein-4b\nIMAGE_OFFLOAD={offload}\n"
-            f"IDLE_MINUTES={idle}\nMAX_HOURS={max_hours}\n")
+            f"IDLE_MINUTES={idle}\nMAX_HOURS={max_hours}\nOLLAMA_IMAGE={ollama}\nOLLAMA_MODELS=\"{ollama_models}\"\n")
 worker_env = (f"SPRING_RABBITMQ_USERNAME=orazaka\nSPRING_RABBITMQ_PASSWORD={os.environ['RABBIT_PASSWORD']}\n"
               f"ORAZAKA_SERVICE_TOKEN={os.environ['SERVICE_TOKEN']}\n")
 relay_env = f"AUTH=gpu:{os.environ['RELAY_PASSWORD']}\n"

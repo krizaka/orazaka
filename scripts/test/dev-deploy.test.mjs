@@ -53,7 +53,7 @@ test("broker cloud-init: TLS only, bound to the private address, secrets as plac
 test("the GPU relay allows exactly the broker, the job service and the two reverse ports", () => {
   const entry = readFileSync(new URL("../../infra/deploy/gpu-relay/entrypoint.sh", import.meta.url), "utf8");
   const allowed = [...entry.matchAll(/^\s+"(\^[^"]+)",?$/gm)].map((m) => m[1]);
-  assert.deepEqual(allowed, ["^rabbitmq:5672\\$", "^core:8090\\$", "^R:0\\\\\\\\.0\\\\\\\\.0\\\\\\\\.0:(8086|8188)\\$"]);
+  assert.deepEqual(allowed, ["^rabbitmq:5672\\$", "^core:8090\\$", "^R:0\\\\\\\\.0\\\\\\\\.0\\\\\\\\.0:(8086|8188|11434)\\$"]);
   assert.match(entry, /-lt 32/);
   const dockerfile = readFileSync(new URL("../../infra/deploy/gpu-relay/Dockerfile", import.meta.url), "utf8");
   assert.match(dockerfile, /sha256sum -c/);
