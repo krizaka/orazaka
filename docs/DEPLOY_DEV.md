@@ -90,6 +90,16 @@ Droplet in the `default-tor1` VPC (`node scripts/dev-deploy.mjs broker`, idempot
 host, through the relay). Change a model or a provider in the admin
 console or in that file — never in a service's configuration.
 
+- `deepseek-v4-pro` is in the catalogue, selectable, never the default: it answers once the model access key is
+  authorised for it (403 until then) — no change needed here when it is.
+- The key reaches the call through `ai_providers.api_key` (krizaka/orazaka-ai-engine#10); `orazaka-dev` also holds it
+  as the SECRET `AI_INFERENCE_KEY`, the deployment's copy of record. `node scripts/dev-deploy.mjs data` reads it from
+  the secrets file and sends it on psql's stdin, never on a command line.
+- `ORAZAKA_CORE_DEFAULT_PROVIDER=do-inference`: with the historical `ollama` default the pipeline pins Ollama's active
+  model and never reaches the catalogue default.
+- Embeddings (`gte-large-en-v1.5`, 1024 dimensions, tested on the key) are for the knowledge service, which is not
+  deployed in dev yet: chat degrades to no RAG.
+
 ## GPU — images and 9:16 video, by the hour
 
 Generation runs on a GPU droplet that exists only while it works (ADR-077). It runs the CUDA image of
@@ -166,7 +176,7 @@ share the jobs, and a Wan job reaching the Mac runs on Metal (slowly) or fails b
 |---|---|---|
 | Sign-in (web, admin) | yes | admin needs `ROLE_ADMIN` |
 | Sign-up | **no** — 403 | closed on purpose |
-| Chat | yes, once `AI_INFERENCE_KEY` is set | serverless inference |
+| Chat | yes — `mistral-3-14B` (DeepSeek V4 Pro once the key allows it) | serverless inference |
 | Studios list, Prospecting runs (text only) | yes | chat capability |
 | Trades showcase, Media production, 9:16 video | while the GPU runs | `scripts/gpu-dev.sh start big` |
 | Document validation, real-estate reels | locked | PAID Studios, billing off; document screening runs on the Mac worker |
