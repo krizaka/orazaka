@@ -135,6 +135,17 @@ through the API after **30 min without a job** (a job start or end, an image req
 from the secrets file when present — a token scoped to `droplet:read` + `droplet:delete`, to create in the control
 panel — else the doctl token. Containers cannot read the droplet's metadata (and so its user-data).
 
+### The sovereign smoke — do our own engines still generate?
+
+`scripts/gpu-dev.sh smoke` starts the `small` GPU, runs `scripts/gpu-smoke.mjs` against dev.orazaka.com as the test user
+— a chat Studio on Ollama, an image on sd-server (FLUX.2 [klein]), a 1 s 9:16 clip on the media worker (Wan 2.1 1.3B) —
+asserts each (run SUCCEEDED, output non-empty, latency, the model our job reported) and **destroys the droplet whatever
+happens** (trap on exit, interrupt and error). TTS, transcription and RAG are reported `SKIPPED` with their reason until
+dev serves them (LocalAI, knowledge) — never passed. The report: `~/Documents/krizaka/orazaka-smoke/last.json`.
+`scripts/gpu-dev.sh smoke mac` runs the same checks against the Mac's engines on the relay, for free. The weekly
+workflow `GPU smoke (sovereign)` runs it on Mondays once its secrets are set (see the workflow's header); a run on a
+warm Volume costs ≈ $0.20 (the first one also builds the image and fetches the weights).
+
 ### The Mac as the GPU (free)
 
 The Mac's Metal worker can drain the same queue:

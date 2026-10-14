@@ -9,6 +9,7 @@
 #   scripts/gpu-dev.sh logs              the droplet's setup and container logs (ssh, read-only)
 #   scripts/gpu-dev.sh mac               write the env file to run the Mac's worker against the same queue
 #   scripts/gpu-dev.sh relay-secret      create the relay credential in the secrets file if it is missing
+#   scripts/gpu-dev.sh smoke [small|mac] the sovereign smoke: start small, assert our engines through Orazaka, destroy
 #   scripts/gpu-dev.sh user-data big F   render the droplet's cloud-init into F (0600) and create nothing
 #
 #   big   = NVIDIA L40S 48 GB (or RTX 6000 Ada 48 GB), $1.57/h — Wan 2.2 TI2V 5B, 704x1280, 5 s @ 24 fps
@@ -303,6 +304,46 @@ logs() {
     'journalctl -t orazaka-gpu -t orazaka-gpu-watchdog --no-pager -n 60; for c in sd-server worker relay; do echo "== $c"; docker logs --tail 25 $c 2>&1; done; nvidia-smi --query-gpu=name,utilization.gpu,memory.used,memory.total --format=csv'
 }
 
+# The sovereign smoke (scripts/gpu-smoke.mjs): our engines, through Orazaka's routing, asserted — then destroyed.
+wait_ready() {
+  local ip="$1" deadline=$(( $(date +%s) + ${GPU_READY_MINUTES:-75} * 60 ))
+  while (( $(date +%s) < deadline )); do
+    if ssh -i "$LOCAL/id_ed25519" -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$LOCAL/known_hosts" \
+         -o ConnectTimeout=10 -o BatchMode=yes "root@$ip" test -e /var/lib/orazaka-gpu/ready 2>/dev/null; then
+      say "the GPU host is serving"; return 0
+    fi
+    sleep 30
+  done
+  die "the GPU host was not ready after ${GPU_READY_MINUTES:-75} min"
+}
+
+# Destroys every GPU droplet of the tag, whatever state this script is in (the smoke's trap).
+destroy_all() {
+  local ids; ids=$(droplets_json | python3 -c 'import json,sys; print(" ".join(str(d["id"]) for d in json.load(sys.stdin) or []))')
+  # shellcheck disable=SC2086
+  [[ -z "$ids" ]] || { say "destroying $ids"; doctl compute droplet delete $ids --force; }
+}
+
+smoke() {
+  local host="${1:-small}" out="${GPU_SMOKE_OUT:-$HOME/Documents/krizaka/orazaka-smoke/last.json}"
+  if [[ "$host" == "mac" ]]; then
+    node "$ROOT/scripts/gpu-smoke.mjs" --host mac --out "$out"
+    return
+  fi
+  [[ "$host" == "small" || "$host" == "big" ]] || die "usage: scripts/gpu-dev.sh smoke [small|big|mac]"
+  # Whatever happens from here — a failed check, Ctrl+C, a crash — the droplet is destroyed.
+  trap destroy_all EXIT INT TERM
+  start "$host"
+  local ip; ip=$(droplets_json | python3 -c 'import json,sys; ds=json.load(sys.stdin) or []; print(next((n["ip_address"] for d in ds for n in d["networks"]["v4"] if n["type"]=="public"), ""))')
+  wait_ready "$ip"
+  local status=0
+  node "$ROOT/scripts/gpu-smoke.mjs" --host "droplet-$host" --out "$out" || status=$?
+  destroy_all
+  trap - EXIT INT TERM
+  cost | tail -2
+  return "$status"
+}
+
 # The Mac's Metal worker on the same queue, for free (docs/DEPLOY_DEV.md § The Mac as the GPU).
 mac() {
   mkdir -p "$LOCAL"; chmod 700 "$LOCAL"
@@ -339,7 +380,8 @@ case "${1:-}" in
   logs) logs ;;
   mac) mac ;;
   relay-secret) relay_secret ;;
+  smoke) smoke "${2:-small}" ;;
   # Renders a droplet's cloud-init into a 0600 file and creates nothing (tests, review).
   user-data) render_user_data "${2:?big|small}" "${NAME_PREFIX}-models-${REGIONS%% *}" "${3:?output file}" "${GPU_SSH_PUBKEY:-ssh-ed25519 AAAA test}" "${GPU_SSH_FROM:-127.0.0.1}" ;;
-  *) echo "usage: scripts/gpu-dev.sh start big|small | stop | status | cost | logs | mac | relay-secret" >&2; exit 2 ;;
+  *) echo "usage: scripts/gpu-dev.sh start big|small | stop | status | cost | logs | mac | relay-secret | smoke [small|mac]" >&2; exit 2 ;;
 esac
