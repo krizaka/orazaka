@@ -29,8 +29,8 @@ files themselves `INSERT` (plans, price book, models, capabilities, policies…)
 
 **The compromise, to decide before `--apply`:** six contexts share one namespace. Only `processed_messages` exists in
 several (jobs, knowledge, automation, billing, studio — same shape, keyed by `consumer`): they merge into one table.
-That breaks the "one context, one database" boundary of the contract (SqlBoundaryRules) for this environment, and no
-service can be pointed at it without a `search_path`-less shared view of every table. Alternatives: a second dev
+That breaks the "one context, one database" boundary of the contract (SqlBoundaryRules) for this environment: every
+service would see every context's tables. Alternatives: a second dev
 database (another app), or a deployment where each context has its own database.
 
 ## Run it
@@ -45,7 +45,7 @@ scripts/dev-db-migrate.sh --app 4f0f45c4-3e6f-4f75-9f47-2b4454ed4ab6 --apply
 
 `--app` runs `psql` inside the `web` container through `doctl apps console` (the only path to a dev database).
 Without `--app` the script uses `DATABASE_URL` (+ optional `DATABASE_CA_CERT_FILE`) from the environment — for any
-PostgreSQL you can reach, e.g. the local `orazaka_db`-less Docker one.
+PostgreSQL you can reach, e.g. a scratch local PostgreSQL.
 
 ## Looking at it from DBeaver
 
