@@ -144,7 +144,9 @@ scripts/gpu-dev.sh mac                   # writes ~/.orazaka/gpu-dev/mac-worker.
 # then the two commands it prints: a chisel client (brew install chisel) and the worker with that env
 ```
 
-The worker hands its outputs to the dev job service the same way. Run one host at a time: two workers on one queue
+The tunnel also carries the Mac's own engines back into the app — sd-server (`:8086`, FLUX.2 [klein] on Metal), the
+worker's pipeline (`:8188`) and Ollama (`:11434`, with `qwen2.5:7b` and `llava` pulled) — so dev's image, video, chat and
+vision steps run on the Mac while it is connected. The worker hands its outputs to the dev job service the same way. Run one host at a time: two workers on one queue
 share the jobs, and a Wan job reaching the Mac runs on Metal (slowly) or fails by name.
 
 ## What works in dev

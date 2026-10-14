@@ -188,6 +188,10 @@ start() {
 
   mkdir -p "$LOCAL"; chmod 700 "$LOCAL"
   [[ -f "$LOCAL/id_ed25519" ]] || ssh-keygen -q -t ed25519 -N "" -C "orazaka-gpu-dev" -f "$LOCAL/id_ed25519"
+  # The GPU image refuses root passwords: the droplet needs a DigitalOcean SSH key — this machine's own, imported once.
+  local fingerprint; fingerprint=$(ssh-keygen -E md5 -lf "$LOCAL/id_ed25519.pub" | awk '{print $2}' | sed 's/^MD5://')
+  doctl compute ssh-key get "$fingerprint" >/dev/null 2>&1 \
+    || doctl compute ssh-key import "orazaka-gpu-dev-$(hostname -s)" --public-key-file "$LOCAL/id_ed25519.pub" >/dev/null
   local myip; myip=$(curl -fsS https://api.ipify.org)
   local userdata="$LOCAL/user-data.yaml"
 
@@ -200,7 +204,7 @@ start() {
       render_user_data "$profile" "${NAME_PREFIX}-models-${region}" "$userdata" "$(cat "$LOCAL/id_ed25519.pub")" "$myip"
       say "trying $size in $region (\$$rate/hour while it exists)…"
       if id=$(doctl compute droplet create "${NAME_PREFIX}-${profile}" --region "$region" --size "$size" \
-            --image "$IMAGE" --tag-name "$TAG" --user-data-file "$userdata" \
+            --image "$IMAGE" --tag-name "$TAG" --user-data-file "$userdata" --ssh-keys "$fingerprint" \
             --enable-monitoring --wait --format ID --no-header 2>"$LOCAL/create.err"); then
         break 2
       fi
@@ -321,7 +325,9 @@ with os.fdopen(fd, "w") as handle:
     )
 PY
   say "wrote $out (0600, valid 12 h). Then, in two terminals:"
-  echo "  set -a; . $out; set +a; chisel client --keepalive 25s $RELAY_URL 127.0.0.1:15671:broker-dev.orazaka.com:5671 127.0.0.1:18090:core:8090"
+  # The same remotes as a droplet: the broker and the job service in, and the Mac's own engines back into the app
+  # (sd-server :8086, the worker's pipeline :8188, Ollama :11434) — whichever of them runs on the Mac answers.
+  echo "  set -a; . $out; set +a; chisel client --keepalive 25s $RELAY_URL 127.0.0.1:15671:broker-dev.orazaka.com:5671 127.0.0.1:18090:core:8090 R:0.0.0.0:8086:127.0.0.1:8086 R:0.0.0.0:8188:127.0.0.1:8188 R:0.0.0.0:11434:127.0.0.1:11434"
   echo "  set -a; . $out; set +a; cd orazaka-apps/workers/orazaka-worker-media && .venv/bin/python -u -m app.consumer"
 }
 

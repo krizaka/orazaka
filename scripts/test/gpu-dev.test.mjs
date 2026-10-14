@@ -90,6 +90,8 @@ test("the watchdog destroys (never powers off) on idle, lifetime or a stuck setu
 test("gpu-dev.sh: stop always destroys, and the sizes are the stated ones", () => {
   const script = read("scripts/gpu-dev.sh");
   assert.match(script, /doctl compute droplet delete \$ids --force/);
+  // The GPU image takes no root password: the droplet is created with this machine's SSH key.
+  assert.match(script, /--ssh-keys "\$fingerprint"/);
   assert.doesNotMatch(script, /power-?off|droplet-action shutdown/);
   assert.match(script, /big\) echo "gpu-l40sx1-48gb:1\.57 gpu-6000adax1-48gb:1\.57"/);
   assert.match(script, /small\) echo "gpu-4000adax1-20gb:0\.76"/);
