@@ -29,7 +29,7 @@ the media worker (`ghcr.io/krizaka/orazaka-worker-media:cuda-*`, ADR-077), the n
 | Target | For | Installer | Containers | AI runtime | Updates | When |
 |---|---|---|---|---|---|---|
 | **Orazaka for Mac** | a firm of 1–15 people, one Apple Silicon Mac (Mac mini / Studio) | **Orazaka Desktop** (Tauri 2) driving the CLI | Colima VM (arm64), managed by Orazaka | native on Metal: Ollama, `sd-server`, media worker, LocalAI | Desktop → `orazaka update` | first pilots (2027-Q1 target) |
-| **Orazaka on a Linux server** | an office server or a client VM, optionally with an NVIDIA GPU | `orazaka install --target server` | Docker Engine + compose bundle, systemd | Ollama container, CUDA media-worker image (or CPU profile) | `orazaka update` (CLI) | right after the Mac |
+| **Orazaka on a Linux server** | an office server or a client VM, optionally with an NVIDIA GPU | `npx orazaka install --server` (or the `install.sh` bootstrap) | Docker Engine + compose bundle, systemd | Ollama container, CUDA media-worker image (or CPU profile) | `orazaka update` (CLI) | right after the Mac |
 | **Kubernetes / Helm** | bigger organisations, HA | Helm chart | per-service images | GPU operator | Helm upgrade | **later** — first client that needs HA |
 
 One **release** (one version number) covers every target; a target is a subset of its artefacts.
@@ -61,7 +61,7 @@ account, no GUI.
 | Apple `container` (macOS 26) | Native and promising, but young, macOS 26 only and no compose. Re-evaluated in 2027. |
 
 The VM gets a fixed budget from the machine profile (e.g. 6 vCPU / 12 GB on a 32 GB Mac); Postgres,
-Redis, RabbitMQ, the platform image and the web apps run there, on **linux/arm64** images — which is why
+Redis, RabbitMQ, the service images and the web apps run there, on **linux/arm64** images — which is why
 every image of a release that targets the Mac must exist for arm64 (a rule `orazaka release verify`
 enforces).
 
@@ -94,10 +94,13 @@ CLI with its Node runtime, the **compose bundle**, the systemd units, the releas
 signature, the checksums and SBOMs. An **offline** variant adds `images.tar.zst` (`docker save` of every
 image pinned in the manifest) and the model kit.
 
-**Install:** `sudo ./orazaka install --target server` (or `npx orazaka install --target server` when the
-machine has Node and network). It:
+**Install, one command:** `npx orazaka install --server` on a machine with Node 22, or
+`curl -fsSL https://dev.orazaka.com/install.sh | sh` — a thin bootstrap that downloads the server
+tarball, checks its SHA-256 against the signed manifest and hands over to the CLI; every step of the
+installation is the CLI's (ERR-125), the script only fetches it. Offline: `sudo ./orazaka install
+--server` from the unpacked tarball. It:
 
-1. runs `orazaka doctor --target server`: Ubuntu 24.04 LTS / Debian 12 / RHEL 9, Docker Engine ≥ 27 with
+1. runs `orazaka doctor --server`: Ubuntu 24.04 LTS / Debian 12 / RHEL 9, Docker Engine ≥ 27 with
    the compose plugin (free; Docker Desktop is not used on servers), disk, RAM, LUKS on the data volume
    (warning), and with a GPU: `nvidia-smi`, driver ≥ 570 (CUDA 12.8), NVIDIA Container Toolkit runtime;
 2. creates the `orazaka` system user and the layout `/opt/orazaka/<version>` (code, current → symlink),
@@ -107,7 +110,7 @@ machine has Node and network). It:
 4. writes `orazaka.service` (compose up/down, `Type=oneshot` + `RemainAfterExit`) and
    `orazaka-backup.timer` (nightly), enables them, starts, and waits for every health check.
 
-**Profiles of the compose bundle:** `core` (Postgres + pgvector, Redis, RabbitMQ, the platform image,
+**Profiles of the compose bundle:** `core` (Postgres + pgvector, Redis, RabbitMQ, the service images,
 edge, web, admin), `gpu` (the CUDA media-worker image — worker + `sd-server`, ADR-077 — and Ollama with
 `--gpus all`), `cpu` (Ollama and the media worker on CPU: text, documents and small images only — said
 honestly in the profile). TLS on the LAN: the edge behind Caddy with the firm's certificate, or an
@@ -119,8 +122,8 @@ bundle; the first administrator is created by `orazaka install` and sign-up stay
 
 ## 4. Later: Kubernetes / Helm
 
-Not now. When a client needs high availability or more than one GPU node: per-service images (the
-platform image split along the services it already contains), a Helm chart in this repository,
+Not now. When a client needs high availability or more than one GPU node: the same per-service images
+(§6), a Helm chart in this repository,
 external managed Postgres, the NVIDIA GPU operator, the same release manifest feeding the chart's
 `values.yaml` digests. The release train and the signatures below are designed so this adds a target,
 not a second process.
@@ -135,7 +138,8 @@ not a second process.
   upgrades from in place (`upgradeFrom`).
 - **Built by one workflow** in this repository on a tag `vX.Y.Z`: it reads `orazaka.workspace.json`,
   checks out every repository at the commit the release names, builds and tests (the existing reactor),
-  builds the images (multi-arch, `linux/amd64` + `linux/arm64`; CUDA `amd64` only), the Metal
+  builds **one public image per service and worker** on GHCR (`ghcr.io/krizaka/<component>`,
+  multi-arch `linux/amd64` + `linux/arm64`; the media worker also as a CUDA `amd64` variant), the Metal
   `sd-server` and the dmg on a macOS arm64 runner, writes the manifest, signs everything and publishes a
   **GitHub Release** (free for a public repository) with the manifest, signatures, SBOMs and artefacts.
 - **Cadence:** a minor release monthly when something changed, patches as needed; a release is a
@@ -162,6 +166,29 @@ The offline root of trust is therefore **one public key in the CLI**: a valid ma
 proves every digest and hash it lists. **SBOMs** (CycloneDX, `syft`) are produced for every image, the
 dmg and the CLI, attached to the release and attested; a vulnerability scan (Grype/Trivy) blocks a
 release on a critical finding that has a fix.
+
+**Images are shared, public and pinned.** Every service and worker image is published to
+**GHCR** (`ghcr.io/krizaka/orazaka-edge`, `…/orazaka-studio`, `…/orazaka-job-service`,
+`…/orazaka-knowledge-service`, `…/orazaka-automation-service`, `…/orazaka-conversation-service`,
+`…/orazaka-web-client`, `…/orazaka-web-admin`, `…/orazaka-worker-media` with its `cuda-` variant, and the
+Krizaka blocks the platform runs — users, billing, notifications), public, built by CI on release tags
+only, signed with cosign keyless and attested (SBOM + SLSA provenance). The compose bundle references
+them **by digest**, and `orazaka install`/`update` verify each signature (identity: the release
+workflow of `krizaka/<repo>`) before anything runs. The single JVM image of `infra/deploy/Dockerfile`
+stays what it is: the cheap shape of the **dev** environment, not a delivery artefact.
+
+### Security by default
+
+| Default | How | Checked by `orazaka doctor` |
+|---|---|---|
+| No default password | every secret (database roles, broker, JWT keys, asset master key, first admin) generated at install into one local file, mode 600, owned by the service user | file mode/owner; no known default value anywhere |
+| Nothing exposed but the edge | Postgres, Redis, RabbitMQ, Ollama, workers bound to `127.0.0.1` or the internal compose network; only the edge publishes a port | listening sockets |
+| TLS for remote access | Caddy in front of the edge (automatic certificate when the host has a public name, internal CA on a LAN), or a documented reverse proxy the firm already runs | edge reachable over HTTPS only when remote access is on |
+| Hardened containers | non-root user, read-only root filesystem where the service allows it (tmpfs for scratch), `no-new-privileges`, all capabilities dropped, minimal base images (distroless/Alpine JRE, slim Python) | compose settings of the running containers |
+| Scanned images | Trivy/Grype in CI, **fails on a critical** finding that has a fix | image digests match the signed manifest |
+| Sign-up closed | `AUTH_SIGNUP_ENABLED=false`; the first administrator is created at the first run | flag value |
+
+How to report a vulnerability and which versions are supported: [`SECURITY.md`](../SECURITY.md).
 
 ### Update and rollback
 
@@ -257,11 +284,12 @@ Each step is an issue of the epic, with its acceptance criteria. Steps marked **
 
 1. Release manifest + `orazaka release verify` — **done** (orazaka-cli).
 2. Signed release manifest (ed25519, public key in the CLI) — **(Oussama: generate the key)**.
-3. Release images: platform image (multi-arch) + web/admin images to GHCR, cosign, SBOM, provenance, scan.
+3. Release images: one public image per service and worker on GHCR, multi-arch (+ CUDA worker), cosign,
+   SBOM, provenance, scan; install verifies signatures.
 4. Release workflow `vX.Y.Z` → manifest, artefacts, GitHub Release.
 5. Versioned migration ledger (prerequisite of update).
 6. On-prem compose bundle (profiles core / gpu / cpu, no dev fixtures, TLS).
-7. `orazaka install --target server` + systemd + server checks in `doctor`.
+7. `orazaka install --server` (+ `install.sh` bootstrap) + systemd + server checks in `doctor`.
 8. `orazaka backup` / `restore` + timers + restore drill in CI.
 9. `orazaka update` / `rollback`.
 10. Models by profile with progress + offline kit import.
@@ -272,3 +300,8 @@ Each step is an issue of the epic, with its acceptance criteria. Steps marked **
 14. `orazaka doctor --bundle` + egress/telemetry and encryption checks.
 15. Loi 25 technical sheet for clients' EFVP.
 16. Later: Helm chart.
+17. Security by default (secrets generated, localhost binding, TLS, hardened non-root containers,
+    scan gate) checked by `orazaka doctor`. `SECURITY.md` is written (this document's PR); the defaults and
+    their checks are the issue.
+18. "Run Orazaka on your own infrastructure" guide ([`SELF_HOSTING.md`](SELF_HOSTING.md)) in the README,
+    published on dev.orazaka.com/docs.
