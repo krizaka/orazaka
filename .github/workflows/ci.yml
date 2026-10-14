@@ -38,6 +38,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Workspace scripts
+        run: node --test 'scripts/test/*.test.mjs'
+
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
