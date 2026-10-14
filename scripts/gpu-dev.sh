@@ -71,6 +71,15 @@ for line in open(path, encoding="utf-8"):
 PY
 }
 
+# The dev broker's CA (krizaka/orazaka#70): from the secrets file, else the folder dev-deploy.mjs broker made it in.
+broker_ca_b64() {
+  local inline; inline="$(secret RABBITMQ_CA_CERT_BASE64 || true)"
+  if [[ -n "$inline" ]]; then printf '%s' "$inline"; return; fi
+  local file; file="$(dirname "$ENV_FILE")/orazaka-broker/ca.pem"
+  [[ -f "$file" ]] || die "no broker CA (RABBITMQ_CA_CERT_BASE64 or $file) — node scripts/dev-deploy.mjs broker"
+  base64 < "$file" | tr -d '\n'
+}
+
 droplets_json() { doctl compute droplet list --tag-name "$TAG" -o json; }
 
 # The SERVICE token the worker presents to the job service (ADR-035), minted HERE with the identity
@@ -123,7 +132,7 @@ render_user_data() {
   local image_offload="false"; [[ "$profile" == "small" ]] && image_offload="true"
   RELAY_PASSWORD="$(secret AI_GPU_RELAY_PASSWORD)" \
   RABBIT_PASSWORD="$(secret RABBITMQ_PASS_GPU)" \
-  BROKER_CA_B64="$(secret RABBITMQ_CA_CERT_BASE64)" \
+  BROKER_CA_B64="$(broker_ca_b64)" \
   SERVICE_TOKEN="$(mint_service_token "$MAX_HOURS")" \
   WATCHDOG_TOKEN="$(do_token)" \
   python3 - "$ROOT" "$out" "$profile" "$volume" "$WORKER_IMAGE" "$CHISEL_IMAGE" "$RELAY_URL" \
@@ -295,7 +304,7 @@ mac() {
   mkdir -p "$LOCAL"; chmod 700 "$LOCAL"
   local out="$LOCAL/mac-worker.env"
   RELAY_PASSWORD="$(secret AI_GPU_RELAY_PASSWORD)" RABBIT_PASSWORD="$(secret RABBITMQ_PASS_GPU)" \
-  BROKER_CA_B64="$(secret RABBITMQ_CA_CERT_BASE64)" \
+  BROKER_CA_B64="$(broker_ca_b64)" \
   SERVICE_TOKEN="$(mint_service_token 12)" python3 - "$out" "$LOCAL/broker-ca.pem" <<'PY'
 import base64, os, sys
 with open(sys.argv[2], "w") as ca:
@@ -325,6 +334,6 @@ case "${1:-}" in
   mac) mac ;;
   relay-secret) relay_secret ;;
   # Renders a droplet's cloud-init into a 0600 file and creates nothing (tests, review).
-  user-data) render_user_data "${2:?big|small}" "${NAME_PREFIX}-models-${GPU_REGIONS%% *}" "${3:?output file}" "${GPU_SSH_PUBKEY:-ssh-ed25519 AAAA test}" "${GPU_SSH_FROM:-127.0.0.1}" ;;
+  user-data) render_user_data "${2:?big|small}" "${NAME_PREFIX}-models-${REGIONS%% *}" "${3:?output file}" "${GPU_SSH_PUBKEY:-ssh-ed25519 AAAA test}" "${GPU_SSH_FROM:-127.0.0.1}" ;;
   *) echo "usage: scripts/gpu-dev.sh start big|small | stop | status | cost | logs | mac | relay-secret" >&2; exit 2 ;;
 esac
