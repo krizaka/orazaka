@@ -98,7 +98,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 ## Commands
 
 ```cli-commands
-31 commands, 23 subcommands — every one in the table below.
+32 commands, 24 subcommands — every one in the table below.
 ```
 
 | Command | Description |
@@ -141,6 +141,8 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka profile` | Display authenticated user profile information |
 | `orazaka recover` | Diagnose and recover from common issues |
 | `orazaka register [username] [email]` | Register a new user account |
+| `orazaka release` | Release bundles — check a release manifest and an offline bundle before installing it |
+| `orazaka release verify <manifest>` | Check a release manifest, and with --dir the artefacts of an offline bundle against it |
 | `orazaka reset [token]` | Reset account password using a valid reset token |
 | `orazaka settings` | Manage user settings and preferences |
 | `orazaka settings get` | Get all settings and preferences |
@@ -360,6 +362,17 @@ Register a new user account
 | `[username]` | Desired username |
 | `[email]` | Account email address |
 | `-l, --language <lang>` | BCP 47 language tag (e.g. en, ja) |
+
+### `orazaka release verify <manifest>`
+
+Check a release manifest, and with --dir the artefacts of an offline bundle against it
+
+| Argument / option | Description |
+|:---|:---|
+| `<manifest>` | Path to the release manifest (orazaka-release.json) |
+| `--dir <path>` | Offline bundle directory whose artefacts are checked (size and SHA-256) |
+| `--target <target>` | Only the artefacts of one target: mac-arm64, linux-amd64 or linux-arm64 |
+| `--json` | Print the result as JSON |
 
 ### `orazaka reset [token]`
 
