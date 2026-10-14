@@ -182,6 +182,24 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <!-- The worker on a CUDA host (ADR-077): 9:16 shapes, routing, hand-over, threaded ack. -->
+                        <id>validate-gpu-runtime</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${python.executable}</executable>
+                            <workingDirectory>${project.basedir}/orazaka-apps/workers/orazaka-worker-media</workingDirectory>
+                            <arguments>
+                                <argument>-m</argument>
+                                <argument>pytest</argument>
+                                <argument>-q</argument>
+                                <argument>test_gpu_runtime.py</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <!-- The document-validation pack's rule engine: 17 tests written and never run by any
                              build until ADR-064. Its sibling test_authenticity.py cannot run here (pypdf is
                              declared nowhere); the worker suite's collection guard names it and checks why. -->

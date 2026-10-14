@@ -134,6 +134,11 @@ ehthumbs.db
 !ops/local/scripts/*.sh
 # The dev deployment's container entrypoint: an exception to ERR-125 (it runs in the cloud image).
 !infra/deploy/*.sh
+# The hourly GPU host (docs/DEPLOY_DEV.md § GPU): it drives a cloud resource and runs on the droplet and in
+# the relay image, not in the local workspace — the same ERR-125 exception.
+!scripts/gpu-dev.sh
+!infra/gpu/*.sh
+!infra/deploy/gpu-relay/*.sh
 .idea
 .sonarlint
 

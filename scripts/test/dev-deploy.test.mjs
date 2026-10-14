@@ -31,10 +31,10 @@ for (const name of ["orazaka-dev", "orazaka-admin-dev"]) {
   });
 }
 
-test("orazaka-dev: only the edge and the web are routed; the broker is reached over TLS in the VPC", () => {
+test("orazaka-dev: only the edge, the web and the GPU relay are routed; the broker is reached over TLS in the VPC", () => {
   const text = spec("orazaka-dev");
   const routed = [...text.matchAll(/- component:\n\s+name: (\S+)/g)].map((m) => m[1]);
-  assert.deepEqual(routed.sort(), ["core", "web"]);
+  assert.deepEqual(routed.sort(), ["core", "gpu-relay", "web"]);
   assert.match(text, /^vpc:\n  id: \S+/m);
   assert.match(text, /RABBITMQ_PORT, scope: RUN_TIME, value: "5671"/);
   assert.match(text, /SPRING_RABBITMQ_SSL_ENABLED, scope: RUN_TIME, value: "true"/);
@@ -48,6 +48,15 @@ test("broker cloud-init: TLS only, bound to the private address, secrets as plac
   for (const p of ["BROKER_USERS_SCRIPT_B64", "BROKER_CA_PEM_B64", "BROKER_SERVER_PEM_B64", "BROKER_SERVER_KEY_B64"]) {
     assert.match(text, new RegExp(`__${p}__`));
   }
+});
+
+test("the GPU relay allows exactly the broker, the job service and the two reverse ports", () => {
+  const entry = readFileSync(new URL("../../infra/deploy/gpu-relay/entrypoint.sh", import.meta.url), "utf8");
+  const allowed = [...entry.matchAll(/^\s+"(\^[^"]+)",?$/gm)].map((m) => m[1]);
+  assert.deepEqual(allowed, ["^rabbitmq:5672\\$", "^core:8090\\$", "^R:0\\\\\\\\.0\\\\\\\\.0\\\\\\\\.0:(8086|8188)\\$"]);
+  assert.match(entry, /-lt 32/);
+  const dockerfile = readFileSync(new URL("../../infra/deploy/gpu-relay/Dockerfile", import.meta.url), "utf8");
+  assert.match(dockerfile, /sha256sum -c/);
 });
 
 test("password: long, mixed, different each time", () => {

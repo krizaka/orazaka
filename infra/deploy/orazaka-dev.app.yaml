@@ -20,6 +20,13 @@ ingress:
       match:
         path:
           prefix: /edge
+    # The GPU relay (docs/DEPLOY_DEV.md § GPU): the GPU droplet or the Mac's worker dials OUT here, over
+    # TLS, with a 256-bit credential, and may open only the remotes of its allow-list.
+    - component:
+        name: gpu-relay
+      match:
+        path:
+          prefix: /gpu-relay
     - component:
         name: web
       match:
@@ -57,6 +64,8 @@ services:
     dockerfile_path: infra/deploy/Dockerfile
     source_dir: /
     http_port: 8088
+    # The job service, for the GPU relay only (worker registry, output hand-over); never routed.
+    internal_ports: [8090]
     instance_count: 1
     instance_size_slug: basic-s
     health_check:
@@ -103,9 +112,29 @@ services:
       - { key: USERS_RESERVED_PREFERENCE_PREFIXES, scope: RUN_TIME, value: "orazaka." }
       # No Ollama in dev (chat is on serverless inference): its catalogue answers empty.
       - { key: SPRING_AI_OLLAMA_BASE_URL, scope: RUN_TIME, value: "http://localhost:11434" }
-      # Image engine = the hourly GPU droplet (ORA-GPU); greyed out while it is off.
-      - { key: ORAZAKA_CORE_IMAGE_GENERATION_BASE_URL, scope: RUN_TIME, value: "http://gpu-dev.orazaka.com:8086/v1" }
+      # Image and video engines = the hourly GPU droplet, reached through the relay (gpu-relay:8086 is its
+      # sd-server, :8188 its video pipeline); nothing listens there while it is off, which greys them out.
+      - { key: ORAZAKA_CORE_IMAGE_GENERATION_BASE_URL, scope: RUN_TIME, value: "http://gpu-relay:8086/v1" }
+      - { key: ORAZAKA_CORE_VIDEO_GENERATION_BASE_URL, scope: RUN_TIME, value: "http://gpu-relay:8188" }
       # No collector in dev: no trace export, logs on stdout.
       - { key: MANAGEMENT_TRACING_SAMPLING_PROBABILITY, scope: RUN_TIME, value: "0" }
       - { key: TRACING_SAMPLING_PROBABILITY, scope: RUN_TIME, value: "0" }
       - { key: LOGGING_LEVEL_ORAZAKA, scope: RUN_TIME, value: INFO }
+
+  # The GPU relay (infra/deploy/gpu-relay): a chisel server. Forwards the broker (broker-dev.orazaka.com:5671, TLS end to end) and core:8090 to the GPU
+  # host, and exposes the GPU host's sd-server and video pipeline inside the app as gpu-relay:8086/:8188.
+  - name: gpu-relay
+    github:
+      repo: krizaka/orazaka
+      branch: main
+      deploy_on_push: false
+    dockerfile_path: infra/deploy/gpu-relay/Dockerfile
+    source_dir: infra/deploy/gpu-relay
+    http_port: 8080
+    internal_ports: [8086, 8188]
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    health_check:
+      http_path: /health
+    envs:
+      - { key: AI_GPU_RELAY_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__AI_GPU_RELAY_PASSWORD__" }
