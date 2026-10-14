@@ -13,6 +13,10 @@ test("a run passes only when it SUCCEEDED with a non-empty output, and names the
   assert.ok(ok.models.includes("qwen2.5:7b") && ok.models.includes("provider:ollama"));
   assert.equal(judge(check, { status: "SUCCEEDED", outputs: [{ value: "  " }] }, 1).status, "FAILED");
   assert.equal(judge(check, { status: "FAILED", errorMessage: "boom", outputs: [] }, 1).detail, "boom");
+  // A chat a cloud API answered is not a pass of OUR runtime.
+  const cloud = judge(check, { status: "SUCCEEDED", outputs: [{ value: "content: x, metadata: provider: do-inference" }] }, 1);
+  assert.equal(cloud.status, "FAILED");
+  assert.match(cloud.detail, /answered by do-inference, not ollama/);
 });
 
 test("what dev cannot route is SKIPPED with its reason — never passed", () => {

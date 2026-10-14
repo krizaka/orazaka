@@ -32,6 +32,8 @@ export const CHECKS = [
     name: "chat",
     engine: "ollama",
     studio: "lead-research",
+    // Sovereign or nothing: a chat answered by a cloud API is not our runtime, whatever it says.
+    requireProvider: "ollama",
     install: { tone: "direct", signature: "Orazaka smoke" },
     inputs: {
       prospects: ["Boulangerie Le Fournil, Montréal — 3 boutiques"],
@@ -84,7 +86,9 @@ export function judge(check, run, ms) {
     for (const m of text.matchAll(/"?model"?\s*[:=]\s*"?([A-Za-z0-9._:/-]+)/g)) models.add(m[1]);
     for (const m of text.matchAll(/provider:\s*([a-z-]+)/g)) models.add(`provider:${m[1]}`);
   }
-  const ok = run.status === "SUCCEEDED" && nonEmpty;
+  const providers = [...models].filter((m) => m.startsWith("provider:")).map((m) => m.slice(9));
+  const foreign = check.requireProvider && !providers.includes(check.requireProvider);
+  const ok = run.status === "SUCCEEDED" && nonEmpty && !foreign;
   return {
     name: check.name,
     engine: check.engine,
@@ -93,7 +97,11 @@ export function judge(check, run, ms) {
     ms,
     runId: run.id,
     models: [...models],
-    detail: ok ? `${outputs.length} output(s)` : run.errorMessage ?? `status ${run.status}, empty output`,
+    detail: ok
+      ? `${outputs.length} output(s)`
+      : foreign && run.status === "SUCCEEDED"
+        ? `answered by ${providers.join(", ") || "an undeclared provider"}, not ${check.requireProvider}`
+        : run.errorMessage ?? `status ${run.status}, empty output`,
   };
 }
 
