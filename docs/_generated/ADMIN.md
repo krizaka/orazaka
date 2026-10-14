@@ -24,7 +24,7 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | `/(console)` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
 | `/(console)/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
 | `/(console)/studios` | The Studio Builder console (ADR-034 §12.4). | — |
-| `/login` | `/login` — where the gate (`src/proxy.ts`) and next-auth (`pages.signIn`) send an operator without a session. | — |
+| `/login` | — | — |
 
 ![Billing — consumption per capability and model, refusals included](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/02-billing-usage.png)
 
