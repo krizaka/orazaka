@@ -39,7 +39,8 @@ RUN \
 FROM eclipse-temurin:21-jre
 # The document-validation worker (orazaka-packs, Tier-W, Python): it drains job.validation.* for the document
 # Studios. Its venv is built here with the pack's pinned dependencies; run-services.sh starts it beside the JVMs.
-RUN apt-get update \
+RUN export DEBIAN_FRONTEND=noninteractive \
+ && apt-get update \
  && apt-get install -y --no-install-recommends python3 python3-venv \
  && rm -rf /var/lib/apt/lists/* \
  && python3 -m venv /opt/validation-venv \
