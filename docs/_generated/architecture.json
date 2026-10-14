@@ -5235,6 +5235,45 @@
         ]
       },
       {
+        "name": "release",
+        "top": "release",
+        "isTop": true,
+        "description": "Release bundles — check a release manifest and an offline bundle before installing it",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "release verify",
+        "top": "release",
+        "isTop": false,
+        "description": "Check a release manifest, and with --dir the artefacts of an offline bundle against it",
+        "args": [
+          {
+            "name": "<manifest>",
+            "desc": "Path to the release manifest (orazaka-release.json)"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--dir <path>",
+            "desc": "Offline bundle directory whose artefacts are checked (size and SHA-256)",
+            "default": null
+          },
+          {
+            "flag": "--target <target>",
+            "desc": "Only the artefacts of one target: mac-arm64, linux-amd64 or linux-arm64",
+            "default": null
+          },
+          {
+            "flag": "--json",
+            "desc": "Print the result as JSON",
+            "default": null
+          }
+        ]
+      },
+      {
         "name": "reset",
         "top": "reset",
         "isTop": true,
