@@ -70,3 +70,4 @@ generated: true
 | ADR-074 | ADR-074 — Krizaka starters and event contracts | `adr/ADR-074-krizaka-starters-and-event-contracts.md` |
 | ADR-075 | ADR-075 — The local image engine: FLUX.2 [klein] 4B, recipes, art direction | `adr/ADR-075-local-image-engine.md` |
 | ADR-076 | ADR-076 — The voice turn | `adr/ADR-076-the-voice-turn.md` |
+| ADR-077 | ADR-077 — The hourly GPU: 9:16 video with Wan, images with FLUX.2 [klein], reached through a relay | `adr/ADR-077-hourly-gpu-and-9x16-video.md` |

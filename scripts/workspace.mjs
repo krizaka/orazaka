@@ -166,6 +166,10 @@ function ci(name) {
     const dir = join(ROOT, target.path);
     run("python3", ["-m", "pip", "install", "--quiet", "pytest", "pyyaml", "pika", "Pillow", "psutil"], { cwd: dir });
     run("python3", ["-m", "pytest", "-q", "test_capability_contract.py"], { cwd: dir });
+    // The CUDA host's own suite (ADR-077) — present once the worker carries it.
+    if (existsSync(join(dir, "test_gpu_runtime.py"))) {
+      run("python3", ["-m", "pytest", "-q", "test_gpu_runtime.py"], { cwd: dir });
+    }
     return;
   }
 

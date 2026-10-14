@@ -58,6 +58,8 @@ the machine holds for clinical, legal or security work, and keep a professional 
 | `mlx-stable-diffusion-video` | MLX Native Video | video | Stable Diffusion video on Apple MLX. Higher quality (25 steps, ~14fps); heavier than AnimateDiff. |
 | `stable-video-diffusion-img2vid-xt` | Stable Video Diffusion XT (heavy, >64GB) | video | Stable Video Diffusion XT — highest-quality image-to-video. Heavy: needs >64GB unified memory or CUDA. Not recommended on a 64GB Mac. |
 | `stable-video-diffusion-img2vid-xt-mps-fp32` | SVD XT (PyTorch MPS Float32) | video | SVD XT in PyTorch MPS float32. Highest fidelity but ~96GB memory — will fail on a 64GB Mac. |
+| `wan2.1-t2v-1.3b` | Wan 2.1 T2V 1.3B (9:16, GPU) | video | Wan 2.1 T2V 1.3B (Apache-2.0) — vertical clips at 480x832, 5 s at 16 fps, on the small GPU host (20 GB). Fast drafts. |
+| `wan2.2-ti2v-5b` | Wan 2.2 TI2V 5B (9:16, GPU) | video | Wan 2.2 TI2V 5B (Apache-2.0) — vertical shorts at 704x1280, 5 s at 24 fps, on the GPU host (48 GB). The 9:16 model of the demos. |
 | `bakllava:latest` | BakLLaVA (latest) | vision | BakLLaVA (Mistral-based) vision model. Compact image understanding. |
 | `llama3.2-vision:latest` | Llama 3.2 Vision (latest) | vision | Llama 3.2 Vision — strong general image understanding. Local vision default. |
 | `llava:latest` | LLaVA (latest) | vision | LLaVA multimodal model — describe and answer questions about images. |
