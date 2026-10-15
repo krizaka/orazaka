@@ -78,7 +78,7 @@ node scripts/dev-deploy.mjs service-account orochia-explorer --scopes ai:embed -
 
 Embeddings: `POST /api/v1/embeddings` `{ "input": ["…"], "model"?: "bge-m3" }` → `{ runId, model, dimensions, data:[{index, embedding}],
 usage }` (and the header `X-Orazaka-Run-Id`). The model is data (`orazaka_models`, category `embedding`, BGE-M3 on the
-`do-inference` provider — `infra/migrations/2026-10-15-embedding-model.sql`); the `runId` is the line `embedding.run
+`do-inference` provider — `infra/deploy/dev-model-registry.sql`, applied by `dev-deploy.mjs data`); the `runId` is the line `embedding.run
 runId=…` in the core's logs (user, model, counts — never a text or a vector). No model configured or the provider down →
 503, so a caller falls back to its own non-AI path. Existing databases need
 `infra/migrations/2026-10-15-embeddings-and-key-scopes.sql` on `krizaka_users_db`.

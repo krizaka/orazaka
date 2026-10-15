@@ -662,6 +662,7 @@
           "CapabilityProvider",
           "ChatGeneratorClient",
           "ChatMemoryStore",
+          "EmbeddingClient",
           "ImageGeneratorClient",
           "InfrastructureStatusProvider",
           "KnowledgeService",
@@ -4492,6 +4493,27 @@
         "url": "https://huggingface.co/mistralai/Ministral-3-14B-Instruct-2512/blob/main/README.md"
       },
       "contextWindow": 262144,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "bge-m3",
+      "name": "BGE-M3",
+      "vendor": "BAAI",
+      "family": "BGE-M3",
+      "category": "embedding",
+      "capabilities": [
+        "embeddings"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "MIT",
+        "url": "https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE"
+      },
+      "contextWindow": 8192,
       "status": "available",
       "lastVerified": null
     },
