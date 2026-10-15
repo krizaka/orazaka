@@ -128,10 +128,11 @@ function apply(name, flags) {
 
 function data() {
   const env = secrets();
-  if (!env.AI_INFERENCE_KEY) throw new Error("AI_INFERENCE_KEY is not in the secrets file yet");
+  const inferenceKey = env.AI_INFERENCE_KEY_ALL || env.AI_INFERENCE_KEY; // the all-models key lists the hosted image models too
+  if (!inferenceKey) throw new Error("AI_INFERENCE_KEY is not in the secrets file yet");
   const sql = readFileSync(join(DEPLOY, "dev-data.sql"), "utf8");
   // The key goes in on stdin (\set), never on the command line where `ps` would show it.
-  const key = env.AI_INFERENCE_KEY.replace(/'/g, "''");
+  const key = inferenceKey.replace(/'/g, "''");
   psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], `\\set ai_inference_key '${key}'\n${sql}`);
   console.log("orazaka_db: dev routing data applied");
 }
