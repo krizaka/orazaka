@@ -29,6 +29,9 @@ UPDATE orazaka_models SET is_default = (model_name = 'mistral-3-14B') WHERE cate
 -- off nothing listens there and the capabilities are greyed out (degraded mode); nothing else changes.
 UPDATE ai_providers SET base_url = 'http://gpu-relay:8086/v1', api_key = 'not-required' WHERE name = 'localai-image';
 UPDATE ai_providers SET base_url = 'http://gpu-relay:8188' WHERE name = 'localai-video';
+-- Speech (Piper, through LocalAI on the Mac) shares the image engine's relay port: scripts/mac-engines-router.mjs
+-- answers /v1/audio/* from LocalAI and the rest from sd-server. Off while the Mac is not connected.
+UPDATE ai_providers SET base_url = 'http://gpu-relay:8086/v1', api_key = 'not-required' WHERE name = 'localai';
 -- Ollama, for the Studios' chat and vision steps while the GPU runs (qwen2.5:7b, llava) — the same relay.
 UPDATE ai_providers SET base_url = 'http://gpu-relay:11434' WHERE name = 'ollama';
 
