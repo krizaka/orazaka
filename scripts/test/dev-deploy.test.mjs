@@ -143,3 +143,11 @@ test("parseScopes: area:action only, none = unscoped", () => {
   assert.throws(() => parseScopes("AI:embed"), /not a scope/);
   assert.throws(() => parseScopes("*:*"), /not a scope/);
 });
+
+test("the core image build cache is busted at every apply: CORE_REBUILD is filled, and the Dockerfile reads it", () => {
+  const core = spec("orazaka-dev");
+  assert.match(core, /key: CORE_REBUILD, scope: BUILD_TIME, value: "__CORE_REBUILD__"/);
+  const filled = render('X: "__CORE_REBUILD__"', {});
+  assert.match(filled, /X: "\d{4}-\d{2}-\d{2}T[\d-]+Z"/);
+  assert.match(readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8"), /ARG CORE_REBUILD[\s\S]*\$\{CORE_REBUILD\}/);
+});

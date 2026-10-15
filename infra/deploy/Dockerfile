@@ -20,7 +20,12 @@ RUN node scripts/workspace.mjs clone --depth 1
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
 COPY --from=sources /workspace /workspace
-RUN \
+# The cloned repositories change under an unchanged Dockerfile: App Platform's layer cache then reuses yesterday's
+# build (a merged route or endpoint never reaches the image). CORE_REBUILD is a BUILD_TIME variable of the core
+# component (deploy/orazaka-dev.app.yaml); changing its value — `scripts/dev-deploy.mjs` sets the date — busts it.
+ARG CORE_REBUILD=0
+RUN echo "core build ${CORE_REBUILD}" \
+ && \
     ./mvnw -B -ntp -q install \
       -DskipTests -DskipITs=true -Dspotless.check.skip=true -Dexec.skip=true \
       -Dskip.npm=true -Dskip.installnodenpm=true \
