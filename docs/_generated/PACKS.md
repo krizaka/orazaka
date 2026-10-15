@@ -36,7 +36,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Media Studios",
   "tagline": "Generate, listen, describe — without leaving a run.",
   "tier": "DATA",
-  "category": "business",
+  "category": "Business",
   "studios": 10
  },
  {
@@ -144,7 +144,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": "TOOLKIT",
  "distribution": "OSS",
  "regulatoryClass": "STANDARD",
- "category": "business",
+ "category": "Business",
  "listed": true,
  "workers": [],
  "controls": {

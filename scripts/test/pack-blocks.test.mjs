@@ -24,6 +24,12 @@ test("a pack block carries the facts a card shows, as data, on one line each", (
   assert.equal(packIndexBlock([pack])[0].studios, 1);
 });
 
+test("a category key without a translation reads like the translated ones (no \"Business\" next to \"business\")", () => {
+  const raw = { ...pack, categoryText: {}, category: "business" };
+  assert.equal(packBlock(raw).category, "Business");
+  assert.equal(packIndexBlock([raw])[0].category, "Business");
+});
+
 test("the section is headings plus fences — no table, no prose wall", () => {
   const md = packsSection([pack]).join("\n");
   assert.match(md, /^### Document Verification$/m);

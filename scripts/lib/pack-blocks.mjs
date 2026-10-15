@@ -3,6 +3,7 @@
  * `pack-index` (find a pack: filters on tier and category) and one `pack` per bundle under its own heading, so the
  * page's contents list one entry per pack. No prose, no wide table — the site lays the data out.
  */
+const sentence = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const oneLine = (s) => (s ?? "").replace(/\s+/g, " ").trim();
 
 /** The English words of a pack, the way the catalogue shows them. */
@@ -23,7 +24,7 @@ export function packBlock(x) {
     kind: x.kind ?? null,
     distribution: x.distribution ?? null,
     regulatoryClass: x.regulatoryClass ?? null,
-    category: x.categoryText?.en?.label ?? x.category ?? null,
+    category: sentence(x.categoryText?.en?.label ?? x.category) ?? null,
     listed: x.status !== "UNLISTED",
     workers: x.workers,
     controls: { scopeGuard: x.scopeGuard, consent: x.consent, safety: x.safety },
@@ -45,7 +46,7 @@ export function packBlock(x) {
 }
 
 export function packIndexBlock(shown) {
-  return shown.map((x) => ({ key: x.key, title: packTitle(x), tagline: oneLine(x.text.en?.tagline) || null, tier: x.tier, category: x.categoryText?.en?.label ?? x.category ?? null, studios: x.studios.length }));
+  return shown.map((x) => ({ key: x.key, title: packTitle(x), tagline: oneLine(x.text.en?.tagline) || null, tier: x.tier, category: sentence(x.categoryText?.en?.label ?? x.category) ?? null, studios: x.studios.length }));
 }
 
 const fence = (lang, data) => ["```" + lang, JSON.stringify(data, null, 1), "```", ""];
