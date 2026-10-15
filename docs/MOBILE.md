@@ -33,10 +33,14 @@ secure storage only (`expo-secure-store`); the navigator shows the app stack onl
 ### Studios
 
 The Studio catalogue (`GET /api/v1/studios`) — locked Studios listed, not hidden, exactly as on the web — then a
-Studio's page (`GET /api/v1/studios/<key>`: price per run, install) and its run screen (the Studio's input form, the
-run started and polled: `/api/v1/studios/installations/<id>/runs`, `/api/v1/studios/runs/<id>`). The run screen shows
-each step's status while it works, then the outputs. Today the outputs are the model's text as it comes: Markdown is
-not rendered (`**Nom:**` shows as is) and a step's metadata (`provider`, `durationMs`) is printed with its content.
+Studio's page (`GET /api/v1/studios/<key>`: price per run, install — or "Ouvrir" for a toolkit Studio such as image, video
+and voice, which has no installation and runs on its own key, `POST /api/v1/studios/<key>/runs`) and its run screen (the
+Studio's input form — an `enum` input such as a size or an aspect is a row of chips, a number is sent as a number — then
+the run started and polled: `/api/v1/studios/runs/<id>`). The run screen shows each step's status while it works, then the
+outputs **as the blueprint typed them**: a picture shown inline, a clip or a voice-over played with `expo-video` (the edge's
+assets are private: the Bearer goes on the request), a rules report (a lease checked against the law) as cards — failures
+first, with the passage quoted and the article cited — and a model's text as Markdown (headings, lists, bold, links; never a
+literal `**`), the run's own facts (provider, duration) apart from the words.
 
 ![The Studio catalogue](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/02-studios.c219e3160e.webp)
 ![A Studio's page](https://krizaka-assets.b-cdn.net/site/docs/orazaka/mobile/03-studio-detail.d43b3a0d83.webp)
