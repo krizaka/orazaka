@@ -37,7 +37,7 @@ Pack `realestate-studio` 1.0.0 · tier DATA · OSS · regulatory class STANDARD.
 
 **Generate, listen, describe — without leaving a run.**
 
-Pack `orazaka-media` 1.2.0 · tier DATA · kind TOOLKIT · OSS · regulatory class STANDARD.
+Pack `orazaka-media` 1.3.0 · tier DATA · kind TOOLKIT · OSS · regulatory class STANDARD.
 
 | Studio | What it does | Asks for | Steps | Credits held |
 |:---|:---|:---|:---|:---|
@@ -116,7 +116,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | `document-validation` | 1.1.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
 | `echo-toolkit` | 1.0.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
-| `orazaka-media` | 1.2.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
+| `orazaka-media` | 1.3.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.1.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
 | `realestate-studio` | 1.0.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
 | `trade-showcase` | 1.0.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |
