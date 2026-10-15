@@ -31,7 +31,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, basename, relative } from "node:path";
-import { buildModels, catalogue, readmeLicences } from "./lib/model-registry.mjs";
+import { buildModels, catalogue, manifestLicences, readmeLicences } from "./lib/model-registry.mjs";
 
 const ROOT = process.cwd();
 const GEN_DIR = join(ROOT, "docs", "_generated");
@@ -1318,9 +1318,11 @@ const readSmoke = () => {
 
 /** The models Orazaka supports (registry metadata required — see scripts/lib/model-registry.mjs). */
 const extractRegistry = () => {
-  // The worker's models.yaml is a licence source too (manifestLicences); it joins this list once orazaka-worker-media's
-  // main carries the card-true AnimateDiff licence (its PR needs this pipeline's cryptography fix first).
-  const licenceSources = [{ name: "infra/localai/README.md", licences: readmeLicences(read(join(ROOT, "infra", "localai", "README.md"))) }];
+  const worker = REPOSITORIES.find((r) => r.name === "orazaka-worker-media");
+  const licenceSources = [
+    { name: "infra/localai/README.md", licences: readmeLicences(read(join(ROOT, "infra", "localai", "README.md"))) },
+    ...(worker ? [{ name: `${worker.path}/models.yaml`, licences: manifestLicences(read(join(ROOT, worker.path, "models.yaml"))) }] : []),
+  ];
   return buildModels(readModelSql(), { smoke: readSmoke(), licenceSources });
 };
 
