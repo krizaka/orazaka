@@ -28,6 +28,7 @@ async function call(method, path, body, { form, raw } = {}) {
   for (let attempt = 1; attempt <= 6; attempt++) {
     try {
       const res = await fetch(BASE + path, {
+        signal: AbortSignal.timeout(raw ? 300_000 : 60_000), // a hung socket is a failed attempt, retried
         method,
         headers: {
           Accept: "application/json",
