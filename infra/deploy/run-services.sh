@@ -50,7 +50,24 @@ for entry in $SERVICES; do
   sleep "${ORAZAKA_START_STAGGER_SECONDS:-5}"
 done
 
-# The first JVM to exit takes the container down with it.
+# The Python workers of the packs, after the JVMs (the job service declares the topology they bind to). The dev broker
+# is TLS only: the worker reads the same RABBITMQ_* and SPRING_RABBITMQ_SSL_ENABLED as the services, and the CA file
+# written above (orazaka-packs document-validation/worker/broker.py).
+for worker in ${ORAZAKA_WORKERS-validation}; do
+  case "$worker" in
+    validation)
+      echo "[run-services] starting the document-validation worker"
+      (cd "${ORAZAKA_APP_DIR:-/app}/orazaka-packs/document-validation/worker" \
+        && SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
+           exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py) \
+        > >(sed -u "s/^/[validation] /") 2>&1 &
+      pids+=("$!")
+      ;;
+    *) echo "[run-services] unknown worker: $worker" >&2; exit 2 ;;
+  esac
+done
+
+# The first process (JVM or worker) to exit takes the container down with it.
 set +e
 wait -n
 status=$?

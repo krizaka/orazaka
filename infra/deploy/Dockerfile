@@ -1,5 +1,5 @@
 # ==============================================================================
-# Orazaka dev runtime — the JVM services of dev.orazaka.com in ONE image (docs/DEPLOY_DEV.md)
+# Orazaka dev runtime — the JVM services of dev.orazaka.com (and the document-validation worker) in ONE image (docs/DEPLOY_DEV.md)
 # ------------------------------------------------------------------------------
 # Built by DigitalOcean App Platform from this repository (dockerfile_path: infra/deploy/Dockerfile,
 # context: the repository root). The platform is one repository per component, so the image clones
@@ -37,6 +37,14 @@ RUN \
 
 # ── 3. Runtime: a JRE, the jars, one supervisor ──────────────────────────────
 FROM eclipse-temurin:21-jre
+# The document-validation worker (orazaka-packs, Tier-W, Python): it drains job.validation.* for the document
+# Studios. Its venv is built here with the pack's pinned dependencies; run-services.sh starts it beside the JVMs.
+RUN export DEBIAN_FRONTEND=noninteractive \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends python3 python3-venv \
+ && rm -rf /var/lib/apt/lists/* \
+ && python3 -m venv /opt/validation-venv \
+ && /opt/validation-venv/bin/pip install --no-cache-dir pika==1.4.4 pyyaml==6.0.3 pypdf==6.20.0
 RUN groupadd --system orazaka && useradd --system --gid orazaka --create-home orazaka
 WORKDIR /app
 COPY --from=build /out/ /app/

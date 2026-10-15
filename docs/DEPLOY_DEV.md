@@ -9,7 +9,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | App (DO) | Component | What | Size | $/month |
 |---|---|---|---|---|
 | `orazaka-dev` | `web` | `krizaka/orazaka-web-client` (Next.js + BFF), `dev.orazaka.com/` | `apps-s-1vcpu-0.5gb` | 5 |
-| `orazaka-dev` | `core` | one image, five JVMs (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
+| `orazaka-dev` | `core` | one image, five JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
 | Droplet | `orazaka-broker-dev` | RabbitMQ 4.2, **TLS only** (5671), bound to its private IP, cloud firewall: VPC `10.118.0.0/20` only | `s-1vcpu-512mb-10gb` | 4 |
 | `orazaka-admin-dev` | `web` | `krizaka/orazaka-web-admin`, `admin.orazaka.com`, BFF → `https://dev.orazaka.com/edge` | `apps-s-1vcpu-0.5gb` | 5 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
@@ -41,6 +41,31 @@ idle and after a round of sign-ins and Studio listings — the reason for a 2 GB
 **Not deployed** (and why): billing (`BILLING_ENABLED=false`: nothing is sold in dev — PAID Studios show as locked),
 knowledge (chat degrades without RAG), automation (connectors), notifications (no e-mail in dev: no password reset),
 worker-media (Metal/MLX — Mac only), Redis (only for `orazaka.identity.rate-limit.enabled`, off).
+
+The **document-validation worker** (orazaka-packs, Python, `job.validation.*`) runs in the same container: the image
+builds its venv (`pika`, `pyyaml`, `pypdf`, pinned), `run-services.sh` starts it after the JVMs (`ORAZAKA_WORKERS`,
+default `validation`; empty to skip) with the broker's TLS settings and CA file, its lines prefixed `[validation]`. It
+takes ~40 MB; like a JVM, if it exits the container restarts.
+
+## Service accounts — a Krizaka product calling Orazaka
+
+Krizaka's products consume AI **only through Orazaka**: Yomizaka runs the document Studios with its own account, never a
+model called directly. One command makes the account, its API key and its Studio grants:
+
+```bash
+node scripts/dev-deploy.mjs service-account yomizaka \
+  --studios compliance-check,document-authenticity \
+  --out ~/Documents/krizaka/yomizaka-dev.env
+```
+
+- the user `svc_<product>` (`svc+<product>@orazaka.com`, ROLE_USER, a random password nobody keeps) in `krizaka_users_db`;
+- an `oz_` API key named `<product>-dev`, created through the supported endpoint (`POST /api/v1/api-keys`, signed in as
+  that user); earlier keys of the same name are revoked — one live key per product;
+- the operator's grants in `orazaka_studio_db` (`studio_entitlement_grant`, krizaka/orazaka-studio#9; incremental script
+  `infra/migrations/2026-10-14-studio-entitlement-grant.sql`): the PAID Studios open for that account only, with a reason;
+- `AI_PROVIDER=orazaka`, `AI_API_URL`, `AI_API_KEY` written to `--out` (mode 600) — never printed. The product stores the
+  key as a DO **SECRET** and calls `https://dev.orazaka.com/edge` with `Authorization: Bearer oz_…`; the edge exchanges
+  it for a JWT (`ApiKeyExchangeFilter`). Re-running rotates the key.
 
 ## Deploy
 
@@ -169,5 +194,6 @@ share the jobs, and a Wan job reaching the Mac runs on Metal (slowly) or fails b
 | Chat | yes, once `AI_INFERENCE_KEY` is set | serverless inference |
 | Studios list, Prospecting runs (text only) | yes | chat capability |
 | Trades showcase, Media production, 9:16 video | while the GPU runs | `scripts/gpu-dev.sh start big` |
-| Document validation, real-estate reels | locked | PAID Studios, billing off; document screening runs on the Mac worker |
+| Document validation (compliance-check, document-authenticity) | for a **granted** account | PAID Studios, billing off: an operator grant opens them (`service-account`, below); the worker runs in `core` |
+| Real-estate reels | locked | PAID Studio, billing off |
 | E-mails (verify, reset) | no | notifications not deployed |
