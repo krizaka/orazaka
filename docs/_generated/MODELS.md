@@ -30,6 +30,8 @@ it never covers content sexualising minors, explicit sexual content, real person
 working malware, or anything that enables serious harm. Unfiltered is not infallible either: serve the largest model
 the machine holds for clinical, legal or security work, and keep a professional in the loop.
 
+How fast and at what price they really run — time, cost and every parameter of the runs Orazaka measured — is on the [Measured runs](MEASURED_RUNS.md) page.
+
 ## On your hardware
 
 | Model | Vendor · family | Does | Runs | Licence | Context | Status | Last verified |

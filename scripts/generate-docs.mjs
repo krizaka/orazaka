@@ -34,6 +34,7 @@ import { join, basename, relative } from "node:path";
 import { buildModels, catalogue, manifestLicences, readmeLicences } from "./lib/model-registry.mjs";
 import { walk } from "./lib/walk.mjs";
 import { packsSection } from "./lib/pack-blocks.mjs";
+import { mdMeasuredRuns } from "./lib/measured-runs.mjs";
 
 const ROOT = process.cwd();
 const GEN_DIR = join(ROOT, "docs", "_generated");
@@ -1712,6 +1713,7 @@ const mdModels = (models, rows) => {
       lines.push(`| \`${m.id}\` — ${m.name} | ${m.vendor} · ${m.family} | ${m.capabilities.map((c) => CAP_LABEL[c]).join(", ")} | ${m.runtime} | ${lic}${m.openWeights ? "" : " (proprietary)"}${m.commercialUse === "no" ? " — **non-commercial**" : m.commercialUse === "conditions" ? " — commercial use under conditions" : ""} | ${m.contextWindow ? m.contextWindow.toLocaleString("en-US") : "—"} | ${m.status} | ${m.lastVerified ?? "—"} |`);
     }
   };
+  lines.push("", "How fast and at what price they really run — time, cost and every parameter of the runs Orazaka measured — is on the [Measured runs](MEASURED_RUNS.md) page.");
   table("On your hardware", local);
   table("Optional: served by a provider", provider);
   const hidden = rows.filter((r) => r.status === "internal");
@@ -2768,6 +2770,7 @@ const outputs = {
   "ADMIN.md": mdAdmin(extractAdmin(api)),
   "GOVERNANCE.md": mdGovernance(extractGovernance()),
   "MODELS.md": mdModels(registry, extractModels()),
+  "MEASURED_RUNS.md": frontmatter("Measured runs", "Time, cost and every parameter of the video and image runs Orazaka made, per model and provider — generated from the run records.", "Models", 9) + mdMeasuredRuns(JSON.parse(read(join(ROOT, "docs/measurements/runs.json")))),
   "ADRS.md": mdAdrs(extractAdrs()),
 };
 
