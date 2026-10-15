@@ -208,7 +208,9 @@ scripts/gpu-dev.sh mac                   # writes ~/.orazaka/gpu-dev/mac-worker.
 
 The tunnel also carries the Mac's own engines back into the app — sd-server (`:8086`, FLUX.2 [klein] on Metal), the
 worker's pipeline (`:8188`) and Ollama (`:11434`, with `qwen2.5:7b` and `llava` pulled) — so dev's image, video, chat and
-vision steps run on the Mac while it is connected. The worker hands its outputs to the dev job service the same way. Run one host at a time: two workers on one queue
+vision steps run on the Mac while it is connected. The worker hands its outputs to the dev job service the same way. Speech (Piper through LocalAI on `:8085`) shares the image engine's relay port: start sd-server on `:8087`
+(`MEDIA_IMAGE_PORT=8087`) and `node scripts/mac-engines-router.mjs` on `:8086`, which answers `/v1/audio/*` from LocalAI and
+the rest from sd-server; the dev provider `localai` points at `gpu-relay:8086` (`infra/deploy/dev-data.sql`). Run one host at a time: two workers on one queue
 share the jobs, and a Wan job reaching the Mac runs on Metal (slowly) or fails by name.
 
 ### Wan 2.2 A14B — a provider's model, run by Orazaka
