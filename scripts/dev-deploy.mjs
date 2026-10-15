@@ -130,7 +130,9 @@ function data() {
   const env = secrets();
   if (!env.AI_INFERENCE_KEY) throw new Error("AI_INFERENCE_KEY is not in the secrets file yet");
   const sql = readFileSync(join(DEPLOY, "dev-data.sql"), "utf8");
-  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", ["-v", `ai_inference_key=${env.AI_INFERENCE_KEY}`], sql);
+  // The key goes in on stdin (\set), never on the command line where `ps` would show it.
+  const key = env.AI_INFERENCE_KEY.replace(/'/g, "''");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], `\\set ai_inference_key '${key}'\n${sql}`);
   console.log("orazaka_db: dev routing data applied");
 }
 

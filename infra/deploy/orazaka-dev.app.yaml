@@ -112,6 +112,12 @@ services:
       - { key: USERS_RESERVED_PREFERENCE_PREFIXES, scope: RUN_TIME, value: "orazaka." }
       # Ollama = the GPU droplet's, through the relay (chat and vision of the Studios while it runs; serverless
       # inference stays the chat default once its key is set). Its chat model is declared, never the first one listed.
+      # The pipeline's provider when a turn names none: serverless inference. With `ollama` here the
+      # pipeline pins Ollama's active model and never reaches the catalogue default (mistral-3-14B).
+      - { key: ORAZAKA_CORE_DEFAULT_PROVIDER, scope: RUN_TIME, value: do-inference }
+      # The serverless-inference model access key (`orazaka-dev`). Routing reads it from ai_providers
+      # (dev-data.sql); kept here as the deployment's copy of record.
+      - { key: AI_INFERENCE_KEY, scope: RUN_TIME, type: SECRET, value: "__AI_INFERENCE_KEY__" }
       - { key: SPRING_AI_OLLAMA_BASE_URL, scope: RUN_TIME, value: "http://gpu-relay:11434" }
       - { key: ORAZAKA_OLLAMA_MODEL, scope: RUN_TIME, value: "qwen2.5:7b" }
       # Image and video engines = the hourly GPU droplet, reached through the relay (gpu-relay:8086 is its
