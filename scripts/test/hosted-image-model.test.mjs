@@ -9,7 +9,8 @@ const MODEL = "stable-diffusion-3.5-large";
 test("the migration and the dev data give the hosted model the same provider, a null step count and provider facts", () => {
   for (const file of ["infra/migrations/2026-10-15-do-sd35.sql", "infra/deploy/dev-data.sql"]) {
     const sql = read(file);
-    assert.match(sql, new RegExp(`'${MODEL}', 'Stable Diffusion 3\\.5 Large \\(DigitalOcean\\)', 'image', NULL, 'do-inference', FALSE, NULL, NULL, NULL`), file);
+    assert.match(sql, new RegExp(`'${MODEL}', 'Stable Diffusion 3\\.5 Large \\(DigitalOcean\\)', 'image', NULL, 'do-inference-images', FALSE, NULL, NULL, NULL`), file);
+    assert.match(sql, /'do-inference-images', 'https:\/\/inference\.do-ai\.run\/v1'/, file); // Spring AI's image client appends /images/generations
     assert.match(sql, /runs_on = 'provider'/, file);
     assert.match(sql, /licence = 'Stability AI Community Licence'/, file);
     assert.match(sql, /commercial_use = 'conditions'/, file);

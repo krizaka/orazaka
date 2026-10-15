@@ -4553,6 +4553,28 @@
       "lastVerified": null
     },
     {
+      "id": "stable-diffusion-3.5-large",
+      "name": "Stable Diffusion 3.5 Large (DigitalOcean)",
+      "vendor": "Stability AI",
+      "family": "Stable Diffusion 3.5",
+      "category": "image",
+      "capabilities": [
+        "image"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference-images",
+      "openWeights": true,
+      "licence": {
+        "name": "Stability AI Community Licence",
+        "url": "https://stability.ai/license"
+      },
+      "commercialUse": "conditions",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "wan2-2-t2v-a14b",
       "name": "Wan 2.2 T2V A14B (serverless)",
       "vendor": "Alibaba (Wan-AI)",
