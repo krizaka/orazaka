@@ -46,7 +46,7 @@ jobs:
           python-version: "3.12"
 
       - name: Worker test dependencies
-        run: python -m pip install --quiet pytest pyyaml pika Pillow psutil coverage
+        run: python -m pip install --quiet pytest pyyaml pika Pillow psutil cryptography coverage
 
       - name: Media worker contract
         working-directory: orazaka-apps/workers/orazaka-worker-media

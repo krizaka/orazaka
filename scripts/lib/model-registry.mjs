@@ -18,9 +18,11 @@ export const STATUSES = ["available", "planned", "internal"];
 const NOT_A_MODEL = new Set(["theme"]);
 
 /** Columns the registry metadata lives in, in `orazaka_models`. */
-export const METADATA_COLUMNS = ["vendor", "family", "capabilities", "runs_on", "runtime", "open_weights", "licence", "licence_url", "context_window", "status"];
+export const METADATA_COLUMNS = ["vendor", "family", "capabilities", "runs_on", "runtime", "open_weights", "licence", "licence_url", "commercial_use", "context_window", "status"];
 /** What a published model must carry (an `internal` one only needs its status). */
-export const REQUIRED = ["vendor", "family", "capabilities", "runs_on", "runtime", "open_weights", "licence", "status"];
+export const REQUIRED = ["vendor", "family", "capabilities", "runs_on", "runtime", "open_weights", "licence", "commercial_use", "status"];
+/** Can a firm that sells use it: yes · conditions (a community licence, share-alike, use restrictions) · no (non-commercial). */
+export const COMMERCIAL_USE = ["yes", "conditions", "no"];
 
 /** SQL with its `--` comments dropped, string- and dollar-quote-aware (a comment holds apostrophes and semicolons). */
 export function stripComments(sql) {
@@ -175,6 +177,7 @@ const isText = (v) => typeof v === "string" && v.trim().length > 0;
 export function problems(row) {
   const out = [];
   if (!STATUSES.includes(row.status)) return [`status must be one of ${STATUSES.join(", ")} (got ${JSON.stringify(row.status ?? null)})`];
+  if (row.is_default === true && row.commercial_use === "no") out.push("a default model must allow commercial use (commercial_use = 'no' — we sell to firms)");
   if (row.status === "internal") return out;
   for (const col of REQUIRED) {
     const v = row[col];
@@ -185,6 +188,7 @@ export function problems(row) {
   for (const c of caps) if (!CAPABILITIES.includes(c)) out.push(`capability "${c}" is not in the vocabulary (${CAPABILITIES.join(", ")})`);
   if (!RUNS_ON.includes(row.runs_on)) out.push(`runs_on must be one of ${RUNS_ON.join(", ")}`);
   if (typeof row.open_weights !== "boolean") out.push("open_weights must be TRUE or FALSE");
+  if (!COMMERCIAL_USE.includes(row.commercial_use)) out.push(`commercial_use must be one of ${COMMERCIAL_USE.join(", ")}`);
   if (row.context_window != null && !(Number.isInteger(row.context_window) && row.context_window > 0)) out.push("context_window must be a positive integer");
   if (row.licence_url != null && !/^https:\/\//.test(row.licence_url)) out.push("licence_url must be an https URL");
   for (const col of ["vendor", "family", "runtime", "licence"]) if (!isText(row[col])) out.push(`${col} must be text`);
@@ -196,11 +200,13 @@ export function problems(row) {
  * stable file. `smoke` is the sovereign smoke report, when one exists: a model is "verified" on the date of the last
  * PASSED check that names it.
  */
-export function buildModels(sql, { smoke = null } = {}) {
+export function buildModels(sql, { smoke = null, licenceSources = [] } = {}) {
   const verified = verifiedBySmoke(smoke);
   const failures = [];
   const models = [];
-  for (const row of catalogue(sql)) {
+  const rows = catalogue(sql);
+  failures.push(...licenceDisagreements(rows, licenceSources));
+  for (const row of rows) {
     if (NOT_A_MODEL.has(row.category)) continue;
     const list = problems(row);
     if (list.length) {
@@ -220,6 +226,7 @@ export function buildModels(sql, { smoke = null } = {}) {
       provider: row.provider_name ?? null,
       openWeights: row.open_weights,
       licence: { name: row.licence, url: row.licence_url ?? null },
+      commercialUse: row.commercial_use,
       contextWindow: row.context_window ?? null,
       status: row.is_default === true && row.status === "available" ? "default" : row.status,
       lastVerified: verified.get(row.model_name) ?? null,
@@ -239,6 +246,50 @@ export function verifiedBySmoke(report) {
   for (const check of report.checks) {
     if (check.status !== "PASSED") continue;
     for (const m of check.models ?? []) if (!m.startsWith("provider:")) out.set(m, day);
+  }
+  return out;
+}
+
+/** A licence name as a comparable key: "CC-BY 4.0 (SIWIS)" and "CC BY 4.0" meet at ccby40. */
+export const licenceKey = (name) => String(name).toLowerCase().replace(/licen[cs]e/g, "").replace(/[^a-z0-9]/g, "");
+
+/**
+ * Other files in the workspace also state a model's licence (a README table, a worker's manifest). The registry follows
+ * the model's own card, and the build refuses two sources that disagree: a source's text must start with the registry's.
+ * \`sources\`: [{ name, licences: Map(model id → text) }].
+ */
+export function licenceDisagreements(rows, sources) {
+  const out = [];
+  for (const row of rows) {
+    if (!row.licence || row.status === "internal") continue;
+    for (const { name, licences } of sources) {
+      const said = licences.get(row.model_name);
+      if (said === undefined) continue;
+      if (!licenceKey(said).startsWith(licenceKey(row.licence))) out.push(`  - ${row.model_name}: ${name} says "${said}", the registry (the model's card) says "${row.licence}"`);
+    }
+  }
+  return out;
+}
+
+/** The README table of infra/localai: \`| \`<id>.yaml\` | weights | source | licence |\` → id → licence cell. */
+export function readmeLicences(text) {
+  const out = new Map();
+  for (const line of text.split("\n")) {
+    const m = /^\|\s*`([^`]+)\.yaml`\s*\|(.*)\|\s*([^|]*?)\s*\|\s*$/.exec(line);
+    if (m) out.set(m[1], m[3]);
+  }
+  return out;
+}
+
+/** The worker's models.yaml: an entry (two-space indent) followed by its four-space \`licence:\` → id → licence. */
+export function manifestLicences(text) {
+  const out = new Map();
+  let id = null;
+  for (const line of text.split("\n")) {
+    const entry = /^ {2}([\w.\-]+):\s*$/.exec(line);
+    if (entry) id = entry[1];
+    const lic = /^ {4}licence:\s*(.+?)\s*$/.exec(line);
+    if (lic && id) out.set(id, lic[1].replace(/^["']|["']$/g, ""));
   }
   return out;
 }

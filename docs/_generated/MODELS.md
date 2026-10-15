@@ -12,7 +12,7 @@ generated: true
 
 ## Local first
 
-Orazaka supports **29 models**: **23 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **6 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
+Orazaka supports **26 models**: **20 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **6 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
 
 Every figure below is read from `orazaka_models` (the table the routing reads): the vendor, licence and context window are those of each model's own card; `last verified` is the date of the last passing sovereign smoke that named the model, empty until one is recorded.
 
@@ -38,23 +38,20 @@ the machine holds for clinical, legal or security work, and keep a professional 
 | `qwen2.5-coder:7b` — Qwen 2.5 Coder 7B | Alibaba Cloud · Qwen 2.5 Coder | Code | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct/blob/main/LICENSE) | 32,768 | default | — |
 | `flux-2-klein-4b` — FLUX.2 [klein] 4B | Black Forest Labs · FLUX.2 klein | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/README.md) | — | default | 2026-10-15 |
 | `piper-en-medium-ljspeech` — Piper LJSpeech (en) | Rhasspy · Piper (en-US, LJSpeech) | Text to speech | LocalAI · Piper | [Public domain](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ljspeech/medium/MODEL_CARD) | — | default | — |
-| `animatediff-lightning-mps` — AnimateDiff Lightning | ByteDance · AnimateDiff-Lightning | Video | PyTorch MPS · Apple Metal | [CreativeML OpenRAIL-M](https://huggingface.co/ByteDance/AnimateDiff-Lightning/blob/main/README.md) | — | default | — |
+| `animatediff-lightning-mps` — AnimateDiff Lightning | ByteDance · AnimateDiff-Lightning | Video | PyTorch MPS · Apple Metal | [CreativeML OpenRAIL-M](https://huggingface.co/ByteDance/AnimateDiff-Lightning/blob/main/README.md) — commercial use under conditions | — | default | — |
 | `llava:latest` — LLaVA (latest) | LLaVA team · LLaVA 1.6 | Vision | Ollama | [Apache-2.0](https://ollama.com/library/llava) | — | default | — |
 | `whisper-tiny-en` — Whisper Tiny (en) | OpenAI · Whisper | Speech to text | LocalAI · whisper.cpp | [MIT](https://github.com/openai/whisper/blob/main/LICENSE) | — | available | — |
-| `dolphin-llama3:8b` — Dolphin Llama 3 8B — unfiltered | Cognitive Computations · Dolphin 2.9 (Llama 3, unfiltered) | Chat | Ollama | [Meta Llama 3 Community Licence](https://www.llama.com/llama3/license/) | 8,192 | available | — |
-| `huihui_ai/qwen2.5-abliterate:7b` — Qwen 2.5 7B — unfiltered | Alibaba Cloud · Qwen 2.5 (unfiltered) | Chat | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/blob/main/LICENSE) | 32,768 | available | — |
-| `mdq100/Gemma3-Instruct-Abliterated:27b` — Gemma 3 27B — unfiltered | Google · Gemma 3 (unfiltered) | Chat | Ollama | [Gemma Terms of Use](https://ai.google.dev/gemma/terms) | 131,072 | available | — |
 | `qwen2.5:7b` — Qwen 2.5 7B Instruct | Alibaba Cloud · Qwen 2.5 | Chat | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/blob/main/LICENSE) | 32,768 | available | — |
-| `codellama:7b` — CodeLlama 7B | Meta · Code Llama | Code | Ollama | [Llama 2 Community Licence](https://ai.meta.com/llama/license/) | 16,384 | available | — |
+| `codellama:7b` — CodeLlama 7B | Meta · Code Llama | Code | Ollama | [Llama 2 Community Licence](https://ai.meta.com/llama/license/) — commercial use under conditions | 16,384 | available | — |
 | `argmaxinc/mlx-FLUX.1-schnell-4bit-quantized` — FLUX.1 Schnell 4-bit (MLX) | Black Forest Labs · FLUX.1 schnell | Image | MLX · Apple Silicon | [Apache-2.0](https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md) | — | available | — |
-| `v1-5-pruned-emaonly` — Stable Diffusion 1.5 | Stability AI · Stable Diffusion 1.5 | Image | stable-diffusion.cpp · Metal, CUDA | [CreativeML OpenRAIL-M](https://huggingface.co/spaces/CompVis/stable-diffusion-license) | — | available | — |
+| `v1-5-pruned-emaonly` — Stable Diffusion 1.5 | Stability AI · Stable Diffusion 1.5 | Image | stable-diffusion.cpp · Metal, CUDA | [CreativeML OpenRAIL-M](https://huggingface.co/spaces/CompVis/stable-diffusion-license) — commercial use under conditions | — | available | — |
 | `z-image-turbo` — Z-Image Turbo | Tongyi Lab (Alibaba) · Z-Image | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/README.md) | — | available | — |
-| `piper-en-low` — Piper Low (en) | Rhasspy · Piper (en-US, Lessac) | Text to speech | LocalAI · Piper | [Lessac Blizzard 2013 data licence](https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html) | — | available | — |
-| `piper-en-medium-ryan` — Piper Ryan (en) | Rhasspy · Piper (en-US, Ryan) | Text to speech | LocalAI · Piper | [CC BY-NC-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ryan/medium/MODEL_CARD) | — | available | — |
-| `piper-fr-medium` — Piper Medium (fr) | Rhasspy · Piper (fr-FR, UPMC) | Text to speech | LocalAI · Piper | [CC BY-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/upmc/medium/MODEL_CARD) | — | available | — |
+| `piper-en-low` — Piper Low (en) | Rhasspy · Piper (en-US, Lessac) | Text to speech | LocalAI · Piper | [Lessac Blizzard 2013 data licence](https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html) — **non-commercial** | — | available | — |
+| `piper-en-medium-ryan` — Piper Ryan (en) | Rhasspy · Piper (en-US, Ryan) | Text to speech | LocalAI · Piper | [CC BY-NC-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ryan/medium/MODEL_CARD) — **non-commercial** | — | available | — |
+| `piper-fr-medium` — Piper Medium (fr) | Rhasspy · Piper (fr-FR, UPMC) | Text to speech | LocalAI · Piper | [CC BY-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/upmc/medium/MODEL_CARD) — commercial use under conditions | — | available | — |
 | `piper-fr-siwis-medium` — Piper Siwis (fr-FR, féminine) | Rhasspy · Piper (fr-FR, Siwis) | Text to speech | LocalAI · Piper | [CC BY 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/siwis/medium/MODEL_CARD) | — | available | — |
-| `piper-fr-tom-medium` — Piper Tom (fr-FR, masculine) | Rhasspy · Piper (fr-FR, Tom) | Text to speech | LocalAI · Piper | [AGPL-3.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/tom/medium/MODEL_CARD) | — | available | — |
-| `stable-video-diffusion-img2vid-xt` — Stable Video Diffusion XT (heavy, >64GB) | Stability AI · Stable Video Diffusion | Video | CUDA, more than 64 GB of memory | [Stability AI Community Licence](https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/blob/main/LICENSE.md) | — | available | — |
+| `piper-fr-tom-medium` — Piper Tom (fr-FR, masculine) | Rhasspy · Piper (fr-FR, Tom) | Text to speech | LocalAI · Piper | [AGPL-3.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/tom/medium/MODEL_CARD) — commercial use under conditions | — | available | — |
+| `stable-video-diffusion-img2vid-xt` — Stable Video Diffusion XT (heavy, >64GB) | Stability AI · Stable Video Diffusion | Video | CUDA, more than 64 GB of memory | [Stability AI Community Licence](https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/blob/main/LICENSE.md) — commercial use under conditions | — | available | — |
 | `wan2.1-t2v-1.3b` — Wan 2.1 T2V 1.3B | Alibaba (Wan-AI) · Wan 2.1 | Video | worker-media · CUDA | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B-Diffusers/blob/main/README.md) | — | available | — |
 | `wan2.2-ti2v-5b` — Wan 2.2 TI2V 5B | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers/blob/main/README.md) | — | available | — |
 
@@ -62,13 +59,13 @@ the machine holds for clinical, legal or security work, and keep a professional 
 
 | Model | Vendor · family | Does | Runs | Licence | Context | Status | Last verified |
 |:---|:---|:---|:---|:---|---:|:---|:---|
+| `deepseek-v4-pro` — DeepSeek V4 Pro | DeepSeek · DeepSeek V4 | Chat, Reasoning | DigitalOcean serverless inference | [MIT](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/blob/main/LICENSE) | 1,048,576 | available | — |
+| `gemma-4-31B-it` — Gemma 4 31B | Google · Gemma 4 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/google/gemma-4-31B-it/blob/main/README.md) | 262,144 | available | — |
+| `llama-4-maverick` — Llama 4 Maverick | Meta · Llama 4 | Chat | DigitalOcean serverless inference | [Llama 4 Community Licence](https://github.com/meta-llama/llama-models/blob/main/models/llama4/LICENSE) — commercial use under conditions | 1,048,576 | available | — |
 | `mistral-3-14B` — Mistral 3 14B | Mistral AI · Mistral 3 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/mistralai/Ministral-3-14B-Instruct-2512/blob/main/README.md) | 262,144 | available | — |
 | `gte-large-en-v1.5` — GTE Large (en) v1.5 | Alibaba-NLP · GTE | Embeddings | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md) | 8,192 | available | — |
-| `deepseek-v4-pro` — DeepSeek V4 Pro | DeepSeek · DeepSeek V4 | Chat, Reasoning | DigitalOcean serverless inference | [MIT](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/blob/main/LICENSE) | 1,048,576 | planned | — |
-| `gemma-4-31B-it` — Gemma 4 31B | Google · Gemma 4 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/google/gemma-4-31B-it/blob/main/README.md) | 262,144 | planned | — |
-| `llama-4-maverick` — Llama 4 Maverick | Meta · Llama 4 | Chat | DigitalOcean serverless inference | [Llama 4 Community Licence](https://github.com/meta-llama/llama-models/blob/main/models/llama4/LICENSE) | 1,048,576 | planned | — |
 | `bge-m3` — BGE-M3 | BAAI · BGE-M3 | Embeddings | DigitalOcean serverless inference | [MIT](https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE) | 8,192 | planned | — |
 
 ## In the catalogue, not published
 
-10 rows are aliases, runtime variants or test fixtures of the models above (`status = 'internal'`): `tinyllama:latest`, `tts-1`, `apple-coreml-video-pipeline`, `ByteDance/AnimateDiff-Lightning`, `mlx-animatediff-lightning`, `mlx-stable-diffusion-video`, `stable-video-diffusion-img2vid-xt-mps-fp32`, `bakllava:latest`, `llama3.2-vision:latest`, `llava:v1.6`.
+13 rows are aliases, runtime variants or test fixtures of the models above (`status = 'internal'`): `dolphin-llama3:8b`, `huihui_ai/qwen2.5-abliterate:7b`, `mdq100/Gemma3-Instruct-Abliterated:27b`, `tinyllama:latest`, `tts-1`, `apple-coreml-video-pipeline`, `ByteDance/AnimateDiff-Lightning`, `mlx-animatediff-lightning`, `mlx-stable-diffusion-video`, `stable-video-diffusion-img2vid-xt-mps-fp32`, `bakllava:latest`, `llama3.2-vision:latest`, `llava:v1.6`.
