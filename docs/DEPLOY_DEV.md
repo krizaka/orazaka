@@ -90,8 +90,8 @@ Droplet in the `default-tor1` VPC (`node scripts/dev-deploy.mjs broker`, idempot
 host, through the relay). Change a model or a provider in the admin
 console or in that file — never in a service's configuration.
 
-- `deepseek-v4-pro` is in the catalogue, selectable, never the default: it answers once the model access key is
-  authorised for it (403 until then) — no change needed here when it is.
+- The other hosted models (DeepSeek V4 Pro, Llama 4 Maverick, Gemma 4) and every model's registry metadata come
+  from `infra/deploy/dev-model-registry.sql` (ORA-MODELS), run after `dev-data.sql`; selectable, never the default.
 - The key reaches the call through `ai_providers.api_key` (krizaka/orazaka-ai-engine#10); `orazaka-dev` also holds it
   as the SECRET `AI_INFERENCE_KEY`, the deployment's copy of record. `node scripts/dev-deploy.mjs data` reads it from
   the secrets file and sends it on psql's stdin, never on a command line.

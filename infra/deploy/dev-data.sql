@@ -19,12 +19,8 @@ VALUES ('mistral-3-14B', 'Mistral 3 14B', 'chat', NULL, 'do-inference', FALSE,
         'Mistral 3 14B (Apache-2.0) on DigitalOcean serverless inference — the chat default of the dev '
         || 'environment: fluent English and French, billed per token, no GPU to run.')
 ON CONFLICT (model_name) DO NOTHING;
--- Selectable, never the default: answers once the model access key is allowed to use it (403 until then).
-INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, description)
-VALUES ('deepseek-v4-pro', 'DeepSeek V4 Pro', 'chat', NULL, 'do-inference', FALSE,
-        'DeepSeek V4 Pro on DigitalOcean serverless inference — the large reasoning model of the dev '
-        || 'environment, billed per token; available once the inference key is authorised for it.')
-ON CONFLICT (model_name) DO NOTHING;
+-- The other provider-hosted models (DeepSeek V4 Pro, Llama 4 Maverick, Gemma 4) and their registry metadata:
+-- infra/deploy/dev-model-registry.sql, run after this file.
 UPDATE orazaka_models SET is_default = (model_name = 'mistral-3-14B') WHERE category = 'chat';
 
 -- The image and video engines are the hourly GPU droplet (scripts/gpu-dev.sh), reached inside the app
