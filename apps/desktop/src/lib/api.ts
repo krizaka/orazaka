@@ -99,3 +99,11 @@ export function parentOf(path: string): string {
 export function isInside(root: string, path: string): boolean {
   return path === root || path.startsWith(root.endsWith("/") ? root : `${root}/`);
 }
+
+/** The stack's state from the services `orazaka status` reported: all running, none, or some. */
+export function stackState(services: ServiceStatus[], fallback: Probe["state"]): Probe["state"] {
+  if (services.length === 0) return fallback;
+  const running = services.filter((s) => s.status === "running").length;
+  if (running === 0) return "stopped";
+  return running === services.length ? "running" : "partial";
+}

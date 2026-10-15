@@ -3,7 +3,7 @@ import { Badge } from "@krizaka/ui/badge";
 import { Button } from "@krizaka/ui/button";
 import { Alert } from "@krizaka/ui/alert";
 import { Select } from "@krizaka/ui/field";
-import { api, errorMessage, hostOf, on, parseServices, type CliCall, type CliResult, type ServiceStatus, type Snapshot } from "../lib/api";
+import { api, errorMessage, hostOf, on, parseServices, stackState, type CliCall, type CliResult, type ServiceStatus, type Snapshot } from "../lib/api";
 import { useI18n } from "../lib/i18n";
 
 const LOG_SERVICES = ["router", "ollama", "media-worker", "image-worker", "ui"];
@@ -75,7 +75,7 @@ export function StackPanel({ snap, goSettings }: { snap: Snapshot; goSettings: (
     return () => void off.then((f) => f());
   }, [run, refreshStatus]);
 
-  const state = snap.probe.state;
+  const state = stackState(services, snap.probe.state);
   const remote = snap.settings.mode === "remote";
   const needsWorkspace = !snap.settings.workspaceDir;
   const disabled = busy !== null || !snap.sidecar;

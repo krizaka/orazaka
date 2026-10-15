@@ -45,6 +45,12 @@ describe("StackPanel", () => {
     expect(invoke).toHaveBeenCalledWith("cli_run", { call: { command: "status" } });
   });
 
+  it("shows the header state from the services, not from the probe", async () => {
+    render(wrap(<StackPanel snap={base} goSettings={() => undefined} />));
+    // the mocked status reports one running service while the probe says stopped
+    expect(await screen.findByText("Running")).toBeInTheDocument();
+  });
+
   it("only ever asks for allow-listed commands", async () => {
     render(wrap(<StackPanel snap={base} goSettings={() => undefined} />));
     await screen.findByText("Edge");

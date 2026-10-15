@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatSize, hostOf, isInside, parentOf, parseServices } from "../lib/api";
+import { formatSize, hostOf, isInside, parentOf, parseServices, stackState, type ServiceStatus } from "../lib/api";
 
 describe("parseServices", () => {
   it("reads the JSON array of `orazaka status --json`, ignoring noise around it", () => {
@@ -33,5 +33,17 @@ describe("formatting", () => {
   it("hostOf", () => {
     expect(hostOf("https://dev.orazaka.com")).toBe("dev.orazaka.com");
     expect(hostOf("nonsense")).toBe("nonsense");
+  });
+});
+
+describe("stackState", () => {
+  const svc = (status: ServiceStatus["status"]): ServiceStatus => ({ name: "x", port: 1, status, pid: null, category: "app" });
+  it("is derived from the services, not from the two probed ports", () => {
+    expect(stackState([svc("running"), svc("running")], "stopped")).toBe("running");
+    expect(stackState([svc("running"), svc("stopped")], "stopped")).toBe("partial");
+    expect(stackState([svc("stopped"), svc("stopped")], "running")).toBe("stopped");
+  });
+  it("falls back to the probe until the status has been read", () => {
+    expect(stackState([], "partial")).toBe("partial");
   });
 });
