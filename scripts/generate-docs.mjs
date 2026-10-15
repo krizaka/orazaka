@@ -1679,7 +1679,7 @@ const mdGovernance = (rows) => {
   return lines.join("\n") + "\n";
 };
 
-const CAP_LABEL = { chat: "Chat", reasoning: "Reasoning", vision: "Vision", code: "Code", embeddings: "Embeddings", image: "Image", video: "Video", "speech-to-text": "Speech to text", "text-to-speech": "Text to speech" };
+const CAP_LABEL = { chat: "Chat", reasoning: "Reasoning", vision: "Vision", code: "Code", embeddings: "Embeddings", image: "Image", video: "Video", "speech-to-text": "Speech to text", "text-to-speech": "Text to speech", music: "Music", "video-to-audio": "Video to audio (foley)" };
 const mdModels = (models, rows) => {
   const lines = [frontmatter("Supported Models", "Every model Orazaka supports: where it runs, its licence, its context window — read from the registry the routing reads.", "Models", 8)];
   const local = models.filter((m) => m.runsOn === "local");

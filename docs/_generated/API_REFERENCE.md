@@ -86,6 +86,8 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/internal/v1/capabilities/{featureKey}` | SERVICE | CapabilityController | Removes one capability. |
 | PUT | `/internal/v1/capabilities/{featureKey}` | SERVICE | CapabilityController | Registers or replaces one capability a pack contributes. |
 | GET | `/internal/v1/capabilities/{featureKey}/route` | SERVICE | CapabilityController | Resolves where one capability's work is executed. |
+| GET | `/internal/v1/jobs/{jobId}/input/image` | SERVICE | JobOutputController | The starting image of a job, for a worker that does not share the platform's disk. |
+| GET | `/internal/v1/jobs/{jobId}/output/{filename}` | SERVICE | JobOutputController | Reads one of the actor's own outputs back (a step whose input is an earlier step's clip). |
 | PUT | `/internal/v1/jobs/{jobId}/output/{filename}` | SERVICE | JobOutputController | Stores one output file of a job, sealed, and answers the URL it is served under. |
 | POST | `/internal/v1/workers` | SERVICE | WorkerController | Registers a worker, or refreshes what is known about it. |
 | POST | `/internal/v1/workers/{workerName}/heartbeat` | SERVICE | WorkerController | Records a heartbeat from an already-registered worker. |
@@ -148,6 +150,14 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| GET | `/api/v1/admin/users` | ADMIN | AdminUserController |  |
+| DELETE | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |
+| GET | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |
+| PUT | `/api/v1/admin/users/{id}/admin` | ADMIN | AdminUserController |  |
+| GET | `/api/v1/admin/users/{id}/export` | ADMIN | AdminUserController |  |
+| POST | `/api/v1/admin/users/{id}/restore` | ADMIN | AdminUserController |  |
+| POST | `/api/v1/admin/users/{id}/suspend` | ADMIN | AdminUserController |  |
+| GET | `/api/v1/admin/users/audit` | ADMIN | AdminUserController |  |
 | GET | `/api/v1/api-keys` | authenticated | ApiKeyController |  |
 | POST | `/api/v1/api-keys` | authenticated | ApiKeyController |  |
 | DELETE | `/api/v1/api-keys/{id}` | ADMIN + USER | ApiKeyController |  |

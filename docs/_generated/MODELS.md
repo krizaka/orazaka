@@ -12,7 +12,7 @@ generated: true
 
 ## Local first
 
-Orazaka supports **28 models**: **20 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **8 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
+Orazaka supports **30 models**: **22 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **8 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
 
 Every figure below is read from `orazaka_models` (the table the routing reads): the vendor, licence and context window are those of each model's own card; `last verified` is the date of the last passing sovereign smoke that named the model, empty until one is recorded.
 
@@ -39,12 +39,14 @@ How fast and at what price they really run — time, cost and every parameter of
 | `whisper-base` — Whisper Base | OpenAI · Whisper | Speech to text | LocalAI · whisper.cpp | [MIT](https://github.com/openai/whisper/blob/main/LICENSE) | — | default | — |
 | `qwen2.5-coder:7b` — Qwen 2.5 Coder 7B | Alibaba Cloud · Qwen 2.5 Coder | Code | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct/blob/main/LICENSE) | 32,768 | default | — |
 | `flux-2-klein-4b` — FLUX.2 [klein] 4B | Black Forest Labs · FLUX.2 klein | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/README.md) | — | default | 2026-10-15 |
+| `acestep-v15-xl-turbo` — ACE-Step 1.5 XL turbo (music bed) | ACE Studio · StepFun · ACE-Step 1.5 | Music | worker-media · Metal, CUDA | [MIT](https://huggingface.co/ACE-Step/acestep-v15-xl-turbo-diffusers) | — | default | — |
 | `piper-en-medium-ljspeech` — Piper LJSpeech (en) | Rhasspy · Piper (en-US, LJSpeech) | Text to speech | LocalAI · Piper | [Public domain](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ljspeech/medium/MODEL_CARD) | — | default | — |
 | `animatediff-lightning-mps` — AnimateDiff Lightning | ByteDance · AnimateDiff-Lightning | Video | PyTorch MPS · Apple Metal | [CreativeML OpenRAIL-M](https://huggingface.co/ByteDance/AnimateDiff-Lightning/blob/main/README.md) — commercial use under conditions | — | default | — |
 | `llava:latest` — LLaVA (latest) | LLaVA team · LLaVA 1.6 | Vision | Ollama | [Apache-2.0](https://ollama.com/library/llava) | — | default | — |
 | `whisper-tiny-en` — Whisper Tiny (en) | OpenAI · Whisper | Speech to text | LocalAI · whisper.cpp | [MIT](https://github.com/openai/whisper/blob/main/LICENSE) | — | available | — |
 | `qwen2.5:7b` — Qwen 2.5 7B Instruct | Alibaba Cloud · Qwen 2.5 | Chat | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/blob/main/LICENSE) | 32,768 | available | — |
 | `codellama:7b` — CodeLlama 7B | Meta · Code Llama | Code | Ollama | [Llama 2 Community Licence](https://ai.meta.com/llama/license/) — commercial use under conditions | 16,384 | available | — |
+| `mmaudio-large-44k-v2` — MMAudio large 44k v2 (foley) — non-commercial | Sony · Hkchengrex (UIUC) · MMAudio | Video to audio (foley) | worker-media · Metal, CUDA | [CC-BY-NC-4.0](https://github.com/hkchengrex/MMAudio#licenses) — **non-commercial** | — | available | — |
 | `argmaxinc/mlx-FLUX.1-schnell-4bit-quantized` — FLUX.1 Schnell 4-bit (MLX) | Black Forest Labs · FLUX.1 schnell | Image | MLX · Apple Silicon | [Apache-2.0](https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md) | — | available | — |
 | `v1-5-pruned-emaonly` — Stable Diffusion 1.5 | Stability AI · Stable Diffusion 1.5 | Image | stable-diffusion.cpp · Metal, CUDA | [CreativeML OpenRAIL-M](https://huggingface.co/spaces/CompVis/stable-diffusion-license) — commercial use under conditions | — | available | — |
 | `z-image-turbo` — Z-Image Turbo | Tongyi Lab (Alibaba) · Z-Image | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/README.md) | — | available | — |

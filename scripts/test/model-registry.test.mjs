@@ -41,7 +41,7 @@ test("a capability outside the vocabulary, a bad context window or a non-https l
   assert.throws(() => buildModels(seed + meta("qwen2.5:7b", { capabilities: "chat,telepathy" })), /capability "telepathy"/);
   assert.throws(() => buildModels(seed + meta("qwen2.5:7b", { context_window: 0 })), /context_window must be a positive integer/);
   assert.throws(() => buildModels(seed + meta("qwen2.5:7b", { licence_url: "http://insecure.example" })), /licence_url must be an https URL/);
-  for (const c of ["chat", "reasoning", "vision", "embeddings", "image", "video", "speech-to-text", "text-to-speech"]) assert.ok(CAPABILITIES.includes(c), c);
+  for (const c of ["chat", "reasoning", "vision", "embeddings", "image", "video", "speech-to-text", "text-to-speech", "music", "video-to-audio"]) assert.ok(CAPABILITIES.includes(c), c);
 });
 
 test("metadata for a model no INSERT created is an error, not a silent no-op", () => {
