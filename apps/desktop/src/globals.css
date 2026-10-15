@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "@krizaka/orazaka-design-system/theme.css";
+
+html, body, #root { height: 100%; }
+body { background: var(--kz-surface-1, var(--color-surface-1)); color: var(--kz-fg, inherit); font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; -webkit-font-smoothing: antialiased; overscroll-behavior: none; user-select: none; }
+code, pre, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+pre, input, textarea { user-select: text; }
+.drop-active { outline: 2px dashed var(--color-accent, #dc6509); outline-offset: -8px; }

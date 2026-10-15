@@ -1,0 +1,38 @@
+#!/bin/sh
+# The `orazaka` sidecar of Orazaka Desktop: runs the CLI bundled in the app (Contents/Resources/cli) with a
+# Node.js >= 22 found on this Mac. It runs nothing else — the app only ever passes it the arguments that
+# src/sidecar.rs allows. Version 0.1 does not ship its own Node runtime (see the README).
+DIR="$(cd "$(dirname "$0")" && pwd)"
+CLI=""
+for c in \
+  "$DIR/../Resources/cli/node_modules/@krizaka/orazaka-cli/dist/index.js" \
+  "$DIR/../resources/cli/node_modules/@krizaka/orazaka-cli/dist/index.js" \
+  "$DIR/../../resources/cli/node_modules/@krizaka/orazaka-cli/dist/index.js"; do
+  [ -f "$c" ] && CLI="$c" && break
+done
+if [ -z "$CLI" ]; then echo "orazaka CLI not found in the app bundle" >&2; exit 127; fi
+
+HOME_DIR="${HOME:-$(eval echo ~)}"
+NODE=""
+# The CLI's native module was built for one Node major (recorded at bundling time): prefer it, accept any >= 22.
+WANT=""
+[ -f "$(dirname "$CLI")/../../../../.node-major" ] && WANT=$(cat "$(dirname "$CLI")/../../../../.node-major")
+for dir in /opt/homebrew/bin /usr/local/bin "$HOME_DIR/.volta/bin" \
+  $(ls -d "$HOME_DIR"/.nvm/versions/node/*/bin 2>/dev/null | sort -V -r) \
+  $(ls -d "$HOME_DIR"/.local/share/fnm/node-versions/*/installation/bin 2>/dev/null | sort -V -r); do
+  if [ -x "$dir/node" ]; then
+    major=$("$dir/node" -p 'process.versions.node.split(".")[0]' 2>/dev/null)
+    if [ -n "$WANT" ] && [ "$major" = "$WANT" ]; then NODE="$dir/node"; break; fi
+    if [ "${major:-0}" -ge 22 ] 2>/dev/null && [ -z "$FALLBACK" ]; then FALLBACK="$dir/node"; fi
+  fi
+done
+[ -z "$NODE" ] && NODE="$FALLBACK"
+if [ -z "$NODE" ] && command -v node >/dev/null 2>&1; then
+  major=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null)
+  [ "${major:-0}" -ge 22 ] 2>/dev/null && NODE="$(command -v node)"
+fi
+if [ -z "$NODE" ]; then
+  echo "Node.js 22 or later is required by the Orazaka CLI (brew install node)." >&2
+  exit 127
+fi
+exec "$NODE" "$CLI" "$@"
