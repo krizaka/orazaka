@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Orazaka",
+  "version": "0.1.0",
+  "identifier": "com.krizaka.orazaka.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build:ui",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Orazaka",
+        "width": 1120,
+        "height": 760,
+        "minWidth": 900,
+        "minHeight": 620,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; frame-src blob:; object-src blob:; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["dmg"],
+    "category": "DeveloperTool",
+    "shortDescription": "Control panel and file bridge for Orazaka",
+    "longDescription": "Start and stop your local Orazaka stack, connect to a hosted Orazaka, and give it access to the folders you choose — and only those.",
+    "copyright": "Krizaka",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.png"],
+    "externalBin": ["binaries/orazaka"],
+    "resources": { "resources/cli": "cli" },
+    "macOS": {
+      "minimumSystemVersion": "14.0",
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.plist",
+      "infoPlist": "Info.plist",
+      "signingIdentity": null,
+      "dmg": { "windowSize": { "width": 560, "height": 360 } }
+    }
+  }
+}

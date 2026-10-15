@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-window",
+  "description": "The control panel — and only the control panel. No fs, no shell, no opener: files are read by Rust commands that go through the folder scope, and the CLI only through the sidecar allow-list. The hosted workspace window has no capability at all.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

@@ -1,0 +1,105 @@
+# Orazaka Desktop (apps/desktop): checks on every pull request that touches it, and on a `desktop-v*` tag a macOS
+# build (arm64 .dmg, unsigned until the Apple Developer ID exists) attached to a GitHub Release.
+name: Desktop
+
+on:
+  pull_request:
+    paths:
+      - "apps/desktop/**"
+      - ".github/workflows/desktop.yml"
+  push:
+    tags: ["desktop-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: desktop check
+    runs-on: macos-15
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - run: npm install -g pnpm@12.10.1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - run: pnpm install --frozen-lockfile
+      - name: Bundle the orazaka CLI
+        run: pnpm sidecar
+      - name: Types, UI tests, Rust tests (scope, sidecar allow-list, settings, files)
+        run: pnpm check
+      - name: Frontend build
+        run: pnpm build:ui
+
+  release:
+    name: desktop dmg
+    if: startsWith(github.ref, 'refs/tags/desktop-v')
+    needs: check
+    runs-on: macos-15
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - run: npm install -g pnpm@12.10.1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - run: pnpm install --frozen-lockfile
+      - name: The tag matches the app version
+        run: |
+          v="${GITHUB_REF_NAME#desktop-v}"
+          app="$(node -p "require('./package.json').version")"
+          conf="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          [ "${v%%-*}" = "$app" ] && [ "$app" = "$conf" ] || { echo "tag $v, package $app, tauri $conf must agree"; exit 1; }
+      - name: Build the .dmg (ad-hoc signed; Developer ID signing + notarization are added with the secrets below)
+        env:
+          # Set these repository secrets when the Apple Developer ID exists — Tauri signs and notarizes by itself:
+          # APPLE_CERTIFICATE (base64 .p12), APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
+          # APPLE_ID, APPLE_PASSWORD (app-specific), APPLE_TEAM_ID.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: pnpm build:app
+      - name: Checksum
+        run: |
+          cd src-tauri/target/aarch64-apple-darwin/release/bundle/dmg
+          for f in *.dmg; do shasum -a 256 "$f" > "$f.sha256"; done
+          ls -la
+      - name: Attach to the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg
+        run: |
+          flags=""
+          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease";; esac
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            && gh release upload "$GITHUB_REF_NAME" ./*.dmg ./*.sha256 --clobber \
+            || gh release create "$GITHUB_REF_NAME" ./*.dmg ./*.sha256 $flags \
+                 --title "Orazaka Desktop ${GITHUB_REF_NAME#desktop-v}" \
+                 --notes "Orazaka Desktop for macOS (Apple Silicon). Unsigned until the Apple Developer ID exists: right-click the app, then Open. See apps/desktop/README.md."
