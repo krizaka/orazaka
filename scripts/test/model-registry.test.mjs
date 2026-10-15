@@ -1,12 +1,13 @@
 // node --test scripts/test — the model registry the site and the docs publish: read from the SQL the routing reads, and refused when incomplete.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildModels, catalogue, statements, stripComments, verifiedBySmoke, CAPABILITIES } from "../lib/model-registry.mjs";
+import { readFileSync } from "node:fs";
+import { buildModels, catalogue, licenceKey, manifestLicences, readmeLicences, statements, stripComments, verifiedBySmoke, CAPABILITIES } from "../lib/model-registry.mjs";
 
 const meta = (name, extra = {}) => {
   const set = {
     vendor: "Alibaba Cloud", family: "Qwen 2.5", capabilities: "chat", runs_on: "local", runtime: "Ollama", open_weights: true,
-    licence: "Apache-2.0", licence_url: "https://example.org/licence", context_window: 32768, status: "available", ...extra,
+    licence: "Apache-2.0", licence_url: "https://example.org/licence", commercial_use: "yes", context_window: 32768, status: "available", ...extra,
   };
   const sql = (v) => (v === null ? "NULL" : typeof v === "boolean" ? String(v).toUpperCase() : typeof v === "number" ? String(v) : `'${v}'`);
   return `UPDATE orazaka_models SET ${Object.entries(set).filter(([, v]) => v !== undefined).map(([k, v]) => `${k} = ${sql(v)}`).join(", ")} WHERE model_name = '${name}';`;
@@ -91,4 +92,35 @@ test("comments and dollar-quoted blocks do not break statement splitting", () =>
   assert.equal(stripComments("select 1; -- it's; fine\nselect '--kept';").includes("it's"), false);
   assert.ok(stripComments("select '--kept';").includes("--kept"));
   assert.equal(statements("UPDATE t SET j = $${\"a\": \"b;c\"}$$::jsonb;\nselect 2;").length, 2);
+});
+
+test("commercial use is required, and a default may never be non-commercial", () => {
+  assert.throws(() => buildModels(seed + meta("qwen2.5:7b", { commercial_use: undefined })), /commercial_use is missing/);
+  assert.throws(() => buildModels(seed + meta("qwen2.5:7b", { commercial_use: "maybe" })), /commercial_use must be one of yes, conditions, no/);
+  // seed has is_default TRUE: a non-commercial default is refused; the same licence as a non-default is published and flagged.
+  assert.throws(() => buildModels(seed + meta("qwen2.5:7b", { commercial_use: "no" })), /a default model must allow commercial use/);
+  const notDefault = seed.replace("'q4_K_M', 'ollama', TRUE)", "'q4_K_M', 'ollama', FALSE)");
+  assert.equal(buildModels(notDefault + meta("qwen2.5:7b", { commercial_use: "no" }))[0].commercialUse, "no");
+  assert.equal(buildModels(seed + meta("qwen2.5:7b"))[0].commercialUse, "yes");
+});
+
+test("two sources that disagree on a licence fail the build, naming both", () => {
+  const readme = new Map([["qwen2.5:7b", "CC BY-NC 4.0"]]);
+  assert.throws(() => buildModels(seed + meta("qwen2.5:7b"), { licenceSources: [{ name: "infra/localai/README.md", licences: readme }] }), /qwen2\.5:7b: infra\/localai\/README\.md says "CC BY-NC 4\.0", the registry \(the model's card\) says "Apache-2\.0"/);
+  const agree = new Map([["qwen2.5:7b", "Apache-2.0 (weights, unmodified)"], ["unknown-model", "anything"]]);
+  assert.equal(buildModels(seed + meta("qwen2.5:7b"), { licenceSources: [{ name: "w", licences: agree }] }).length, 1);
+  assert.equal(licenceKey("CC-BY 4.0 (SIWIS)").startsWith(licenceKey("CC BY 4.0")), true);
+  assert.equal(licenceKey("CC BY-NC-SA 4.0").startsWith(licenceKey("CC BY 4.0")), false);
+});
+
+test("the README table and the worker manifest are read as id → licence", () => {
+  assert.deepEqual([...readmeLicences("| File | W | S | Licence |\n|:---|\n| `piper-x.yaml` | `a.onnx` | https://h/a | CC BY 4.0 (X) |\n")], [["piper-x", "CC BY 4.0 (X)"]]);
+  assert.deepEqual([...manifestLicences('video:\n  wan:\n    label: "W"\n    licence: Apache-2.0\n  ad:\n    licence: "CreativeML OpenRAIL-M"\n')], [["wan", "Apache-2.0"], ["ad", "CreativeML OpenRAIL-M"]]);
+});
+
+test("the README of infra/localai says what the registry says about the voices", () => {
+  const found = readmeLicences(readFileSync(new URL("../../infra/localai/README.md", import.meta.url), "utf8"));
+  assert.match(found.get("piper-en-medium-ljspeech"), /^Public domain/);
+  assert.match(found.get("piper-en-medium-ryan"), /^CC BY-NC-SA 4\.0/);
+  assert.ok(found.size >= 7);
 });

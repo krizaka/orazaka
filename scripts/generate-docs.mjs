@@ -31,7 +31,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, basename, relative } from "node:path";
-import { buildModels, catalogue } from "./lib/model-registry.mjs";
+import { buildModels, catalogue, manifestLicences, readmeLicences } from "./lib/model-registry.mjs";
 
 const ROOT = process.cwd();
 const GEN_DIR = join(ROOT, "docs", "_generated");
@@ -1317,7 +1317,14 @@ const readSmoke = () => {
 };
 
 /** The models Orazaka supports (registry metadata required — see scripts/lib/model-registry.mjs). */
-const extractRegistry = () => buildModels(readModelSql(), { smoke: readSmoke() });
+const extractRegistry = () => {
+  const worker = REPOSITORIES.find((r) => r.name === "orazaka-worker-media");
+  const licenceSources = [
+    { name: "infra/localai/README.md", licences: readmeLicences(read(join(ROOT, "infra", "localai", "README.md"))) },
+    ...(worker ? [{ name: `${worker.path}/models.yaml`, licences: manifestLicences(read(join(ROOT, worker.path, "models.yaml"))) }] : []),
+  ];
+  return buildModels(readModelSql(), { smoke: readSmoke(), licenceSources });
+};
 
 /** The full catalogue for MODELS.md: every non-theme row of orazaka_models with its description. */
 function extractModels() {
@@ -1713,7 +1720,7 @@ const mdModels = (models, rows) => {
     lines.push("", `## ${title}`, "", "| Model | Vendor · family | Does | Runs | Licence | Context | Status | Last verified |", "|:---|:---|:---|:---|:---|---:|:---|:---|");
     for (const m of list) {
       const lic = m.licence.url ? `[${m.licence.name}](${m.licence.url})` : m.licence.name;
-      lines.push(`| \`${m.id}\` — ${m.name} | ${m.vendor} · ${m.family} | ${m.capabilities.map((c) => CAP_LABEL[c]).join(", ")} | ${m.runtime} | ${lic}${m.openWeights ? "" : " (proprietary)"} | ${m.contextWindow ? m.contextWindow.toLocaleString("en-US") : "—"} | ${m.status} | ${m.lastVerified ?? "—"} |`);
+      lines.push(`| \`${m.id}\` — ${m.name} | ${m.vendor} · ${m.family} | ${m.capabilities.map((c) => CAP_LABEL[c]).join(", ")} | ${m.runtime} | ${lic}${m.openWeights ? "" : " (proprietary)"}${m.commercialUse === "no" ? " — **non-commercial**" : m.commercialUse === "conditions" ? " — commercial use under conditions" : ""} | ${m.contextWindow ? m.contextWindow.toLocaleString("en-US") : "—"} | ${m.status} | ${m.lastVerified ?? "—"} |`);
     }
   };
   table("On your hardware", local);

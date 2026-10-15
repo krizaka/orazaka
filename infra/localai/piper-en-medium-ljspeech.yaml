@@ -1,0 +1,4 @@
+name: piper-en-medium-ljspeech
+backend: piper
+parameters:
+  model: en/en_US/ljspeech/medium/en_US-ljspeech-medium.onnx

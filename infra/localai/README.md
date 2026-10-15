@@ -15,8 +15,9 @@ Copy these files into the LocalAI models directory (`~/models/stable-diffusion/`
 | `piper-fr-siwis-medium.yaml` | `fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx` (+ `.onnx.json`) | https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/fr/fr_FR/siwis/medium | CC-BY 4.0 (SIWIS) |
 | `piper-fr-tom-medium.yaml` | `fr/fr_FR/tom/medium/fr_FR-tom-medium.onnx` (+ `.onnx.json`) | https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/fr/fr_FR/tom/medium | AGPL-3.0 (weights, used unmodified, never redistributed by Orazaka) |
 | `piper-fr-medium.yaml` | `fr/fr_FR/upmc/medium/fr_FR-upmc-medium.onnx` (+ `.onnx.json`) | https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/fr/fr_FR/upmc/medium | CC-BY-SA 4.0 |
-| `piper-en-medium-ryan.yaml` | `en/en_US/ryan/medium/en_US-ryan-medium.onnx` (+ `.onnx.json`) | https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/en/en_US/ryan/medium | CC-BY 4.0 |
-| `piper-en-low.yaml` | `en/en_US/lessac/low/en_US-lessac-low.onnx` (+ `.onnx.json`) | https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/en/en_US/lessac/low | CC-BY 4.0 |
+| `piper-en-medium-ljspeech.yaml` | `en/en_US/ljspeech/medium/en_US-ljspeech-medium.onnx` (+ `.onnx.json`) | https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/en/en_US/ljspeech/medium | Public domain (LJSpeech — the English default) |
+| `piper-en-medium-ryan.yaml` | `en/en_US/ryan/medium/en_US-ryan-medium.onnx` (+ `.onnx.json`) | https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/en/en_US/ryan/medium | CC BY-NC-SA 4.0 (RyanSpeech dataset — non-commercial: never a default) |
+| `piper-en-low.yaml` | `en/en_US/lessac/low/en_US-lessac-low.onnx` (+ `.onnx.json`) | https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/en/en_US/lessac/low | Lessac Blizzard 2013 data licence (research licence — non-commercial: never a default) |
 
 LocalAI 4.x finds its backends (`piper`, `whisper`) in `--backends-path`, which defaults to
 `./backends` **relative to the directory it was started from**. Start it with the models
