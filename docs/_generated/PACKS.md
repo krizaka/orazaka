@@ -21,92 +21,773 @@ capability rows, a price, catalogue entries — and changes no code.
 
 ## The packs
 
+```pack-index
+[
+ {
+  "key": "realestate-studio",
+  "title": "Real-Estate Studio",
+  "tagline": "Your listings become Reels ready to publish.",
+  "tier": "DATA",
+  "category": "Business",
+  "studios": 1
+ },
+ {
+  "key": "orazaka-media",
+  "title": "Media Studios",
+  "tagline": "Generate, listen, describe — without leaving a run.",
+  "tier": "DATA",
+  "category": "Business",
+  "studios": 10
+ },
+ {
+  "key": "outbound-prospection",
+  "title": "Outbound Prospecting",
+  "tagline": "From a prospect list to a sequence that ships.",
+  "tier": "DATA",
+  "category": "Business",
+  "studios": 3
+ },
+ {
+  "key": "bien-etre",
+  "title": "Wellbeing",
+  "tagline": "Put into words what you live through, and bring it to your sessions.",
+  "tier": "DATA",
+  "category": "Lifestyle",
+  "studios": 4
+ },
+ {
+  "key": "document-validation",
+  "title": "Document Verification",
+  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
+  "tier": "WORKER",
+  "category": "Business",
+  "studios": 2
+ },
+ {
+  "key": "trade-showcase",
+  "title": "Trade Showcase",
+  "tagline": null,
+  "tier": "DATA",
+  "category": null,
+  "studios": 1
+ }
+]
+```
+
 ### Real-Estate Studio
 
-**Your listings become Reels ready to publish.**
-
-The real-estate agent's pack: the Real-Estate Reels Studio and the credits to run it.
-
-Pack `realestate-studio` 1.0.0 · tier DATA · OSS · regulatory class STANDARD.
-
-| Studio | What it does | Asks for | Steps | Credits held |
-|:---|:---|:---|:---|:---|
-| **Real-Estate Reels** (`realestate-reels`) | Five photos become a Reel ready to publish. Property photos, a three-line brief, and you leave with a 9:16 Reel, its caption and its hashtags. | `photos`, `clip`, `propertyBrief`, `platform` | 4 (CAPABILITY, APPROVAL) | 2800 |
+```pack
+{
+ "key": "realestate-studio",
+ "title": "Real-Estate Studio",
+ "tagline": "Your listings become Reels ready to publish.",
+ "description": "The real-estate agent's pack: the Real-Estate Reels Studio and the credits to run it.",
+ "version": "1.0.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "OSS",
+ "regulatoryClass": "STANDARD",
+ "category": "Business",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "realestate-reels",
+   "label": "Real-Estate Reels",
+   "summary": "Five photos become a Reel ready to publish.",
+   "description": "Property photos, a three-line brief, and you leave with a 9:16 Reel, its caption and its hashtags.",
+   "inputs": [
+    {
+     "key": "photos",
+     "title": "Photos du bien"
+    },
+    {
+     "key": "clip",
+     "title": "Clip vidéo (optionnel)"
+    },
+    {
+     "key": "propertyBrief",
+     "title": "Le bien en 3 lignes"
+    },
+    {
+     "key": "platform",
+     "title": "Plateforme"
+    }
+   ],
+   "steps": 4,
+   "stepKinds": [
+    "CAPABILITY",
+    "APPROVAL"
+   ],
+   "credits": 2800
+  }
+ ]
+}
+```
 
 ### Media Studios
 
-**Generate, listen, describe — without leaving a run.**
-
-Pack `orazaka-media` 1.3.0 · tier DATA · kind TOOLKIT · OSS · regulatory class STANDARD.
-
-| Studio | What it does | Asks for | Steps | Credits held |
-|:---|:---|:---|:---|:---|
-| **Image generation** (`image-generation`) | One sentence, one image. | `prompt`, `size`, `negativePrompt`, `seed`, `model` | 1 (CAPABILITY) | 200 |
-| **Golden-hour editorial** (`art-golden-hour`) | Your subject, in warm low light, shot like a magazine spread. Lifestyle photography at golden hour: raking sunlight, an 85 mm lens wide open, weathered wood, wool and brass, an amber and terracotta palette. Describe who and where — the light, the optics, the materials and the palette are taken care of. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
-| **Tilt-shift miniature** (`art-miniature`) | Your scene as a handcrafted diorama, shot in macro. A 1:24 diorama of figurines and props in felt, embroidered thread and painted resin, a razor-thin plane of focus and soft window light. Describe the scene; it becomes a miniature. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
-| **Artisanal still life** (`art-still-life`) | Objects and produce in single-window light. Chiaroscuro on a weathered table: hand-thrown ceramics, hammered copper, linen and fresh produce, a muted earthy palette. Name the objects; they are arranged and lit. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
-| **Montreal neon night** (`art-montreal-night`) | Wet streets, brick and spiral staircases under magenta and teal. Montreal after rain: cobblestones mirroring window light and neon, light mist, a 35 mm lens wide open, cinematic grading. Describe the place and the moment. | `subject`, `size`, `seed` | 1 (CAPABILITY) | 200 |
-| **Video generation** (`video-generation`) | A vertical short (9:16) or a wide shot, described then rendered. | `prompt`, `durationSeconds`, `aspect`, `image`, `model`, `seed` | 1 (CAPABILITY) | 3600 |
-| **Speech synthesis** (`speech-synthesis`) | Your text, read aloud. | `text`, `voice`, `model` | 1 (CAPABILITY) | 40 |
-| **Image analysis** (`image-analysis`) | What an image shows, in words. | `assetId`, `prompt`, `model` | 1 (CAPABILITY) | 30 |
-| **Audio transcription** (`audio-analysis`) | What was said, written down. | `assetId`, `model` | 1 (CAPABILITY) | 60 |
-| **Video analysis** (`video-analysis`) | A video's speech, and its keyframes. | `assetId`, `model` | 1 (CAPABILITY) | 90 |
+```pack
+{
+ "key": "orazaka-media",
+ "title": "Media Studios",
+ "tagline": "Generate, listen, describe — without leaving a run.",
+ "description": null,
+ "version": "1.3.0",
+ "tier": "DATA",
+ "kind": "TOOLKIT",
+ "distribution": "OSS",
+ "regulatoryClass": "STANDARD",
+ "category": "Business",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "image-generation",
+   "label": "Image generation",
+   "summary": "One sentence, one image.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "prompt",
+     "title": "Ce que vous voulez voir"
+    },
+    {
+     "key": "size",
+     "title": "Format"
+    },
+    {
+     "key": "negativePrompt",
+     "title": "À éviter (facultatif)"
+    },
+    {
+     "key": "seed",
+     "title": "Graine (facultatif)"
+    },
+    {
+     "key": "model",
+     "title": "Modèle (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 200
+  },
+  {
+   "key": "art-golden-hour",
+   "label": "Golden-hour editorial",
+   "summary": "Your subject, in warm low light, shot like a magazine spread.",
+   "description": "Lifestyle photography at golden hour: raking sunlight, an 85 mm lens wide open, weathered wood, wool and brass, an amber and terracotta palette. Describe who and where — the light, the optics, the materials and the palette are taken care of.",
+   "inputs": [
+    {
+     "key": "subject",
+     "title": "Votre sujet"
+    },
+    {
+     "key": "size",
+     "title": "Format"
+    },
+    {
+     "key": "seed",
+     "title": "Graine (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 200
+  },
+  {
+   "key": "art-miniature",
+   "label": "Tilt-shift miniature",
+   "summary": "Your scene as a handcrafted diorama, shot in macro.",
+   "description": "A 1:24 diorama of figurines and props in felt, embroidered thread and painted resin, a razor-thin plane of focus and soft window light. Describe the scene; it becomes a miniature.",
+   "inputs": [
+    {
+     "key": "subject",
+     "title": "Votre sujet"
+    },
+    {
+     "key": "size",
+     "title": "Format"
+    },
+    {
+     "key": "seed",
+     "title": "Graine (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 200
+  },
+  {
+   "key": "art-still-life",
+   "label": "Artisanal still life",
+   "summary": "Objects and produce in single-window light.",
+   "description": "Chiaroscuro on a weathered table: hand-thrown ceramics, hammered copper, linen and fresh produce, a muted earthy palette. Name the objects; they are arranged and lit.",
+   "inputs": [
+    {
+     "key": "subject",
+     "title": "Votre sujet"
+    },
+    {
+     "key": "size",
+     "title": "Format"
+    },
+    {
+     "key": "seed",
+     "title": "Graine (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 200
+  },
+  {
+   "key": "art-montreal-night",
+   "label": "Montreal neon night",
+   "summary": "Wet streets, brick and spiral staircases under magenta and teal.",
+   "description": "Montreal after rain: cobblestones mirroring window light and neon, light mist, a 35 mm lens wide open, cinematic grading. Describe the place and the moment.",
+   "inputs": [
+    {
+     "key": "subject",
+     "title": "Votre sujet"
+    },
+    {
+     "key": "size",
+     "title": "Format"
+    },
+    {
+     "key": "seed",
+     "title": "Graine (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 200
+  },
+  {
+   "key": "video-generation",
+   "label": "Video generation",
+   "summary": "A vertical short (9:16) or a wide shot, described then rendered.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "prompt",
+     "title": "Ce qui doit se passer à l'écran"
+    },
+    {
+     "key": "durationSeconds",
+     "title": "Durée (secondes)"
+    },
+    {
+     "key": "aspect",
+     "title": "Format"
+    },
+    {
+     "key": "image",
+     "title": "Image d'amorce (facultatif)"
+    },
+    {
+     "key": "model",
+     "title": "Modèle (facultatif)"
+    },
+    {
+     "key": "seed",
+     "title": "Graine (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 3600
+  },
+  {
+   "key": "speech-synthesis",
+   "label": "Speech synthesis",
+   "summary": "Your text, read aloud.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "text",
+     "title": "Le texte à lire"
+    },
+    {
+     "key": "voice",
+     "title": "Voix"
+    },
+    {
+     "key": "model",
+     "title": "Modèle (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 40
+  },
+  {
+   "key": "image-analysis",
+   "label": "Image analysis",
+   "summary": "What an image shows, in words.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "assetId",
+     "title": "Votre image"
+    },
+    {
+     "key": "prompt",
+     "title": "Ce que vous voulez savoir"
+    },
+    {
+     "key": "model",
+     "title": "Modèle (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 30
+  },
+  {
+   "key": "audio-analysis",
+   "label": "Audio transcription",
+   "summary": "What was said, written down.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "assetId",
+     "title": "Votre fichier audio"
+    },
+    {
+     "key": "model",
+     "title": "Modèle (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 60
+  },
+  {
+   "key": "video-analysis",
+   "label": "Video analysis",
+   "summary": "A video's speech, and its keyframes.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "assetId",
+     "title": "Votre vidéo"
+    },
+    {
+     "key": "model",
+     "title": "Modèle (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 90
+  }
+ ]
+}
+```
 
 ### Outbound Prospecting
 
-**From a prospect list to a sequence that ships.**
-
-The salesperson's pack: qualify a list, write each prospect's angle, and get the follow-ups out — three Studios over the same list.
-
-Pack `outbound-prospection` 1.1.0 · tier DATA · OSS · regulatory class STANDARD.
-
-| Studio | What it does | Asks for | Steps | Credits held |
-|:---|:---|:---|:---|:---|
-| **Outbound Prospecting** (`outbound-prospection`) | Your prospect list becomes a sequence ready to send. Describe your target and your offer: Orazaka writes a per-prospect angle, then a sequence ready to leave for your channel. | `prospects`, `offer`, `icp` | 4 (CAPABILITY, TRANSFORM, APPROVAL, CONNECTOR) | 250 |
-| **Lead Research** (`lead-research`) | Your raw list becomes a prioritised dossier. One brief per prospect — sector, buying trigger, expected objection — then a ranking so you know who to call first. | `prospects`, `offer`, `icp` | 3 (CAPABILITY, TRANSFORM) | 380 |
-| **Follow-up Sequences** (`followup-sequences`) | Your first contacts become follow-ups that go out. A multi-touch follow-up per prospect, unified into one voice, approved by you, then posted to your channel. | `prospects`, `offer`, `context` | 5 (CAPABILITY, TRANSFORM, APPROVAL, CONNECTOR) | 510 |
+```pack
+{
+ "key": "outbound-prospection",
+ "title": "Outbound Prospecting",
+ "tagline": "From a prospect list to a sequence that ships.",
+ "description": "The salesperson's pack: qualify a list, write each prospect's angle, and get the follow-ups out — three Studios over the same list.",
+ "version": "1.1.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "OSS",
+ "regulatoryClass": "STANDARD",
+ "category": "Business",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "outbound-prospection",
+   "label": "Outbound Prospecting",
+   "summary": "Your prospect list becomes a sequence ready to send.",
+   "description": "Describe your target and your offer: Orazaka writes a per-prospect angle, then a sequence ready to leave for your channel.",
+   "inputs": [
+    {
+     "key": "prospects",
+     "title": "Vos prospects"
+    },
+    {
+     "key": "offer",
+     "title": "Votre offre en une phrase"
+    },
+    {
+     "key": "icp",
+     "title": "Votre client idéal"
+    }
+   ],
+   "steps": 4,
+   "stepKinds": [
+    "CAPABILITY",
+    "TRANSFORM",
+    "APPROVAL",
+    "CONNECTOR"
+   ],
+   "credits": 250
+  },
+  {
+   "key": "lead-research",
+   "label": "Lead Research",
+   "summary": "Your raw list becomes a prioritised dossier.",
+   "description": "One brief per prospect — sector, buying trigger, expected objection — then a ranking so you know who to call first.",
+   "inputs": [
+    {
+     "key": "prospects",
+     "title": "Vos prospects"
+    },
+    {
+     "key": "offer",
+     "title": "Votre offre en une phrase"
+    },
+    {
+     "key": "icp",
+     "title": "Votre client idéal"
+    }
+   ],
+   "steps": 3,
+   "stepKinds": [
+    "CAPABILITY",
+    "TRANSFORM"
+   ],
+   "credits": 380
+  },
+  {
+   "key": "followup-sequences",
+   "label": "Follow-up Sequences",
+   "summary": "Your first contacts become follow-ups that go out.",
+   "description": "A multi-touch follow-up per prospect, unified into one voice, approved by you, then posted to your channel.",
+   "inputs": [
+    {
+     "key": "prospects",
+     "title": "Prospects à relancer"
+    },
+    {
+     "key": "offer",
+     "title": "Votre offre en une phrase"
+    },
+    {
+     "key": "context",
+     "title": "Ce qui s'est passé au premier contact"
+    }
+   ],
+   "steps": 5,
+   "stepKinds": [
+    "CAPABILITY",
+    "TRANSFORM",
+    "APPROVAL",
+    "CONNECTOR"
+   ],
+   "credits": 510
+  }
+ ]
+}
+```
 
 ### Wellbeing
 
-**Put into words what you live through, and bring it to your sessions.**
-
-Guided journaling, session preparation and mood tracking. Not care: no diagnosis, no advice on treatment, no emergency service — what you bring to a professional, not instead of one. Health data, kept 30 days at most, never used to train a model.
-
-Pack `bien-etre` 1.0.0 · tier DATA · CLOUD · regulatory class REGULATED.
-
-Declares a scope guard (refused domain), versioned consent before install, a fixed, reviewed crisis response; the engine adds the controls of its regulatory class.
-
-| Studio | What it does | Asks for | Steps | Credits held |
-|:---|:---|:---|:---|:---|
-| **Guided Journaling** (`guided-journaling`) | Your words, put in order — in your own voice. Write what you want to set down, as it comes: the Studio tidies it into a clean entry, in the first person, without adding advice or interpretation. | `entry` | 1 (CAPABILITY) | 40 |
-| **Session Preparation** (`session-preparation`) | Your notes since the last session become the points to raise. Paste what you noted, in any order: the Studio turns it into the list of points to bring to your next session, without interpreting anything. | `notes` | 1 (CAPABILITY) | 40 |
-| **Mood Tracking** (`mood-tracking`) | What your daily notes show, described — never concluded. One line a day is enough: the Studio describes what the entries show over time, and draws no conclusion from them. | `entries` | 1 (CAPABILITY) | 40 |
-| **Session Summary** (`session-summary`) | What you keep of a conversation — themes, what helped, one small step. Hand over the turns of a conversation: the Studio returns what you keep of it — up to three themes, what helped, one small step, and what to bring to your therapist — described in your words, never explained. | `turns`, `thread`, `moodBefore`, `moodAfter`, `locale` | 1 (CAPABILITY) | 40 |
+```pack
+{
+ "key": "bien-etre",
+ "title": "Wellbeing",
+ "tagline": "Put into words what you live through, and bring it to your sessions.",
+ "description": "Guided journaling, session preparation and mood tracking. Not care: no diagnosis, no advice on treatment, no emergency service — what you bring to a professional, not instead of one. Health data, kept 30 days at most, never used to train a model.",
+ "version": "1.0.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "REGULATED",
+ "category": "Lifestyle",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": true,
+  "consent": true,
+  "safety": true
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "guided-journaling",
+   "label": "Guided Journaling",
+   "summary": "Your words, put in order — in your own voice.",
+   "description": "Write what you want to set down, as it comes: the Studio tidies it into a clean entry, in the first person, without adding advice or interpretation.",
+   "inputs": [
+    {
+     "key": "entry",
+     "title": "Ce que vous voulez mettre par écrit"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 40
+  },
+  {
+   "key": "session-preparation",
+   "label": "Session Preparation",
+   "summary": "Your notes since the last session become the points to raise.",
+   "description": "Paste what you noted, in any order: the Studio turns it into the list of points to bring to your next session, without interpreting anything.",
+   "inputs": [
+    {
+     "key": "notes",
+     "title": "Ce que vous avez noté depuis la dernière séance"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 40
+  },
+  {
+   "key": "mood-tracking",
+   "label": "Mood Tracking",
+   "summary": "What your daily notes show, described — never concluded.",
+   "description": "One line a day is enough: the Studio describes what the entries show over time, and draws no conclusion from them.",
+   "inputs": [
+    {
+     "key": "entries",
+     "title": "Vos relevés"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 40
+  },
+  {
+   "key": "session-summary",
+   "label": "Session Summary",
+   "summary": "What you keep of a conversation — themes, what helped, one small step.",
+   "description": "Hand over the turns of a conversation: the Studio returns what you keep of it — up to three themes, what helped, one small step, and what to bring to your therapist — described in your words, never explained.",
+   "inputs": [
+    {
+     "key": "turns",
+     "title": "Le moment"
+    },
+    {
+     "key": "thread",
+     "title": "Le fil"
+    },
+    {
+     "key": "moodBefore",
+     "title": "Humeur avant (auto-déclarée)"
+    },
+    {
+     "key": "moodAfter",
+     "title": "Humeur après (auto-déclarée)"
+    },
+    {
+     "key": "locale",
+     "title": "Langue du résumé"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 40
+  }
+ ]
+}
+```
 
 ### Document Verification
 
-**Check a contract against the rules, and a PDF for signs of tampering.**
-
-Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.
-
-Pack `document-validation` 1.1.0 · tier WORKER · CLOUD · regulatory class SENSITIVE · own worker `orazaka-worker-validation`.
-
-Declares a scope guard (refused domain); the engine adds the controls of its regulatory class.
-
-Rulesets: Bail de résidence principale — Région wallonne (BE-WAL, 4 rules, versions 2025-01-01); Bail d'habitation — France (FR, 10 rules, versions 2024-07-01, 2026-07-01); Bail de logement — Québec (QC, 9 rules, versions 2024-02-21).
-
-| Studio | What it does | Asks for | Steps | Credits held |
-|:---|:---|:---|:---|:---|
-| **Document Authenticity** (`document-authenticity`) | A PDF's metadata, structure and fonts, examined for signs of tampering. Examines the file itself — who produced it, when, with what, and whether it was edited afterwards — and lists the points worth clearing up. It never judges what the document says. | `documentBase64`, `expectedIssuer` | 1 (CAPABILITY) | 30 |
-| **Compliance Check** (`compliance-check`) | Your lease or contract, checked against the rules of its jurisdiction. Runs a lease or a contract against the rules of its jurisdiction, as they stood on a date you pick. Each finding gives its rule, its source and the passage of the document. | `document`, `jurisdiction`, `asOf` | 3 (CAPABILITY) | 120 |
+```pack
+{
+ "key": "document-validation",
+ "title": "Document Verification",
+ "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
+ "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
+ "version": "1.1.0",
+ "tier": "WORKER",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": "Business",
+ "listed": true,
+ "workers": [
+  "orazaka-worker-validation"
+ ],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [
+  {
+   "label": "Bail de résidence principale — Région wallonne",
+   "jurisdiction": "BE-WAL",
+   "rules": 4,
+   "versions": [
+    "2025-01-01"
+   ]
+  },
+  {
+   "label": "Bail d'habitation — France",
+   "jurisdiction": "FR",
+   "rules": 10,
+   "versions": [
+    "2024-07-01",
+    "2026-07-01"
+   ]
+  },
+  {
+   "label": "Bail de logement — Québec",
+   "jurisdiction": "QC",
+   "rules": 9,
+   "versions": [
+    "2024-02-21"
+   ]
+  }
+ ],
+ "studios": [
+  {
+   "key": "document-authenticity",
+   "label": "Document Authenticity",
+   "summary": "A PDF's metadata, structure and fonts, examined for signs of tampering.",
+   "description": "Examines the file itself — who produced it, when, with what, and whether it was edited afterwards — and lists the points worth clearing up. It never judges what the document says.",
+   "inputs": [
+    {
+     "key": "documentBase64",
+     "title": "Le fichier PDF"
+    },
+    {
+     "key": "expectedIssuer",
+     "title": "Émetteur attendu (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 30
+  },
+  {
+   "key": "compliance-check",
+   "label": "Compliance Check",
+   "summary": "Your lease or contract, checked against the rules of its jurisdiction.",
+   "description": "Runs a lease or a contract against the rules of its jurisdiction, as they stood on a date you pick. Each finding gives its rule, its source and the passage of the document.",
+   "inputs": [
+    {
+     "key": "document",
+     "title": "Document à contrôler"
+    },
+    {
+     "key": "jurisdiction",
+     "title": "Juridiction"
+    },
+    {
+     "key": "asOf",
+     "title": "Règles en vigueur à la date du"
+    }
+   ],
+   "steps": 3,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 120
+  }
+ ]
+}
+```
 
 ### Trade Showcase
 
-Pack `trade-showcase` 1.0.0 · tier DATA · OSS · regulatory class STANDARD · installed without a catalogue entry.
-
-| Studio | What it does | Asks for | Steps | Credits held |
-|:---|:---|:---|:---|:---|
-| **Trade Showcase** (`trade-showcase`) | Your job sites become a showcase that sells. Drop in photos of your work: Orazaka describes them, then composes a branded showcase visual. | `photos`, `trade` | 3 (CAPABILITY) | 210 |
+```pack
+{
+ "key": "trade-showcase",
+ "title": "Trade Showcase",
+ "tagline": null,
+ "description": null,
+ "version": "1.0.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "OSS",
+ "regulatoryClass": "STANDARD",
+ "category": null,
+ "listed": false,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "trade-showcase",
+   "label": "Trade Showcase",
+   "summary": "Your job sites become a showcase that sells.",
+   "description": "Drop in photos of your work: Orazaka describes them, then composes a branded showcase visual.",
+   "inputs": [
+    {
+     "key": "photos",
+     "title": "Photos de vos réalisations"
+    },
+    {
+     "key": "trade",
+     "title": "Votre métier"
+    }
+   ],
+   "steps": 3,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 210
+  }
+ ]
+}
+```
 
 Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for the platform's tests, never sold.
 
