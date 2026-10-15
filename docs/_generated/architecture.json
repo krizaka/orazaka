@@ -3666,7 +3666,7 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -3710,6 +3710,15 @@
             "2026-07-01"
           ],
           "rules": 10
+        },
+        {
+          "id": "qc-residential-lease",
+          "label": "Bail de logement — Québec",
+          "jurisdiction": "QC",
+          "versions": [
+            "2024-02-21"
+          ],
+          "rules": 9
         }
       ],
       "text": {
@@ -4497,10 +4506,10 @@
       "lastVerified": null
     },
     {
-      "id": "bge-m3",
-      "name": "BGE-M3",
-      "vendor": "BAAI",
-      "family": "BGE-M3",
+      "id": "gte-large-en-v1.5",
+      "name": "GTE Large (en) v1.5",
+      "vendor": "Alibaba-NLP",
+      "family": "GTE",
       "category": "embedding",
       "capabilities": [
         "embeddings"
@@ -4510,8 +4519,8 @@
       "provider": "do-inference",
       "openWeights": true,
       "licence": {
-        "name": "MIT",
-        "url": "https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE"
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md"
       },
       "contextWindow": 8192,
       "status": "available",
@@ -4582,10 +4591,10 @@
       "lastVerified": null
     },
     {
-      "id": "gte-large-en-v1.5",
-      "name": "GTE Large (en) v1.5",
-      "vendor": "Alibaba-NLP",
-      "family": "GTE",
+      "id": "bge-m3",
+      "name": "BGE-M3",
+      "vendor": "BAAI",
+      "family": "BGE-M3",
       "category": "embedding",
       "capabilities": [
         "embeddings"
@@ -4595,8 +4604,8 @@
       "provider": "do-inference",
       "openWeights": true,
       "licence": {
-        "name": "Apache-2.0",
-        "url": "https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md"
+        "name": "MIT",
+        "url": "https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE"
       },
       "contextWindow": 8192,
       "status": "planned",

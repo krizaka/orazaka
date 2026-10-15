@@ -89,11 +89,11 @@ Declares a scope guard (refused domain), versioned consent before install, a fix
 
 Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.
 
-Pack `document-validation` 1.0.0 · tier WORKER · CLOUD · regulatory class SENSITIVE · own worker `orazaka-worker-validation`.
+Pack `document-validation` 1.1.0 · tier WORKER · CLOUD · regulatory class SENSITIVE · own worker `orazaka-worker-validation`.
 
 Declares a scope guard (refused domain); the engine adds the controls of its regulatory class.
 
-Rulesets: Bail de résidence principale — Région wallonne (BE-WAL, 4 rules, versions 2025-01-01); Bail d'habitation — France (FR, 10 rules, versions 2024-07-01, 2026-07-01).
+Rulesets: Bail de résidence principale — Région wallonne (BE-WAL, 4 rules, versions 2025-01-01); Bail d'habitation — France (FR, 10 rules, versions 2024-07-01, 2026-07-01); Bail de logement — Québec (QC, 9 rules, versions 2024-02-21).
 
 | Studio | What it does | Asks for | Steps | Credits held |
 |:---|:---|:---|:---|:---|
@@ -114,7 +114,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 
 | Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |
 |:---|:---|:---|:---|:---|:---|:---|:---|
-| `document-validation` | 1.0.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
+| `document-validation` | 1.1.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
 | `echo-toolkit` | 1.0.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
 | `orazaka-media` | 1.2.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.1.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |

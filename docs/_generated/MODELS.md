@@ -63,11 +63,11 @@ the machine holds for clinical, legal or security work, and keep a professional 
 | Model | Vendor · family | Does | Runs | Licence | Context | Status | Last verified |
 |:---|:---|:---|:---|:---|---:|:---|:---|
 | `mistral-3-14B` — Mistral 3 14B | Mistral AI · Mistral 3 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/mistralai/Ministral-3-14B-Instruct-2512/blob/main/README.md) | 262,144 | available | — |
-| `bge-m3` — BGE-M3 | BAAI · BGE-M3 | Embeddings | DigitalOcean serverless inference | [MIT](https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE) | 8,192 | available | — |
+| `gte-large-en-v1.5` — GTE Large (en) v1.5 | Alibaba-NLP · GTE | Embeddings | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md) | 8,192 | available | — |
 | `deepseek-v4-pro` — DeepSeek V4 Pro | DeepSeek · DeepSeek V4 | Chat, Reasoning | DigitalOcean serverless inference | [MIT](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/blob/main/LICENSE) | 1,048,576 | planned | — |
 | `gemma-4-31B-it` — Gemma 4 31B | Google · Gemma 4 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/google/gemma-4-31B-it/blob/main/README.md) | 262,144 | planned | — |
 | `llama-4-maverick` — Llama 4 Maverick | Meta · Llama 4 | Chat | DigitalOcean serverless inference | [Llama 4 Community Licence](https://github.com/meta-llama/llama-models/blob/main/models/llama4/LICENSE) | 1,048,576 | planned | — |
-| `gte-large-en-v1.5` — GTE Large (en) v1.5 | Alibaba-NLP · GTE | Embeddings | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md) | 8,192 | planned | — |
+| `bge-m3` — BGE-M3 | BAAI · BGE-M3 | Embeddings | DigitalOcean serverless inference | [MIT](https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE) | 8,192 | planned | — |
 
 ## In the catalogue, not published
 
