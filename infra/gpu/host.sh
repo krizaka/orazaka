@@ -81,6 +81,8 @@ worker_image() {
   step "building the worker image from krizaka/orazaka-worker-media@${sha} (once per commit, ~20 min)"
   local src; src=$(mktemp -d)
   git clone -q --depth 1 https://github.com/krizaka/orazaka-worker-media.git "$src"
+  # The DigitalOcean GPU image ships Docker without buildx, and Dockerfile.cuda needs BuildKit.
+  docker buildx version >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq docker-buildx >/dev/null; }
   DOCKER_BUILDKIT=1 docker build -q -f "$src/Dockerfile.cuda" -t "orazaka-worker-media:${sha}" "$src" >/dev/null
   rm -rf "$src"
   docker tag "orazaka-worker-media:${sha}" "$WORKER_IMAGE"

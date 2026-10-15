@@ -174,7 +174,7 @@ ensure_volume() {
   local region="$1" name="${NAME_PREFIX}-models-$1"
   local id; id=$(doctl compute volume list -o json | python3 -c "import json,sys; print(next((v['id'] for v in json.load(sys.stdin) or [] if v['name']=='$name' and v['region']['slug']=='$region'), ''))")
   if [[ -z "$id" ]]; then
-    say "creating the models volume $name (${VOLUME_GB} GB in $region, ≈ \$$(( VOLUME_GB / 10 ))/month, kept between droplets)"
+    say "creating the models volume $name (${VOLUME_GB} GB in $region, ≈ \$$(( VOLUME_GB / 10 ))/month, kept between droplets)" >&2
     id=$(doctl compute volume create "$name" --region "$region" --size "${VOLUME_GB}GiB" --desc "Orazaka GPU model weights (scripts/gpu-dev.sh)" --format ID --no-header)
     local project_id; project_id=$(doctl projects list -o json | python3 -c "import json,sys; print(next(p['id'] for p in json.load(sys.stdin) if p['name']=='$PROJECT'))")
     doctl projects resources assign "$project_id" --resource="do:volume:$id" >/dev/null

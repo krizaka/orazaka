@@ -122,4 +122,12 @@ test("runpod guard: gpu-dev.sh routes `runpod` to the guard and the key never tr
   const script = read("scripts/gpu-dev.sh");
   assert.match(script, /runpod\)[\s\S]*runpod-guard\.py/);
   assert.doesNotMatch(read("scripts/runpod-guard.py"), /sys\.argv\[\d\].*key/i);
+
+test("the volume's creation message never reaches stdout (it is read as the volume id), and the host builds with buildx", () => {
+  const script = read("scripts/gpu-dev.sh");
+  assert.match(script, /kept between droplets\)" >&2/);
+  const host = read("infra/gpu/host.sh");
+  assert.match(host, /docker buildx version[\s\S]*apt-get install -y -qq docker-buildx[\s\S]*docker build/);
+  // one image per worker commit: a new main commit is a new tar, hence a rebuild
+  assert.match(host, /orazaka-worker-media-\$\{sha\}\.tar/);
 });
