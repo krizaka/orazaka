@@ -211,6 +211,16 @@ worker's pipeline (`:8188`) and Ollama (`:11434`, with `qwen2.5:7b` and `llava` 
 vision steps run on the Mac while it is connected. The worker hands its outputs to the dev job service the same way. Run one host at a time: two workers on one queue
 share the jobs, and a Wan job reaching the Mac runs on Metal (slowly) or fails by name.
 
+### Wan 2.2 A14B — a provider's model, run by Orazaka
+
+`wan2-2-t2v-a14b` (catalogue row, provider `do-inference`) is made by DigitalOcean serverless inference; Orazaka is
+the run: the Studio run id, the seed, the metering and the sealed asset are its own, and the clip says where it came from
+(`metrics.provider`). The media worker routes it (`app/remote_video.py`: `POST /v1/videos`, poll `GET /v1/videos/{id}`,
+`GET /v1/videos/{id}/content`); **text-to-video, 832×480 (16:9 only — measured: any other size is answered at 832×480, so
+9:16 is refused by name), 5 s at 16 fps, $0.60 a clip, the seed makes the same shot again**. The key
+(`AI_INFERENCE_KEY_ALL` in the secrets file, a model access key that lists the model) goes into the Mac worker's 0600
+env by `scripts/gpu-dev.sh mac` — never printed, never in a repository. Select it with `--model wan2-2-t2v-a14b --aspect 16:9`.
+
 ## What works in dev
 
 | Feature | Dev | Why |

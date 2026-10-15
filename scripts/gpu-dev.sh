@@ -349,6 +349,7 @@ mac() {
   mkdir -p "$LOCAL"; chmod 700 "$LOCAL"
   local out="$LOCAL/mac-worker.env"
   RELAY_PASSWORD="$(secret AI_GPU_RELAY_PASSWORD)" RABBIT_PASSWORD="$(secret RABBITMQ_PASS_GPU)" \
+  INFERENCE_KEY="$(secret AI_INFERENCE_KEY_ALL || secret AI_INFERENCE_KEY)" \
   BROKER_CA_B64="$(broker_ca_b64)" \
   SERVICE_TOKEN="$(mint_service_token 12)" python3 - "$out" "$LOCAL/broker-ca.pem" <<'PY'
 import base64, os, sys
@@ -364,6 +365,9 @@ with os.fdopen(fd, "w") as handle:
         f"ORAZAKA_SERVICE_TOKEN={os.environ['SERVICE_TOKEN']}\n"
         "MEDIA_ASSET_SINK_URL=http://127.0.0.1:18090\nJOB_SERVICE_INTERNAL_URL=http://127.0.0.1:18090\n"
     )
+    if os.environ.get("INFERENCE_KEY"):
+        # The provider key of the models routed rather than run here (wan2-2-t2v-a14b); in the 0600 file, never printed.
+        handle.write(f"AI_INFERENCE_KEY={os.environ['INFERENCE_KEY']}\n")
 PY
   say "wrote $out (0600, valid 12 h). Then, in two terminals:"
   # The same remotes as a droplet: the broker and the job service in, and the Mac's own engines back into the app

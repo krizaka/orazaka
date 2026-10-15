@@ -32,4 +32,12 @@ UPDATE ai_providers SET base_url = 'http://gpu-relay:8188' WHERE name = 'localai
 -- Ollama, for the Studios' chat and vision steps while the GPU runs (qwen2.5:7b, llava) — the same relay.
 UPDATE ai_providers SET base_url = 'http://gpu-relay:11434' WHERE name = 'ollama';
 
+-- Wan 2.2 A14B, text-to-video: made by the provider, run by Orazaka (the media worker routes it; its key is its
+-- AI_INFERENCE_KEY). Same rows as infra/migrations/2026-10-15-do-wan-a14b.sql.
+INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, max_steps, recommended_fps, supported_hardware, description)
+VALUES ('wan2-2-t2v-a14b', 'Wan 2.2 T2V A14B (serverless)', 'video', NULL, 'do-inference', FALSE, 0, 16, NULL,
+        'Wan 2.2 A14B (Apache-2.0) on DigitalOcean serverless inference, routed by Orazaka — text-to-video, 832x480 in 16:9, 5 s at 16 fps, $0.60 a clip, the seed makes the same shot again. The cinematic model of the demos.')
+ON CONFLICT (model_name) DO NOTHING;
+UPDATE orazaka_models SET vendor = 'Alibaba (Wan-AI)', family = 'Wan 2.2', capabilities = 'video', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B', commercial_use = 'yes', context_window = NULL, status = 'available' WHERE model_name = 'wan2-2-t2v-a14b';
+
 COMMIT;
