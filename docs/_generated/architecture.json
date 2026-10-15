@@ -3990,6 +3990,576 @@
       ]
     }
   ],
+  "models": [
+    {
+      "id": "whisper-base",
+      "name": "Whisper Base",
+      "vendor": "OpenAI",
+      "family": "Whisper",
+      "category": "audio",
+      "capabilities": [
+        "speech-to-text"
+      ],
+      "runsOn": "local",
+      "runtime": "LocalAI · whisper.cpp",
+      "provider": "ollama",
+      "openWeights": true,
+      "licence": {
+        "name": "MIT",
+        "url": "https://github.com/openai/whisper/blob/main/LICENSE"
+      },
+      "contextWindow": null,
+      "status": "default",
+      "lastVerified": null
+    },
+    {
+      "id": "qwen2.5-coder:7b",
+      "name": "Qwen 2.5 Coder 7B",
+      "vendor": "Alibaba Cloud",
+      "family": "Qwen 2.5 Coder",
+      "category": "code",
+      "capabilities": [
+        "code"
+      ],
+      "runsOn": "local",
+      "runtime": "Ollama",
+      "provider": "ollama",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct/blob/main/LICENSE"
+      },
+      "contextWindow": 32768,
+      "status": "default",
+      "lastVerified": null
+    },
+    {
+      "id": "flux-2-klein-4b",
+      "name": "FLUX.2 [klein] 4B",
+      "vendor": "Black Forest Labs",
+      "family": "FLUX.2 klein",
+      "category": "image",
+      "capabilities": [
+        "image"
+      ],
+      "runsOn": "local",
+      "runtime": "stable-diffusion.cpp · Metal, CUDA",
+      "provider": "localai-image",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/README.md"
+      },
+      "contextWindow": null,
+      "status": "default",
+      "lastVerified": null
+    },
+    {
+      "id": "piper-en-medium-ryan",
+      "name": "Piper Ryan (en)",
+      "vendor": "Rhasspy",
+      "family": "Piper (en-US, Ryan)",
+      "category": "speech",
+      "capabilities": [
+        "text-to-speech"
+      ],
+      "runsOn": "local",
+      "runtime": "LocalAI · Piper",
+      "provider": "localai",
+      "openWeights": true,
+      "licence": {
+        "name": "CC BY-NC-SA 4.0",
+        "url": "https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ryan/medium/MODEL_CARD"
+      },
+      "contextWindow": null,
+      "status": "default",
+      "lastVerified": null
+    },
+    {
+      "id": "animatediff-lightning-mps",
+      "name": "AnimateDiff Lightning",
+      "vendor": "ByteDance",
+      "family": "AnimateDiff-Lightning",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "PyTorch MPS · Apple Metal",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "CreativeML OpenRAIL-M",
+        "url": "https://huggingface.co/ByteDance/AnimateDiff-Lightning/blob/main/README.md"
+      },
+      "contextWindow": null,
+      "status": "default",
+      "lastVerified": null
+    },
+    {
+      "id": "llava:latest",
+      "name": "LLaVA (latest)",
+      "vendor": "LLaVA team",
+      "family": "LLaVA 1.6",
+      "category": "vision",
+      "capabilities": [
+        "vision"
+      ],
+      "runsOn": "local",
+      "runtime": "Ollama",
+      "provider": "ollama",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://ollama.com/library/llava"
+      },
+      "contextWindow": null,
+      "status": "default",
+      "lastVerified": null
+    },
+    {
+      "id": "whisper-tiny-en",
+      "name": "Whisper Tiny (en)",
+      "vendor": "OpenAI",
+      "family": "Whisper",
+      "category": "audio",
+      "capabilities": [
+        "speech-to-text"
+      ],
+      "runsOn": "local",
+      "runtime": "LocalAI · whisper.cpp",
+      "provider": "ollama",
+      "openWeights": true,
+      "licence": {
+        "name": "MIT",
+        "url": "https://github.com/openai/whisper/blob/main/LICENSE"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "dolphin-llama3:8b",
+      "name": "Dolphin Llama 3 8B — unfiltered",
+      "vendor": "Cognitive Computations",
+      "family": "Dolphin 2.9 (Llama 3, unfiltered)",
+      "category": "chat",
+      "capabilities": [
+        "chat"
+      ],
+      "runsOn": "local",
+      "runtime": "Ollama",
+      "provider": "ollama",
+      "openWeights": true,
+      "licence": {
+        "name": "Meta Llama 3 Community Licence",
+        "url": "https://www.llama.com/llama3/license/"
+      },
+      "contextWindow": 8192,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "huihui_ai/qwen2.5-abliterate:7b",
+      "name": "Qwen 2.5 7B — unfiltered",
+      "vendor": "Alibaba Cloud",
+      "family": "Qwen 2.5 (unfiltered)",
+      "category": "chat",
+      "capabilities": [
+        "chat"
+      ],
+      "runsOn": "local",
+      "runtime": "Ollama",
+      "provider": "ollama",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/blob/main/LICENSE"
+      },
+      "contextWindow": 32768,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "mdq100/Gemma3-Instruct-Abliterated:27b",
+      "name": "Gemma 3 27B — unfiltered",
+      "vendor": "Google",
+      "family": "Gemma 3 (unfiltered)",
+      "category": "chat",
+      "capabilities": [
+        "chat"
+      ],
+      "runsOn": "local",
+      "runtime": "Ollama",
+      "provider": "ollama",
+      "openWeights": true,
+      "licence": {
+        "name": "Gemma Terms of Use",
+        "url": "https://ai.google.dev/gemma/terms"
+      },
+      "contextWindow": 131072,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "qwen2.5:7b",
+      "name": "Qwen 2.5 7B Instruct",
+      "vendor": "Alibaba Cloud",
+      "family": "Qwen 2.5",
+      "category": "chat",
+      "capabilities": [
+        "chat"
+      ],
+      "runsOn": "local",
+      "runtime": "Ollama",
+      "provider": "ollama",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/blob/main/LICENSE"
+      },
+      "contextWindow": 32768,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "codellama:7b",
+      "name": "CodeLlama 7B",
+      "vendor": "Meta",
+      "family": "Code Llama",
+      "category": "code",
+      "capabilities": [
+        "code"
+      ],
+      "runsOn": "local",
+      "runtime": "Ollama",
+      "provider": "ollama",
+      "openWeights": true,
+      "licence": {
+        "name": "Llama 2 Community Licence",
+        "url": "https://ai.meta.com/llama/license/"
+      },
+      "contextWindow": 16384,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "argmaxinc/mlx-FLUX.1-schnell-4bit-quantized",
+      "name": "FLUX.1 Schnell 4-bit (MLX)",
+      "vendor": "Black Forest Labs",
+      "family": "FLUX.1 schnell",
+      "category": "image",
+      "capabilities": [
+        "image"
+      ],
+      "runsOn": "local",
+      "runtime": "MLX · Apple Silicon",
+      "provider": "localai-image",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "v1-5-pruned-emaonly",
+      "name": "Stable Diffusion 1.5",
+      "vendor": "Stability AI",
+      "family": "Stable Diffusion 1.5",
+      "category": "image",
+      "capabilities": [
+        "image"
+      ],
+      "runsOn": "local",
+      "runtime": "stable-diffusion.cpp · Metal, CUDA",
+      "provider": "localai-image",
+      "openWeights": true,
+      "licence": {
+        "name": "CreativeML OpenRAIL-M",
+        "url": "https://huggingface.co/spaces/CompVis/stable-diffusion-license"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "z-image-turbo",
+      "name": "Z-Image Turbo",
+      "vendor": "Tongyi Lab (Alibaba)",
+      "family": "Z-Image",
+      "category": "image",
+      "capabilities": [
+        "image"
+      ],
+      "runsOn": "local",
+      "runtime": "stable-diffusion.cpp · Metal, CUDA",
+      "provider": "localai-image",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/README.md"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "piper-en-low",
+      "name": "Piper Low (en)",
+      "vendor": "Rhasspy",
+      "family": "Piper (en-US, Lessac)",
+      "category": "speech",
+      "capabilities": [
+        "text-to-speech"
+      ],
+      "runsOn": "local",
+      "runtime": "LocalAI · Piper",
+      "provider": "localai",
+      "openWeights": true,
+      "licence": {
+        "name": "Lessac Blizzard 2013 data licence",
+        "url": "https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "piper-fr-medium",
+      "name": "Piper Medium (fr)",
+      "vendor": "Rhasspy",
+      "family": "Piper (fr-FR, UPMC)",
+      "category": "speech",
+      "capabilities": [
+        "text-to-speech"
+      ],
+      "runsOn": "local",
+      "runtime": "LocalAI · Piper",
+      "provider": "localai",
+      "openWeights": true,
+      "licence": {
+        "name": "CC BY-SA 4.0",
+        "url": "https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/upmc/medium/MODEL_CARD"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "piper-fr-siwis-medium",
+      "name": "Piper Siwis (fr-FR, féminine)",
+      "vendor": "Rhasspy",
+      "family": "Piper (fr-FR, Siwis)",
+      "category": "speech",
+      "capabilities": [
+        "text-to-speech"
+      ],
+      "runsOn": "local",
+      "runtime": "LocalAI · Piper",
+      "provider": "localai",
+      "openWeights": true,
+      "licence": {
+        "name": "CC BY 4.0",
+        "url": "https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/siwis/medium/MODEL_CARD"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "piper-fr-tom-medium",
+      "name": "Piper Tom (fr-FR, masculine)",
+      "vendor": "Rhasspy",
+      "family": "Piper (fr-FR, Tom)",
+      "category": "speech",
+      "capabilities": [
+        "text-to-speech"
+      ],
+      "runsOn": "local",
+      "runtime": "LocalAI · Piper",
+      "provider": "localai",
+      "openWeights": true,
+      "licence": {
+        "name": "AGPL-3.0",
+        "url": "https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/tom/medium/MODEL_CARD"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "stable-video-diffusion-img2vid-xt",
+      "name": "Stable Video Diffusion XT (heavy, >64GB)",
+      "vendor": "Stability AI",
+      "family": "Stable Video Diffusion",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "CUDA, more than 64 GB of memory",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Stability AI Community Licence",
+        "url": "https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/blob/main/LICENSE.md"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "wan2.1-t2v-1.3b",
+      "name": "Wan 2.1 T2V 1.3B",
+      "vendor": "Alibaba (Wan-AI)",
+      "family": "Wan 2.1",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B-Diffusers/blob/main/README.md"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "wan2.2-ti2v-5b",
+      "name": "Wan 2.2 TI2V 5B",
+      "vendor": "Alibaba (Wan-AI)",
+      "family": "Wan 2.2",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers/blob/main/README.md"
+      },
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "mistral-3-14B",
+      "name": "Mistral 3 14B",
+      "vendor": "Mistral AI",
+      "family": "Mistral 3",
+      "category": "chat",
+      "capabilities": [
+        "chat"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/mistralai/Ministral-3-14B-Instruct-2512/blob/main/README.md"
+      },
+      "contextWindow": 262144,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "name": "DeepSeek V4 Pro",
+      "vendor": "DeepSeek",
+      "family": "DeepSeek V4",
+      "category": "chat",
+      "capabilities": [
+        "chat",
+        "reasoning"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "MIT",
+        "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/blob/main/LICENSE"
+      },
+      "contextWindow": 1048576,
+      "status": "planned",
+      "lastVerified": null
+    },
+    {
+      "id": "gemma-4-31B-it",
+      "name": "Gemma 4 31B",
+      "vendor": "Google",
+      "family": "Gemma 4",
+      "category": "chat",
+      "capabilities": [
+        "chat"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/google/gemma-4-31B-it/blob/main/README.md"
+      },
+      "contextWindow": 262144,
+      "status": "planned",
+      "lastVerified": null
+    },
+    {
+      "id": "llama-4-maverick",
+      "name": "Llama 4 Maverick",
+      "vendor": "Meta",
+      "family": "Llama 4",
+      "category": "chat",
+      "capabilities": [
+        "chat"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "Llama 4 Community Licence",
+        "url": "https://github.com/meta-llama/llama-models/blob/main/models/llama4/LICENSE"
+      },
+      "contextWindow": 1048576,
+      "status": "planned",
+      "lastVerified": null
+    },
+    {
+      "id": "gte-large-en-v1.5",
+      "name": "GTE Large (en) v1.5",
+      "vendor": "Alibaba-NLP",
+      "family": "GTE",
+      "category": "embedding",
+      "capabilities": [
+        "embeddings"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md"
+      },
+      "contextWindow": 8192,
+      "status": "planned",
+      "lastVerified": null
+    }
+  ],
   "cli": {
     "package": "@krizaka/orazaka-cli",
     "alias": "orazaka",
@@ -4660,6 +5230,45 @@
           {
             "flag": "-l, --language <lang>",
             "desc": "BCP 47 language tag (e.g. en, ja)",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "release",
+        "top": "release",
+        "isTop": true,
+        "description": "Release bundles — check a release manifest and an offline bundle before installing it",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "release verify",
+        "top": "release",
+        "isTop": false,
+        "description": "Check a release manifest, and with --dir the artefacts of an offline bundle against it",
+        "args": [
+          {
+            "name": "<manifest>",
+            "desc": "Path to the release manifest (orazaka-release.json)"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--dir <path>",
+            "desc": "Offline bundle directory whose artefacts are checked (size and SHA-256)",
+            "default": null
+          },
+          {
+            "flag": "--target <target>",
+            "desc": "Only the artefacts of one target: mac-arm64, linux-amd64 or linux-arm64",
+            "default": null
+          },
+          {
+            "flag": "--json",
+            "desc": "Print the result as JSON",
             "default": null
           }
         ]

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { password, readEnvFile, render, seedSql } from "../dev-deploy.mjs";
+import { grantSql, password, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
 
 const spec = (name) => readFileSync(new URL(`../../infra/deploy/${name}.app.yaml`, import.meta.url), "utf8");
 
@@ -42,6 +42,8 @@ test("orazaka-dev: only the edge, the web and the GPU relay are routed; the brok
 
 test("broker cloud-init: TLS only, bound to the private address, secrets as placeholders", () => {
   const text = readFileSync(new URL("../../infra/deploy/broker/cloud-init.yaml", import.meta.url), "utf8");
+  // cloud-init drops the whole file on a non-ASCII byte ("unacceptable character #x0080").
+  assert.match(text, /^[\x00-\x7f]*$/);
   assert.match(text, /listeners\.tcp = none/);
   assert.match(text, /listeners\.ssl\.default = 5671/);
   assert.match(text, /-p \$\{PRIVATE_IP\}:5671:5671/);
@@ -85,4 +87,29 @@ test("brokerUsersScript: two users, the GPU worker confined to orazaka.* names, 
   assert.match(script, /set_permissions -p \/ 'gpu-worker' '\^orazaka\\\..\*'/);
   const re = new RegExp(BROKER_PERMISSIONS["gpu-worker"]);
   assert.ok(re.test("orazaka.jobs.batch") && !re.test("amq.rabbitmq.log"));
+});
+
+test("a product's service account is a plain user named after it, never an admin", () => {
+  const a = serviceAccount("yomizaka");
+  assert.equal(a.username, "svc_yomizaka");
+  assert.equal(a.email, "svc+yomizaka@orazaka.com");
+  assert.deepEqual(a.roles, ["ROLE_USER"]);
+  assert.throws(() => serviceAccount("Yomizaka; DROP"), /not a product id/);
+  assert.throws(() => serviceAccount(undefined), /not a product id/);
+});
+
+test("the Studio grants are one row per Studio, with a reason, idempotent, injection-proof", () => {
+  const sql = grantSql("550e8400-e29b-41d4-a716-446655440002", ["compliance-check", "document-authenticity"], "yomizaka");
+  assert.match(sql, /'studio\.compliance-check'/);
+  assert.match(sql, /'studio\.document-authenticity'/);
+  assert.match(sql, /yomizaka: a Krizaka product runs this Studio through Orazaka/);
+  assert.match(sql, /ON CONFLICT \(actor_id, entitlement_key\) DO UPDATE/);
+  assert.throws(() => grantSql("x", ["a'); DROP TABLE x; --"], "p"), /not a Studio key/);
+  assert.throws(() => grantSql("x", [], "p"), /no Studio/);
+  assert.throws(() => grantSql("", ["a"], "p"), /no actor id/);
+});
+
+test("upsertEnv replaces a key in place, appends a new one, keeps the rest", () => {
+  assert.equal(upsertEnv("A=1\nAI_API_KEY=old\n", { AI_API_KEY: "new", B: "2" }), "A=1\nAI_API_KEY=new\nB=2\n");
+  assert.equal(upsertEnv("", { A: "1" }), "A=1\n");
 });

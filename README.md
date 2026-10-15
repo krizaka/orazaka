@@ -136,6 +136,13 @@ Rules (AGENTS.md §2): a repository depends only on repositories **before** it i
 `orazaka.workspace.json` (no cycle); a service depends on another context's **contract**
 (`*-api`) or **client**, never on its implementation.
 
+## Run Orazaka on your own infrastructure
+
+On a Mac (Apple Silicon) or a Linux server with an NVIDIA GPU — your data never leaves your machine,
+no telemetry, offline once the models are downloaded. Requirements, the 3 steps per target, update,
+backup and uninstall: **[docs/SELF_HOSTING.md](docs/SELF_HOSTING.md)**. How it is packaged and signed:
+[docs/DELIVERY.md](docs/DELIVERY.md). Security reports: [SECURITY.md](SECURITY.md).
+
 ## Quick start
 
 Requirements: git, JDK 21, Node.js 22+, Docker, Python 3.11+ (media worker), macOS recommended for native

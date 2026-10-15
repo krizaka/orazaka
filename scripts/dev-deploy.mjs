@@ -5,6 +5,8 @@
  *   node scripts/dev-deploy.mjs apply <orazaka-dev|orazaka-admin-dev> [--dry-run] [--drop-attached-db]
  *   node scripts/dev-deploy.mjs data        # infra/deploy/dev-data.sql into orazaka_db (routing is data)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
+ *   node scripts/dev-deploy.mjs service-account <product> --studios a,b --out <file>
+ *                                           # a product's service account: user, oz_ API key, Studio grants
  *   node scripts/dev-deploy.mjs broker      # the TLS RabbitMQ Droplet in the tor1 VPC (once; idempotent)
  *   node scripts/dev-deploy.mjs status
  *
@@ -128,7 +130,9 @@ function data() {
   const env = secrets();
   if (!env.AI_INFERENCE_KEY) throw new Error("AI_INFERENCE_KEY is not in the secrets file yet");
   const sql = readFileSync(join(DEPLOY, "dev-data.sql"), "utf8");
-  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", ["-v", `ai_inference_key=${env.AI_INFERENCE_KEY}`], sql);
+  // The key goes in on stdin (\set), never on the command line where `ps` would show it.
+  const key = env.AI_INFERENCE_KEY.replace(/'/g, "''");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], `\\set ai_inference_key '${key}'\n${sql}`);
   console.log("orazaka_db: dev routing data applied");
 }
 
@@ -200,6 +204,79 @@ _Injectés dans \`krizaka_users_db\` (cluster \`krizaka-dev-pg\`) par \`node scr
   }
   writeFileSync(QA_FILE, qa);
   console.log(`seeded ${accounts.map((a) => a.email).join(", ")} — passwords written to ${QA_FILE} only`);
+}
+
+// ── Service accounts: a Krizaka product calling Orazaka (products consume AI only through Orazaka) ──
+const EDGE_URL = process.env.ORAZAKA_EDGE_URL ?? "https://dev.orazaka.com/edge";
+
+/** The account a product calls Orazaka with: a plain ROLE_USER, never an admin. */
+export function serviceAccount(product) {
+  if (!/^[a-z][a-z0-9-]{1,30}$/.test(product ?? "")) throw new Error(`not a product id: ${product}`);
+  const id = product.replace(/-/g, "_");
+  return { key: product, username: `svc_${id}`, email: `svc+${product}@orazaka.com`, tier: "free", roles: ["ROLE_USER"] };
+}
+
+/**
+ * The operator's grants (studio_entitlement_grant, krizaka/orazaka-studio infra/initdb/80-studio.sql): one row per
+ * Studio, with its reason — idempotent, a re-run refreshes the reason and lifts an expiry.
+ */
+export function grantSql(actorId, studios, product) {
+  const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
+  if (!actorId) throw new Error("no actor id");
+  if (!studios.length) throw new Error("no Studio to grant");
+  for (const s of studios) if (!/^[a-z0-9-]+$/.test(s)) throw new Error(`not a Studio key: ${s}`);
+  const reason = `${product}: a Krizaka product runs this Studio through Orazaka (dev, nothing is sold)`;
+  const rows = studios.map((s) => `(${q(actorId)}, ${q(`studio.${s}`)}, ${q(reason)}, 'dev-deploy service-account')`);
+  return `INSERT INTO studio_entitlement_grant (actor_id, entitlement_key, reason, granted_by) VALUES
+${rows.join(",\n")}
+ON CONFLICT (actor_id, entitlement_key) DO UPDATE SET reason = EXCLUDED.reason, expires_at = NULL;
+`;
+}
+
+/** Sets KEY=value lines in an env file (kept, created mode 600), without ever printing a value. */
+export function upsertEnv(text, values) {
+  const lines = text ? text.replace(/\n$/, "").split("\n") : [];
+  for (const [key, value] of Object.entries(values)) {
+    const i = lines.findIndex((l) => l.startsWith(`${key}=`));
+    if (i >= 0) lines[i] = `${key}=${value}`;
+    else lines.push(`${key}=${value}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+async function edge(path, { token, body, method } = {}) {
+  const res = await fetch(`${EDGE_URL}${path}`, {
+    method: method ?? (body ? "POST" : "GET"),
+    headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error(`${method ?? (body ? "POST" : "GET")} ${path}: HTTP ${res.status}`);
+  return res.status === 204 ? null : res.json();
+}
+
+async function createServiceAccount(product, flags) {
+  const opt = (name) => {
+    const i = flags.indexOf(name);
+    return i >= 0 ? flags[i + 1] : undefined;
+  };
+  const studios = (opt("--studios") ?? "").split(",").filter(Boolean);
+  const out = opt("--out");
+  if (!out) throw new Error("--out <file> is required: the product's secrets file (the key is written there only)");
+  const env = secrets();
+  const account = serviceAccount(product);
+  const pw = password();
+  psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], seedSql([{ ...account, hash: bcrypt(pw) }]));
+  const actorId = psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB",
+    ["-t", "-A", "-c", `SELECT id FROM users WHERE username = '${account.username}'`]).trim();
+  const { token } = await edge("/api/v1/auth/login", { body: { email: account.email, password: pw } });
+  // One live key per product and environment: the previous ones are revoked.
+  const name = `${product}-dev`;
+  for (const k of await edge("/api/v1/api-keys", { token })) if (k.name === name) await edge(`/api/v1/api-keys/${k.id}`, { token, method: "DELETE" });
+  const { key } = await edge("/api/v1/api-keys", { token, body: { name } });
+  if (studios.length) psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], grantSql(actorId, studios, product));
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, upsertEnv(existsSync(out) ? readFileSync(out, "utf8") : "", { AI_PROVIDER: "orazaka", AI_API_URL: EDGE_URL, AI_API_KEY: key }), { mode: 0o600 });
+  console.log(`${account.username}: API key "${name}" written to ${out} (AI_API_KEY, never printed); granted ${studios.length ? studios.join(", ") : "no Studio"}`);
 }
 
 // ── Broker: RabbitMQ on a Droplet in the tor1 VPC, TLS only, VPC-only (cloud firewall) ─────────────
@@ -330,10 +407,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (command === "apply") apply(rest[0], rest.slice(1));
     else if (command === "data") data();
     else if (command === "seed") seed();
+    else if (command === "service-account") await createServiceAccount(rest[0], rest.slice(1));
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | seed | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | seed | service-account <product> --studios a,b --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {

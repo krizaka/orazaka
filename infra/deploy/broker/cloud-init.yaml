@@ -1,5 +1,5 @@
 #cloud-config
-# Orazaka dev broker — RabbitMQ on a small Droplet in the tor1 VPC (docs/DEPLOY_DEV.md § Broker).
+# Orazaka dev broker - RabbitMQ on a small Droplet in the tor1 VPC (docs/DEPLOY_DEV.md section Broker).
 # TLS only (5671), bound to the private interface, reachable from the VPC alone (cloud firewall).
 # Rendered by `node scripts/dev-deploy.mjs broker`; certificates and the users' passwords come from the
 # maintainer's local files, never from the repository.
@@ -45,4 +45,5 @@ runcmd:
     -v /etc/orazaka-broker/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     -v /etc/orazaka-broker/tls:/etc/rabbitmq/tls:ro
     rabbitmq:4.2-alpine
-  - docker exec rabbitmq rabbitmqctl await_startup --timeout 120 && sh /root/broker-users.sh && shred -u /root/broker-users.sh
+  - for i in $(seq 1 40); do docker exec rabbitmq rabbitmqctl await_startup --timeout 10 && break; sleep 5; done
+  - sh /root/broker-users.sh && shred -u /root/broker-users.sh

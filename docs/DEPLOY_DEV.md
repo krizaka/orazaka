@@ -9,7 +9,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | App (DO) | Component | What | Size | $/month |
 |---|---|---|---|---|
 | `orazaka-dev` | `web` | `krizaka/orazaka-web-client` (Next.js + BFF), `dev.orazaka.com/` | `apps-s-1vcpu-0.5gb` | 5 |
-| `orazaka-dev` | `core` | one image, five JVMs (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
+| `orazaka-dev` | `core` | one image, five JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
 | Droplet | `orazaka-broker-dev` | RabbitMQ 4.2, **TLS only** (5671), bound to its private IP, cloud firewall: VPC `10.118.0.0/20` only | `s-1vcpu-512mb-10gb` | 4 |
 | `orazaka-admin-dev` | `web` | `krizaka/orazaka-web-admin`, `admin.orazaka.com`, BFF → `https://dev.orazaka.com/edge` | `apps-s-1vcpu-0.5gb` | 5 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
@@ -41,6 +41,31 @@ idle and after a round of sign-ins and Studio listings — the reason for a 2 GB
 **Not deployed** (and why): billing (`BILLING_ENABLED=false`: nothing is sold in dev — PAID Studios show as locked),
 knowledge (chat degrades without RAG), automation (connectors), notifications (no e-mail in dev: no password reset),
 worker-media (Metal/MLX — Mac only), Redis (only for `orazaka.identity.rate-limit.enabled`, off).
+
+The **document-validation worker** (orazaka-packs, Python, `job.validation.*`) runs in the same container: the image
+builds its venv (`pika`, `pyyaml`, `pypdf`, pinned), `run-services.sh` starts it after the JVMs (`ORAZAKA_WORKERS`,
+default `validation`; empty to skip) with the broker's TLS settings and CA file, its lines prefixed `[validation]`. It
+takes ~40 MB; like a JVM, if it exits the container restarts.
+
+## Service accounts — a Krizaka product calling Orazaka
+
+Krizaka's products consume AI **only through Orazaka**: Yomizaka runs the document Studios with its own account, never a
+model called directly. One command makes the account, its API key and its Studio grants:
+
+```bash
+node scripts/dev-deploy.mjs service-account yomizaka \
+  --studios compliance-check,document-authenticity \
+  --out ~/Documents/krizaka/yomizaka-dev.env
+```
+
+- the user `svc_<product>` (`svc+<product>@orazaka.com`, ROLE_USER, a random password nobody keeps) in `krizaka_users_db`;
+- an `oz_` API key named `<product>-dev`, created through the supported endpoint (`POST /api/v1/api-keys`, signed in as
+  that user); earlier keys of the same name are revoked — one live key per product;
+- the operator's grants in `orazaka_studio_db` (`studio_entitlement_grant`, krizaka/orazaka-studio#9; incremental script
+  `infra/migrations/2026-10-14-studio-entitlement-grant.sql`): the PAID Studios open for that account only, with a reason;
+- `AI_PROVIDER=orazaka`, `AI_API_URL`, `AI_API_KEY` written to `--out` (mode 600) — never printed. The product stores the
+  key as a DO **SECRET** and calls `https://dev.orazaka.com/edge` with `Authorization: Bearer oz_…`; the edge exchanges
+  it for a JWT (`ApiKeyExchangeFilter`). Re-running rotates the key.
 
 ## Deploy
 
@@ -90,6 +115,16 @@ Droplet in the `default-tor1` VPC (`node scripts/dev-deploy.mjs broker`, idempot
 host, through the relay). Change a model or a provider in the admin
 console or in that file — never in a service's configuration.
 
+- The other hosted models (DeepSeek V4 Pro, Llama 4 Maverick, Gemma 4) and every model's registry metadata come
+  from `infra/deploy/dev-model-registry.sql` (ORA-MODELS), run after `dev-data.sql`; selectable, never the default.
+- The key reaches the call through `ai_providers.api_key` (krizaka/orazaka-ai-engine#10); `orazaka-dev` also holds it
+  as the SECRET `AI_INFERENCE_KEY`, the deployment's copy of record. `node scripts/dev-deploy.mjs data` reads it from
+  the secrets file and sends it on psql's stdin, never on a command line.
+- `ORAZAKA_CORE_DEFAULT_PROVIDER=do-inference`: with the historical `ollama` default the pipeline pins Ollama's active
+  model and never reaches the catalogue default.
+- Embeddings (`gte-large-en-v1.5`, 1024 dimensions, tested on the key) are for the knowledge service, which is not
+  deployed in dev yet: chat degrades to no RAG.
+
 ## GPU — images and 9:16 video, by the hour
 
 Generation runs on a GPU droplet that exists only while it works (ADR-077). It runs the CUDA image of
@@ -135,6 +170,17 @@ through the API after **30 min without a job** (a job start or end, an image req
 from the secrets file when present — a token scoped to `droplet:read` + `droplet:delete`, to create in the control
 panel — else the doctl token. Containers cannot read the droplet's metadata (and so its user-data).
 
+### The sovereign smoke — do our own engines still generate?
+
+`scripts/gpu-dev.sh smoke` starts the `small` GPU, runs `scripts/gpu-smoke.mjs` against dev.orazaka.com as the test user
+— a chat Studio on Ollama, an image on sd-server (FLUX.2 [klein]), a 1 s 9:16 clip on the media worker (Wan 2.1 1.3B) —
+asserts each (run SUCCEEDED, output non-empty, latency, the model our job reported) and **destroys the droplet whatever
+happens** (trap on exit, interrupt and error). TTS, transcription and RAG are reported `SKIPPED` with their reason until
+dev serves them (LocalAI, knowledge) — never passed. The report: `~/Documents/krizaka/orazaka-smoke/last.json`.
+`scripts/gpu-dev.sh smoke mac` runs the same checks against the Mac's engines on the relay, for free. The weekly
+workflow `GPU smoke (sovereign)` runs it on Mondays once its secrets are set (see the workflow's header); a run on a
+warm Volume costs ≈ $0.20 (the first one also builds the image and fetches the weights).
+
 ### The Mac as the GPU (free)
 
 The Mac's Metal worker can drain the same queue:
@@ -155,8 +201,9 @@ share the jobs, and a Wan job reaching the Mac runs on Metal (slowly) or fails b
 |---|---|---|
 | Sign-in (web, admin) | yes | admin needs `ROLE_ADMIN` |
 | Sign-up | **no** — 403 | closed on purpose |
-| Chat | yes, once `AI_INFERENCE_KEY` is set | serverless inference |
+| Chat | yes — `mistral-3-14B` (DeepSeek V4 Pro once the key allows it) | serverless inference |
 | Studios list, Prospecting runs (text only) | yes | chat capability |
 | Trades showcase, Media production, 9:16 video | while the GPU runs | `scripts/gpu-dev.sh start big` |
-| Document validation, real-estate reels | locked | PAID Studios, billing off; document screening runs on the Mac worker |
+| Document validation (compliance-check, document-authenticity) | for a **granted** account | PAID Studios, billing off: an operator grant opens them (`service-account`, below); the worker runs in `core` |
+| Real-estate reels | locked | PAID Studio, billing off |
 | E-mails (verify, reset) | no | notifications not deployed |

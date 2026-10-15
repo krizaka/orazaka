@@ -4,7 +4,7 @@
 > This file is **agent-neutral**: `CLAUDE.md` (and any other agent file) only **imports** it (`@AGENTS.md`). No rule lives anywhere except in this contract and in `.agent/rules/*`.
 > Every generation, review, or refactor **must** enforce these constraints without exception.
 >
-> Architectural detail (non-normative): [`docs/VISION_ARCHITECTURE.md`](docs/VISION_ARCHITECTURE.md), [`docs/INTERFACES.md`](docs/INTERFACES.md), [`docs/DEVEX_LIFECYCLE.md`](docs/DEVEX_LIFECYCLE.md). Code-derived docs (architecture map, ports, use-cases, business layer, tools, jobs & schedules, packs, administration, interceptors, API, CLI, models, ADRs) are generated under [`docs/_generated/`](docs/_generated/) by `orazaka docs build`.
+> Architectural detail (non-normative): [`docs/VISION_ARCHITECTURE.md`](docs/VISION_ARCHITECTURE.md), [`docs/INTERFACES.md`](docs/INTERFACES.md), [`docs/DEVEX_LIFECYCLE.md`](docs/DEVEX_LIFECYCLE.md); how Orazaka is packaged, signed, installed and updated on a client's premises: [`docs/DELIVERY.md`](docs/DELIVERY.md). Code-derived docs (architecture map, ports, use-cases, business layer, tools, jobs & schedules, packs, administration, interceptors, API, CLI, models, ADRs) are generated under [`docs/_generated/`](docs/_generated/) by `orazaka docs build`.
 
 ---
 
