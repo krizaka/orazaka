@@ -26,7 +26,8 @@
   },
   "devDependencies": {
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "image-size": "^2.0.4"
   },
   "overrides": {
     "react": "19.2.4",
@@ -35,7 +36,14 @@
     "jest-environment-node": "^30.4.1",
     "orazaka-mobile-client": {
       "react": "19.0.0"
-    }
+    },
+    "@expo/metro-config": {
+      "postcss": "8.5.30"
+    },
+    "xcode": {
+      "uuid": "11.1.1"
+    },
+    "image-size": "$image-size"
   },
   "description": "npm workspace of the Orazaka workspace: links every cloned UI repository (@krizaka/* packages from source)."
 }
