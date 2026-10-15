@@ -131,3 +131,11 @@ test("the volume's creation message never reaches stdout (it is read as the volu
   // one image per worker commit: a new main commit is a new tar, hence a rebuild
   assert.match(host, /orazaka-worker-media-\$\{sha\}\.tar/);
 });
+
+test("GPU_SERVICES=video starts neither the image engine nor Ollama (their memory is the video model's)", () => {
+  const script = read("scripts/gpu-dev.sh");
+  assert.match(script, /SERVICES=\{os\.environ\.get\('GPU_SERVICES', 'all'\)\}/);
+  const host = read("infra/gpu/host.sh");
+  assert.match(host, /if \[\[ "\$\{SERVICES:-all\}" != "video" \]\]; then\s+docker run -d --name sd-server/);
+  assert.match(host, /if \[\[ "\$\{SERVICES:-all\}" != "video" \]\]; then\s+mkdir -p \/models\/ollama/);
+});

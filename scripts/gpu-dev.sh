@@ -149,7 +149,8 @@ def file(path, content, mode):
     return f"  - path: {path}\n    encoding: b64\n    permissions: '{mode}'\n    owner: root:root\n    content: {data}\n"
 host_env = (f"PROFILE={profile}\nWORKER_IMAGE={worker}\nCHISEL_IMAGE={chisel}\nRELAY_URL={relay}\n"
             f"VOLUME_NAME={volume}\nIMAGE_MODEL=flux-2-klein-4b\nIMAGE_OFFLOAD={offload}\n"
-            f"IDLE_MINUTES={idle}\nMAX_HOURS={max_hours}\nOLLAMA_IMAGE={ollama}\nOLLAMA_MODELS=\"{ollama_models}\"\n")
+            f"IDLE_MINUTES={idle}\nMAX_HOURS={max_hours}\nOLLAMA_IMAGE={ollama}\nOLLAMA_MODELS=\"{ollama_models}\"\n"
+            f"SERVICES={os.environ.get('GPU_SERVICES', 'all')}\n")
 worker_env = (f"SPRING_RABBITMQ_USERNAME=gpu-worker\nSPRING_RABBITMQ_PASSWORD={os.environ['RABBIT_PASSWORD']}\n"
               f"ORAZAKA_SERVICE_TOKEN={os.environ['SERVICE_TOKEN']}\n")
 relay_env = f"AUTH=gpu:{os.environ['RELAY_PASSWORD']}\n"
