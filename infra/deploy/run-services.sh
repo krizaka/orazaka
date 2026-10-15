@@ -8,6 +8,26 @@
 # ==============================================================================
 set -euo pipefail
 
+# A pack worker is supervised, never fatal: when it exits it is restarted after a backoff that doubles up
+# to ORAZAKA_WORKER_BACKOFF_MAX seconds (reset after a run longer than that), and the JVMs keep serving.
+# Only the JVMs are fatal (below): they are the platform; a worker is one capability.
+supervise() {
+  local name="$1"; shift
+  local delay="${ORAZAKA_WORKER_BACKOFF_START:-2}" max="${ORAZAKA_WORKER_BACKOFF_MAX:-300}" started rc
+  while true; do
+    started=$(date +%s)
+    "$@" && rc=0 || rc=$?
+    if (( $(date +%s) - started > max )); then delay="${ORAZAKA_WORKER_BACKOFF_START:-2}"; fi
+    echo "[run-services] worker $name exited (status $rc) — restarting in ${delay}s"
+    sleep "$delay"
+    delay=$(( delay * 2 > max ? max : delay * 2 ))
+  done
+}
+
+# The library mode of the tests (scripts/test/run-services.test.mjs): define, start nothing.
+if [[ "${RUN_SERVICES_LIB:-}" == "1" ]]; then return 0 2>/dev/null || exit 0; fi
+
+
 # The asset keyring (FileMasterKeyProvider): written from the MEDIA_ENCRYPTION_KEY secret, mode 0600,
 # never logged. Without it the services that read or write assets refuse to start.
 if [[ -n "${MEDIA_ENCRYPTION_KEY:-}" ]]; then
@@ -50,26 +70,28 @@ for entry in $SERVICES; do
   sleep "${ORAZAKA_START_STAGGER_SECONDS:-5}"
 done
 
+run_validation_worker() {
+  (cd "${ORAZAKA_APP_DIR:-/app}/orazaka-packs/document-validation/worker" \
+    && SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
+       exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py)
+}
+
 # The Python workers of the packs, after the JVMs (the job service declares the topology they bind to). The dev broker
 # is TLS only: the worker reads the same RABBITMQ_* and SPRING_RABBITMQ_SSL_ENABLED as the services, and the CA file
 # written above (orazaka-packs document-validation/worker/broker.py).
 for worker in ${ORAZAKA_WORKERS-validation}; do
   case "$worker" in
     validation)
-      echo "[run-services] starting the document-validation worker"
-      (cd "${ORAZAKA_APP_DIR:-/app}/orazaka-packs/document-validation/worker" \
-        && SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
-           exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py) \
-        > >(sed -u "s/^/[validation] /") 2>&1 &
-      pids+=("$!")
+      echo "[run-services] starting the document-validation worker (supervised)"
+      supervise validation run_validation_worker > >(sed -u "s/^/[validation] /") 2>&1 &
       ;;
-    *) echo "[run-services] unknown worker: $worker" >&2; exit 2 ;;
+    *) echo "[run-services] unknown worker: $worker" >&2 ;;
   esac
 done
 
-# The first process (JVM or worker) to exit takes the container down with it.
+# The first JVM to exit takes the container down with it (App Platform restarts the set).
 set +e
-wait -n
+wait -n "${pids[@]}"
 status=$?
 echo "[run-services] a service exited (status $status) — stopping the others"
 stop_all

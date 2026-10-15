@@ -196,7 +196,7 @@ function ci(name) {
     const validationWorker = join(ROOT, target.path, "document-validation", "worker");
     run("python3", ["test_rules.py"], { cwd: validationWorker });
     // The broker connection (TLS to the dev broker) — the worker's one third-party import here is pika.
-    run("python3", ["-m", "pip", "install", "--quiet", "pika==1.4.4"], { cwd: validationWorker });
+    run("python3", ["-m", "pip", "install", "--quiet", "pika==1.4.4", "pyyaml==6.0.3"], { cwd: validationWorker });
     run("python3", ["test_broker.py"], { cwd: validationWorker });
     return;
   }

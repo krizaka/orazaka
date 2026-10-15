@@ -4056,7 +4056,7 @@
       "commercialUse": "yes",
       "contextWindow": null,
       "status": "default",
-      "lastVerified": null
+      "lastVerified": "2026-10-15"
     },
     {
       "id": "piper-en-medium-ljspeech",
@@ -4541,6 +4541,28 @@
       "commercialUse": "yes",
       "contextWindow": 8192,
       "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "bge-m3",
+      "name": "BGE-M3",
+      "vendor": "BAAI",
+      "family": "BGE-M3",
+      "category": "embedding",
+      "capabilities": [
+        "embeddings"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "MIT",
+        "url": "https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE"
+      },
+      "commercialUse": "yes",
+      "contextWindow": 8192,
+      "status": "planned",
       "lastVerified": null
     }
   ],

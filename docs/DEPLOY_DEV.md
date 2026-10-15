@@ -67,6 +67,22 @@ node scripts/dev-deploy.mjs service-account yomizaka \
   key as a DO **SECRET** and calls `https://dev.orazaka.com/edge` with `Authorization: Bearer oz_…`; the edge exchanges
   it for a JWT (`ApiKeyExchangeFilter`). Re-running rotates the key.
 
+A key can be **scoped**: `--scopes ai:embed` makes the key usable for `POST /api/v1/embeddings` and nothing else (the
+edge answers 403 anywhere else; an unscoped key keeps its account's rights). `--prefix AI_ENGINE` names the variables
+`AI_ENGINE_URL` / `AI_ENGINE_API_KEY` instead of the Studio callers' `AI_PROVIDER` / `AI_API_URL` / `AI_API_KEY`:
+
+```bash
+node scripts/dev-deploy.mjs service-account orochia-explorer --scopes ai:embed --prefix AI_ENGINE \
+  --out ~/Documents/krizaka/orochia-dev.env
+```
+
+Embeddings: `POST /api/v1/embeddings` `{ "input": ["…"], "model"?: "gte-large-en-v1.5" }` → `{ runId, model, dimensions, data:[{index, embedding}],
+usage }` (and the header `X-Orazaka-Run-Id`). The model is data (`orazaka_models`, category `embedding`, GTE Large (en) v1.5 on the
+`do-inference` provider; BGE-M3 is planned until the inference key may call it — `infra/deploy/dev-model-registry.sql`, run after `dev-data.sql`); the `runId` is the line `embedding.run
+runId=…` in the core's logs (user, model, counts — never a text or a vector). No model configured or the provider down →
+503, so a caller falls back to its own non-AI path. Existing databases need
+`infra/migrations/2026-10-15-embeddings-and-key-scopes.sql` on `krizaka_users_db`.
+
 ## Deploy
 
 Secrets never enter the repository: `~/Documents/krizaka/orazaka-dev.env` (mode 600) holds the database role
@@ -114,6 +130,16 @@ Droplet in the `default-tor1` VPC (`node scripts/dev-deploy.mjs broker`, idempot
 `mistral-3-14B`; `localai-image` at `http://gpu-relay:8086/v1` and `localai-video` at `http://gpu-relay:8188` (the GPU
 host, through the relay). Change a model or a provider in the admin
 console or in that file — never in a service's configuration.
+
+- The other hosted models (DeepSeek V4 Pro, Llama 4 Maverick, Gemma 4) and every model's registry metadata come
+  from `infra/deploy/dev-model-registry.sql` (ORA-MODELS), run after `dev-data.sql`; selectable, never the default.
+- The key reaches the call through `ai_providers.api_key` (krizaka/orazaka-ai-engine#10); `orazaka-dev` also holds it
+  as the SECRET `AI_INFERENCE_KEY`, the deployment's copy of record. `node scripts/dev-deploy.mjs data` reads it from
+  the secrets file and sends it on psql's stdin, never on a command line.
+- `ORAZAKA_CORE_DEFAULT_PROVIDER=do-inference`: with the historical `ollama` default the pipeline pins Ollama's active
+  model and never reaches the catalogue default.
+- Embeddings (`gte-large-en-v1.5`, 1024 dimensions, tested on the key) are for the knowledge service, which is not
+  deployed in dev yet: chat degrades to no RAG.
 
 ## GPU — images and 9:16 video, by the hour
 
@@ -191,7 +217,7 @@ share the jobs, and a Wan job reaching the Mac runs on Metal (slowly) or fails b
 |---|---|---|
 | Sign-in (web, admin) | yes | admin needs `ROLE_ADMIN` |
 | Sign-up | **no** — 403 | closed on purpose |
-| Chat | yes, once `AI_INFERENCE_KEY` is set | serverless inference |
+| Chat | yes — `mistral-3-14B` (DeepSeek V4 Pro once the key allows it) | serverless inference |
 | Studios list, Prospecting runs (text only) | yes | chat capability |
 | Trades showcase, Media production, 9:16 video | while the GPU runs | `scripts/gpu-dev.sh start big` |
 | Document validation (compliance-check, document-authenticity) | for a **granted** account | PAID Studios, billing off: an operator grant opens them (`service-account`, below); the worker runs in `core` |

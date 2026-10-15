@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { grantSql, password, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
+import { connectionVars, grantSql, parseScopes, password, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
 
 const spec = (name) => readFileSync(new URL(`../../infra/deploy/${name}.app.yaml`, import.meta.url), "utf8");
 
@@ -42,6 +42,8 @@ test("orazaka-dev: only the edge, the web and the GPU relay are routed; the brok
 
 test("broker cloud-init: TLS only, bound to the private address, secrets as placeholders", () => {
   const text = readFileSync(new URL("../../infra/deploy/broker/cloud-init.yaml", import.meta.url), "utf8");
+  // cloud-init drops the whole file on a non-ASCII byte ("unacceptable character #x0080").
+  assert.match(text, /^[\x00-\x7f]*$/);
   assert.match(text, /listeners\.tcp = none/);
   assert.match(text, /listeners\.ssl\.default = 5671/);
   assert.match(text, /-p \$\{PRIVATE_IP\}:5671:5671/);
@@ -110,4 +112,34 @@ test("the Studio grants are one row per Studio, with a reason, idempotent, injec
 test("upsertEnv replaces a key in place, appends a new one, keeps the rest", () => {
   assert.equal(upsertEnv("A=1\nAI_API_KEY=old\n", { AI_API_KEY: "new", B: "2" }), "A=1\nAI_API_KEY=new\nB=2\n");
   assert.equal(upsertEnv("", { A: "1" }), "A=1\n");
+});
+
+test("serverCertExtensions: what Python's strict verification requires of the broker's leaf", async () => {
+  const { serverCertExtensions } = await import("../dev-deploy.mjs");
+  const ext = serverCertExtensions("broker-dev.orazaka.com");
+  assert.match(ext, /^subjectAltName=DNS:broker-dev\.orazaka\.com$/m);
+  assert.match(ext, /^authorityKeyIdentifier=keyid,issuer$/m);
+  assert.match(ext, /^subjectKeyIdentifier=hash$/m);
+  assert.match(ext, /^basicConstraints=critical,CA:FALSE$/m);
+});
+
+test("CA_EXTENSIONS: a CA strict verification accepts (key usage present)", async () => {
+  const { CA_EXTENSIONS } = await import("../dev-deploy.mjs");
+  assert.ok(CA_EXTENSIONS.includes("keyUsage=critical,keyCertSign,cRLSign"));
+  assert.ok(CA_EXTENSIONS.includes("basicConstraints=critical,CA:TRUE"));
+});
+
+test("connectionVars: the default pair for Studio callers, AI_<NAME>_URL / _API_KEY for an engine client", () => {
+  assert.deepEqual(connectionVars(undefined, "https://e/edge", "oz_k"), { AI_PROVIDER: "orazaka", AI_API_URL: "https://e/edge", AI_API_KEY: "oz_k" });
+  assert.deepEqual(connectionVars("AI_ENGINE", "https://e/edge", "oz_k"), { AI_ENGINE_URL: "https://e/edge", AI_ENGINE_API_KEY: "oz_k" });
+  assert.throws(() => connectionVars("OROCHIA_AI", "u", "k"), /not an AI_ prefix/);
+  assert.throws(() => connectionVars("AI_X; rm", "u", "k"), /not an AI_ prefix/);
+});
+
+test("parseScopes: area:action only, none = unscoped", () => {
+  assert.deepEqual(parseScopes(undefined), []);
+  assert.deepEqual(parseScopes("ai:embed, ai:chat"), ["ai:embed", "ai:chat"]);
+  assert.throws(() => parseScopes("embed"), /not a scope/);
+  assert.throws(() => parseScopes("AI:embed"), /not a scope/);
+  assert.throws(() => parseScopes("*:*"), /not a scope/);
 });
