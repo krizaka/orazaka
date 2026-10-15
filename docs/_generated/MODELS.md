@@ -12,7 +12,7 @@ generated: true
 
 ## Local first
 
-Orazaka supports **27 models**: **22 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **5 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
+Orazaka supports **28 models**: **23 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **5 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
 
 Every figure below is read from `orazaka_models` (the table the routing reads): the vendor, licence and context window are those of each model's own card; `last verified` is the date of the last passing sovereign smoke that named the model, empty until one is recorded.
 
@@ -37,7 +37,7 @@ the machine holds for clinical, legal or security work, and keep a professional 
 | `whisper-base` — Whisper Base | OpenAI · Whisper | Speech to text | LocalAI · whisper.cpp | [MIT](https://github.com/openai/whisper/blob/main/LICENSE) | — | default | — |
 | `qwen2.5-coder:7b` — Qwen 2.5 Coder 7B | Alibaba Cloud · Qwen 2.5 Coder | Code | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct/blob/main/LICENSE) | 32,768 | default | — |
 | `flux-2-klein-4b` — FLUX.2 [klein] 4B | Black Forest Labs · FLUX.2 klein | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/README.md) | — | default | — |
-| `piper-en-medium-ryan` — Piper Ryan (en) | Rhasspy · Piper (en-US, Ryan) | Text to speech | LocalAI · Piper | [CC BY-NC-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ryan/medium/MODEL_CARD) | — | default | — |
+| `piper-en-medium-ljspeech` — Piper LJSpeech (en) | Rhasspy · Piper (en-US, LJSpeech) | Text to speech | LocalAI · Piper | [Public domain](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ljspeech/medium/MODEL_CARD) | — | default | — |
 | `animatediff-lightning-mps` — AnimateDiff Lightning | ByteDance · AnimateDiff-Lightning | Video | PyTorch MPS · Apple Metal | [CreativeML OpenRAIL-M](https://huggingface.co/ByteDance/AnimateDiff-Lightning/blob/main/README.md) | — | default | — |
 | `llava:latest` — LLaVA (latest) | LLaVA team · LLaVA 1.6 | Vision | Ollama | [Apache-2.0](https://ollama.com/library/llava) | — | default | — |
 | `whisper-tiny-en` — Whisper Tiny (en) | OpenAI · Whisper | Speech to text | LocalAI · whisper.cpp | [MIT](https://github.com/openai/whisper/blob/main/LICENSE) | — | available | — |
@@ -50,6 +50,7 @@ the machine holds for clinical, legal or security work, and keep a professional 
 | `v1-5-pruned-emaonly` — Stable Diffusion 1.5 | Stability AI · Stable Diffusion 1.5 | Image | stable-diffusion.cpp · Metal, CUDA | [CreativeML OpenRAIL-M](https://huggingface.co/spaces/CompVis/stable-diffusion-license) | — | available | — |
 | `z-image-turbo` — Z-Image Turbo | Tongyi Lab (Alibaba) · Z-Image | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/README.md) | — | available | — |
 | `piper-en-low` — Piper Low (en) | Rhasspy · Piper (en-US, Lessac) | Text to speech | LocalAI · Piper | [Lessac Blizzard 2013 data licence](https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html) | — | available | — |
+| `piper-en-medium-ryan` — Piper Ryan (en) | Rhasspy · Piper (en-US, Ryan) | Text to speech | LocalAI · Piper | [CC BY-NC-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ryan/medium/MODEL_CARD) | — | available | — |
 | `piper-fr-medium` — Piper Medium (fr) | Rhasspy · Piper (fr-FR, UPMC) | Text to speech | LocalAI · Piper | [CC BY-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/upmc/medium/MODEL_CARD) | — | available | — |
 | `piper-fr-siwis-medium` — Piper Siwis (fr-FR, féminine) | Rhasspy · Piper (fr-FR, Siwis) | Text to speech | LocalAI · Piper | [CC BY 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/siwis/medium/MODEL_CARD) | — | available | — |
 | `piper-fr-tom-medium` — Piper Tom (fr-FR, masculine) | Rhasspy · Piper (fr-FR, Tom) | Text to speech | LocalAI · Piper | [AGPL-3.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/tom/medium/MODEL_CARD) | — | available | — |
