@@ -182,6 +182,27 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <!-- Sound for a video (orazaka-packs#25): the mix, -14 LUFS, the AAC mux, the silent variant,
+                             the model licences, the job's ownership and refusals. ffmpeg only, no model. -->
+                        <id>validate-sound</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${python.executable}</executable>
+                            <workingDirectory>${project.basedir}/orazaka-apps/workers/orazaka-worker-media</workingDirectory>
+                            <arguments>
+                                <argument>-m</argument>
+                                <argument>pytest</argument>
+                                <argument>-q</argument>
+                                <argument>test_sound.py</argument>
+                                <argument>test_sound_models.py</argument>
+                                <argument>test_sound_handler.py</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <!-- The worker on a CUDA host (ADR-077): 9:16 shapes, routing, hand-over, threaded ack. -->
                         <id>validate-gpu-runtime</id>
                         <phase>test</phase>
