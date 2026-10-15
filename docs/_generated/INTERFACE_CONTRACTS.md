@@ -26,6 +26,7 @@ generated: true
 - `CapabilityProvider`
 - `ChatGeneratorClient`
 - `ChatMemoryStore`
+- `EmbeddingClient`
 - `ImageGeneratorClient`
 - `InfrastructureStatusProvider`
 - `KnowledgeService`
