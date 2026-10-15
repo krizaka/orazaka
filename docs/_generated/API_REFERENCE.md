@@ -86,6 +86,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/internal/v1/capabilities/{featureKey}` | SERVICE | CapabilityController | Removes one capability. |
 | PUT | `/internal/v1/capabilities/{featureKey}` | SERVICE | CapabilityController | Registers or replaces one capability a pack contributes. |
 | GET | `/internal/v1/capabilities/{featureKey}/route` | SERVICE | CapabilityController | Resolves where one capability's work is executed. |
+| GET | `/internal/v1/jobs/{jobId}/input/image` | SERVICE | JobOutputController | The starting image of a job, for a worker that does not share the platform's disk. |
 | PUT | `/internal/v1/jobs/{jobId}/output/{filename}` | SERVICE | JobOutputController | Stores one output file of a job, sealed, and answers the URL it is served under. |
 | POST | `/internal/v1/workers` | SERVICE | WorkerController | Registers a worker, or refreshes what is known about it. |
 | POST | `/internal/v1/workers/{workerName}/heartbeat` | SERVICE | WorkerController | Records a heartbeat from an already-registered worker. |

@@ -23,6 +23,8 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 |:---|:---|:---|
 | `/(console)` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
 | `/(console)/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
+| `/(console)/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
+| `/(console)/operations` | `/operations` — dependencies, queue depth, recent errors, runs and the deployed version. | — |
 | `/(console)/studios` | The Studio Builder console (ADR-034 §12.4). | — |
 | `/login` | — | — |
 
@@ -56,10 +58,14 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 
 | Method | Path | Access | Summary |
 |:---|:---|:---|:---|
+| PUT | `/api/v1/features/{featureKey}` | ADMIN | Admin: toggles an existing capability's enabled state. |
 | GET | `/api/v1/features/all` | ADMIN | Admin: all capabilities (enabled or not) from the database. |
 | GET | `/api/v1/jobs` | authenticated | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
 | GET | `/api/v1/jobs/active-connections` | ADMIN | Retrieves the current active SSE connection count. |
 | GET | `/api/v1/models/catalog` | authenticated | Retrieves the complete AI model catalog definitions from the database. |
+| GET | `/api/v1/models/providers` | authenticated | Retrieves all available AI provider names from the database. |
+| GET | `/api/v1/status/health` | public | Returns sovereign readiness health details (public probe). |
+| GET | `/api/v1/status/infrastructure` | authenticated | Returns the current online/offline snapshot of the local inference engines. |
 | GET | `/api/v1/billing/configuration` | ADMIN | The declared key vocabulary — type, permitted domain and code default per key. |
 | PATCH | `/api/v1/billing/configuration` | ADMIN | Applies one validated configuration change. |
 | GET | `/api/v1/billing/packs` | authenticated | The priced catalogue. |
