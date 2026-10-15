@@ -57,17 +57,22 @@ for worker in ${ORAZAKA_WORKERS-validation}; do
   case "$worker" in
     validation)
       echo "[run-services] starting the document-validation worker"
-      (cd "${ORAZAKA_APP_DIR:-/app}/orazaka-packs/document-validation/worker" \
-        && SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
-           exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py) \
-        > >(sed -u "s/^/[validation] /") 2>&1 &
-      pids+=("$!")
+      # A pack worker never takes the platform down: it is restarted with a growing pause (30 s → 5 min) and is not
+      # one of the processes whose exit stops the container.
+      (cd "${ORAZAKA_APP_DIR:-/app}/orazaka-packs/document-validation/worker" || exit 0
+        pause=30
+        while true; do
+          SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
+            "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py
+          echo "[run-services] the document-validation worker exited ($?) — restart in ${pause}s"
+          sleep "$pause"; pause=$(( pause < 300 ? pause * 2 : 300 ))
+        done) > >(sed -u "s/^/[validation] /") 2>&1 &
       ;;
     *) echo "[run-services] unknown worker: $worker" >&2; exit 2 ;;
   esac
 done
 
-# The first process (JVM or worker) to exit takes the container down with it.
+# The first JVM to exit takes the container down with it (pack workers restart on their own).
 set +e
 wait -n
 status=$?
