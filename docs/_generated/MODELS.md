@@ -36,7 +36,7 @@ the machine holds for clinical, legal or security work, and keep a professional 
 |:---|:---|:---|:---|:---|---:|:---|:---|
 | `whisper-base` — Whisper Base | OpenAI · Whisper | Speech to text | LocalAI · whisper.cpp | [MIT](https://github.com/openai/whisper/blob/main/LICENSE) | — | default | — |
 | `qwen2.5-coder:7b` — Qwen 2.5 Coder 7B | Alibaba Cloud · Qwen 2.5 Coder | Code | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct/blob/main/LICENSE) | 32,768 | default | — |
-| `flux-2-klein-4b` — FLUX.2 [klein] 4B | Black Forest Labs · FLUX.2 klein | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/README.md) | — | default | — |
+| `flux-2-klein-4b` — FLUX.2 [klein] 4B | Black Forest Labs · FLUX.2 klein | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/README.md) | — | default | 2026-10-15 |
 | `piper-en-medium-ljspeech` — Piper LJSpeech (en) | Rhasspy · Piper (en-US, LJSpeech) | Text to speech | LocalAI · Piper | [Public domain](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ljspeech/medium/MODEL_CARD) | — | default | — |
 | `animatediff-lightning-mps` — AnimateDiff Lightning | ByteDance · AnimateDiff-Lightning | Video | PyTorch MPS · Apple Metal | [CreativeML OpenRAIL-M](https://huggingface.co/ByteDance/AnimateDiff-Lightning/blob/main/README.md) | — | default | — |
 | `llava:latest` — LLaVA (latest) | LLaVA team · LLaVA 1.6 | Vision | Ollama | [Apache-2.0](https://ollama.com/library/llava) | — | default | — |

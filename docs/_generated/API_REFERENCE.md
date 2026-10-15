@@ -31,6 +31,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/chat/stream/{conversationId}` | ADMIN + USER | ChatController | Streams chat via SSE using GET. |
 | POST | `/api/v1/chat/stream/{conversationId}` | ADMIN + USER | ChatController | Streams chat via SSE using POST (supporting file reference mappings). |
 | POST | `/api/v1/code` | authenticated | CodeController | Streams code generation via SSE using POST. |
+| POST | `/api/v1/embeddings` | ADMIN + USER | EmbeddingController |  |
 | GET | `/api/v1/features` | ADMIN + USER | FeatureController | What this deployment can currently run: every enabled capability with its live degraded-mode state. |
 | PUT | `/api/v1/features/{featureKey}` | ADMIN | FeatureController | Admin: toggles an existing capability's enabled state. |
 | GET | `/api/v1/features/all` | ADMIN | FeatureController | Admin: all capabilities (enabled or not) from the database. |

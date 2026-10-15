@@ -662,6 +662,7 @@
           "CapabilityProvider",
           "ChatGeneratorClient",
           "ChatMemoryStore",
+          "EmbeddingClient",
           "ImageGeneratorClient",
           "InfrastructureStatusProvider",
           "KnowledgeService",
@@ -4052,7 +4053,7 @@
       },
       "contextWindow": null,
       "status": "default",
-      "lastVerified": null
+      "lastVerified": "2026-10-15"
     },
     {
       "id": "piper-en-medium-ljspeech",
