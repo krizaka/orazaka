@@ -74,13 +74,33 @@ export function credentials(env = process.env, qaText = existsSync(QA_FILE) ? re
 }
 
 /** What a finished run proves: SUCCEEDED, a non-empty output, and the model our job reported, when it did. */
-export function judge(check, run, ms) {
+/** What our own jobs reported, read from each step's job (never from the client): models, providers and the facts. */
+export function jobFacts(jobs) {
+  const models = new Set();
+  const facts = [];
+  for (const job of jobs) {
+    const result = job?.result ?? {};
+    const metrics = result.metrics ?? {};
+    const metadata = result.metadata ?? {};
+    for (const m of [result.model, metrics.model, metadata.model]) if (typeof m === "string" && m) models.add(m);
+    if (typeof metadata.provider === "string") models.add(`provider:${metadata.provider}`);
+    const f = {};
+    for (const k of ["seed", "width", "height", "frames", "fps", "durationSeconds", "aspect", "gpu", "generationMs", "steps"]) {
+      const v = metrics[k] ?? result[k];
+      if (v !== undefined && v !== null) f[k] = v;
+    }
+    if (Object.keys(f).length) facts.push({ jobId: job.id, ...f });
+  }
+  return { models: [...models], facts };
+}
+
+export function judge(check, run, ms, reported = { models: [], facts: [] }) {
   const outputs = run.outputs ?? [];
   const nonEmpty = outputs.some((o) => {
     const v = o.value ?? o.url ?? o.content;
     return typeof v === "string" ? v.trim().length > 0 : v != null;
   });
-  const models = new Set();
+  const models = new Set(reported.models);
   for (const o of outputs) {
     const text = typeof o.value === "string" ? o.value : JSON.stringify(o.value ?? "");
     for (const m of text.matchAll(/"?model"?\s*[:=]\s*"?([A-Za-z0-9._:/-]+)/g)) models.add(m[1]);
@@ -97,6 +117,7 @@ export function judge(check, run, ms) {
     ms,
     runId: run.id,
     models: [...models],
+    facts: reported.facts,
     detail: ok
       ? `${outputs.length} output(s)`
       : foreign && run.status === "SUCCEEDED"
@@ -127,7 +148,12 @@ async function runCheck(check) {
       await new Promise((r) => setTimeout(r, 10_000));
       run = await call("GET", `/api/v1/studios/runs/${accepted.id}`);
     }
-    return judge(check, run, Date.now() - started);
+    const elapsed = Date.now() - started;
+    const jobs = [];
+    for (const step of run.steps ?? []) {
+      if (step.jobId) jobs.push(await call("GET", `/api/v1/jobs/${step.jobId}`).catch(() => null));
+    }
+    return judge(check, run, elapsed, jobFacts(jobs.filter(Boolean)));
   } catch (e) {
     return { name: check.name, engine: check.engine, studio: check.studio, status: "FAILED", ms: Date.now() - started, detail: e.message };
   }

@@ -1,0 +1,69 @@
+{
+  "suite": "orazaka-sovereign-smoke",
+  "base": "https://dev.orazaka.com/edge",
+  "host": "mac",
+  "startedAt": "2026-10-15T00:03:11.445Z",
+  "checks": [
+    {
+      "name": "chat",
+      "engine": "ollama",
+      "studio": "lead-research",
+      "status": "FAILED",
+      "ms": 11191,
+      "runId": "cb8b943c-1854-4130-8b2e-bcaecd559296",
+      "models": [],
+      "facts": [],
+      "detail": "com.openai.errors.PermissionDeniedException: 403: {\"id\":\"Forbidden\",\"message\":\"You are not authorized to perform this operation\"}"
+    },
+    {
+      "name": "image",
+      "engine": "sd-server",
+      "studio": "image-generation",
+      "status": "PASSED",
+      "ms": 50975,
+      "runId": "ead1165a-6cbb-4905-915b-e30d8602ef9e",
+      "models": [
+        "flux-2-klein-4b"
+      ],
+      "facts": [
+        {
+          "jobId": "68bbda40-a379-4f04-807f-7a3802d53239",
+          "seed": "7",
+          "generationMs": 43222
+        }
+      ],
+      "detail": "4 output(s)"
+    },
+    {
+      "name": "video",
+      "engine": "worker-media",
+      "studio": "video-generation",
+      "status": "FAILED",
+      "ms": 10510,
+      "runId": "74743ca3-66aa-4f88-8dd9-3f091fcea62b",
+      "models": [],
+      "facts": [],
+      "detail": "HTTP Error 500: Internal Server Error"
+    },
+    {
+      "name": "tts",
+      "engine": "localai",
+      "status": "SKIPPED",
+      "detail": "speech synthesis runs on LocalAI (piper), which no dev host serves yet"
+    },
+    {
+      "name": "transcription",
+      "engine": "localai",
+      "status": "SKIPPED",
+      "detail": "transcription runs on LocalAI (whisper), which no dev host serves yet"
+    },
+    {
+      "name": "rag",
+      "engine": "knowledge",
+      "status": "SKIPPED",
+      "detail": "the knowledge service is not deployed in dev (docs/DEPLOY_DEV.md)"
+    }
+  ],
+  "finishedAt": "2026-10-15T00:04:24.730Z",
+  "passed": false
+}
