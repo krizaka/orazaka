@@ -57,13 +57,16 @@ export function factsOf(jobs) {
   for (const job of jobs) {
     const result = job?.result ?? {};
     const metrics = result.metrics ?? {};
-    for (const k of ["model", "seed", "width", "height", "frames", "fps", "durationSeconds", "aspect", "steps", "generationMs", "gpu", "provider"]) {
+    for (const k of ["model", "seed", "width", "height", "frames", "fps", "durationSeconds", "aspect", "steps", "generationMs", "gpu", "provider", "gpuSeconds", "inference_time_sec", "peak_memory_rss_mb", "gpu_allocated_mb"]) {
       const v = metrics[k] ?? result[k];
       if (v !== undefined && v !== null) facts[k] = v;
     }
   }
   return facts;
 }
+
+/** Seconds a run took by the platform's own clock (its start and finish), not by when this script noticed. */
+export const runSeconds = (run) => (run?.startedAt && run?.finishedAt ? Math.round((Date.parse(run.finishedAt) - Date.parse(run.startedAt)) / 1000) : undefined);
 
 export const gpuCostUsd = (seconds, ratePerHour) => Math.round((seconds / 3600) * ratePerHour * 10000) / 10000;
 
@@ -110,9 +113,10 @@ async function runClip(plan, clip, imagesDir, out, rate) {
     requestedSeconds: clip.seconds ?? 5,
     runId: accepted.id,
     status: run.status,
-    wallSeconds: seconds,
+    pollSeconds: seconds, // when this script saw it finish: includes any network gap, so it is not the run's time
+    runSeconds: runSeconds(run) ?? seconds, // the platform's own clock: start to finish of the run
     gpuRateUsdPerHour: rate,
-    gpuCostUsd: gpuCostUsd(seconds, rate),
+    gpuCostUsd: gpuCostUsd(runSeconds(run) ?? seconds, rate),
     reported: factsOf(jobs.filter(Boolean)),
     error: run.status === "SUCCEEDED" ? undefined : (run.errorMessage ?? `status ${run.status}`),
   };
@@ -152,7 +156,7 @@ async function main() {
       const r = await runClip(plan, clip, resolve(arg("images", dirname(planFile))), out, rate);
       spent += r.gpuCostUsd;
       const got = r.reported;
-      console.log(`i2v: ${clip.id.padEnd(22)} ${r.status.padEnd(9)} ${String(r.wallSeconds).padStart(5)} s  ${got.width ?? "?"}x${got.height ?? "?"}  ${got.frames ?? "?"} fr  $${r.gpuCostUsd}  ${r.error ?? ""}`);
+      console.log(`i2v: ${clip.id.padEnd(22)} ${r.status.padEnd(9)} ${String(r.runSeconds).padStart(5)} s  ${got.width ?? "?"}x${got.height ?? "?"}  ${got.frames ?? "?"} fr  $${r.gpuCostUsd}  ${r.error ?? ""}`);
     } catch (e) {
       console.log(`i2v: ${clip.id.padEnd(22)} ERROR ${e.message}`);
     }

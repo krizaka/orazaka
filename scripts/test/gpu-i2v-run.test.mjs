@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { factsOf, gpuCostUsd } from "../gpu-i2v-run.mjs";
+import { factsOf, gpuCostUsd, runSeconds } from "../gpu-i2v-run.mjs";
 
 const plan = JSON.parse(readFileSync(new URL("../gpu-i2v-plan.json", import.meta.url), "utf8"));
 
@@ -28,4 +28,9 @@ test("the facts of a run are what its jobs measured, merged", () => {
 test("GPU cost is wall seconds at the hourly rate", () => {
   assert.equal(gpuCostUsd(3600, 0.76), 0.76);
   assert.equal(gpuCostUsd(900, 0.76), 0.19);
+});
+
+test("a run's time is the platform's own clock, never when the script noticed", () => {
+  assert.equal(runSeconds({ startedAt: "2026-10-15T20:02:19.118878Z", finishedAt: "2026-10-15T20:20:44.854535Z" }), 1106);
+  assert.equal(runSeconds({}), undefined);
 });
