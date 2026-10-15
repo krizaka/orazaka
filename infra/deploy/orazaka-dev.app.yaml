@@ -46,6 +46,8 @@ services:
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
     envs:
+      # Dev is closed to search engines: noindex on every response, robots Disallow /, no sitemap, the dev line in the footer.
+      - { key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "off" }
       - { key: AUTH_LOGIN_ENABLED, scope: RUN_AND_BUILD_TIME, value: "true" }
       - { key: AUTH_SIGNUP_ENABLED, scope: RUN_AND_BUILD_TIME, value: "false" }
       - { key: APP_COMMIT, scope: BUILD_TIME, value: "${_self.COMMIT_HASH}" }
@@ -118,6 +120,10 @@ services:
       # The serverless-inference model access key (`orazaka-dev`). Routing reads it from ai_providers
       # (dev-data.sql); kept here as the deployment's copy of record.
       - { key: AI_INFERENCE_KEY, scope: RUN_TIME, type: SECRET, value: "__AI_INFERENCE_KEY__" }
+      # Spend guards (tokens must not burn): a daily budget for paid providers (chat, embeddings, video), clips per day, requests per service key per day.
+      - { key: AI_SPEND_DAILY_BUDGET_USD, scope: RUN_TIME, value: "5" }
+      - { key: AI_VIDEO_DAILY_RUNS, scope: RUN_TIME, value: "5" }
+      - { key: AUTH_API_KEY_DAILY_REQUESTS, scope: RUN_TIME, value: "2000" }
       - { key: SPRING_AI_OLLAMA_BASE_URL, scope: RUN_TIME, value: "http://gpu-relay:11434" }
       - { key: ORAZAKA_OLLAMA_MODEL, scope: RUN_TIME, value: "qwen2.5:7b" }
       # Image and video engines = the hourly GPU droplet, reached through the relay (gpu-relay:8086 is its
