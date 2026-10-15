@@ -51,11 +51,33 @@ test("the committed measurements are consistent: every run is of a known model, 
     const model = dataset.models[run.model];
     assert.ok(model, `${run.runId}: unknown model ${run.model}`);
     assert.match(run.runId, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    if (model.gpuUsdPerHour) {
+      // A GPU droplet is billed by the hour: a run costs its own start-to-finish time at the model's hourly rate.
+      assert.ok(Math.abs(run.costUsd - (run.seconds / 3600) * model.gpuUsdPerHour) < 0.01, `${run.runId}: GPU time cost`);
+      continue;
+    }
     if (run.costUsd != null) assert.equal(run.costUsd, model.costUsd, run.runId);
     if (model.costUsd == null) assert.equal(run.costUsd ?? null, null, run.runId);
   }
   assert.match(dataset.measuredOn, /^\d{4}-\d{2}-\d{2}$/);
   assert.match(dataset.commit, /^[0-9a-f]{7,}$/);
+});
+
+test("a GPU-hour model costs the GPU time of its own runs, and the page says what the droplet sessions were billed", () => {
+  const gpu = {
+    ...fake,
+    models: { g: { label: "G", kind: "video", where: "gpu", licence: "L", gpuUsdPerHour: 0.76, costUsd: null, parameters: {} } },
+    engineSeconds: {},
+    runs: [
+      { model: "g", outcome: "succeeded", seconds: 1800, costUsd: 0.38 },
+      { model: "g", outcome: "succeeded", seconds: 900, costUsd: 0.19 },
+      { model: "g", outcome: "failed", seconds: 17, costUsd: 0 },
+    ],
+    gpuSessions: [{ what: "batch", gpu: "RTX 4000 Ada", hours: 2, usdPerHour: 0.76 }],
+  };
+  assert.equal(summarise(gpu).g.costUsd, 0.57);
+  const md = mdMeasuredRuns(gpu);
+  for (const text of ["$0.76 per GPU hour", "$0.57", "GPU droplet sessions (what was billed)", "$1.52", "setup (image build, weights)"]) assert.ok(md.includes(text), `missing: ${text}`);
 });
 
 test("the committed measurements contain no key, token or account identifier", () => {
