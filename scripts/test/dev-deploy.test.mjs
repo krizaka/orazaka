@@ -127,6 +127,7 @@ test("CA_EXTENSIONS: a CA strict verification accepts (key usage present)", asyn
   const { CA_EXTENSIONS } = await import("../dev-deploy.mjs");
   assert.ok(CA_EXTENSIONS.includes("keyUsage=critical,keyCertSign,cRLSign"));
   assert.ok(CA_EXTENSIONS.includes("basicConstraints=critical,CA:TRUE"));
+});
 
 test("connectionVars: the default pair for Studio callers, AI_<NAME>_URL / _API_KEY for an engine client", () => {
   assert.deepEqual(connectionVars(undefined, "https://e/edge", "oz_k"), { AI_PROVIDER: "orazaka", AI_API_URL: "https://e/edge", AI_API_KEY: "oz_k" });
