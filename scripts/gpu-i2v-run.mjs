@@ -154,7 +154,16 @@ async function main() {
       continue;
     }
     try {
-      const r = await runClip(plan, clip, resolve(arg("images", dirname(planFile))), out, rate);
+      let r;
+      // The platform keeps an upload on the core's own disk, which a redeploy of the app wipes: a run whose photo vanished
+      // before the worker fetched it is made again from a fresh upload (never counted twice: its record is replaced).
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        r = await runClip(plan, clip, resolve(arg("images", dirname(planFile))), out, rate);
+        if (r.status === "SUCCEEDED" || !/starting image/.test(r.error ?? "")) break;
+        console.log(`i2v: ${clip.id} lost its photo to a redeploy (attempt ${attempt}); uploading it again`);
+        spent += r.gpuCostUsd;
+        rmSync(join(out, `${clip.id}.json`), { force: true });
+      }
       spent += r.gpuCostUsd;
       const got = r.reported;
       console.log(`i2v: ${clip.id.padEnd(22)} ${r.status.padEnd(9)} ${String(r.runSeconds).padStart(5)} s  ${got.width ?? "?"}x${got.height ?? "?"}  ${got.frames ?? "?"} fr  $${r.gpuCostUsd}  ${r.error ?? ""}`);
