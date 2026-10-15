@@ -34,4 +34,16 @@ VALUES ('gte-large-en-v1.5', 'GTE Large (en) v1.5', 'embedding', NULL, 'do-infer
 ON CONFLICT (model_name) DO NOTHING;
 UPDATE orazaka_models SET vendor = 'Alibaba-NLP', family = 'GTE', capabilities = 'embeddings', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md', context_window = 8192, status = 'planned' WHERE model_name = 'gte-large-en-v1.5';
 
+-- The embedding model of dev (POST /api/v1/embeddings resolves the default of the `embedding` category, never a model the caller
+-- names). GTE Large (en) v1.5 is the one the dev inference key may call (1024 dimensions, the size Orochia's Explorer stores in
+-- pgvector); BGE-M3, multilingual (English and French), answers 403 on that key today and replaces it as the default the day the
+-- model is enabled on the key (`UPDATE orazaka_models SET status = 'available'` for it, then the default line below).
+UPDATE orazaka_models SET status = 'available' WHERE model_name = 'gte-large-en-v1.5';
+INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, description)
+VALUES ('bge-m3', 'BGE-M3', 'embedding', NULL, 'do-inference', FALSE,
+        'BGE-M3 (MIT) on DigitalOcean serverless inference — multilingual text embeddings (English, French), 1024 dimensions. Planned: the inference key of dev may not call it yet.')
+ON CONFLICT (model_name) DO NOTHING;
+UPDATE orazaka_models SET vendor = 'BAAI', family = 'BGE-M3', capabilities = 'embeddings', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'MIT', licence_url = 'https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE', context_window = 8192, status = 'planned' WHERE model_name = 'bge-m3';
+UPDATE orazaka_models SET is_default = (model_name = 'gte-large-en-v1.5') WHERE category = 'embedding';
+
 COMMIT;

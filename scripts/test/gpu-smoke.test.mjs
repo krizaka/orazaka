@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { CHECKS, credentials, judge } from "../gpu-smoke.mjs";
+import { CHECKS, credentials, jobFacts, judge } from "../gpu-smoke.mjs";
 
 const read = (p) => readFileSync(new URL(`../../${p}`, import.meta.url), "utf8");
 
@@ -49,4 +49,17 @@ test("the weekly workflow runs the smoke and keeps its report, and never without
   assert.match(wf, /scripts\/gpu-dev\.sh smoke small/);
   assert.match(wf, /upload-artifact/);
   assert.match(wf, /if: always\(\)[\s\S]*destroy/);
+});
+
+test("the model and the facts come from our jobs' own results", () => {
+  const reported = jobFacts([
+    { id: "j1", result: { url: "/api/v1/assets/j1/video.mp4", metrics: { model: "wan2.1-t2v-1.3b", seed: "7", width: 480, height: 832, durationSeconds: 1.56, gpu: "Apple Silicon (Metal)" } } },
+    { id: "j2", result: { content: "x", metadata: { provider: "ollama", durationMs: 9 } } },
+  ]);
+  assert.deepEqual(reported.models.sort(), ["provider:ollama", "wan2.1-t2v-1.3b"]);
+  assert.deepEqual(reported.facts[0], { jobId: "j1", seed: "7", width: 480, height: 832, durationSeconds: 1.56, gpu: "Apple Silicon (Metal)" });
+  const video = CHECKS.find((c) => c.name === "video");
+  const verdict = judge(video, { id: "r", status: "SUCCEEDED", outputs: [{ value: "/api/v1/assets/j1/video.mp4" }] }, 5, reported);
+  assert.equal(verdict.status, "PASSED");
+  assert.ok(verdict.models.includes("wan2.1-t2v-1.3b"));
 });

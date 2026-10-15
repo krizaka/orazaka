@@ -12,7 +12,7 @@ generated: true
 
 ## Local first
 
-Orazaka supports **28 models**: **23 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **5 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
+Orazaka supports **29 models**: **23 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **6 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
 
 Every figure below is read from `orazaka_models` (the table the routing reads): the vendor, licence and context window are those of each model's own card; `last verified` is the date of the last passing sovereign smoke that named the model, empty until one is recorded.
 
@@ -36,7 +36,7 @@ the machine holds for clinical, legal or security work, and keep a professional 
 |:---|:---|:---|:---|:---|---:|:---|:---|
 | `whisper-base` — Whisper Base | OpenAI · Whisper | Speech to text | LocalAI · whisper.cpp | [MIT](https://github.com/openai/whisper/blob/main/LICENSE) | — | default | — |
 | `qwen2.5-coder:7b` — Qwen 2.5 Coder 7B | Alibaba Cloud · Qwen 2.5 Coder | Code | Ollama | [Apache-2.0](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct/blob/main/LICENSE) | 32,768 | default | — |
-| `flux-2-klein-4b` — FLUX.2 [klein] 4B | Black Forest Labs · FLUX.2 klein | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/README.md) | — | default | — |
+| `flux-2-klein-4b` — FLUX.2 [klein] 4B | Black Forest Labs · FLUX.2 klein | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/README.md) | — | default | 2026-10-15 |
 | `piper-en-medium-ljspeech` — Piper LJSpeech (en) | Rhasspy · Piper (en-US, LJSpeech) | Text to speech | LocalAI · Piper | [Public domain](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ljspeech/medium/MODEL_CARD) | — | default | — |
 | `animatediff-lightning-mps` — AnimateDiff Lightning | ByteDance · AnimateDiff-Lightning | Video | PyTorch MPS · Apple Metal | [CreativeML OpenRAIL-M](https://huggingface.co/ByteDance/AnimateDiff-Lightning/blob/main/README.md) | — | default | — |
 | `llava:latest` — LLaVA (latest) | LLaVA team · LLaVA 1.6 | Vision | Ollama | [Apache-2.0](https://ollama.com/library/llava) | — | default | — |
@@ -63,10 +63,11 @@ the machine holds for clinical, legal or security work, and keep a professional 
 | Model | Vendor · family | Does | Runs | Licence | Context | Status | Last verified |
 |:---|:---|:---|:---|:---|---:|:---|:---|
 | `mistral-3-14B` — Mistral 3 14B | Mistral AI · Mistral 3 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/mistralai/Ministral-3-14B-Instruct-2512/blob/main/README.md) | 262,144 | available | — |
+| `gte-large-en-v1.5` — GTE Large (en) v1.5 | Alibaba-NLP · GTE | Embeddings | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md) | 8,192 | available | — |
 | `deepseek-v4-pro` — DeepSeek V4 Pro | DeepSeek · DeepSeek V4 | Chat, Reasoning | DigitalOcean serverless inference | [MIT](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/blob/main/LICENSE) | 1,048,576 | planned | — |
 | `gemma-4-31B-it` — Gemma 4 31B | Google · Gemma 4 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/google/gemma-4-31B-it/blob/main/README.md) | 262,144 | planned | — |
 | `llama-4-maverick` — Llama 4 Maverick | Meta · Llama 4 | Chat | DigitalOcean serverless inference | [Llama 4 Community Licence](https://github.com/meta-llama/llama-models/blob/main/models/llama4/LICENSE) | 1,048,576 | planned | — |
-| `gte-large-en-v1.5` — GTE Large (en) v1.5 | Alibaba-NLP · GTE | Embeddings | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md) | 8,192 | planned | — |
+| `bge-m3` — BGE-M3 | BAAI · BGE-M3 | Embeddings | DigitalOcean serverless inference | [MIT](https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE) | 8,192 | planned | — |
 
 ## In the catalogue, not published
 
