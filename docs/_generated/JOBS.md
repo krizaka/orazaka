@@ -67,7 +67,7 @@ Service-to-service (`SERVICE` token): how a pack registers a capability and a wo
 |:---|:---|:---|:---|
 | GET | `/api/v1/jobs` | authenticated | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
 | GET | `/api/v1/jobs/{id}` | ADMIN + USER | Fetches the single, atomic state of a specific job. |
-| POST | `/api/v1/jobs/{id}/progress` | public | Updates progress of a running job and broadcasts it to connected users. |
+| POST | `/api/v1/jobs/{id}/progress` | ADMIN + USER | Updates progress of a running job and broadcasts it to connected users. |
 | POST | `/api/v1/jobs/{jobId}/approve` | ADMIN + USER | Approves a pending automation job and dispatches its payload to the execution queue. |
 | POST | `/api/v1/jobs/{jobId}/revoke` | ADMIN + USER | Revokes a pending automation job, preventing its execution. |
 | GET | `/api/v1/jobs/active-connections` | ADMIN | Retrieves the current active SSE connection count. |
