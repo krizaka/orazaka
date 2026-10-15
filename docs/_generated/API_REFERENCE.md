@@ -39,7 +39,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/intent/route` | public | IntentController | M2M Level-0 gate routing: verifies the envelope and returns a signed intent token. |
 | GET | `/api/v1/jobs` | authenticated | JobController | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
 | GET | `/api/v1/jobs/{id}` | ADMIN + USER | JobController | Fetches the single, atomic state of a specific job. |
-| POST | `/api/v1/jobs/{id}/progress` | public | JobController | Updates progress of a running job and broadcasts it to connected users. |
+| POST | `/api/v1/jobs/{id}/progress` | ADMIN + USER | JobController | Updates progress of a running job and broadcasts it to connected users. |
 | POST | `/api/v1/jobs/{jobId}/approve` | ADMIN + USER | JobController | Approves a pending automation job and dispatches its payload to the execution queue. |
 | POST | `/api/v1/jobs/{jobId}/revoke` | ADMIN + USER | JobController | Revokes a pending automation job, preventing its execution. |
 | GET | `/api/v1/jobs/active-connections` | ADMIN | JobController | Retrieves the current active SSE connection count. |
