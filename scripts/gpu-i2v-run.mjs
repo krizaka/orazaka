@@ -13,6 +13,7 @@
  * Cost = wall seconds of the run × the GPU's hourly rate / 3600. Credentials are read from the environment, never printed.
  */
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { basename, dirname, join, resolve } from "node:path";
 
 const BASE = process.env.ORAZAKA_EDGE_URL ?? "https://dev.orazaka.com/edge";
@@ -71,6 +72,13 @@ export const runSeconds = (run) => (run?.startedAt && run?.finishedAt ? Math.rou
 
 export const gpuCostUsd = (seconds, ratePerHour) => Math.round((seconds / 3600) * ratePerHour * 10000) / 10000;
 
+/** The last frame of a clip, as the PNG the next run starts from. */
+export function lastFrame(video, png) {
+  if (!existsSync(video)) throw new Error(`${video} is not there: the clip to continue from has not been made`);
+  execFileSync("ffmpeg", ["-v", "error", "-y", "-sseof", "-0.2", "-i", video, "-update", "1", "-frames:v", "1", png]);
+  return png;
+}
+
 async function runClip(plan, clip, imagesDir, out, rate) {
   const ticket = join(out, `${clip.id}.run`); // a run in flight survives this process: its id and start are kept here
   let started = Date.now();
@@ -79,7 +87,8 @@ async function runClip(plan, clip, imagesDir, out, rate) {
     ({ runId, started } = JSON.parse(readFileSync(ticket, "utf8")));
     console.log(`i2v: ${clip.id} resumes run ${runId}`);
   } else {
-    const imagePath = resolve(imagesDir, clip.image);
+    // `continueFrom`: the photo is the LAST frame of an earlier clip of this batch (the second half of a 10 s clip, two linked runs).
+    const imagePath = clip.continueFrom ? lastFrame(join(out, `${clip.continueFrom}.mp4`), join(out, `${clip.id}.start.png`)) : resolve(imagesDir, clip.image);
     const bytes = readFileSync(imagePath);
     const form = new FormData();
     form.append("file", new Blob([bytes], { type: "image/png" }), basename(imagePath));
@@ -107,7 +116,7 @@ async function runClip(plan, clip, imagesDir, out, rate) {
   const record = {
     id: clip.id,
     model: plan.model,
-    sourceImage: clip.image,
+    sourceImage: clip.continueFrom ? `last frame of ${clip.continueFrom}` : clip.image,
     aspect: clip.aspect,
     prompt: clip.prompt,
     requestedSeed: String(clip.seed),
