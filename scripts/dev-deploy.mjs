@@ -309,16 +309,41 @@ export function brokerUsersScript(passwords) {
   return `${lines.join("\n")}\n`;
 }
 
+/**
+ * The server certificate's extensions. Python ≥ 3.13 verifies strictly (VERIFY_X509_STRICT): a leaf
+ * without an Authority Key Identifier is refused ("Missing Authority Key Identifier") — the pack
+ * workers could not reach the broker while the JVMs could.
+ */
+/** The dev CA's extensions — strict verification also wants the CA's key usage. */
+export const CA_EXTENSIONS = [
+  "basicConstraints=critical,CA:TRUE",
+  "keyUsage=critical,keyCertSign,cRLSign",
+  "subjectKeyIdentifier=hash",
+];
+
+export function serverCertExtensions(host) {
+  return [
+    `subjectAltName=DNS:${host}`,
+    "basicConstraints=critical,CA:FALSE",
+    "keyUsage=critical,digitalSignature,keyEncipherment",
+    "extendedKeyUsage=serverAuth",
+    "subjectKeyIdentifier=hash",
+    "authorityKeyIdentifier=keyid,issuer",
+    "",
+  ].join("\n");
+}
+
 function ensureTls() {
   mkdirSync(BROKER_DIR, { recursive: true, mode: 0o700 });
   const f = (n) => join(BROKER_DIR, n);
   if (existsSync(f("server.pem"))) return;
   const ossl = (args) => execFileSync("openssl", args, { stdio: ["ignore", "ignore", "inherit"] });
   ossl(["req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:P-256", "-nodes", "-days", "3650",
-    "-subj", "/CN=Orazaka dev broker CA", "-keyout", f("ca.key"), "-out", f("ca.pem")]);
+    "-subj", "/CN=Orazaka dev broker CA", ...CA_EXTENSIONS.flatMap((e) => ["-addext", e]),
+    "-keyout", f("ca.key"), "-out", f("ca.pem")]);
   ossl(["req", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:P-256", "-nodes", "-subj", `/CN=${BROKER.host}`,
     "-keyout", f("server.key"), "-out", f("server.csr")]);
-  writeFileSync(f("san.ext"), `subjectAltName=DNS:${BROKER.host}\nextendedKeyUsage=serverAuth\n`);
+  writeFileSync(f("san.ext"), serverCertExtensions(BROKER.host));
   ossl(["x509", "-req", "-in", f("server.csr"), "-CA", f("ca.pem"), "-CAkey", f("ca.key"), "-CAcreateserial",
     "-days", "825", "-extfile", f("san.ext"), "-out", f("server.pem")]);
   execFileSync("chmod", ["600", f("ca.key"), f("server.key")]);
