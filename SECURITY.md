@@ -17,7 +17,7 @@ GitHub security advisory with the fixed release, and credit you unless you prefe
 
 | Version | Supported |
 |---|---|
-| The latest Orazaka release (one version for the whole bundle, see [docs/DELIVERY.md](docs/DELIVERY.md)) | yes |
+| The latest Orazaka release (one version for the whole bundle) | yes |
 | The previous minor release | security fixes for 90 days after the next minor |
 | `main` | yes (development) |
 | Anything older | no — update with `orazaka update` |

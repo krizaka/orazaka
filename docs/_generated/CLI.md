@@ -476,4 +476,6 @@ Generate video from a text prompt
 | `<prompt>` | Text prompt describing the desired video |
 | `-d, --duration <seconds>` | Duration of the video in seconds (default: `4`) |
 | `-m, --model <model>` | Specify AI model name |
+| `-a, --aspect <ratio>` | Frame: 9:16 (default of the Studio), 16:9 or 1:1 — the model must make it |
+| `-s, --seed <number>` | The same prompt, model and seed make the same shot again |
 | `-o, --output <path>` | Specific file path to save the video |

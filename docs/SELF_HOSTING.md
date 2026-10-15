@@ -12,7 +12,7 @@ nothing is sent to Krizaka (no telemetry), and once the models are downloaded it
 
 > **Where this stands.** The packaged installers below — Orazaka Desktop for Mac and the one-command
 > server install — are **under construction** (tracked in
-> [the delivery epic](https://github.com/krizaka/orazaka/issues/75); design in [DELIVERY.md](DELIVERY.md)).
+> [the delivery epic](https://github.com/krizaka/orazaka/issues/75)).
 > Each command is marked: **available** works today, **1.0** arrives with the first release.
 > Until then, the [developer install](#today-the-developer-install) runs the same platform from source.
 
@@ -32,7 +32,7 @@ nothing is sent to Krizaka (no telemetry), and once the models are downloaded it
 1. **Download Orazaka Desktop** (`Orazaka.dmg`, signed and notarized by Apple) and drag it into
    Applications — or, in a terminal, `npx orazaka install`.
 2. **Open it.** It checks your Mac, downloads the models once (with progress), and starts Orazaka.
-3. **Open <http://localhost:3000>.** On the first run you create the administrator account; sign-up
+3. **Open `http://localhost:3000`.** On the first run you create the administrator account; sign-up
    stays closed, you invite your colleagues.
 
 ## On a Linux server with an NVIDIA GPU — 3 steps (1.0)

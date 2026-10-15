@@ -103,7 +103,7 @@ Both share the repo; **the `orazaka` CLI is the neutral orchestrator** both call
 ### 3.3 Local cycle (inner loop)
 
 ```bash
-orazaka install      # detect HW/prereqs (Java 21, Node 24+, Docker, Ollama), generate .env
+orazaka install      # detect HW/prereqs (Java 21, Node 22+, Docker, Ollama), generate .env
 orazaka start        # start the Docker infra + check native Ollama
 orazaka models pull  # pull the required Ollama models
 orazaka dev          # spawn the 8 services + web + admin + mobile (color logs)
