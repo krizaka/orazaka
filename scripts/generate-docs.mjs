@@ -33,6 +33,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSy
 import { join, basename, relative } from "node:path";
 import { buildModels, catalogue, manifestLicences, readmeLicences } from "./lib/model-registry.mjs";
 import { walk } from "./lib/walk.mjs";
+import { packsSection } from "./lib/pack-blocks.mjs";
 
 const ROOT = process.cwd();
 const GEN_DIR = join(ROOT, "docs", "_generated");
@@ -2606,37 +2607,7 @@ const mdPacks = (p, cli, catalog) => {
   );
   const shown = catalog.filter((x) => x.showcase);
   if (shown.length) {
-    lines.push("## The packs", "");
-    for (const x of shown) {
-      const t = x.text.en ?? {};
-      const title = t.label ?? x.studios[0]?.text.en?.label ?? x.key;
-      lines.push(`### ${title}`, "");
-      if (t.tagline) lines.push(`**${t.tagline}**`, "");
-      if (t.description) lines.push(t.description.trim(), "");
-      const facts = [
-        `Pack ${code(x.key)} ${x.version}`,
-        `tier ${x.tier}`,
-        x.kind ? `kind ${x.kind}` : null,
-        `${x.distribution}`,
-        `regulatory class ${x.regulatoryClass}`,
-        x.status === "UNLISTED" ? "installed without a catalogue entry" : null,
-        x.workers.length ? `own worker ${x.workers.map(code).join(", ")}` : null,
-      ].filter(Boolean);
-      lines.push(facts.join(" · ") + ".", "");
-      const controls = [x.scopeGuard && "a scope guard (refused domain)", x.consent && "versioned consent before install", x.safety && "a fixed, reviewed crisis response"].filter(Boolean);
-      if (controls.length) lines.push(`Declares ${controls.join(", ")}; the engine adds the controls of its regulatory class.`, "");
-      if (x.rulesets.length) {
-        lines.push(`Rulesets: ${x.rulesets.map((r) => `${r.label} (${r.jurisdiction ?? "—"}, ${r.rules} rules, versions ${r.versions.join(", ")})`).join("; ")}.`, "");
-      }
-      lines.push("| Studio | What it does | Asks for | Steps | Credits held |", "|:---|:---|:---|:---|:---|");
-      for (const st of x.studios) {
-        const st_t = st.text.en ?? {};
-        const what = [st_t.tagline, st_t.description].filter(Boolean).join(" ").replace(/\s+/g, " ").replace(/\|/g, "\\|") || "—";
-        const asks = st.inputs.map((i) => code(i.key)).join(", ") || "—";
-        lines.push(`| **${st_t.label ?? st.key}** (${code(st.key)}) | ${what} | ${asks} | ${st.steps} (${st.stepKinds.join(", ")}) | ${st.estimatedCredits ?? "—"} |`);
-      }
-      lines.push("");
-    }
+    lines.push(...packsSection(shown));
     const hidden = catalog.filter((x) => !x.showcase);
     if (hidden.length) lines.push(`Kept off the shelf (\`catalog.status: DRAFT\`): ${hidden.map((x) => code(x.key)).join(", ")} — installable for the platform's tests, never sold.`, "");
   }
