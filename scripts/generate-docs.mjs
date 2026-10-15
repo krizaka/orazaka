@@ -32,6 +32,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, basename, relative } from "node:path";
 import { buildModels, catalogue, manifestLicences, readmeLicences } from "./lib/model-registry.mjs";
+import { walk } from "./lib/walk.mjs";
 
 const ROOT = process.cwd();
 const GEN_DIR = join(ROOT, "docs", "_generated");
@@ -67,19 +68,6 @@ const readInitDb = () => {
     .join("\n");
 };
 
-/** Recursively list files matching a predicate. */
-function walk(dir, pred) {
-  if (!existsSync(dir)) return [];
-  const out = [];
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    if (name === "node_modules" || name === "target" || name === ".git") continue;
-    const s = statSync(p);
-    if (s.isDirectory()) out.push(...walk(p, pred));
-    else if (pred(p)) out.push(p);
-  }
-  return out;
-}
 const javaFiles = (dir) => walk(dir, (p) => p.endsWith(".java"));
 
 /** artifactId → module directory, for every Maven module of every cloned repository. */
