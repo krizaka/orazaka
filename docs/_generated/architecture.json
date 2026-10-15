@@ -5594,6 +5594,16 @@
             "default": null
           },
           {
+            "flag": "-a, --aspect <ratio>",
+            "desc": "Frame: 9:16 (default of the Studio), 16:9 or 1:1 — the model must make it",
+            "default": null
+          },
+          {
+            "flag": "-s, --seed <number>",
+            "desc": "The same prompt, model and seed make the same shot again",
+            "default": null
+          },
+          {
             "flag": "-o, --output <path>",
             "desc": "Specific file path to save the video",
             "default": null
