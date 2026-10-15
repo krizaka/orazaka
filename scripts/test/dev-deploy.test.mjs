@@ -113,3 +113,18 @@ test("upsertEnv replaces a key in place, appends a new one, keeps the rest", () 
   assert.equal(upsertEnv("A=1\nAI_API_KEY=old\n", { AI_API_KEY: "new", B: "2" }), "A=1\nAI_API_KEY=new\nB=2\n");
   assert.equal(upsertEnv("", { A: "1" }), "A=1\n");
 });
+
+test("serverCertExtensions: what Python's strict verification requires of the broker's leaf", async () => {
+  const { serverCertExtensions } = await import("../dev-deploy.mjs");
+  const ext = serverCertExtensions("broker-dev.orazaka.com");
+  assert.match(ext, /^subjectAltName=DNS:broker-dev\.orazaka\.com$/m);
+  assert.match(ext, /^authorityKeyIdentifier=keyid,issuer$/m);
+  assert.match(ext, /^subjectKeyIdentifier=hash$/m);
+  assert.match(ext, /^basicConstraints=critical,CA:FALSE$/m);
+});
+
+test("CA_EXTENSIONS: a CA strict verification accepts (key usage present)", async () => {
+  const { CA_EXTENSIONS } = await import("../dev-deploy.mjs");
+  assert.ok(CA_EXTENSIONS.includes("keyUsage=critical,keyCertSign,cRLSign"));
+  assert.ok(CA_EXTENSIONS.includes("basicConstraints=critical,CA:TRUE"));
+});
