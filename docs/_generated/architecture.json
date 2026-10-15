@@ -4497,6 +4497,27 @@
       "lastVerified": null
     },
     {
+      "id": "bge-m3",
+      "name": "BGE-M3",
+      "vendor": "BAAI",
+      "family": "BGE-M3",
+      "category": "embedding",
+      "capabilities": [
+        "embeddings"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "MIT",
+        "url": "https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE"
+      },
+      "contextWindow": 8192,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "deepseek-v4-pro",
       "name": "DeepSeek V4 Pro",
       "vendor": "DeepSeek",

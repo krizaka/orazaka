@@ -23,6 +23,7 @@ ON CONFLICT (model_name) DO NOTHING;
 -- infra/deploy/dev-model-registry.sql, run after this file.
 UPDATE orazaka_models SET is_default = (model_name = 'mistral-3-14B') WHERE category = 'chat';
 
+
 -- The image and video engines are the hourly GPU droplet (scripts/gpu-dev.sh), reached inside the app
 -- through the GPU relay: gpu-relay:8086 is its sd-server, gpu-relay:8188 its video pipeline. While it is
 -- off nothing listens there and the capabilities are greyed out (degraded mode); nothing else changes.

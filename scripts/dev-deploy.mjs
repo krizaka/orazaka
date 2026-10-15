@@ -5,7 +5,7 @@
  *   node scripts/dev-deploy.mjs apply <orazaka-dev|orazaka-admin-dev> [--dry-run] [--drop-attached-db]
  *   node scripts/dev-deploy.mjs data        # infra/deploy/dev-data.sql into orazaka_db (routing is data)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
- *   node scripts/dev-deploy.mjs service-account <product> --studios a,b --out <file>
+ *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
  *   node scripts/dev-deploy.mjs broker      # the TLS RabbitMQ Droplet in the tor1 VPC (once; idempotent)
  *   node scripts/dev-deploy.mjs status
@@ -217,6 +217,24 @@ export function serviceAccount(product) {
 }
 
 /**
+ * The variables a product reads the connection from, by bounded context (`AI_…`): the default is the pair the
+ * Studios' callers use (`AI_PROVIDER`, `AI_API_URL`, `AI_API_KEY`); `--prefix AI_ENGINE` names `AI_ENGINE_URL` and
+ * `AI_ENGINE_API_KEY` (and no provider line) for a product whose AI client is one engine, not a provider choice.
+ */
+export function connectionVars(prefix, url, key) {
+  if (prefix === undefined) return { AI_PROVIDER: "orazaka", AI_API_URL: url, AI_API_KEY: key };
+  if (!/^AI_[A-Z]+$/.test(prefix)) throw new Error(`not an AI_ prefix: ${prefix}`);
+  return { [`${prefix}_URL`]: url, [`${prefix}_API_KEY`]: key };
+}
+
+/** The scopes a key is held to at the edge (area:action); none = the account's full rights. */
+export function parseScopes(raw) {
+  const scopes = (raw ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  for (const s of scopes) if (!/^[a-z][a-z0-9-]{0,23}:[a-z][a-z0-9-]{0,23}$/.test(s)) throw new Error(`not a scope (area:action): ${s}`);
+  return scopes;
+}
+
+/**
  * The operator's grants (studio_entitlement_grant, krizaka/orazaka-studio infra/initdb/80-studio.sql): one row per
  * Studio, with its reason — idempotent, a re-run refreshes the reason and lifts an expiry.
  */
@@ -260,6 +278,7 @@ async function createServiceAccount(product, flags) {
     return i >= 0 ? flags[i + 1] : undefined;
   };
   const studios = (opt("--studios") ?? "").split(",").filter(Boolean);
+  const scopes = parseScopes(opt("--scopes"));
   const out = opt("--out");
   if (!out) throw new Error("--out <file> is required: the product's secrets file (the key is written there only)");
   const env = secrets();
@@ -272,11 +291,11 @@ async function createServiceAccount(product, flags) {
   // One live key per product and environment: the previous ones are revoked.
   const name = `${product}-dev`;
   for (const k of await edge("/api/v1/api-keys", { token })) if (k.name === name) await edge(`/api/v1/api-keys/${k.id}`, { token, method: "DELETE" });
-  const { key } = await edge("/api/v1/api-keys", { token, body: { name } });
+  const { key } = await edge("/api/v1/api-keys", { token, body: scopes.length ? { name, scopes } : { name } });
   if (studios.length) psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], grantSql(actorId, studios, product));
   mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, upsertEnv(existsSync(out) ? readFileSync(out, "utf8") : "", { AI_PROVIDER: "orazaka", AI_API_URL: EDGE_URL, AI_API_KEY: key }), { mode: 0o600 });
-  console.log(`${account.username}: API key "${name}" written to ${out} (AI_API_KEY, never printed); granted ${studios.length ? studios.join(", ") : "no Studio"}`);
+  writeFileSync(out, upsertEnv(existsSync(out) ? readFileSync(out, "utf8") : "", connectionVars(opt("--prefix"), EDGE_URL, key)), { mode: 0o600 });
+  console.log(`${account.username}: API key "${name}" (${scopes.length ? scopes.join(", ") : "unscoped"}) written to ${out} (never printed); granted ${studios.length ? studios.join(", ") : "no Studio"}`);
 }
 
 // ── Broker: RabbitMQ on a Droplet in the tor1 VPC, TLS only, VPC-only (cloud firewall) ─────────────
@@ -436,7 +455,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | seed | service-account <product> --studios a,b --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {
