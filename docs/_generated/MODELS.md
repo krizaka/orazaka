@@ -12,7 +12,7 @@ generated: true
 
 ## Local first
 
-Orazaka supports **27 models**: **20 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **7 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
+Orazaka supports **28 models**: **20 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **8 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
 
 Every figure below is read from `orazaka_models` (the table the routing reads): the vendor, licence and context window are those of each model's own card; `last verified` is the date of the last passing sovereign smoke that named the model, empty until one is recorded.
 
@@ -29,6 +29,8 @@ the AI kill-switch is pulled, and every turn is accounted for. "Uncensored" mean
 it never covers content sexualising minors, explicit sexual content, real persons, weapons or bio-chemical procedures,
 working malware, or anything that enables serious harm. Unfiltered is not infallible either: serve the largest model
 the machine holds for clinical, legal or security work, and keep a professional in the loop.
+
+How fast and at what price they really run — time, cost and every parameter of the runs Orazaka measured — is on the [Measured runs](MEASURED_RUNS.md) page.
 
 ## On your hardware
 
@@ -64,6 +66,7 @@ the machine holds for clinical, legal or security work, and keep a professional 
 | `llama-4-maverick` — Llama 4 Maverick | Meta · Llama 4 | Chat | DigitalOcean serverless inference | [Llama 4 Community Licence](https://github.com/meta-llama/llama-models/blob/main/models/llama4/LICENSE) — commercial use under conditions | 1,048,576 | available | — |
 | `mistral-3-14B` — Mistral 3 14B | Mistral AI · Mistral 3 | Chat | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/mistralai/Ministral-3-14B-Instruct-2512/blob/main/README.md) | 262,144 | available | — |
 | `gte-large-en-v1.5` — GTE Large (en) v1.5 | Alibaba-NLP · GTE | Embeddings | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md) | 8,192 | available | — |
+| `stable-diffusion-3.5-large` — Stable Diffusion 3.5 Large (DigitalOcean) | Stability AI · Stable Diffusion 3.5 | Image | DigitalOcean serverless inference | [Stability AI Community Licence](https://stability.ai/license) — commercial use under conditions | — | available | — |
 | `wan2-2-t2v-a14b` — Wan 2.2 T2V A14B (serverless) | Alibaba (Wan-AI) · Wan 2.2 | Video | DigitalOcean serverless inference | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B) | — | available | — |
 | `bge-m3` — BGE-M3 | BAAI · BGE-M3 | Embeddings | DigitalOcean serverless inference | [MIT](https://huggingface.co/BAAI/bge-m3/blob/main/LICENSE) | 8,192 | planned | — |
 
