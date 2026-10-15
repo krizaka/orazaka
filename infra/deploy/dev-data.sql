@@ -23,6 +23,14 @@ ON CONFLICT (model_name) DO NOTHING;
 -- infra/deploy/dev-model-registry.sql, run after this file.
 UPDATE orazaka_models SET is_default = (model_name = 'mistral-3-14B') WHERE category = 'chat';
 
+-- Embeddings (POST /api/v1/embeddings): multilingual BGE-M3 on the same provider. The Explorer of Orochia is its first caller.
+INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, description)
+VALUES ('bge-m3', 'BGE-M3', 'embedding', NULL, 'do-inference', FALSE,
+        'BGE-M3 (MIT) on DigitalOcean serverless inference — multilingual text embeddings (English, French), '
+        || '1024 dimensions. The embedding default of the dev environment: semantic search and recommendations.')
+ON CONFLICT (model_name) DO NOTHING;
+UPDATE orazaka_models SET is_default = (model_name = 'bge-m3') WHERE category = 'embedding';
+
 -- The image and video engines are the hourly GPU droplet (scripts/gpu-dev.sh), reached inside the app
 -- through the GPU relay: gpu-relay:8086 is its sd-server, gpu-relay:8188 its video pipeline. While it is
 -- off nothing listens there and the capabilities are greyed out (degraded mode); nothing else changes.

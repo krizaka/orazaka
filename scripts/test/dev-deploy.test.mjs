@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { grantSql, password, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
+import { connectionVars, grantSql, parseScopes, password, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
 
 const spec = (name) => readFileSync(new URL(`../../infra/deploy/${name}.app.yaml`, import.meta.url), "utf8");
 
@@ -127,4 +127,18 @@ test("CA_EXTENSIONS: a CA strict verification accepts (key usage present)", asyn
   const { CA_EXTENSIONS } = await import("../dev-deploy.mjs");
   assert.ok(CA_EXTENSIONS.includes("keyUsage=critical,keyCertSign,cRLSign"));
   assert.ok(CA_EXTENSIONS.includes("basicConstraints=critical,CA:TRUE"));
+
+test("connectionVars: the default pair for Studio callers, AI_<NAME>_URL / _API_KEY for an engine client", () => {
+  assert.deepEqual(connectionVars(undefined, "https://e/edge", "oz_k"), { AI_PROVIDER: "orazaka", AI_API_URL: "https://e/edge", AI_API_KEY: "oz_k" });
+  assert.deepEqual(connectionVars("AI_ENGINE", "https://e/edge", "oz_k"), { AI_ENGINE_URL: "https://e/edge", AI_ENGINE_API_KEY: "oz_k" });
+  assert.throws(() => connectionVars("OROCHIA_AI", "u", "k"), /not an AI_ prefix/);
+  assert.throws(() => connectionVars("AI_X; rm", "u", "k"), /not an AI_ prefix/);
+});
+
+test("parseScopes: area:action only, none = unscoped", () => {
+  assert.deepEqual(parseScopes(undefined), []);
+  assert.deepEqual(parseScopes("ai:embed, ai:chat"), ["ai:embed", "ai:chat"]);
+  assert.throws(() => parseScopes("embed"), /not a scope/);
+  assert.throws(() => parseScopes("AI:embed"), /not a scope/);
+  assert.throws(() => parseScopes("*:*"), /not a scope/);
 });

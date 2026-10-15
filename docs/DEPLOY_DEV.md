@@ -67,6 +67,22 @@ node scripts/dev-deploy.mjs service-account yomizaka \
   key as a DO **SECRET** and calls `https://dev.orazaka.com/edge` with `Authorization: Bearer oz_…`; the edge exchanges
   it for a JWT (`ApiKeyExchangeFilter`). Re-running rotates the key.
 
+A key can be **scoped**: `--scopes ai:embed` makes the key usable for `POST /api/v1/embeddings` and nothing else (the
+edge answers 403 anywhere else; an unscoped key keeps its account's rights). `--prefix AI_ENGINE` names the variables
+`AI_ENGINE_URL` / `AI_ENGINE_API_KEY` instead of the Studio callers' `AI_PROVIDER` / `AI_API_URL` / `AI_API_KEY`:
+
+```bash
+node scripts/dev-deploy.mjs service-account orochia-explorer --scopes ai:embed --prefix AI_ENGINE \
+  --out ~/Documents/krizaka/orochia-dev.env
+```
+
+Embeddings: `POST /api/v1/embeddings` `{ "input": ["…"], "model"?: "bge-m3" }` → `{ runId, model, dimensions, data:[{index, embedding}],
+usage }` (and the header `X-Orazaka-Run-Id`). The model is data (`orazaka_models`, category `embedding`, BGE-M3 on the
+`do-inference` provider — `infra/migrations/2026-10-15-embedding-model.sql`); the `runId` is the line `embedding.run
+runId=…` in the core's logs (user, model, counts — never a text or a vector). No model configured or the provider down →
+503, so a caller falls back to its own non-AI path. Existing databases need
+`infra/migrations/2026-10-15-embeddings-and-key-scopes.sql` on `krizaka_users_db`.
+
 ## Deploy
 
 Secrets never enter the repository: `~/Documents/krizaka/orazaka-dev.env` (mode 600) holds the database role
