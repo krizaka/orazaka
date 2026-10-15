@@ -24,7 +24,6 @@ Sovereign AI platform by [Krizaka](https://krizaka.com) — and the **workspace*
 <!-- /krizaka-header -->
 
 <p align="center">
-  <a href="https://www.krizaka.com/en/products/orazaka/demos"><img src="https://raw.githubusercontent.com/krizaka/.github/main/profile/assets/orazaka-tour.gif" alt="Orazaka's web client, signed in as Eric: a customer's return request answered from his own returns policy, then a product photo generated locally" width="760"></a>
   <br><sub>Eric answers a customer from his own returns policy, then generates the product photo — everything ran on one Mac, nothing left it. <a href="https://www.krizaka.com/en/products/orazaka/demos">More demos</a></sub>
 </p>
 
@@ -219,3 +218,7 @@ Cloned directories are ignored by this repository's git; each is its own reposit
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+---
+
+<sub>A Krizaka product · [krizaka.com](https://www.krizaka.com) · Apache-2.0</sub>
