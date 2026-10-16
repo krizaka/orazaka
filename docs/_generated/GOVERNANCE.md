@@ -74,7 +74,7 @@ build fails when it is violated. Treat an empty cell as a defect, not as a gap.
 
 | Rule | Enforced by | Summary |
 |:---|:---|:---|
-| `assertEveryRuleIsNonVacuous` | `GovernanceSubjectsTest` | [GOV-006] Asserts every governance rule in this package is non-vacuous by construction. |
+| `assertEveryRuleIsNonVacuous` | **none** | [GOV-006] Asserts every governance rule in this package is non-vacuous by construction. |
 
 ## LaneCoherenceRules
 
