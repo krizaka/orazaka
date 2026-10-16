@@ -1513,6 +1513,12 @@
     },
     {
       "from": "orazaka-edge",
+      "to": "orazaka-knowledge-service",
+      "kind": "http",
+      "via": "route /api/v1/recommendations"
+    },
+    {
+      "from": "orazaka-edge",
       "to": "orazaka-studio-service",
       "kind": "http",
       "via": "route /api/v1/studios"

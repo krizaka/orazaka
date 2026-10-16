@@ -333,6 +333,29 @@ router on images for the first time, and they were what had to change (ADR-063).
 
 ---
 
+## 12.1 Static rules & codemods (OpenRewrite, ArchUnit)
+
+The org code rules (addendum 2026-10-15) are checked by tools, not by review.
+
+- **OpenRewrite** (`rewrite-maven-plugin`, configured once in `krizaka-parent`, inherited by every JVM repository):
+  common static analysis, test best practices, Java 21 idioms, Spring idioms (no `@Autowired` on a constructor; `@Bean` methods stay public), no duplicate POM dependency. `./mvnw rewrite:dryRun` lists what would change and **fails** if
+  anything would (CI runs it: `rewrite: true` in the component's `.github/workflows/ci.yml`, input of `component.yml`); `./mvnw rewrite:run` applies it — behaviour
+  identical, run the tests, land it in a small pull request. A recipe that is wrong for this repository is excluded here
+  (`<exclusions>` / a `rewrite.yml`), with the reason; test fixtures (`**/fixture/**`) are excluded everywhere.
+- **ArchUnit** (shared rules in `krizaka-test-support`: `CodeRules`, `ConfigBindingRules`, `SourceRules`,
+  `ArchitectureRules`): the governance tests of a module call them. `ArchitectureRules` holds the structure — layers
+  (web → service → repository, none skipped, none calling up), no package cycle, `*Controller` / `*Service` /
+  `*Repository` names, `@Value` and the environment read only in configuration, `@Transactional` only on services. The
+  older `CodeRules` hold the rest (no field injection, no `System.out`, domain free of framework, one class per file…).
+- **Debt only shrinks — `FrozenRules`** (ArchUnit `FreezingArchRule`): a rule a module cannot satisfy yet is checked with
+  `FrozenRules.check(ArchitectureRules.xxxRule(...), CLASSES)`. The violations that exist are recorded in the module's
+  `archunit_store/` (committed); a **new** violation fails, a fixed one leaves the store (commit it). A rule with no store
+  fails: record a new rule's debt once with `-Darchunit.freeze.store.default.allowStoreCreation=true`, review the store,
+  commit it. Never add a violation to a store by hand to get a build green.
+- A rule is never weakened, skipped or deleted to get a PR green (AGENTS §5.3 of the org); fix the code or freeze the existing debt.
+
+- Orazaka's own governance (`orazaka-test-support`: `GovernanceRules`, hexagonal boundaries, pack coherence…) stays the contract; its structure rules (`StructureRules`) freeze what a service cannot satisfy yet.
+
 ## 13. Agent session protocol
 
 1. **Load first** this contract + `.agent/rules/*` + `.agent/config/mcp.json`. Never generate code that violates a rule or an ArchUnit rule.
