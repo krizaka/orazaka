@@ -123,6 +123,20 @@ Droplet in the `default-tor1` VPC (`node scripts/dev-deploy.mjs broker`, idempot
   the same VPC (`--vpc-uuid` of `default-tor1`; another region needs VPC peering).
 - No volume worth keeping: queues are re-declared by the services and workers at start (AGENTS.md §6).
 
+## Media — kept outside the container
+
+`core` runs on App Platform, whose disk is wiped by every deploy: a generated image or video written only there
+leaves a run whose file is gone (the run page then says "This result is no longer available"). The sealed
+envelope (ADR-054: encrypted before it leaves the process) is therefore also stored through the `DurableAssetStore`
+port (`orazaka-assets`), chosen by environment: `MEDIA_STORAGE_PROVIDER=local|bunny|directory`.
+
+- `bunny`: a **private** storage zone (`orazaka-dev`, no pull zone, never a public URL — media is served only by
+  the authenticated `/api/v1/assets/{jobId}/{file}` route, which restores a missing file after the ownership check).
+  `MEDIA_STORAGE_ZONE`, `MEDIA_STORAGE_API_KEY` (the zone password, secret), `MEDIA_STORAGE_ENDPOINT`
+  (default `storage.bunnycdn.com`), `MEDIA_STORAGE_TENANT` (first key segment).
+- Key layout (krizaka/.github#61): `t/<tenant>/u/<userId>/jobs/<jobId>/<file>`; retention deletes the job prefix.
+- `local` (default) keeps today's behaviour; self-hosted customers keep local disk (or S3/Bunny adapters later).
+
 ## Routing is data
 
 `infra/deploy/dev-data.sql` (idempotent) points the providers of this environment: `do-inference`
