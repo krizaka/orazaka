@@ -9,7 +9,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | App (DO) | Component | What | Size | $/month |
 |---|---|---|---|---|
 | `orazaka-dev` | `web` | `krizaka/orazaka-web-client` (Next.js + BFF), `dev.orazaka.com/` | `apps-s-1vcpu-0.5gb` | 5 |
-| `orazaka-dev` | `core` | one image, six JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
+| `orazaka-dev` | `core` | one image, seven JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
 | Droplet | `orazaka-broker-dev` | RabbitMQ 4.2, **TLS only** (5671), bound to its private IP, cloud firewall: VPC `10.118.0.0/20` only | `s-1vcpu-512mb-10gb` | 4 |
 | `orazaka-admin-dev` | `web` | `krizaka/orazaka-web-admin`, `admin.orazaka.com`, BFF → `https://dev.orazaka.com/edge` | `apps-s-1vcpu-0.5gb` | 5 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
@@ -23,7 +23,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 
 ### The `core` container
 
-`infra/deploy/Dockerfile` clones every repository of `orazaka.workspace.json` (as CI does), builds the six services
+`infra/deploy/Dockerfile` clones every repository of `orazaka.workspace.json` (as CI does), builds the seven services
 without tests, and `infra/deploy/run-services.sh` starts them side by side; the first JVM to exit takes the container
 down so App Platform restarts the set.
 

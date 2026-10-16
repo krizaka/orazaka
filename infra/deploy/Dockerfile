@@ -4,7 +4,7 @@
 # Built by DigitalOcean App Platform from this repository (dockerfile_path: infra/deploy/Dockerfile,
 # context: the repository root). The platform is one repository per component, so the image clones
 # every repository listed in orazaka.workspace.json at its default branch — exactly what CI does —
-# and builds the six services the dev environment runs, without tests (CI ran them).
+# and builds the seven services the dev environment runs, without tests (CI ran them).
 # Redeploy with `doctl apps create-deployment <app> --force-rebuild`: a cached clone layer would
 # otherwise keep yesterday's code.
 # ==============================================================================
@@ -16,7 +16,7 @@ WORKDIR /workspace
 COPY . .
 RUN node scripts/workspace.mjs clone --depth 1
 
-# ── 2. Build the six services and what they depend on ────────────────────────
+# ── 2. Build the seven services and what they depend on ──────────────────────
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
 COPY --from=sources /workspace /workspace
