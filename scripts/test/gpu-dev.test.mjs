@@ -139,3 +139,28 @@ test("GPU_SERVICES=video starts neither the image engine nor Ollama (their memor
   assert.match(host, /if \[\[ "\$\{SERVICES:-all\}" != "video" \]\]; then\s+docker run -d --name sd-server/);
   assert.match(host, /if \[\[ "\$\{SERVICES:-all\}" != "video" \]\]; then\s+mkdir -p \/models\/ollama/);
 });
+
+test("runpod: the key comes from the secrets file and is never echoed, a pod is destroyed (never left), and the volume keeps the weights", () => {
+  const script = read("scripts/lib/gpu-runpod.sh");
+  assert.match(script, /secret AI_GPU_RUNPOD_API_KEY/);
+  assert.doesNotMatch(script, /echo[^\n]*rp_key|printf[^\n]*rp_key|say[^\n]*\$\(rp_key\)/);
+  assert.match(script, /rp_call DELETE "\/pods\/\$id"/);
+  assert.match(script, /"volumeMountPath": "\/models"/);
+  assert.match(script, /"networkVolumeId": e\["VOLUME"\]/);
+  assert.match(script, /GPU_RUNPOD_MIN_BALANCE/); // a budget guard before any pod
+  assert.match(script, /ledger_add .*rp-/); // the same ledger as the droplets
+  // gpu-dev.sh stop destroys RunPod pods too, even when no droplet runs
+  const main = read("scripts/gpu-dev.sh");
+  assert.equal((main.match(/runpod_stop/g) ?? []).length >= 2, true);
+  assert.match(main, /runpod\) shift; runpod "\$@"/);
+});
+
+test("runpod bootstrap: a watchdog first, the worker built from its public repository, weights on the volume, the tunnel dials out", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.ok(boot.indexOf("orazaka-watchdog armed") < 0 && boot.indexOf("watchdog armed") < boot.indexOf("building the worker runtime"));
+  assert.match(boot, /rest\.runpod\.io\/v1\/pods\/\$\{RUNPOD_POD_ID\}/); // the pod ends itself
+  assert.match(boot, /git clone -q https:\/\/github\.com\/krizaka\/orazaka-worker-media\.git/);
+  assert.match(boot, /MEDIA_MODELS_DIR=\/models/);
+  assert.match(boot, /127\.0\.0\.1:15671:broker-dev\.orazaka\.com:5671/);
+  assert.doesNotMatch(boot, /ghcr\.io/); // the private registry is never needed
+});
