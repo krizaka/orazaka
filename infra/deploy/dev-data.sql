@@ -40,6 +40,13 @@ VALUES ('wan2-2-t2v-a14b', 'Wan 2.2 T2V A14B (serverless)', 'video', NULL, 'do-i
 ON CONFLICT (model_name) DO NOTHING;
 UPDATE orazaka_models SET vendor = 'Alibaba (Wan-AI)', family = 'Wan 2.2', capabilities = 'video', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B', commercial_use = 'yes', context_window = NULL, status = 'available' WHERE model_name = 'wan2-2-t2v-a14b';
 
+-- Wan 2.2 T2V A14B at 720p, on our own 80 GB GPU worker. Same rows as infra/migrations/2026-10-16-wan-a14b-720p.sql.
+INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, max_steps, recommended_fps, supported_hardware, description)
+VALUES ('wan2.2-t2v-a14b', 'Wan 2.2 T2V A14B (720p, GPU)', 'video', NULL, 'localai-video', FALSE, 40, 16, NULL,
+        'Wan 2.2 A14B (Apache-2.0) run on our own 80 GB GPU worker — text-to-video at 1280x720 (16:9) or 720x1280 (9:16), 5 s at 16 fps, two experts, the seed makes the same shot again. The showcase model.')
+ON CONFLICT (model_name) DO NOTHING;
+UPDATE orazaka_models SET vendor = 'Alibaba (Wan-AI)', family = 'Wan 2.2', capabilities = 'video', runs_on = 'local', runtime = 'worker-media · CUDA (80 GB)', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B-Diffusers', commercial_use = 'yes', context_window = NULL, status = 'available' WHERE model_name = 'wan2.2-t2v-a14b';
+
 -- Stable Diffusion 3.5 Large, hosted by DigitalOcean serverless inference ($0.08 an image) and routed by Orazaka's image capability
 -- (provider do-inference: its own key, the prompt without <sd_cpp_extra_args>, ImageGeneratorClientImpl). No steps declared: hosted.
 -- The image client of Spring AI appends /images/generations to the base URL (the local sd-server's is .../v1): the same endpoint and key

@@ -3,7 +3,8 @@
 # Orazaka dev — the GPU, by the hour (docs/DEPLOY_DEV.md § GPU, ADR-077).
 #
 #   scripts/gpu-dev.sh start big|small   create the GPU droplet: images (FLUX.2 [klein] 4B) + 9:16 video (Wan)
-#   scripts/gpu-dev.sh stop              destroy it — always destroy, never power off (a stopped droplet bills)
+#   scripts/gpu-dev.sh runpod start|stop|status|logs   the same worker on RunPod (an H100/A100 pod by the hour, scripts/lib/gpu-runpod.sh)
+#   scripts/gpu-dev.sh stop              destroy it (and any RunPod pod) — always destroy, never power off (a stopped droplet bills)
 #   scripts/gpu-dev.sh status            what runs, since when, what it has cost so far
 #   scripts/gpu-dev.sh cost              every session of the ledger: hours × rate, and the total
 #   scripts/gpu-dev.sh logs              the droplet's setup and container logs (ssh, read-only)
@@ -235,11 +236,17 @@ start() {
 
 stop() {
   local ids; ids=$(droplets_json | python3 -c 'import json,sys; print(" ".join(str(d["id"]) for d in json.load(sys.stdin) or []))')
-  if [[ -z "$ids" ]]; then say "nothing running — \$0/hour"; cost; return; fi
+  if [[ -z "$ids" ]]; then
+    say "no droplet running — \$0/hour"
+    [[ -z "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || runpod_stop
+    cost; return
+  fi
   status
   # shellcheck disable=SC2086
   doctl compute droplet delete $ids --force
   say "destroyed $ids — billing stopped (the models volume is kept)"
+  # A pod on RunPod is never left behind either.
+  [[ -z "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || runpod_stop
   cost
 }
 
@@ -378,7 +385,12 @@ PY
   echo "  set -a; . $out; set +a; cd orazaka-apps/workers/orazaka-worker-media && .venv/bin/python -u -m app.consumer"
 }
 
+# RunPod: the same worker on a pod by the hour (scripts/lib/gpu-runpod.sh).
+# shellcheck source=lib/gpu-runpod.sh
+source "$ROOT/scripts/lib/gpu-runpod.sh"
+
 case "${1:-}" in
+  runpod) shift; runpod "$@" ;;
   start) start "${2:-}" ;;
   stop) stop ;;
   status) status ;;
