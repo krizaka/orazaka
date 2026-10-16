@@ -142,6 +142,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/interceptions` |
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/profile` |
 | `orazaka-edge` | `orazaka-conversation-service` | http | `route /` |
+| `orazaka-edge` | `orazaka-knowledge-service` | http | `route /api/v1/recommendations` |
 | `orazaka-edge` | `orazaka-studio-service` | http | `route /api/v1/studios` |
 | `orazaka-job-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
 | `orazaka-job-service` | `krizaka-users-service` | http | `krizaka-users-client` |
