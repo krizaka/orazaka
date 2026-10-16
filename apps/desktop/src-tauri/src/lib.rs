@@ -5,6 +5,7 @@
 //! * `files`     — listing / preview of granted files.
 //! * `settings`  — connect mode, the remote Orazaka, the workspace folder.
 
+pub mod auth;
 pub mod files;
 pub mod scope;
 pub mod settings;
@@ -30,6 +31,7 @@ use tauri::{
     WindowEvent,
 };
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
 
 const WEB_PORT: u16 = 3000;
@@ -62,6 +64,10 @@ pub struct AppState {
     workspace_origin: Arc<Mutex<String>>,
     tray: Mutex<Option<TrayItems>>,
     last_probe: Mutex<String>,
+    /// The sign-in started in the browser and not completed yet (one at a time).
+    pending_auth: Mutex<Option<auth::Pending>>,
+    /// The Keychain (tokens never leave Rust).
+    sessions: Arc<dyn auth::SessionStore>,
 }
 
 impl AppState {
@@ -143,6 +149,50 @@ fn get_snapshot(app: AppHandle, state: State<'_, AppState>) -> Snapshot {
 fn probe_stack() -> Probe {
     probe()
 }
+
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoteProbe {
+    pub reachable: bool,
+    pub latency_ms: Option<u64>,
+    pub host: String,
+    pub status: Option<u16>,
+}
+
+#[tauri::command]
+fn probe_remote(state: State<'_, AppState>, url: Option<String>) -> RemoteProbe {
+    let target = url.unwrap_or_else(|| state.settings.lock().unwrap().remote_url.clone());
+    let host = url::Url::parse(&target)
+        .ok()
+        .and_then(|u| u.host_str().map(|h| h.to_string()))
+        .unwrap_or_else(|| target.clone());
+    let start = Instant::now();
+    let agent: ureq::Agent = ureq::Agent::config_builder()
+        .timeout_global(Some(Duration::from_secs(4)))
+        .build()
+        .into();
+    match agent.get(&target).call() {
+        Ok(res) => RemoteProbe {
+            reachable: true,
+            latency_ms: Some(start.elapsed().as_millis() as u64),
+            host,
+            status: Some(res.status().as_u16()),
+        },
+        Err(ureq::Error::StatusCode(code)) => RemoteProbe {
+            reachable: true,
+            latency_ms: Some(start.elapsed().as_millis() as u64),
+            host,
+            status: Some(code),
+        },
+        Err(_) => RemoteProbe {
+            reachable: false,
+            latency_ms: None,
+            host,
+            status: None,
+        },
+    }
+}
+
 
 #[tauri::command]
 fn save_settings(app: AppHandle, state: State<'_, AppState>, settings: Settings) -> Res<Settings> {
@@ -650,6 +700,75 @@ fn spawn_probe_loop(app: AppHandle) {
     });
 }
 
+// ───────────────────────────── account (sign-in with the system browser, PKCE) ─────────────────────────────
+
+fn now_secs() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+}
+
+#[tauri::command]
+fn auth_status(state: State<'_, AppState>) -> auth::Account {
+    state.sessions.load().map(|s| auth::Account::of(&s)).unwrap_or_else(auth::Account::signed_out)
+}
+
+/// Opens the Orazaka sign-in page in the system browser with a fresh PKCE challenge.
+#[tauri::command]
+fn auth_begin(state: State<'_, AppState>) -> Res<()> {
+    let settings = state.settings.lock().unwrap().clone();
+    let verifier = auth::new_verifier();
+    let auth_state = auth::new_state();
+    let url = auth::authorize_url(&settings.workspace_url(), &auth::challenge_of(&verifier), &auth_state);
+    *state.pending_auth.lock().unwrap() = Some(auth::Pending {
+        verifier,
+        state: auth_state,
+        api_base: auth::api_base(&settings.mode, &settings.remote_url),
+        started: Instant::now(),
+    });
+    Command::new("open").arg(url).spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn auth_cancel(state: State<'_, AppState>) {
+    *state.pending_auth.lock().unwrap() = None;
+}
+
+#[tauri::command]
+async fn auth_sign_out(app: AppHandle, state: State<'_, AppState>) -> Res<auth::Account> {
+    let store = state.sessions.clone();
+    tauri::async_runtime::spawn_blocking(move || auth::sign_out(&auth::HttpAuthApi, store.as_ref()))
+        .await
+        .map_err(|e| e.to_string())??;
+    let account = auth::Account::signed_out();
+    let _ = app.emit("auth-changed", &account);
+    Ok(account)
+}
+
+/// `orazaka://auth/callback?code=…&state=…`: completes the sign-in this app started — and only that one.
+fn handle_deep_link(app: &AppHandle, url: url::Url) {
+    let state = app.state::<AppState>();
+    let pending = {
+        let mut slot = state.pending_auth.lock().unwrap();
+        // A link that is not the callback of the pending sign-in (wrong state, wrong URL) changes nothing.
+        match slot.as_ref() {
+            Some(p) if auth::parse_callback(&url, &p.state).is_ok() => slot.take(),
+            _ => None,
+        }
+    };
+    let Some(pending) = pending else { return };
+    let (app2, store) = (app.clone(), state.sessions.clone());
+    std::thread::spawn(move || {
+        match auth::complete_sign_in(&auth::HttpAuthApi, store.as_ref(), pending, &url, now_secs()) {
+            Ok(session) => {
+                let _ = app2.emit("auth-changed", auth::Account::of(&session));
+            }
+            Err(message) => {
+                let _ = app2.emit("auth-error", message);
+            }
+        }
+        show_panel(&app2);
+    });
+}
+
 // ───────────────────────────── drops on the control panel ─────────────────────────────
 
 #[derive(Serialize, Clone)]
@@ -695,6 +814,7 @@ fn on_panel_drop(app: &AppHandle, paths: &[PathBuf]) {
 pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
@@ -711,6 +831,8 @@ pub fn run() {
                 workspace_origin: Arc::new(Mutex::new(String::new())),
                 tray: Mutex::new(None),
                 last_probe: Mutex::new("stopped".into()),
+                pending_auth: Mutex::new(None),
+                sessions: Arc::new(auth::KeychainStore),
             });
             let handle = app.handle().clone();
             let state = handle.state::<AppState>();
@@ -718,6 +840,18 @@ pub fn run() {
             for dir in watched {
                 if let Ok(resolved) = state.scope.lock().unwrap().resolve(&dir) {
                     let _ = start_watch(&handle, &state, &resolved);
+                }
+            }
+            let link_handle = handle.clone();
+            handle.deep_link().on_open_url(move |event| {
+                for url in event.urls() {
+                    handle_deep_link(&link_handle, url);
+                }
+            });
+            // The app may have been started by the link itself (cold start).
+            if let Ok(Some(urls)) = handle.deep_link().get_current() {
+                for url in urls {
+                    handle_deep_link(&handle, url);
                 }
             }
             build_tray(&handle)?;
@@ -761,6 +895,11 @@ pub fn run() {
             open_workspace,
             workspace_send_file,
             autostart_set,
+            auth_status,
+            auth_begin,
+            auth_cancel,
+            auth_sign_out,
+            probe_remote,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Orazaka Desktop");

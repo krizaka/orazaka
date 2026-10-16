@@ -5,9 +5,13 @@
     "version": "App {version}"
   },
   "tabs": {
+    "generation": "Generation",
+    "packs": "Packs",
+    "studio": "Studio",
     "stack": "Control panel",
     "files": "Files",
-    "settings": "Settings"
+    "settings": "Settings",
+    "account": "Account"
   },
   "common": {
     "theme": "Theme: {mode}",
@@ -21,7 +25,77 @@
   },
   "mode": {
     "local": "Local stack",
-    "remote": "Connected to {host}"
+    "remote": "Connected to {host}",
+    "switchMode": "Switch to {target}",
+    "localMode": "Local (Apple Silicon)",
+    "remoteMode": "Cloud API ({host})"
+  },
+  "generation": {
+    "welcomeLocal": "Direct connection to your Mac's Apple Silicon Metal engine. Sovereign, local, 0 bytes leave your machine.",
+    "welcomeRemote": "Connected to Orazaka Cloud API on {host}. Enterprise sovereign cluster, Canadian data residency (Loi 25).",
+    "mode": {
+      "chat": "Chat & Reasoning",
+      "image": "Image Synthesis",
+      "video": "Video (Wan 2.1)"
+    },
+    "model": "Model",
+    "thinking": "Thinking Pipeline",
+    "steps": "steps",
+    "generatingLocal": "Generating locally on Apple Silicon Metal…",
+    "generatingRemote": "Dispatching inference to Orazaka Cloud…",
+    "placeholder": "Ask a question, request code, or describe an image/video to generate…",
+    "attachFile": "Attach from Mac",
+    "attached": "Attached",
+    "shortcutHint": "⌘+Enter to send",
+    "generate": "Generate",
+    "pickFromGranted": "Attach from Mac Scoped Folders",
+    "noFilesGranted": "No granted files yet. Add folders in the Files tab."
+  },
+  "packs": {
+    "title": "Sovereign Packs Marketplace",
+    "leadLocal": "Packs installed in your local Orazaka workspace.",
+    "leadRemote": "Packs available on {host}.",
+    "search": "Search packs, rulesets, capabilities…",
+    "category": {
+      "all": "All",
+      "business": "Business",
+      "compliance": "Compliance",
+      "media": "Media",
+      "development": "Developer"
+    },
+    "loading": "Loading packs…",
+    "empty": "No packs match your search.",
+    "pricing": {
+      "FREE": "Free",
+      "INCLUDED": "Included",
+      "PAID": "Commercial"
+    },
+    "capabilities": "capabilities",
+    "installed": "Installed:",
+    "active": "Active",
+    "inactive": "Inactive",
+    "details": "Inspect",
+    "install": "Install Pack",
+    "uninstall": "Uninstall Pack",
+    "scopeGuardTitle": "Scope Guard Active",
+    "refusedTerms": "Statutorily Refused Terms",
+    "capabilitiesProvided": "Capabilities Provided"
+  },
+  "studio": {
+    "title": "Studio Blueprints & Sagas",
+    "lead": "Autonomous end-to-end task pipelines. Execute deterministic sagas with verifiable audit trails.",
+    "pipelineSteps": "steps",
+    "configureAndRun": "Configure & Run",
+    "back": "Back to Blueprints",
+    "chooseOption": "Choose an option…",
+    "chooseGrantedFile": "Select file from Mac…",
+    "launchSaga": "Launch Saga",
+    "pipelineTimeline": "Saga Execution Timeline",
+    "step": "Step",
+    "advanceStep": "Advance Step",
+    "newRun": "New Run",
+    "outputsTitle": "Generated Artifacts & Findings",
+    "liveLogs": "Live Execution Logs"
   },
   "stack": {
     "title": "Local stack",
@@ -39,7 +113,11 @@
     "openWorkspace": "Open workspace",
     "services": "Services",
     "noServices": "Status not read yet — press Refresh.",
-    "serviceHeader": { "name": "Service", "port": "Port", "state": "State" },
+    "serviceHeader": {
+      "name": "Service",
+      "port": "Port",
+      "state": "State"
+    },
     "logs": "Logs",
     "logsEmpty": "Nothing yet. Start the stack, run doctor or fetch the service logs.",
     "logService": "Service logs",
@@ -101,5 +179,26 @@
     "startupHelp": "Off by default. Runs in the menu bar; nothing is started unless you ask.",
     "language": "Language",
     "about": "Orazaka Desktop is unsigned for now: if macOS refuses to open it, right-click the app and choose Open."
+  },
+  "account": {
+    "title": "Your Orazaka account",
+    "signedOutTitle": "Sign in to Orazaka",
+    "signedOutLead": "Sign in with your browser. Orazaka opens its own page — this app never sees your password.",
+    "promise": "Own your intelligence.",
+    "asideText": "Your files stay on your Mac, and only the folders you share are ever readable.",
+    "signIn": "Sign in with your browser",
+    "waiting": "Waiting for the browser…",
+    "waitingHint": "Finish signing in on the Orazaka page, then come back here.",
+    "cancel": "Cancel",
+    "name": "Name",
+    "email": "Email",
+    "roles": "Role",
+    "server": "Connected server",
+    "signOut": "Sign out",
+    "signOutHint": "Signing out revokes this Mac's session on the server and deletes it from the Keychain.",
+    "keychain": "Your session is kept in the macOS Keychain, never in a file.",
+    "failed": "The sign-in did not complete: {message}",
+    "remoteHint": "You will sign in on {host}.",
+    "localHint": "You will sign in on your local Orazaka."
   }
 }
