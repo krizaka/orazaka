@@ -9,7 +9,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | App (DO) | Component | What | Size | $/month |
 |---|---|---|---|---|
 | `orazaka-dev` | `web` | `krizaka/orazaka-web-client` (Next.js + BFF), `dev.orazaka.com/` | `apps-s-1vcpu-0.5gb` | 5 |
-| `orazaka-dev` | `core` | one image, five JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
+| `orazaka-dev` | `core` | one image, six JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
 | Droplet | `orazaka-broker-dev` | RabbitMQ 4.2, **TLS only** (5671), bound to its private IP, cloud firewall: VPC `10.118.0.0/20` only | `s-1vcpu-512mb-10gb` | 4 |
 | `orazaka-admin-dev` | `web` | `krizaka/orazaka-web-admin`, `admin.orazaka.com`, BFF → `https://dev.orazaka.com/edge` | `apps-s-1vcpu-0.5gb` | 5 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
@@ -23,7 +23,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 
 ### The `core` container
 
-`infra/deploy/Dockerfile` clones every repository of `orazaka.workspace.json` (as CI does), builds the five services
+`infra/deploy/Dockerfile` clones every repository of `orazaka.workspace.json` (as CI does), builds the six services
 without tests, and `infra/deploy/run-services.sh` starts them side by side; the first JVM to exit takes the container
 down so App Platform restarts the set.
 
@@ -34,12 +34,13 @@ down so App Platform restarts the set.
 | `orazaka-job-service` | 8090 | 256 MiB | `orazaka_db` | capability registry, text jobs of Studio runs |
 | `orazaka-conversation-service` | 8080 | 320 MiB | `orazaka_db` | chat (SSE), models, bootstrap features |
 | `orazaka-studio-service` | 8096 | 160 MiB | `orazaka_studio_db` | Studios, packs (installed at boot), runs |
-| `orazaka-edge` | **8088** | 96 MiB | — | the only routed port: `/` → conversation, `/api/v1/auth…` → users, `/api/v1/studios` → studio |
+| `orazaka-knowledge-service` | 8084 | 128 MiB | `orazaka_knowledge_db` | the products' recommender (ADR-078, pgvector) |
+| `orazaka-edge` | **8088** | 96 MiB | — | the only routed port: `/` → conversation, `/api/v1/auth…` → users, `/api/v1/studios` → studio, `/api/v1/recommendations` → knowledge |
 
 Measured on 2026-10-14 against the cluster (five JVMs, serial GC, C1 only, virtual threads): **1.3 GB resident**
 idle and after a round of sign-ins and Studio listings — the reason for a 2 GB container.
 
-**Not deployed** (and why): knowledge (chat degrades without RAG), automation (connectors), notifications (no e-mail in dev: no password reset),
+**Not deployed** (and why): automation (connectors), notifications (no e-mail in dev: no password reset),
 worker-media (Metal/MLX — Mac only), Redis (only for `orazaka.identity.rate-limit.enabled`, off).
 
 The **document-validation worker** (orazaka-packs, Python, `job.validation.*`) runs in the same container: the image
@@ -82,6 +83,22 @@ usage }` (and the header `X-Orazaka-Run-Id`). The model is data (`orazaka_models
 runId=…` in the core's logs (user, model, counts — never a text or a vector). No model configured or the provider down →
 503, so a caller falls back to its own non-AI path. Existing databases need
 `infra/migrations/2026-10-15-embeddings-and-key-scopes.sql` on `krizaka_users_db`.
+
+## Recommendations — a product's feed, served by Orazaka (ADR-078)
+
+The knowledge service serves the products' recommender (krizaka/orochia#226; decision:
+[ADR-078](https://github.com/krizaka/orazaka-packs/blob/main/docs/adr/ADR-078-recommendations.md)). A product feeds it
+with its service key — events, eligible items, erasures (scope `reco:sync`) — and reads its feeds (scope `reco:read`):
+`POST /api/v1/recommendations/{events,items,erasures}`, `GET /api/v1/recommendations/{for-you,similar,insights}`. Users
+are the product's pseudonyms; titles are embedded (on the caller's own session, through `/api/v1/embeddings`) and never
+stored. Every feed has a `requestId` — the line `recommendation.served requestId=…` in the core's logs (`[knowledge]`).
+The parameters are rows of `reco_settings` (versioned; v1 seeded), never configuration.
+
+```bash
+node scripts/dev-deploy.mjs recommendations      # the tables and settings v1 on orazaka_knowledge_db (idempotent)
+node scripts/dev-deploy.mjs service-account orochia-explorer --scopes ai:embed,reco:sync,reco:read --prefix AI_ENGINE \
+  --out ~/Documents/krizaka/orochia-dev.env   # rotates the product's key: update its App Platform secret
+```
 
 ## Deploy
 
@@ -138,8 +155,8 @@ console or in that file — never in a service's configuration.
   the secrets file and sends it on psql's stdin, never on a command line.
 - `ORAZAKA_CORE_DEFAULT_PROVIDER=do-inference`: with the historical `ollama` default the pipeline pins Ollama's active
   model and never reaches the catalogue default.
-- Embeddings (`gte-large-en-v1.5`, 1024 dimensions, tested on the key) are for the knowledge service, which is not
-  deployed in dev yet: chat degrades to no RAG.
+- Embeddings (`gte-large-en-v1.5`, 1024 dimensions, tested on the key) also embed the recommender's items; the knowledge
+  service runs in dev for the recommender, its RAG store stays dormant (no vector store bean): chat degrades to no RAG.
 
 ## GPU — images and 9:16 video, by the hour
 

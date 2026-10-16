@@ -5,6 +5,7 @@
  *   node scripts/dev-deploy.mjs apply <orazaka-dev|orazaka-admin-dev> [--dry-run] [--drop-attached-db]
  *   node scripts/dev-deploy.mjs data        # infra/deploy/dev-data.sql into orazaka_db (routing is data)
  *   node scripts/dev-deploy.mjs policy      # infra/deploy/dev-content-policy.sql into orazaka_studio_db (docs/CONTENT_POLICY.md)
+ *   node scripts/dev-deploy.mjs recommendations  # the recommender's tables on orazaka_knowledge_db (ADR-078)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
  *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
@@ -137,6 +138,14 @@ function data() {
   const key = inferenceKey.replace(/'/g, "''");
   psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], `\\set ai_inference_key '${key}'\n${sql}`);
   console.log("orazaka_db: dev routing data applied");
+}
+
+/** The recommender's tables on orazaka_knowledge_db (ADR-078) — idempotent. */
+function recommendations() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-15-recommendations.sql"), "utf8");
+  psql(env, "orazaka_knowledge_db", "orazaka_knowledge_db", "DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB", [], sql);
+  console.log("orazaka_knowledge_db: recommendation tables and settings v1 in place");
 }
 
 function policy() {
@@ -461,12 +470,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (command === "apply") apply(rest[0], rest.slice(1));
     else if (command === "data") data();
     else if (command === "policy") policy();
+    else if (command === "recommendations") recommendations();
     else if (command === "seed") seed();
     else if (command === "service-account") await createServiceAccount(rest[0], rest.slice(1));
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {

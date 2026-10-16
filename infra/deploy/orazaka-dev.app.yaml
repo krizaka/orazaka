@@ -57,7 +57,8 @@ services:
       - { key: NEXTAUTH_SECRET, scope: RUN_TIME, type: SECRET, value: "__NEXTAUTH_SECRET_WEB__" }
 
   # The JVM services in one container (infra/deploy/Dockerfile + run-services.sh): edge :8088 (the
-  # only port App Platform routes), users :8083, billing :8095, conversation :8080, studio :8096, job :8090.
+  # only port App Platform routes), users :8083, billing :8095, conversation :8080, studio :8096, job :8090,
+  # knowledge :8084 (the recommender, ADR-078).
   - name: core
     github:
       repo: krizaka/orazaka
@@ -94,6 +95,10 @@ services:
       - { key: STUDIO_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-studio?sslmode=require&prepareThreshold=0" }
       - { key: STUDIO_DB_USER, scope: RUN_TIME, value: orazaka_studio_db }
       - { key: STUDIO_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_STUDIO_DB__" }
+      # The knowledge service: the recommender's store (ADR-078, pgvector).
+      - { key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/orazaka_knowledge_db?sslmode=require" }
+      - { key: KNOWLEDGE_DB_USERNAME, scope: RUN_TIME, value: orazaka_knowledge_db }
+      - { key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__" }
       # Broker: RabbitMQ on the orazaka-broker-dev Droplet, TLS only, VPC only (`dev-deploy.mjs broker`).
       # The GPU workers reach the same broker over the VPC with their own, narrower user.
       - { key: RABBITMQ_HOST, scope: RUN_TIME, value: broker-dev.orazaka.com }
