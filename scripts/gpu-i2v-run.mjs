@@ -88,14 +88,18 @@ async function runClip(plan, clip, imagesDir, out, rate) {
     console.log(`i2v: ${clip.id} resumes run ${runId}`);
   } else {
     // `continueFrom`: the photo is the LAST frame of an earlier clip of this batch (the second half of a 10 s clip, two linked runs).
-    const imagePath = clip.continueFrom ? lastFrame(join(out, `${clip.continueFrom}.mp4`), join(out, `${clip.id}.start.png`)) : resolve(imagesDir, clip.image);
-    const bytes = readFileSync(imagePath);
-    const form = new FormData();
-    form.append("file", new Blob([bytes], { type: "image/png" }), basename(imagePath));
-    const uploaded = await call("POST", "/api/v1/media/upload", undefined, { form });
-    const assetId = uploaded.assetId ?? uploaded.id;
-    if (!assetId) throw new Error("the upload answered no asset id");
-    const inputs = { prompt: clip.prompt, durationSeconds: clip.seconds ?? 5, aspect: clip.aspect, seed: String(clip.seed), image: assetId, model: plan.model };
+    // No `image` at all: a text-to-video clip (Wan 2.2 A14B at 720p) — nothing is uploaded.
+    let assetId;
+    if (clip.continueFrom || clip.image) {
+      const imagePath = clip.continueFrom ? lastFrame(join(out, `${clip.continueFrom}.mp4`), join(out, `${clip.id}.start.png`)) : resolve(imagesDir, clip.image);
+      const bytes = readFileSync(imagePath);
+      const form = new FormData();
+      form.append("file", new Blob([bytes], { type: "image/png" }), basename(imagePath));
+      const uploaded = await call("POST", "/api/v1/media/upload", undefined, { form });
+      assetId = uploaded.assetId ?? uploaded.id;
+      if (!assetId) throw new Error("the upload answered no asset id");
+    }
+    const inputs = { prompt: clip.prompt, durationSeconds: clip.seconds ?? 5, aspect: clip.aspect, seed: String(clip.seed), model: plan.model, ...(assetId ? { image: assetId } : {}) };
     runId = (await call("POST", "/api/v1/studios/video-generation/runs", { inputs })).id;
     writeFileSync(ticket, JSON.stringify({ runId, started }));
   }
@@ -116,7 +120,7 @@ async function runClip(plan, clip, imagesDir, out, rate) {
   const record = {
     id: clip.id,
     model: plan.model,
-    sourceImage: clip.continueFrom ? `last frame of ${clip.continueFrom}` : clip.image,
+    sourceImage: clip.continueFrom ? `last frame of ${clip.continueFrom}` : (clip.image || null),
     aspect: clip.aspect,
     prompt: clip.prompt,
     requestedSeed: String(clip.seed),
