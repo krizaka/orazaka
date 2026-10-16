@@ -119,9 +119,10 @@ test("runpod guard: a pod older than 6 hours is stopped even when busy", () => {
 });
 
 test("runpod guard: gpu-dev.sh routes `runpod` to the guard and the key never travels as an argument", () => {
-  const script = read("scripts/gpu-dev.sh");
-  assert.match(script, /runpod\)[\s\S]*runpod-guard\.py/);
+  const script = read("scripts/lib/gpu-runpod.sh");
+  assert.match(script, /once\|loop\)[\s\S]*runpod-guard\.py/);
   assert.doesNotMatch(read("scripts/runpod-guard.py"), /sys\.argv\[\d\].*key/i);
+});
 
 test("the volume's creation message never reaches stdout (it is read as the volume id), and the host builds with buildx", () => {
   const script = read("scripts/gpu-dev.sh");
