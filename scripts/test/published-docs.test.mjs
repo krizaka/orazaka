@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (f) => fs.readFileSync(path.join(root, f), "utf8");
 /** Published by orazaka-web-client (scripts/docs-manifest.mjs). */
-const PUBLISHED = ["docs/101.md", "docs/SELF_HOSTING.md", "SECURITY.md", "docs/GLOSSARY.md", "docs/AUTH.md", "docs/LICENSING.md"];
+const PUBLISHED = ["docs/101.md", "docs/SELF_HOSTING.md", "SECURITY.md", "docs/GLOSSARY.md", "docs/AUTH.md", "docs/LICENSING.md", "docs/CONTENT_POLICY.md"];
 /** Internal: strategy, pricing, audits. */
 const INTERNAL = ["DELIVERY.md", "BILLING_ARCHITECTURE.md", "PRODUCTION_READINESS_AUDIT.md", "ARCHITECTURE_ASSESSMENT.md"];
 
