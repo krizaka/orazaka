@@ -151,3 +151,18 @@ test("the core image build cache is busted at every apply: CORE_REBUILD is fille
   assert.match(filled, /X: "\d{4}-\d{2}-\d{2}T[\d-]+Z"/);
   assert.match(readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8"), /ARG CORE_REBUILD[\s\S]*\$\{CORE_REBUILD\}/);
 });
+
+test("the recommender (ADR-078): knowledge runs in core with its own database, its migration is idempotent", () => {
+  const dev = spec("orazaka-dev");
+  assert.match(dev, /key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql:\/\/__DATABASE_HOST__:__DATABASE_PORT__\/orazaka_knowledge_db\?sslmode=require"/);
+  assert.match(dev, /key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__"/);
+  const docker = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
+  assert.match(docker, /orazaka-apps\/services\/orazaka-knowledge-service \\/);
+  assert.match(docker, /\/out\/knowledge\.jar/);
+  const runner = readFileSync(new URL("../../infra/deploy/run-services.sh", import.meta.url), "utf8");
+  assert.match(runner, /knowledge:knowledge\.jar:\d+ edge:edge\.jar/, "knowledge starts before the edge");
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-15-recommendations.sql", import.meta.url), "utf8");
+  for (const statement of sql.match(/CREATE (TABLE|INDEX) [^\n]*/g)) assert.match(statement, /IF NOT EXISTS/, statement);
+  assert.match(sql, /EXCEPTION WHEN duplicate_object THEN NULL/);
+  assert.match(sql, /ON CONFLICT \(tenant_id, version\) DO NOTHING/);
+});

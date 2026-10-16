@@ -4,7 +4,7 @@
 # Built by DigitalOcean App Platform from this repository (dockerfile_path: infra/deploy/Dockerfile,
 # context: the repository root). The platform is one repository per component, so the image clones
 # every repository listed in orazaka.workspace.json at its default branch — exactly what CI does —
-# and builds the six services the dev environment runs, without tests (CI ran them).
+# and builds the seven services the dev environment runs, without tests (CI ran them).
 # Redeploy with `doctl apps create-deployment <app> --force-rebuild`: a cached clone layer would
 # otherwise keep yesterday's code.
 # ==============================================================================
@@ -16,7 +16,7 @@ WORKDIR /workspace
 COPY . .
 RUN node scripts/workspace.mjs clone --depth 1
 
-# ── 2. Build the five services and what they depend on ───────────────────────
+# ── 2. Build the seven services and what they depend on ──────────────────────
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
 COPY --from=sources /workspace /workspace
@@ -30,7 +30,7 @@ RUN echo "core build ${CORE_REBUILD}" \
       -DskipTests -DskipITs=true -Dspotless.check.skip=true -Dexec.skip=true \
       -Dskip.npm=true -Dskip.installnodenpm=true \
       -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dgpg.skip=true \
-      -pl orazaka-apps/services/orazaka-edge,krizaka/krizaka-users/krizaka-users-service,krizaka/krizaka-billing/krizaka-billing-service,orazaka-apps/services/orazaka-conversation-service,orazaka-apps/services/orazaka-studio/orazaka-studio-service,orazaka-apps/services/orazaka-job-service \
+      -pl orazaka-apps/services/orazaka-edge,krizaka/krizaka-users/krizaka-users-service,krizaka/krizaka-billing/krizaka-billing-service,orazaka-apps/services/orazaka-conversation-service,orazaka-apps/services/orazaka-studio/orazaka-studio-service,orazaka-apps/services/orazaka-job-service,orazaka-apps/services/orazaka-knowledge-service \
       -am \
  && mkdir -p /out \
  && cp orazaka-apps/services/orazaka-edge/target/orazaka-edge-*[0-9T].jar /out/edge.jar \
@@ -39,6 +39,7 @@ RUN echo "core build ${CORE_REBUILD}" \
  && cp orazaka-apps/services/orazaka-conversation-service/target/orazaka-conversation-service-*[0-9T].jar /out/conversation.jar \
  && cp orazaka-apps/services/orazaka-studio/orazaka-studio-service/target/orazaka-studio-service-*[0-9T].jar /out/studio.jar \
  && cp orazaka-apps/services/orazaka-job-service/target/orazaka-job-service-*[0-9T].jar /out/job.jar \
+ && cp orazaka-apps/services/orazaka-knowledge-service/target/orazaka-knowledge-service-*[0-9T].jar /out/knowledge.jar \
  && cp -r orazaka-packs /out/orazaka-packs
 
 # ── 3. Runtime: a JRE, the jars, one supervisor ──────────────────────────────
