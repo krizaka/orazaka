@@ -96,3 +96,30 @@ test("gpu-dev.sh: stop always destroys, and the sizes are the stated ones", () =
   assert.match(script, /big\) echo "gpu-l40sx1-48gb:1\.57 gpu-6000adax1-48gb:1\.57"/);
   assert.match(script, /small\) echo "gpu-4000adax1-20gb:0\.76"/);
 });
+
+// RunPod spend guard (ADR-078): the rule alone, on fixtures — no network, no key.
+function decide(fixture) {
+  const dir = mkdtempSync(join(tmpdir(), "runpod-guard-"));
+  const file = join(dir, "fixture.json");
+  writeFileSync(file, JSON.stringify(fixture));
+  return JSON.parse(execFileSync("python3", [join(root, "scripts/runpod-guard.py"), "decide", file], { encoding: "utf8" }));
+}
+
+test("runpod guard: a busy pod is kept, an idle one is stopped after 20 minutes", () => {
+  const busy = { id: "a", name: "busy", uptime: 3600, util: 80 };
+  const idle = { id: "b", name: "idle", uptime: 3600, util: 0 };
+  assert.deepEqual(decide({ now: 10_000, pods: [busy, idle], idle_since: { b: 10_000 - 19 * 60 } }), []);
+  const stopped = decide({ now: 10_000, pods: [busy, idle], idle_since: { a: 0, b: 10_000 - 21 * 60 } });
+  assert.deepEqual(stopped.map(([id]) => id), ["b"]);
+});
+
+test("runpod guard: a pod older than 6 hours is stopped even when busy", () => {
+  const stopped = decide({ now: 1, pods: [{ id: "c", name: "old", uptime: 6 * 3600 + 1, util: 90 }] });
+  assert.deepEqual(stopped.map(([id]) => id), ["c"]);
+});
+
+test("runpod guard: gpu-dev.sh routes `runpod` to the guard and the key never travels as an argument", () => {
+  const script = read("scripts/gpu-dev.sh");
+  assert.match(script, /runpod\)[\s\S]*runpod-guard\.py/);
+  assert.doesNotMatch(read("scripts/runpod-guard.py"), /sys\.argv\[\d\].*key/i);
+});

@@ -2449,9 +2449,19 @@
         "kind": "parent"
       },
       {
+        "from": "krizaka-observability",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
         "from": "krizaka-security",
         "to": "krizaka-parent",
         "kind": "parent"
+      },
+      {
+        "from": "krizaka-security",
+        "to": "krizaka-test-support",
+        "kind": "test"
       },
       {
         "from": "krizaka-spring-boot-starter-observability",
@@ -2607,6 +2617,11 @@
         "from": "krizaka-web",
         "to": "krizaka-parent",
         "kind": "parent"
+      },
+      {
+        "from": "krizaka-web",
+        "to": "krizaka-test-support",
+        "kind": "test"
       }
     ]
   },
@@ -2719,7 +2734,7 @@
     {
       "key": "orazaka-media",
       "dir": "orazaka-media",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "tier": "DATA",
       "kind": "TOOLKIT",
       "distribution": "OSS",

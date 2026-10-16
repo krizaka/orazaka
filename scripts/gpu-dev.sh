@@ -10,6 +10,7 @@
 #   scripts/gpu-dev.sh mac               write the env file to run the Mac's worker against the same queue
 #   scripts/gpu-dev.sh relay-secret      create the relay credential in the secrets file if it is missing
 #   scripts/gpu-dev.sh smoke [small|mac] the sovereign smoke: start small, assert our engines through Orazaka, destroy
+#   scripts/gpu-dev.sh runpod status|once|loop   RunPod pods: list, stop the idle/too-old ones, or keep watching (ADR-078)
 #   scripts/gpu-dev.sh user-data big F   render the droplet's cloud-init into F (0600) and create nothing
 #
 #   big   = NVIDIA L40S 48 GB (or RTX 6000 Ada 48 GB), $1.57/h — Wan 2.2 TI2V 5B, 704x1280, 5 s @ 24 fps
@@ -385,6 +386,10 @@ case "${1:-}" in
   mac) mac ;;
   relay-secret) relay_secret ;;
   smoke) smoke "${2:-small}" ;;
+  # RunPod (the GPU of dev since 2026-10): the spend guard stops a pod idle GPU_IDLE_MINUTES (20) or older than GPU_MAX_HOURS (6).
+  runpod)
+    AI_GPU_RUNPOD_API_KEY="${AI_GPU_RUNPOD_API_KEY:-$(secret AI_GPU_RUNPOD_API_KEY)}" \
+      python3 "$ROOT/scripts/runpod-guard.py" "${2:-status}" "${@:3}" ;;
   # Renders a droplet's cloud-init into a 0600 file and creates nothing (tests, review).
   user-data) render_user_data "${2:?big|small}" "${NAME_PREFIX}-models-${REGIONS%% *}" "${3:?output file}" "${GPU_SSH_PUBKEY:-ssh-ed25519 AAAA test}" "${GPU_SSH_FROM:-127.0.0.1}" ;;
   *) echo "usage: scripts/gpu-dev.sh start big|small | stop | status | cost | logs | mac | relay-secret | smoke [small|mac]" >&2; exit 2 ;;
