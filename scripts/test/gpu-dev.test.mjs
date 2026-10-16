@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHmac } from "node:crypto";
-import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -164,4 +164,28 @@ test("runpod bootstrap: a watchdog first, the worker built from its public repos
   assert.match(boot, /MEDIA_MODELS_DIR=\/models/);
   assert.match(boot, /127\.0\.0\.1:15671:broker-dev\.orazaka\.com:5671/);
   assert.doesNotMatch(boot, /ghcr\.io/); // the private registry is never needed
+});
+
+test("runpod watchdog: the pod destroys ITSELF — through the API with the pod's own key, then runpodctl; with no key it says so and falls back", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  const watchdog = boot.slice(boot.indexOf("<<'WD'\n") + 7, boot.indexOf("\nWD\n"));
+  const dir = mkdtempSync(join(tmpdir(), "rp-watchdog-"));
+  const bin = join(dir, "bin"); mkdirSync(bin);
+  const script = join(dir, "watchdog.sh"); writeFileSync(script, watchdog, { mode: 0o755 });
+  const calls = join(dir, "calls.log");
+  // stubs: curl records the request and answers 204; runpodctl records its arguments
+  writeFileSync(join(bin, "curl"), `#!/bin/sh\necho "curl $*" >> ${calls}\nprintf 204\n`, { mode: 0o755 });
+  writeFileSync(join(bin, "runpodctl"), `#!/bin/sh\necho "runpodctl $*" >> ${calls}\n`, { mode: 0o755 });
+  const run = (env) => execFileSync("bash", [script, "--destroy", "idle for 31 min"], { encoding: "utf8", env: { PATH: `${bin}:/usr/bin:/bin`, ...env } });
+  const withKey = run({ RUNPOD_POD_ID: "pod123", RUNPOD_API_KEY: "k-test" });
+  assert.match(withKey, /destroyed through the API \(204\)/);
+  assert.match(readFileSync(calls, "utf8"), /-X DELETE .*Bearer k-test.*rest\.runpod\.io\/v1\/pods\/pod123/);
+  // no key in the environment: the REST call is skipped, runpodctl (authenticated by the pod) removes it
+  writeFileSync(calls, "");
+  const noKey = run({ RUNPOD_POD_ID: "pod123" });
+  assert.match(noKey, /no RUNPOD_API_KEY/);
+  assert.match(noKey, /destroyed through runpodctl/);
+  assert.equal(readFileSync(calls, "utf8").trim(), "runpodctl remove pod pod123");
+  // no pod id at all: it refuses rather than guess
+  assert.throws(() => run({}), /Command failed/);
 });

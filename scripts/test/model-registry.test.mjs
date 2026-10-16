@@ -132,3 +132,14 @@ test("the worker's models.yaml (when present) agrees with the registry on every 
   // the parser reads real entries; the disagreement itself is covered above and enforced by the docs build
   if (text) assert.ok(found.size >= 3);
 });
+
+test("the 720p A14B migration's INSERT is read by the registry (the \\c line must not swallow it), so its UPDATE has a row", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { catalogue } = await import("../lib/model-registry.mjs");
+  const rows = catalogue(readFileSync(new URL("../../infra/migrations/2026-10-16-wan-a14b-720p.sql", import.meta.url), "utf8"));
+  const row = rows.find((r) => r.model_name === "wan2.2-t2v-a14b");
+  assert.ok(row, "wan2.2-t2v-a14b is in the catalogue");
+  assert.equal(row.provider_name, "localai-video");
+  assert.equal(row.runs_on, "local");
+  assert.equal(row.licence, "Apache-2.0");
+});

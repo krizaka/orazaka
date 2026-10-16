@@ -4635,6 +4635,28 @@
       "lastVerified": null
     },
     {
+      "id": "wan2.2-t2v-a14b",
+      "name": "Wan 2.2 T2V A14B (720p, GPU)",
+      "vendor": "Alibaba (Wan-AI)",
+      "family": "Wan 2.2",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA (80 GB)",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B-Diffusers"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "wan2.2-ti2v-5b",
       "name": "Wan 2.2 TI2V 5B",
       "vendor": "Alibaba (Wan-AI)",

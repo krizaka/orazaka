@@ -24,6 +24,30 @@ echo "$boot" > "$STATE/boot-epoch"
 # --- 0. the watchdog first: whatever fails below, this pod still ends --------------------------------
 cat > /usr/local/bin/orazaka-watchdog <<'WD'
 #!/usr/bin/env bash
+# Ends THIS pod. RunPod injects RUNPOD_POD_ID and a pod-scoped RUNPOD_API_KEY into the container's first process; a shell
+# started later (ssh) may not see them, so they are read from /proc/1/environ when absent. Two ways, in order: the REST
+# API with that key, then `runpodctl remove pod` (installed on RunPod's images, it authenticates with the same key).
+pod_env() { tr '\0' '\n' < /proc/1/environ 2>/dev/null | sed -n "s/^$1=//p" | head -1; }
+RUNPOD_POD_ID="${RUNPOD_POD_ID:-$(pod_env RUNPOD_POD_ID)}"
+RUNPOD_API_KEY="${RUNPOD_API_KEY:-$(pod_env RUNPOD_API_KEY)}"
+destroy_pod() {
+  echo "orazaka-gpu: destroying pod ${RUNPOD_POD_ID:-?}: $1"
+  [[ -n "${RUNPOD_POD_ID:-}" ]] || { echo "orazaka-gpu: no RUNPOD_POD_ID: cannot destroy"; return 1; }
+  local attempt code
+  if [[ -n "${RUNPOD_API_KEY:-}" ]]; then
+    for attempt in 1 2 3; do
+      code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer ${RUNPOD_API_KEY}" "https://rest.runpod.io/v1/pods/${RUNPOD_POD_ID}")
+      [[ "$code" == "200" || "$code" == "204" || "$code" == "404" ]] && { echo "orazaka-gpu: destroyed through the API ($code)"; return 0; }
+      echo "orazaka-gpu: API answered $code (attempt $attempt)"; sleep 5
+    done
+  else
+    echo "orazaka-gpu: no RUNPOD_API_KEY in the pod's environment"
+  fi
+  if command -v runpodctl >/dev/null 2>&1 && runpodctl remove pod "$RUNPOD_POD_ID"; then echo "orazaka-gpu: destroyed through runpodctl"; return 0; fi
+  echo "orazaka-gpu: could not destroy the pod: the local guard (gpu-dev.sh runpod loop) is the backstop"
+  return 1
+}
+if [[ "${1:-}" == "--destroy" ]]; then destroy_pod "${2:-requested}"; exit $?; fi
 STATE=/var/lib/orazaka-gpu; IDLE=${IDLE_MINUTES:-30}; MAX=${MAX_HOURS:-10}; SETUP=${SETUP_MAX_MINUTES:-120}
 boot=$(cat /var/lib/orazaka-gpu/boot-epoch)
 while sleep 60; do
@@ -37,13 +61,8 @@ while sleep 60; do
   (( age >= MAX * 60 )) && reason="lifetime of ${MAX} h reached"
   [[ ! -e $STATE/ready ]] && (( age >= SETUP )) && reason="setup unfinished after ${age} min"
   [[ -z "$reason" ]] && continue
-  echo "orazaka-gpu: destroying pod $RUNPOD_POD_ID: $reason"
-  for attempt in 1 2 3 4 5; do
-    code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer ${RUNPOD_API_KEY:-}" "https://rest.runpod.io/v1/pods/${RUNPOD_POD_ID}")
-    [[ "$code" == "200" || "$code" == "204" || "$code" == "404" ]] && exit 0
-    sleep 10
-  done
-  exit 1
+  destroy_pod "$reason" && exit 0
+  sleep 120   # retried every few minutes: a pod that cannot end itself must not stay silent
 done
 WD
 chmod +x /usr/local/bin/orazaka-watchdog

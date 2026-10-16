@@ -2,6 +2,7 @@
 -- the showcase model. Distinct from `wan2-2-t2v-a14b`, the same checkpoint served at 832x480 by DigitalOcean serverless
 -- inference. Same provider as the other GPU Wan models (`localai-video`, through the relay). Idempotent.
 \c orazaka_db
+SET search_path = public;
 
 INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, max_steps, recommended_fps, supported_hardware, description)
 VALUES ('wan2.2-t2v-a14b', 'Wan 2.2 T2V A14B (720p, GPU)', 'video', NULL, 'localai-video', FALSE, 40, 16, NULL,
