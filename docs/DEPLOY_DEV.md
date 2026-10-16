@@ -30,6 +30,7 @@ down so App Platform restarts the set.
 | Service | Port | Heap | Database | Why it is here |
 |---|---|---|---|---|
 | `krizaka-users-service` | 8083 | 160 MiB | `krizaka_users_db` | sign-in, JWT, profile — sign-up closed |
+| `krizaka-billing-service` | 8095 | 160 MiB | `krizaka_billing_db` | plans, wallets, packs held, credit holds — enforcement `DRY_RUN` (meters, never blocks) |
 | `orazaka-job-service` | 8090 | 256 MiB | `orazaka_db` | capability registry, text jobs of Studio runs |
 | `orazaka-conversation-service` | 8080 | 320 MiB | `orazaka_db` | chat (SSE), models, bootstrap features |
 | `orazaka-studio-service` | 8096 | 160 MiB | `orazaka_studio_db` | Studios, packs (installed at boot), runs |
@@ -38,8 +39,7 @@ down so App Platform restarts the set.
 Measured on 2026-10-14 against the cluster (five JVMs, serial GC, C1 only, virtual threads): **1.3 GB resident**
 idle and after a round of sign-ins and Studio listings — the reason for a 2 GB container.
 
-**Not deployed** (and why): billing (`BILLING_ENABLED=false`: nothing is sold in dev — PAID Studios show as locked),
-knowledge (chat degrades without RAG), automation (connectors), notifications (no e-mail in dev: no password reset),
+**Not deployed** (and why): knowledge (chat degrades without RAG), automation (connectors), notifications (no e-mail in dev: no password reset),
 worker-media (Metal/MLX — Mac only), Redis (only for `orazaka.identity.rate-limit.enabled`, off).
 
 The **document-validation worker** (orazaka-packs, Python, `job.validation.*`) runs in the same container: the image
