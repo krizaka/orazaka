@@ -91,6 +91,7 @@ the service's `application.yml` or environment.
 | `orazaka-job-service` | `JobRetentionSweeper.sweep` | every 60 s (`orazaka.jobs.retention-sweep-interval`) | Runs the job plane's retention on a fixed delay (ADR-065). |
 | `orazaka-job-service` | `WorkerHeartbeatSweeper.markStaleWorkers` | every 30 s (`orazaka.jobs.worker-sweeper-interval`) | Marks workers that have stopped heartbeating as `STALE`. |
 | `orazaka-job-service` | `WorkerSelfRegistration.heartbeat` | every 30 s (`orazaka.jobs.worker-heartbeat-interval`) | Registers the job service in the worker registry from its own `worker.yaml`. |
+| `orazaka-knowledge-service` | `RetentionSchedule.purge` | cron `0 17 3 * * *` | Runs the retention sweep once a day (03:17 UTC — off the hour, off the other sweeps). |
 | `orazaka-studio` | `PackBootstrap.install` | every 30 s (`orazaka.studio-service.packs.bootstrap-interval`) | Installs the packs this deployment ships, so a fresh environment has Studios (ADR-068, `#45`). |
 | `orazaka-studio` | `RetentionSweeper.purge` | cron `0 30 3 * * *` (`orazaka.studio-service.retention.cron`) | Purges what the retention window says may no longer be kept (ADR-034 §14, GDPR / Loi 25). |
 | `orazaka-studio` | `RunSweeper.sweep` | every 60 s (`orazaka.studio-service.sweeper.interval`) | Closes runs whose steps stopped reporting, and releases their holds. |
