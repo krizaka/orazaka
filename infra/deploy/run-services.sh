@@ -49,7 +49,7 @@ fi
 COMMON_OPTS="${ORAZAKA_JAVA_OPTS:--XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=64m -Xss512k -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom}"
 
 # name:jar:default-heap-MiB, in start order (edge last: it is the public port).
-SERVICES="${ORAZAKA_SERVICES:-users:users.jar:160 job:job.jar:256 conversation:conversation.jar:320 studio:studio.jar:160 edge:edge.jar:96}"
+SERVICES="${ORAZAKA_SERVICES:-users:users.jar:160 billing:billing.jar:160 job:job.jar:256 conversation:conversation.jar:320 studio:studio.jar:160 edge:edge.jar:96}"
 
 pids=()
 stop_all() {
