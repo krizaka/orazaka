@@ -693,6 +693,7 @@
       "description": "Orazaka Identity and Access Management Domain",
       "ports": {
         "inbound": [
+          "AdminUserService",
           "ApiKeyService",
           "IdentityReconciliationService",
           "IdentityService",
@@ -702,6 +703,7 @@
           "UserProfileProvider"
         ],
         "outbound": [
+          "AdminUserRepositoryPort",
           "ApiKeyRepositoryPort",
           "AuthorityRepositoryPort",
           "CryptographyPort",
@@ -1311,7 +1313,7 @@
       "kind": "amqp",
       "via": "orazaka.jobs.video",
       "exchange": "orazaka.jobs",
-      "routingKey": "job.video.*, job.compose.*"
+      "routingKey": "job.video.*, job.compose.*, job.sound.*"
     },
     {
       "from": "orazaka-job-service",
@@ -1423,7 +1425,7 @@
       "kind": "amqp",
       "via": "orazaka.jobs.video",
       "exchange": "orazaka.jobs",
-      "routingKey": "job.video.*, job.compose.*"
+      "routingKey": "job.video.*, job.compose.*, job.sound.*"
     },
     {
       "from": "orazaka-automation-service",
@@ -1466,6 +1468,12 @@
       "to": "krizaka-billing-service",
       "kind": "http",
       "via": "route /api/v1/billing"
+    },
+    {
+      "from": "orazaka-edge",
+      "to": "krizaka-users-service",
+      "kind": "http",
+      "via": "route /api/v1/admin/users"
     },
     {
       "from": "orazaka-edge",
@@ -1815,7 +1823,7 @@
       {
         "name": "orazaka.jobs.video",
         "exchange": "orazaka.jobs",
-        "binding": "job.video.*, job.compose.*",
+        "binding": "job.video.*, job.compose.*, job.sound.*",
         "dlq": "orazaka.jobs.video.dlq",
         "declaredBy": "orazaka-persistence-app"
       }
@@ -2010,6 +2018,11 @@
       },
       {
         "module": "orazaka-worker-media",
+        "queue": "orazaka.jobs.sound",
+        "retry": "module"
+      },
+      {
+        "module": "orazaka-worker-media",
         "queue": "orazaka.jobs.video",
         "retry": "module"
       }
@@ -2039,6 +2052,11 @@
         "feature": "orazaka.core.media.video.analysis",
         "handler": "video.analyze",
         "routingKey": "job.media.generate"
+      },
+      {
+        "feature": "orazaka.studio.media.sound",
+        "handler": "media.sound",
+        "routingKey": "job.sound.generate"
       },
       {
         "feature": "orazaka.core.chat.completion",
@@ -2701,7 +2719,7 @@
     {
       "key": "orazaka-media",
       "dir": "orazaka-media",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "tier": "DATA",
       "kind": "TOOLKIT",
       "distribution": "OSS",
@@ -3078,6 +3096,138 @@
             "fr": {
               "label": "Génération vidéo",
               "tagline": "Un short vertical (9:16) ou un plan large, décrit puis rendu.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "video-with-sound",
+          "profession": "general",
+          "iconKey": "video",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 4500,
+          "steps": 2,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "prompt",
+              "title": "Ce qui doit se passer à l'écran"
+            },
+            {
+              "key": "durationSeconds",
+              "title": "Durée (secondes)"
+            },
+            {
+              "key": "aspect",
+              "title": "Format"
+            },
+            {
+              "key": "image",
+              "title": "Image d'amorce (facultatif)"
+            },
+            {
+              "key": "model",
+              "title": "Modèle (facultatif)"
+            },
+            {
+              "key": "seed",
+              "title": "Graine (facultatif)"
+            },
+            {
+              "key": "music",
+              "title": "La musique"
+            },
+            {
+              "key": "foley",
+              "title": "Les bruitages (facultatif)"
+            },
+            {
+              "key": "foleyModel",
+              "title": "Modèle de bruitage (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "video",
+              "type": "VIDEO"
+            },
+            {
+              "key": "silent",
+              "type": "VIDEO"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Video with sound",
+              "tagline": "A video, then its sound: a music bed and optional foley, mixed at -14 LUFS.",
+              "description": null
+            },
+            "fr": {
+              "label": "Vidéo avec son",
+              "tagline": "Une vidéo, puis son son : une nappe musicale et des bruitages en option, mixés à -14 LUFS.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "video-sound",
+          "profession": "general",
+          "iconKey": "speech",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 900,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "video",
+              "title": "La vidéo"
+            },
+            {
+              "key": "music",
+              "title": "La musique"
+            },
+            {
+              "key": "foley",
+              "title": "Les bruitages (facultatif)"
+            },
+            {
+              "key": "foleyModel",
+              "title": "Modèle de bruitage (facultatif)"
+            },
+            {
+              "key": "seed",
+              "title": "Graine (facultatif)"
+            },
+            {
+              "key": "voice",
+              "title": "Voix off (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "video",
+              "type": "VIDEO"
+            },
+            {
+              "key": "silent",
+              "type": "VIDEO"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Sound for a video",
+              "tagline": "Give any clip sound: music, foley, a voice-over. The silent original is kept.",
+              "description": null
+            },
+            "fr": {
+              "label": "Du son pour une vidéo",
+              "tagline": "Donnez du son à n'importe quel clip : musique, bruitages, voix off. L'original muet est conservé.",
               "description": null
             }
           }
@@ -4068,6 +4218,28 @@
       "lastVerified": "2026-10-15"
     },
     {
+      "id": "acestep-v15-xl-turbo",
+      "name": "ACE-Step 1.5 XL turbo (music bed)",
+      "vendor": "ACE Studio · StepFun",
+      "family": "ACE-Step 1.5",
+      "category": "music",
+      "capabilities": [
+        "music"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · Metal, CUDA",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "MIT",
+        "url": "https://huggingface.co/ACE-Step/acestep-v15-xl-turbo-diffusers"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "default",
+      "lastVerified": null
+    },
+    {
       "id": "piper-en-medium-ljspeech",
       "name": "Piper LJSpeech (en)",
       "vendor": "Rhasspy",
@@ -4196,6 +4368,28 @@
       },
       "commercialUse": "conditions",
       "contextWindow": 16384,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "mmaudio-large-44k-v2",
+      "name": "MMAudio large 44k v2 (foley) — non-commercial",
+      "vendor": "Sony · Hkchengrex (UIUC)",
+      "family": "MMAudio",
+      "category": "foley",
+      "capabilities": [
+        "video-to-audio"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · Metal, CUDA",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "CC-BY-NC-4.0",
+        "url": "https://github.com/hkchengrex/MMAudio#licenses"
+      },
+      "commercialUse": "no",
+      "contextWindow": null,
       "status": "available",
       "lastVerified": null
     },

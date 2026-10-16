@@ -37,7 +37,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "tagline": "Generate, listen, describe — without leaving a run.",
   "tier": "DATA",
   "category": "Business",
-  "studios": 10
+  "studios": 12
  },
  {
   "key": "outbound-prospection",
@@ -139,7 +139,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Media Studios",
  "tagline": "Generate, listen, describe — without leaving a run.",
  "description": null,
- "version": "1.3.0",
+ "version": "1.4.0",
  "tier": "DATA",
  "kind": "TOOLKIT",
  "distribution": "OSS",
@@ -323,6 +323,92 @@ capability rows, a price, catalogue entries — and changes no code.
     "CAPABILITY"
    ],
    "credits": 3600
+  },
+  {
+   "key": "video-with-sound",
+   "label": "Video with sound",
+   "summary": "A video, then its sound: a music bed and optional foley, mixed at -14 LUFS.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "prompt",
+     "title": "Ce qui doit se passer à l'écran"
+    },
+    {
+     "key": "durationSeconds",
+     "title": "Durée (secondes)"
+    },
+    {
+     "key": "aspect",
+     "title": "Format"
+    },
+    {
+     "key": "image",
+     "title": "Image d'amorce (facultatif)"
+    },
+    {
+     "key": "model",
+     "title": "Modèle (facultatif)"
+    },
+    {
+     "key": "seed",
+     "title": "Graine (facultatif)"
+    },
+    {
+     "key": "music",
+     "title": "La musique"
+    },
+    {
+     "key": "foley",
+     "title": "Les bruitages (facultatif)"
+    },
+    {
+     "key": "foleyModel",
+     "title": "Modèle de bruitage (facultatif)"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 4500
+  },
+  {
+   "key": "video-sound",
+   "label": "Sound for a video",
+   "summary": "Give any clip sound: music, foley, a voice-over. The silent original is kept.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "video",
+     "title": "La vidéo"
+    },
+    {
+     "key": "music",
+     "title": "La musique"
+    },
+    {
+     "key": "foley",
+     "title": "Les bruitages (facultatif)"
+    },
+    {
+     "key": "foleyModel",
+     "title": "Modèle de bruitage (facultatif)"
+    },
+    {
+     "key": "seed",
+     "title": "Graine (facultatif)"
+    },
+    {
+     "key": "voice",
+     "title": "Voix off (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 900
   },
   {
    "key": "speech-synthesis",
@@ -797,7 +883,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | `document-validation` | 1.1.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
 | `echo-toolkit` | 1.0.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
-| `orazaka-media` | 1.3.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
+| `orazaka-media` | 1.4.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.1.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
 | `realestate-studio` | 1.0.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
 | `trade-showcase` | 1.0.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |

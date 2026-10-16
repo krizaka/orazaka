@@ -32,6 +32,7 @@ and **which code** runs it (`handler_key`). Both are data: a pack adds a capabil
 | `orazaka.core.media.audio.analysis` | `audio.analyze` | `job.media.generate` | `AudioAnalysisStrategy` (in process) |
 | `orazaka.core.media.image` | `image.generate` | `job.media.generate` | `ImageGenerationStrategy` (in process) |
 | `orazaka.core.media.video.analysis` | `video.analyze` | `job.media.generate` | `VideoAnalysisStrategy` (in process) |
+| `orazaka.studio.media.sound` | `media.sound` | `job.sound.generate` | a worker (see the [worker protocol](../WORKER_PROTOCOL.md)) |
 | `orazaka.core.chat.completion` | `text.generate` | `job.text.process` | `ChatGenerationStrategy` (in process) |
 | `orazaka.core.media.speech` | `speech.synthesize` | `job.text.process` | `SpeechSynthesisStrategy` (in process) |
 | `orazaka.core.media.video` | `video.generate` | `job.video.generate` | a worker (see the [worker protocol](../WORKER_PROTOCOL.md)) |
