@@ -86,6 +86,60 @@
         "scheduler": "discrete",
         "memory": "10.5 GB (VRAM)"
       }
+    },
+    "wan2.2-ti2v-5b": {
+      "label": "Wan 2.2 TI2V 5B (image to video, H100 80 GB)",
+      "kind": "video",
+      "where": "gpu",
+      "licence": "Apache-2.0",
+      "gpuUsdPerHour": 3.99,
+      "costUsd": null,
+      "parameters": {
+        "size": "1280×704 (16:9) and 704×1280 (9:16), the model's native sizes — the photo is cut to the frame around its subject, never letterboxed",
+        "frames": 121,
+        "fps": 24,
+        "duration": "5.04 s (10 s = two linked runs, 238 frames)",
+        "steps / guidance": "40 / 5.0",
+        "seed": "honoured",
+        "GPU": "NVIDIA H100 80 GB (RunPod), model resident, CPU offload off the 80 GB card",
+        "pipeline": "diffusers WanImageToVideoPipeline (the checkpoint's expand_timesteps)"
+      }
+    },
+    "wan2.2-ti2v-5b-rtx4000ada": {
+      "label": "Wan 2.2 TI2V 5B (image to video, RTX 4000 Ada 20 GB)",
+      "kind": "video",
+      "where": "gpu",
+      "licence": "Apache-2.0",
+      "gpuUsdPerHour": 0.76,
+      "costUsd": null,
+      "parameters": {
+        "size": "1280×704 — native, it fits (19.7 GB of VRAM at the peak) with model CPU offload and VAE tiling; no size ladder step was needed",
+        "frames": 121,
+        "fps": 24,
+        "duration": "5.04 s",
+        "steps / guidance": "40 / 5.0",
+        "seed": "honoured",
+        "host RAM": "25.5 GB resident at the peak on a 31 GB host (the image engine and Ollama were stopped)",
+        "GPU": "NVIDIA RTX 4000 Ada 20 GB (DigitalOcean droplet)"
+      }
+    },
+    "wan2.2-t2v-a14b": {
+      "label": "Wan 2.2 T2V A14B (720p, H100 80 GB)",
+      "kind": "video",
+      "where": "gpu",
+      "licence": "Apache-2.0",
+      "gpuUsdPerHour": 3.99,
+      "costUsd": null,
+      "parameters": {
+        "size": "1280×720 (16:9) and 720×1280 (9:16)",
+        "frames": 81,
+        "fps": 16,
+        "duration": "5.06 s",
+        "steps / guidance": "40 / 4.0 (high-noise expert) and 3.0 (low-noise expert), boundary 0.875",
+        "seed": "honoured",
+        "GPU": "NVIDIA H100 80 GB (RunPod), two bf16 experts (57 GB) swapped by CPU offload — about 26 s per step",
+        "load": "129 s from the network volume"
+      }
     }
   },
   "engineSeconds": {
@@ -873,6 +927,370 @@
       "seed": "20261011",
       "costUsd": null,
       "inspiration": "notary-desk"
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b-rtx4000ada",
+      "runId": "ac377877-5d7c-46fc-b42b-9ec57827bdb1",
+      "outcome": "succeeded",
+      "seconds": 1106,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 704,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "2718",
+      "costUsd": 0.2335
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "da16e28a-7b75-4e5a-b71b-873c302b1e1f",
+      "outcome": "succeeded",
+      "seconds": 175,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "2718",
+      "costUsd": 0.194
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "9e0a30e8-8a9e-498c-9bdb-f3fd3de2b1ba",
+      "outcome": "succeeded",
+      "seconds": 178,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "2718",
+      "costUsd": 0.1973
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "7d1f284b-7cd4-4eac-965f-1050989c0f26",
+      "outcome": "succeeded",
+      "seconds": 170,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 704,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "21",
+      "costUsd": 0.1884
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "da6cdf6c-5506-403c-8fad-ac43b1aac618",
+      "outcome": "succeeded",
+      "seconds": 174,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 704,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "21",
+      "costUsd": 0.1928
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "a6e96e56-6439-4ea7-905b-b779b2a5c04f",
+      "outcome": "succeeded",
+      "seconds": 175,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "21",
+      "costUsd": 0.194
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "13956166-320d-4106-8aa8-880cda864c18",
+      "outcome": "succeeded",
+      "seconds": 174,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "21",
+      "costUsd": 0.1928
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "26cdfd99-49c8-4303-a015-cd814d3cd60e",
+      "outcome": "succeeded",
+      "seconds": 175,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 704,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "808",
+      "costUsd": 0.194
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "6351addc-ba9e-445f-8839-c728320eea46",
+      "outcome": "succeeded",
+      "seconds": 168,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "808",
+      "costUsd": 0.1862
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "a9fde454-845b-43ea-9352-b68f8c5057bc",
+      "outcome": "succeeded",
+      "seconds": 173,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "808",
+      "costUsd": 0.1917
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "556ee03d-377e-44da-9d03-7106f238dd88",
+      "outcome": "succeeded",
+      "seconds": 189,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 704,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "1643",
+      "costUsd": 0.2095
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "0eb8928c-bbd7-433a-af72-fd4d05fe9613",
+      "outcome": "succeeded",
+      "seconds": 173,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "1643",
+      "costUsd": 0.1917
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "0569e281-e375-4ac5-9241-0468df9a3253",
+      "outcome": "succeeded",
+      "seconds": 274,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 704,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "1212",
+      "costUsd": 0.3037
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "734f56a9-c26d-41b8-bf30-6a4c5b100e9d",
+      "outcome": "succeeded",
+      "seconds": 177,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 704,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "1212",
+      "costUsd": 0.1962
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "23ed02f2-2e62-4682-8171-9c8de1a5b311",
+      "outcome": "succeeded",
+      "seconds": 175,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "1212",
+      "costUsd": 0.194
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "b5619ec0-0c9f-4d9d-bb5b-aeba0f9379e2",
+      "outcome": "succeeded",
+      "seconds": 202,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "1212",
+      "costUsd": 0.2239
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "26d23a20-9be4-4fa4-b8cb-15a97f00e4f7",
+      "outcome": "succeeded",
+      "seconds": 175,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 704,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "20261011",
+      "costUsd": 0.194
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "e16fe14e-c9a7-4722-8db9-47c12458846b",
+      "outcome": "succeeded",
+      "seconds": 177,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 704,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "20261011",
+      "costUsd": 0.1962
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "e42ab763-2ce4-458f-8168-1b14e9d51428",
+      "outcome": "succeeded",
+      "seconds": 183,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "20261011",
+      "costUsd": 0.2028
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-ti2v-5b",
+      "runId": "2afb4426-5748-46a4-bdac-9393a8c8e9fb",
+      "outcome": "succeeded",
+      "seconds": 279,
+      "excludedFromStats": null,
+      "width": 704,
+      "height": 1280,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "20261011",
+      "costUsd": 0.3092
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-t2v-a14b",
+      "runId": "c07f1b91-126c-4961-aa4d-be31d93a8673",
+      "outcome": "succeeded",
+      "seconds": 1119,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 720,
+      "fps": 16,
+      "durationSeconds": 5.06,
+      "seed": "20261013",
+      "costUsd": 1.2402
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-t2v-a14b",
+      "runId": "e932aaa3-fc77-44cf-a81e-501ad39cdfa3",
+      "outcome": "succeeded",
+      "seconds": 1108,
+      "excludedFromStats": null,
+      "width": 720,
+      "height": 1280,
+      "fps": 16,
+      "durationSeconds": 5.06,
+      "seed": "20261013",
+      "costUsd": 1.228
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-t2v-a14b",
+      "runId": "19b23f13-0833-46fc-9646-2ec3b2ff9a30",
+      "outcome": "succeeded",
+      "seconds": 1112,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 720,
+      "fps": 16,
+      "durationSeconds": 5.06,
+      "seed": "20261012",
+      "costUsd": 1.2325
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-t2v-a14b",
+      "runId": "9e7f1412-fb08-47ba-beee-bae50c2b3b13",
+      "outcome": "succeeded",
+      "seconds": 1104,
+      "excludedFromStats": null,
+      "width": 720,
+      "height": 1280,
+      "fps": 16,
+      "durationSeconds": 5.06,
+      "seed": "20261012",
+      "costUsd": 1.2236
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-t2v-a14b",
+      "runId": "701bb231-6626-48f3-992d-71bdffa37643",
+      "outcome": "succeeded",
+      "seconds": 1249,
+      "excludedFromStats": null,
+      "width": 1280,
+      "height": 720,
+      "fps": 16,
+      "durationSeconds": 5.06,
+      "seed": "20261011",
+      "costUsd": 1.3843
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-t2v-a14b",
+      "runId": "aa22eab4-a9bf-4470-b05d-b8fce42fb7fe",
+      "outcome": "succeeded",
+      "seconds": 1110,
+      "excludedFromStats": null,
+      "width": 720,
+      "height": 1280,
+      "fps": 16,
+      "durationSeconds": 5.06,
+      "seed": "20261011",
+      "costUsd": 1.2303
     }
   ],
   "events": [
@@ -920,7 +1338,87 @@
       "what": "Z-Image Turbo at 1024×1024 was dropped",
       "cause": "the engine needs about 157 s per image (8 steps at about 18 s each), longer than the client waits",
       "kind": "timeout"
+    },
+    {
+      "kind": "limit",
+      "session": "i2v-2026-10-15",
+      "what": "DigitalOcean GPUs: the 48 GB sizes (L40S, RTX 6000 Ada) were never in stock; the 20 GB RTX 4000 Ada appeared and disappeared (3 starts, 2 refused for stock)",
+      "cause": "sold out in tor1, the only region the private broker's VPC reaches"
+    },
+    {
+      "kind": "infrastructure",
+      "session": "i2v-2026-10-15",
+      "what": "ten clips in a row failed in 17 s (HTTP 500) after the first one succeeded",
+      "cause": "the worker's free-RAM pre-flight counted the first clip's resident pipeline (~22 GB) against the next job (fixed: no pre-flight for a resident pipeline, orazaka-worker-media#22)"
+    },
+    {
+      "kind": "infrastructure",
+      "session": "i2v-2026-10-15",
+      "what": "three clips (up to 9 minutes of GPU each) were lost mid-render",
+      "cause": "every deploy of dev.orazaka.com restarts the relay: the worker's AMQP stream dropped and the process exited (fixed: the consumer reconnects and skips a redelivered job, orazaka-worker-media#24)"
+    },
+    {
+      "kind": "infrastructure",
+      "session": "i2v-2026-10-15",
+      "what": "several runs failed with 404 on their starting photo",
+      "cause": "the platform keeps uploads on the core's disk, which a redeploy wipes; the batch runner uploads the photo again (media durable on Bunny is krizaka/orazaka#144)"
+    },
+    {
+      "kind": "infrastructure",
+      "session": "i2v-2026-10-15",
+      "what": "the droplet's watchdog destroyed an idle droplet (1.2 h) while the laptop that drove the batch was asleep",
+      "cause": "30 min without a job; the batch runner now resumes a run in flight from its ticket"
+    },
+    {
+      "kind": "limit",
+      "session": "i2v-2026-10-15",
+      "what": "Wan 2.2 A14B at 720p cannot be resident on one 80 GB card",
+      "cause": "two bf16 experts are 57 GB; with the activations of 1280×720 the card is full, so the experts are offloaded to the host and swapped (~26 s a step, ~18 min a clip)"
+    },
+    {
+      "kind": "infrastructure",
+      "session": "i2v-2026-10-15",
+      "what": "the RunPod pod kept billing about two hours after its last job",
+      "cause": "its in-pod watchdog destroys the pod through the RunPod API and the pod has no API key of its own; a guard loop on the maintainer's machine ended it (to fix: a restricted key for the pod, or stop from the driver as soon as the queue is empty)"
+    },
+    {
+      "kind": "configuration",
+      "session": "i2v-2026-10-15",
+      "what": "the first 720p run failed: cached snapshot incomplete",
+      "cause": "the fetch pattern list had transformer/* but not the second expert transformer_2/* (fixed, orazaka-worker-media#27)"
     }
   ],
-  "commit": "dbe135b"
+  "commit": "dbe135b",
+  "gpuSessions": [
+    {
+      "what": "DigitalOcean droplet 1 (first start: image build, aborted)",
+      "gpu": "RTX 4000 Ada 20 GB",
+      "hours": 0.1,
+      "usdPerHour": 0.76
+    },
+    {
+      "what": "DigitalOcean droplet 2 (first clip, 18 min; failures)",
+      "gpu": "RTX 4000 Ada 20 GB",
+      "hours": 1.91,
+      "usdPerHour": 0.76
+    },
+    {
+      "what": "DigitalOcean droplet 3 (dropped tunnels, watchdog)",
+      "gpu": "RTX 4000 Ada 20 GB",
+      "hours": 1.05,
+      "usdPerHour": 0.76
+    },
+    {
+      "what": "DigitalOcean droplet 4 (idle while the driver slept)",
+      "gpu": "RTX 4000 Ada 20 GB",
+      "hours": 1.2,
+      "usdPerHour": 0.76
+    },
+    {
+      "what": "RunPod pod (image-to-video pairs, 10 s chains, 720p A14B heroes; it ran ~2 h past its last job because the in-pod watchdog had no key to destroy itself — the local guard loop ended it)",
+      "gpu": "H100 80 GB (CA-MTL-1)",
+      "hours": 5.01,
+      "usdPerHour": 3.99
+    }
+  ]
 }
