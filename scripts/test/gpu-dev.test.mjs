@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHmac } from "node:crypto";
-import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -119,7 +119,73 @@ test("runpod guard: a pod older than 6 hours is stopped even when busy", () => {
 });
 
 test("runpod guard: gpu-dev.sh routes `runpod` to the guard and the key never travels as an argument", () => {
-  const script = read("scripts/gpu-dev.sh");
-  assert.match(script, /runpod\)[\s\S]*runpod-guard\.py/);
+  const script = read("scripts/lib/gpu-runpod.sh");
+  assert.match(script, /once\|loop\)[\s\S]*runpod-guard\.py/);
   assert.doesNotMatch(read("scripts/runpod-guard.py"), /sys\.argv\[\d\].*key/i);
+});
+
+test("the volume's creation message never reaches stdout (it is read as the volume id), and the host builds with buildx", () => {
+  const script = read("scripts/gpu-dev.sh");
+  assert.match(script, /kept between droplets\)" >&2/);
+  const host = read("infra/gpu/host.sh");
+  assert.match(host, /docker buildx version[\s\S]*apt-get install -y -qq docker-buildx[\s\S]*docker build/);
+  // one image per worker commit: a new main commit is a new tar, hence a rebuild
+  assert.match(host, /orazaka-worker-media-\$\{sha\}\.tar/);
+});
+
+test("GPU_SERVICES=video starts neither the image engine nor Ollama (their memory is the video model's)", () => {
+  const script = read("scripts/gpu-dev.sh");
+  assert.match(script, /SERVICES=\{os\.environ\.get\('GPU_SERVICES', 'all'\)\}/);
+  const host = read("infra/gpu/host.sh");
+  assert.match(host, /if \[\[ "\$\{SERVICES:-all\}" != "video" \]\]; then\s+docker run -d --name sd-server/);
+  assert.match(host, /if \[\[ "\$\{SERVICES:-all\}" != "video" \]\]; then\s+mkdir -p \/models\/ollama/);
+});
+
+test("runpod: the key comes from the secrets file and is never echoed, a pod is destroyed (never left), and the volume keeps the weights", () => {
+  const script = read("scripts/lib/gpu-runpod.sh");
+  assert.match(script, /secret AI_GPU_RUNPOD_API_KEY/);
+  assert.doesNotMatch(script, /echo[^\n]*rp_key|printf[^\n]*rp_key|say[^\n]*\$\(rp_key\)/);
+  assert.match(script, /rp_call DELETE "\/pods\/\$id"/);
+  assert.match(script, /"volumeMountPath": "\/models"/);
+  assert.match(script, /"networkVolumeId": e\["VOLUME"\]/);
+  assert.match(script, /GPU_RUNPOD_MIN_BALANCE/); // a budget guard before any pod
+  assert.match(script, /ledger_add .*rp-/); // the same ledger as the droplets
+  // gpu-dev.sh stop destroys RunPod pods too, even when no droplet runs
+  const main = read("scripts/gpu-dev.sh");
+  assert.equal((main.match(/runpod_stop/g) ?? []).length >= 2, true);
+  assert.match(main, /runpod\) shift; runpod "\$@"/);
+});
+
+test("runpod bootstrap: a watchdog first, the worker built from its public repository, weights on the volume, the tunnel dials out", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.ok(boot.indexOf("orazaka-watchdog armed") < 0 && boot.indexOf("watchdog armed") < boot.indexOf("building the worker runtime"));
+  assert.match(boot, /rest\.runpod\.io\/v1\/pods\/\$\{RUNPOD_POD_ID\}/); // the pod ends itself
+  assert.match(boot, /git clone -q https:\/\/github\.com\/krizaka\/orazaka-worker-media\.git/);
+  assert.match(boot, /MEDIA_MODELS_DIR=\/models/);
+  assert.match(boot, /127\.0\.0\.1:15671:broker-dev\.orazaka\.com:5671/);
+  assert.doesNotMatch(boot, /ghcr\.io/); // the private registry is never needed
+});
+
+test("runpod watchdog: the pod destroys ITSELF — through the API with the pod's own key, then runpodctl; with no key it says so and falls back", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  const watchdog = boot.slice(boot.indexOf("<<'WD'\n") + 7, boot.indexOf("\nWD\n"));
+  const dir = mkdtempSync(join(tmpdir(), "rp-watchdog-"));
+  const bin = join(dir, "bin"); mkdirSync(bin);
+  const script = join(dir, "watchdog.sh"); writeFileSync(script, watchdog, { mode: 0o755 });
+  const calls = join(dir, "calls.log");
+  // stubs: curl records the request and answers 204; runpodctl records its arguments
+  writeFileSync(join(bin, "curl"), `#!/bin/sh\necho "curl $*" >> ${calls}\nprintf 204\n`, { mode: 0o755 });
+  writeFileSync(join(bin, "runpodctl"), `#!/bin/sh\necho "runpodctl $*" >> ${calls}\n`, { mode: 0o755 });
+  const run = (env) => execFileSync("bash", [script, "--destroy", "idle for 31 min"], { encoding: "utf8", env: { PATH: `${bin}:/usr/bin:/bin`, ...env } });
+  const withKey = run({ RUNPOD_POD_ID: "pod123", RUNPOD_API_KEY: "k-test" });
+  assert.match(withKey, /destroyed through the API \(204\)/);
+  assert.match(readFileSync(calls, "utf8"), /-X DELETE .*Bearer k-test.*rest\.runpod\.io\/v1\/pods\/pod123/);
+  // no key in the environment: the REST call is skipped, runpodctl (authenticated by the pod) removes it
+  writeFileSync(calls, "");
+  const noKey = run({ RUNPOD_POD_ID: "pod123" });
+  assert.match(noKey, /no RUNPOD_API_KEY/);
+  assert.match(noKey, /destroyed through runpodctl/);
+  assert.equal(readFileSync(calls, "utf8").trim(), "runpodctl remove pod pod123");
+  // no pod id at all: it refuses rather than guess
+  assert.throws(() => run({}), /Command failed/);
 });

@@ -81,6 +81,8 @@ worker_image() {
   step "building the worker image from krizaka/orazaka-worker-media@${sha} (once per commit, ~20 min)"
   local src; src=$(mktemp -d)
   git clone -q --depth 1 https://github.com/krizaka/orazaka-worker-media.git "$src"
+  # The DigitalOcean GPU image ships Docker without buildx, and Dockerfile.cuda needs BuildKit.
+  docker buildx version >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq docker-buildx >/dev/null; }
   DOCKER_BUILDKIT=1 docker build -q -f "$src/Dockerfile.cuda" -t "orazaka-worker-media:${sha}" "$src" >/dev/null
   rm -rf "$src"
   docker tag "orazaka-worker-media:${sha}" "$WORKER_IMAGE"
@@ -116,9 +118,13 @@ step "weights ready in $(( $(date +%s) - started ))s"
 docker network inspect orz >/dev/null 2>&1 || docker network create orz >/dev/null
 for name in sd-server worker ollama relay; do docker rm -f "$name" >/dev/null 2>&1 || true; done
 
+# SERVICES=video (GPU_SERVICES=video at start): a video batch on a 20 GB / 31 GB host keeps the memory for the video
+# model — no image engine, no Ollama (a loaded Wan 2.2 5B takes ~22 GB of the host's RAM while it is offloaded).
+if [[ "${SERVICES:-all}" != "video" ]]; then
 docker run -d --name sd-server --network orz --restart unless-stopped --gpus all \
   -v /models:/models:ro -e MEDIA_IMAGE_OFFLOAD="$IMAGE_OFFLOAD" \
   "$WORKER_IMAGE" python -m app.sd_server "$IMAGE_MODEL" >/dev/null
+fi
 
 docker run -d --name worker --network orz --restart unless-stopped --gpus all --shm-size 8g \
   -v /models:/models:ro -v "$STATE/state":/var/lib/orazaka/state -v "$STATE/uploads":/var/lib/orazaka/uploads \
@@ -133,11 +139,13 @@ docker run -d --name worker --network orz --restart unless-stopped --gpus all --
 
 # Ollama: chat and vision for the Studios' text and photo steps while this GPU runs (the core reaches it as
 # gpu-relay:11434). It unloads a model after 2 idle minutes so the video model gets the card back.
+if [[ "${SERVICES:-all}" != "video" ]]; then
 mkdir -p /models/ollama
 docker run -d --name ollama --network orz --restart unless-stopped --gpus all \
   -v /models/ollama:/root/.ollama -e OLLAMA_KEEP_ALIVE=2m -e OLLAMA_NUM_PARALLEL=1 "$OLLAMA_IMAGE" >/dev/null
 for _ in $(seq 1 30); do docker exec ollama ollama list >/dev/null 2>&1 && break; sleep 2; done
 for model in $OLLAMA_MODELS; do docker exec ollama ollama pull "$model" >/dev/null && step "ollama: $model ready"; done
+fi
 
 # The chisel client: forwards the broker and the job service INTO this network, exposes sd-server and
 # the video pipeline back inside the app. Its credential is read from the environment, not the argv.

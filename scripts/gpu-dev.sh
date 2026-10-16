@@ -3,14 +3,15 @@
 # Orazaka dev — the GPU, by the hour (docs/DEPLOY_DEV.md § GPU, ADR-077).
 #
 #   scripts/gpu-dev.sh start big|small   create the GPU droplet: images (FLUX.2 [klein] 4B) + 9:16 video (Wan)
-#   scripts/gpu-dev.sh stop              destroy it — always destroy, never power off (a stopped droplet bills)
+#   scripts/gpu-dev.sh runpod start|stop|status|logs   the same worker on RunPod (an H100/A100 pod by the hour, scripts/lib/gpu-runpod.sh)
+#   scripts/gpu-dev.sh stop              destroy it (and any RunPod pod) — always destroy, never power off (a stopped droplet bills)
 #   scripts/gpu-dev.sh status            what runs, since when, what it has cost so far
 #   scripts/gpu-dev.sh cost              every session of the ledger: hours × rate, and the total
 #   scripts/gpu-dev.sh logs              the droplet's setup and container logs (ssh, read-only)
 #   scripts/gpu-dev.sh mac               write the env file to run the Mac's worker against the same queue
 #   scripts/gpu-dev.sh relay-secret      create the relay credential in the secrets file if it is missing
 #   scripts/gpu-dev.sh smoke [small|mac] the sovereign smoke: start small, assert our engines through Orazaka, destroy
-#   scripts/gpu-dev.sh runpod status|once|loop   RunPod pods: list, stop the idle/too-old ones, or keep watching (ADR-078)
+#   scripts/gpu-dev.sh runpod once|loop          the RunPod spend guard: stop the idle/too-old pods once, or keep watching (ADR-078)
 #   scripts/gpu-dev.sh user-data big F   render the droplet's cloud-init into F (0600) and create nothing
 #
 #   big   = NVIDIA L40S 48 GB (or RTX 6000 Ada 48 GB), $1.57/h — Wan 2.2 TI2V 5B, 704x1280, 5 s @ 24 fps
@@ -149,7 +150,8 @@ def file(path, content, mode):
     return f"  - path: {path}\n    encoding: b64\n    permissions: '{mode}'\n    owner: root:root\n    content: {data}\n"
 host_env = (f"PROFILE={profile}\nWORKER_IMAGE={worker}\nCHISEL_IMAGE={chisel}\nRELAY_URL={relay}\n"
             f"VOLUME_NAME={volume}\nIMAGE_MODEL=flux-2-klein-4b\nIMAGE_OFFLOAD={offload}\n"
-            f"IDLE_MINUTES={idle}\nMAX_HOURS={max_hours}\nOLLAMA_IMAGE={ollama}\nOLLAMA_MODELS=\"{ollama_models}\"\n")
+            f"IDLE_MINUTES={idle}\nMAX_HOURS={max_hours}\nOLLAMA_IMAGE={ollama}\nOLLAMA_MODELS=\"{ollama_models}\"\n"
+            f"SERVICES={os.environ.get('GPU_SERVICES', 'all')}\n")
 worker_env = (f"SPRING_RABBITMQ_USERNAME=gpu-worker\nSPRING_RABBITMQ_PASSWORD={os.environ['RABBIT_PASSWORD']}\n"
               f"ORAZAKA_SERVICE_TOKEN={os.environ['SERVICE_TOKEN']}\n")
 relay_env = f"AUTH=gpu:{os.environ['RELAY_PASSWORD']}\n"
@@ -174,7 +176,7 @@ ensure_volume() {
   local region="$1" name="${NAME_PREFIX}-models-$1"
   local id; id=$(doctl compute volume list -o json | python3 -c "import json,sys; print(next((v['id'] for v in json.load(sys.stdin) or [] if v['name']=='$name' and v['region']['slug']=='$region'), ''))")
   if [[ -z "$id" ]]; then
-    say "creating the models volume $name (${VOLUME_GB} GB in $region, ≈ \$$(( VOLUME_GB / 10 ))/month, kept between droplets)"
+    say "creating the models volume $name (${VOLUME_GB} GB in $region, ≈ \$$(( VOLUME_GB / 10 ))/month, kept between droplets)" >&2
     id=$(doctl compute volume create "$name" --region "$region" --size "${VOLUME_GB}GiB" --desc "Orazaka GPU model weights (scripts/gpu-dev.sh)" --format ID --no-header)
     local project_id; project_id=$(doctl projects list -o json | python3 -c "import json,sys; print(next(p['id'] for p in json.load(sys.stdin) if p['name']=='$PROJECT'))")
     doctl projects resources assign "$project_id" --resource="do:volume:$id" >/dev/null
@@ -234,11 +236,17 @@ start() {
 
 stop() {
   local ids; ids=$(droplets_json | python3 -c 'import json,sys; print(" ".join(str(d["id"]) for d in json.load(sys.stdin) or []))')
-  if [[ -z "$ids" ]]; then say "nothing running — \$0/hour"; cost; return; fi
+  if [[ -z "$ids" ]]; then
+    say "no droplet running — \$0/hour"
+    [[ -z "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || runpod_stop
+    cost; return
+  fi
   status
   # shellcheck disable=SC2086
   doctl compute droplet delete $ids --force
   say "destroyed $ids — billing stopped (the models volume is kept)"
+  # A pod on RunPod is never left behind either.
+  [[ -z "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || runpod_stop
   cost
 }
 
@@ -377,7 +385,12 @@ PY
   echo "  set -a; . $out; set +a; cd orazaka-apps/workers/orazaka-worker-media && .venv/bin/python -u -m app.consumer"
 }
 
+# RunPod: the same worker on a pod by the hour (scripts/lib/gpu-runpod.sh).
+# shellcheck source=lib/gpu-runpod.sh
+source "$ROOT/scripts/lib/gpu-runpod.sh"
+
 case "${1:-}" in
+  runpod) shift; runpod "$@" ;;
   start) start "${2:-}" ;;
   stop) stop ;;
   status) status ;;
@@ -386,10 +399,6 @@ case "${1:-}" in
   mac) mac ;;
   relay-secret) relay_secret ;;
   smoke) smoke "${2:-small}" ;;
-  # RunPod (the GPU of dev since 2026-10): the spend guard stops a pod idle GPU_IDLE_MINUTES (20) or older than GPU_MAX_HOURS (6).
-  runpod)
-    AI_GPU_RUNPOD_API_KEY="${AI_GPU_RUNPOD_API_KEY:-$(secret AI_GPU_RUNPOD_API_KEY)}" \
-      python3 "$ROOT/scripts/runpod-guard.py" "${2:-status}" "${@:3}" ;;
   # Renders a droplet's cloud-init into a 0600 file and creates nothing (tests, review).
   user-data) render_user_data "${2:?big|small}" "${NAME_PREFIX}-models-${REGIONS%% *}" "${3:?output file}" "${GPU_SSH_PUBKEY:-ssh-ed25519 AAAA test}" "${GPU_SSH_FROM:-127.0.0.1}" ;;
   *) echo "usage: scripts/gpu-dev.sh start big|small | stop | status | cost | logs | mac | relay-secret | smoke [small|mac]" >&2; exit 2 ;;
