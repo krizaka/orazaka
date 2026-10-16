@@ -1,0 +1,54 @@
+{
+ "_": "The 720p heroes: Wan 2.2 T2V A14B on an 80 GB GPU (worker profile `hero`), text to video, single continuous shots, 16:9 and 9:16. Run with scripts/gpu-i2v-run.mjs --plan scripts/gpu-i2v-plan-hero.json.",
+ "model": "wan2.2-t2v-a14b",
+ "clips": [
+  {
+   "id": "old-port-16x9",
+   "image": "",
+   "aspect": "16:9",
+   "seed": 20261011,
+   "seconds": 5,
+   "prompt": "A slow continuous aerial drone glide forward over the Old Port of Montréal at blue hour: calm water mirroring the warm lights of the cobblestone quays, the old stone warehouses and the clock tower in soft dusk, a few small boats at their moorings, the downtown towers glowing in the distance, deep blue sky with the last orange glow on the horizon, gentle mist over the St. Lawrence River. One single continuous shot, steady camera, cinematic colour grade, 35mm anamorphic, photographic realism. No text, no lettering, no logos, no readable signs, no recognisable faces."
+  },
+  {
+   "id": "old-port-9x16",
+   "image": "",
+   "aspect": "9:16",
+   "seed": 20261011,
+   "seconds": 5,
+   "prompt": "A slow continuous vertical aerial drone glide forward over the Old Port of Montréal at blue hour: calm water mirroring the warm lights of the cobblestone quays, the old stone warehouses and the clock tower in soft dusk, a few small boats at their moorings, the downtown towers glowing in the distance, deep blue sky with the last orange glow on the horizon, gentle mist over the St. Lawrence River. One single continuous shot, steady camera, cinematic colour grade, 35mm anamorphic, photographic realism. No text, no lettering, no logos, no readable signs, no recognisable faces. Framed vertically (9:16)."
+  },
+  {
+   "id": "marrakech-lanterns-16x9",
+   "image": "",
+   "aspect": "16:9",
+   "seed": 20261012,
+   "seconds": 5,
+   "prompt": "Slow continuous camera glide across a Marrakech rooftop terrace at dusk: rows of pierced-brass lanterns glowing amber and swaying gently in the warm breeze, low cushions and a carved wooden table with a copper teapot and small glasses, the red-ochre medina roofs and minarets fading into a violet sky behind, the first stars appearing, a few swallows crossing the sky. One single continuous shot, steady dolly forward, cinematic colour grade, shallow depth of field, photographic realism. No text, no lettering, no logos, no readable signs, no recognisable faces."
+  },
+  {
+   "id": "marrakech-lanterns-9x16",
+   "image": "",
+   "aspect": "9:16",
+   "seed": 20261012,
+   "seconds": 5,
+   "prompt": "Slow continuous vertical camera glide across a Marrakech rooftop terrace at dusk: rows of pierced-brass lanterns glowing amber and swaying gently in the warm breeze, low cushions and a carved wooden table with a copper teapot and small glasses, the red-ochre medina roofs and minarets fading into a violet sky behind, the first stars appearing, a few swallows crossing the sky. One single continuous shot, steady dolly forward, cinematic colour grade, shallow depth of field, photographic realism. No text, no lettering, no logos, no readable signs, no recognisable faces. Framed vertically (9:16)."
+  },
+  {
+   "id": "chefchaouen-16x9",
+   "image": "",
+   "aspect": "16:9",
+   "seed": 20261013,
+   "seconds": 5,
+   "prompt": "One single continuous shot walking slowly down a narrow blue-washed lane of Chefchaouen at golden morning light: walls in layered shades of blue, potted plants on steps and in niches, a worn wooden door, a cat dozing on a doorstep, soft sunlight raking across the stone stairs, gentle camera glide forward at eye level, no cuts. Cinematic colour grade, photographic realism. No text, no lettering, no logos, no readable signs, no recognisable faces."
+  },
+  {
+   "id": "chefchaouen-9x16",
+   "image": "",
+   "aspect": "9:16",
+   "seed": 20261013,
+   "seconds": 5,
+   "prompt": "One single continuous shot walking slowly down a narrow blue-washed lane of Chefchaouen at golden morning light: walls in layered shades of blue, potted plants on steps and in niches, a worn wooden door, a cat dozing on a doorstep, soft sunlight raking across the stone stairs, gentle camera glide forward at eye level, no cuts. Cinematic colour grade, photographic realism. No text, no lettering, no logos, no readable signs, no recognisable faces. Framed vertically (9:16)."
+  }
+ ]
+}
