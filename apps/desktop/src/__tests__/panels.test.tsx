@@ -99,3 +99,46 @@ describe("FilesPanel", () => {
     expect(invoke).toHaveBeenCalledWith("list_dir", { path: "/Users/a/Clients" });
   });
 });
+
+import { AccountPanel } from "../components/AccountPanel";
+
+describe("AccountPanel", () => {
+  const signedOut = { signedIn: false, username: null, email: null, authorities: [], server: null };
+  const signedIn = { signedIn: true, username: "eric", email: "eric@orazaka.com", authorities: ["ROLE_USER"], server: "https://dev.orazaka.com" };
+
+  it("offers the browser sign-in, never a password field", async () => {
+    invoke.mockImplementation(async (cmd: string) => (cmd === "auth_status" ? signedOut : undefined));
+    render(wrap(<AccountPanel snap={base} />));
+    expect(await screen.findByRole("button", { name: "Sign in with your browser" })).toBeInTheDocument();
+    expect(document.querySelector("input[type=password]")).toBeNull();
+    expect(screen.getByText(/never sees your password/)).toBeInTheDocument();
+  });
+
+  it("starts the PKCE flow in Rust and shows that it waits for the browser", async () => {
+    invoke.mockImplementation(async (cmd: string) => (cmd === "auth_status" ? signedOut : undefined));
+    render(wrap(<AccountPanel snap={base} />));
+    fireEvent.click(await screen.findByRole("button", { name: "Sign in with your browser" }));
+    expect(await screen.findByText("Waiting for the browser…")).toBeInTheDocument();
+    expect(invoke).toHaveBeenCalledWith("auth_begin");
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("auth_cancel"));
+  });
+
+  it("shows name, email, role and server once signed in, and signs out through the backend", async () => {
+    invoke.mockImplementation(async (cmd: string) => (cmd === "auth_status" ? signedIn : cmd === "auth_sign_out" ? signedOut : undefined));
+    render(wrap(<AccountPanel snap={base} />));
+    expect(await screen.findByText("eric@orazaka.com")).toBeInTheDocument();
+    expect(screen.getByText("user")).toBeInTheDocument();
+    expect(screen.getByText("dev.orazaka.com")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(await screen.findByRole("button", { name: "Sign in with your browser" })).toBeInTheDocument();
+    expect(invoke).toHaveBeenCalledWith("auth_sign_out");
+  });
+
+  it("never asks the backend for a token", async () => {
+    invoke.mockImplementation(async (cmd: string) => (cmd === "auth_status" ? signedIn : undefined));
+    render(wrap(<AccountPanel snap={base} />));
+    await screen.findByText("eric@orazaka.com");
+    expect(invoke.mock.calls.map((c) => String(c[0])).filter((c) => /token|secret/i.test(c))).toEqual([]);
+  });
+});

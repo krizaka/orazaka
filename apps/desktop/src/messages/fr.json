@@ -5,9 +5,13 @@
     "version": "App {version}"
   },
   "tabs": {
+    "generation": "Génération",
+    "packs": "Packs",
+    "studio": "Studio",
     "stack": "Panneau de contrôle",
     "files": "Fichiers",
-    "settings": "Réglages"
+    "settings": "Réglages",
+    "account": "Compte"
   },
   "common": {
     "theme": "Thème : {mode}",
@@ -21,7 +25,77 @@
   },
   "mode": {
     "local": "Pile locale",
-    "remote": "Connecté à {host}"
+    "remote": "Connecté à {host}",
+    "switchMode": "Basculer vers {target}",
+    "localMode": "Local (Apple Silicon)",
+    "remoteMode": "API Cloud ({host})"
+  },
+  "generation": {
+    "welcomeLocal": "Connexion directe au moteur Metal Apple Silicon de votre Mac. Souverain, local, 0 octet ne quitte votre machine.",
+    "welcomeRemote": "Connecté à l'API Cloud Orazaka sur {host}. Cluster souverain d'entreprise, hébergement canadien (Loi 25).",
+    "mode": {
+      "chat": "Discussion & Raisonnement",
+      "image": "Synthèse d'image",
+      "video": "Vidéo (Wan 2.1)"
+    },
+    "model": "Modèle",
+    "thinking": "Pipeline de réflexion",
+    "steps": "étapes",
+    "generatingLocal": "Génération locale sur Apple Silicon Metal…",
+    "generatingRemote": "Envoi de l'inférence au Cloud Orazaka…",
+    "placeholder": "Posez une question, demandez du code, ou décrivez une image/vidéo à générer…",
+    "attachFile": "Joindre depuis le Mac",
+    "attached": "Joint",
+    "shortcutHint": "⌘+Entrée pour envoyer",
+    "generate": "Générer",
+    "pickFromGranted": "Joindre depuis les dossiers partagés du Mac",
+    "noFilesGranted": "Aucun fichier partagé. Ajoutez des dossiers dans l'onglet Fichiers."
+  },
+  "packs": {
+    "title": "Catalogue de Packs Souverains",
+    "leadLocal": "Packs installés dans votre espace Orazaka local.",
+    "leadRemote": "Packs disponibles sur {host}.",
+    "search": "Rechercher des packs, règles, capacités…",
+    "category": {
+      "all": "Tous",
+      "business": "Affaires",
+      "compliance": "Conformité",
+      "media": "Médias",
+      "development": "Développeur"
+    },
+    "loading": "Chargement des packs…",
+    "empty": "Aucun pack ne correspond à votre recherche.",
+    "pricing": {
+      "FREE": "Gratuit",
+      "INCLUDED": "Inclus",
+      "PAID": "Commercial"
+    },
+    "capabilities": "capacités",
+    "installed": "Installé :",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "details": "Inspecter",
+    "install": "Installer le pack",
+    "uninstall": "Désinstaller le pack",
+    "scopeGuardTitle": "Garde-fou actif",
+    "refusedTerms": "Termes refusés par statut",
+    "capabilitiesProvided": "Capacités fournies"
+  },
+  "studio": {
+    "title": "Blueprints & Sagas Studio",
+    "lead": "Pipelines de tâches autonomes de bout en bout. Exécutez des sagas déterministes avec piste d'audit vérifiable.",
+    "pipelineSteps": "étapes",
+    "configureAndRun": "Configurer & Lancer",
+    "back": "Retour aux Blueprints",
+    "chooseOption": "Choisir une option…",
+    "chooseGrantedFile": "Sélectionner un fichier du Mac…",
+    "launchSaga": "Lancer la Saga",
+    "pipelineTimeline": "Chronologie d'exécution de la saga",
+    "step": "Étape",
+    "advanceStep": "Étape suivante",
+    "newRun": "Nouvelle exécution",
+    "outputsTitle": "Artefacts et rapports générés",
+    "liveLogs": "Journaux d'exécution en direct"
   },
   "stack": {
     "title": "Pile locale",
@@ -39,7 +113,11 @@
     "openWorkspace": "Ouvrir l'espace de travail",
     "services": "Services",
     "noServices": "État non lu — appuyez sur Actualiser.",
-    "serviceHeader": { "name": "Service", "port": "Port", "state": "État" },
+    "serviceHeader": {
+      "name": "Service",
+      "port": "Port",
+      "state": "État"
+    },
     "logs": "Journaux",
     "logsEmpty": "Rien pour l'instant. Démarrez la pile, lancez doctor ou affichez les journaux d'un service.",
     "logService": "Journaux d'un service",
@@ -101,5 +179,26 @@
     "startupHelp": "Désactivé par défaut. Tourne dans la barre des menus ; rien n'est démarré sans votre demande.",
     "language": "Langue",
     "about": "Orazaka Desktop n'est pas encore signée : si macOS refuse de l'ouvrir, faites un clic droit sur l'app puis Ouvrir."
+  },
+  "account": {
+    "title": "Votre compte Orazaka",
+    "signedOutTitle": "Se connecter à Orazaka",
+    "signedOutLead": "Connectez-vous avec votre navigateur. Orazaka ouvre sa propre page — cette app ne voit jamais votre mot de passe.",
+    "promise": "Gardez la main sur votre intelligence.",
+    "asideText": "Vos fichiers restent sur votre Mac, et seuls les dossiers que vous partagez sont lisibles.",
+    "signIn": "Se connecter avec le navigateur",
+    "waiting": "En attente du navigateur…",
+    "waitingHint": "Terminez la connexion sur la page Orazaka, puis revenez ici.",
+    "cancel": "Annuler",
+    "name": "Nom",
+    "email": "E-mail",
+    "roles": "Rôle",
+    "server": "Serveur connecté",
+    "signOut": "Se déconnecter",
+    "signOutHint": "La déconnexion révoque la session de ce Mac sur le serveur et la supprime du Trousseau.",
+    "keychain": "Votre session est conservée dans le Trousseau macOS, jamais dans un fichier.",
+    "failed": "La connexion n'a pas abouti : {message}",
+    "remoteHint": "Vous vous connecterez sur {host}.",
+    "localHint": "Vous vous connecterez sur votre Orazaka local."
   }
 }
