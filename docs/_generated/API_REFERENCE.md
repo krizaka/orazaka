@@ -192,6 +192,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | PUT | `/api/v1/studios/{studioKey}/blueprints/{version}` | ADMIN | StudioBlueprintController | Creates or replaces a draft version. |
 | POST | `/api/v1/studios/{studioKey}/blueprints/{version}/publish` | ADMIN | StudioBlueprintController | Publishes a draft, minting it as the Studio's latest version. |
 | POST | `/api/v1/studios/{studioKey}/installations` | authenticated | StudioInstallationController | Installs a Studio, pinning its newest published version. |
+| POST | `/api/v1/studios/{studioKey}/policy-check` | authenticated | StudioRunController | Dry-run of the content policy: what would a run with these inputs do? Nothing is held, stored or sent to a provider. |
 | POST | `/api/v1/studios/{studioKey}/runs` | authenticated | StudioRunController | Starts a run of a Studio, addressed by its key rather than by an installation. |
 | GET | `/api/v1/studios/{studioKey}/versions` | authenticated | StudioController | A Studio's version history. |
 | GET | `/api/v1/studios/composer` | authenticated | StudioController | The Studios that belong in a chat composer, for this actor. |
