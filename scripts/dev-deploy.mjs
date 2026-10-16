@@ -28,7 +28,8 @@ const PROJECT = "orazaka";
 const ENV_FILE = process.env.ORAZAKA_DEV_ENV_FILE ?? join(homedir(), "Documents/krizaka/orazaka-dev.env");
 const QA_FILE = process.env.ORAZAKA_QA_FILE ?? join(homedir(), "krizaka-com/company/QA.md");
 /** Placeholders that are settings, not secrets, and their defaults. */
-const DEFAULTS = {};
+/** CORE_REBUILD busts the image build cache of the core component at every apply (see infra/deploy/Dockerfile). */
+const DEFAULTS = { CORE_REBUILD: new Date().toISOString().replace(/[:.]/g, "-") };
 
 export function readEnvFile(text) {
   const env = {};

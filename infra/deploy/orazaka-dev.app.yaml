@@ -78,6 +78,7 @@ services:
       failure_threshold: 9
     envs:
       # Databases (krizaka-dev-pg). orazaka_db holds conversation, jobs and governance.
+      - { key: CORE_REBUILD, scope: BUILD_TIME, value: "__CORE_REBUILD__" }
       - { key: SPRING_DATASOURCE_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/orazaka_db?sslmode=require" }
       # Connection budget (krizaka/.github#60): the cluster allows 22 usable connections for every dev service.
       # conversation + job share this datasource, capped here; the studio goes through the PgBouncer pool
