@@ -15,6 +15,7 @@ Orazaka on your Mac, or connect to a hosted one, and give Orazaka **access to th
 | **Connect mode** | Point the app at a hosted Orazaka (default `https://dev.orazaka.com`, https only) and sign in **on the Orazaka page itself** — the app never sees or stores a password. |
 | **File access** | Choose folders with the native picker; list and preview their files (text, images, PDF); **drag & drop** files into the workspace page or onto the panel; **watch a folder** for new files; **revoke** any folder or all of them. |
 | **Menu bar** | An icon showing the stack's state (outline = stopped, filled = running/partial), with Open panel · Open workspace · Start · Stop · Quit. Closing the window keeps the app in the menu bar. |
+| **Automations** | Scheduled work on a shared folder with a model served on this Mac — v0.2: *Summarise new PDFs every morning* (a note next to each new PDF). The filesystem MCP server is limited to that folder, every write waits for your approval (or a permission you gave: *always for this folder*), dry-run, **Stop all agents**, budgets, run history with a step-by-step trace, a hash-chained audit log. See [docs/AUTOMATION.md](../../docs/AUTOMATION.md) and ADR-079. Needs Node.js 22+ (the MCP server) and a local model (Ollama: `ollama pull qwen2.5:7b`). |
 | **Auto-start** | "Start Orazaka when I log in" (macOS login item) — **off by default**, and it only opens the menu-bar app; nothing is started unless you ask. |
 
 ## Least privilege — how access is bounded
@@ -34,7 +35,11 @@ Orazaka on your Mac, or connect to a hosted one, and give Orazaka **access to th
    it into a fixed argument vector (`stop` is always `stop -y`, never `--purge`). Everything else is refused before a process
    exists.
 5. **Navigation guard.** The workspace window can only stay on the configured origin; other links open in your browser.
-6. **Hardened runtime** is on, with an explicit `entitlements.plist` that opts out of nothing (no JIT, no unsigned
+6. **Automations** (`src-tauri/src/automation/`). Tools are MCP servers pinned in `mcp-catalogue.json`, each tool with a
+   declared effect: `read` stays inside the automation's folder, `write` waits for an approval or a grant, an undeclared
+   tool is `exec` and refused — no shell, ever. The model only writes text (a fixed plan), so a document cannot steer a
+   run. A revoked folder revokes the automation's grants.
+7. **Hardened runtime** is on, with an explicit `entitlements.plist` that opts out of nothing (no JIT, no unsigned
    memory, no library-validation bypass). Notarization needs only the Developer ID (below).
 
 ## Requirements
