@@ -72,3 +72,4 @@ generated: true
 | ADR-076 | ADR-076 — The voice turn | `adr/ADR-076-the-voice-turn.md` |
 | ADR-077 | ADR-077 — The hourly GPU: 9:16 video with Wan, images with FLUX.2 [klein], reached through a relay | `adr/ADR-077-hourly-gpu-and-9x16-video.md` |
 | ADR-078 | ADR-078 — RunPod serverless workers at $0 idle (proposal), and the pod spend guard | `adr/ADR-078-runpod-serverless-workers-at-zero-idle.md` |
+| ADR-079 | ADR-079 — Automations and local agents | `adr/ADR-079-automations-and-local-agents.md` |
