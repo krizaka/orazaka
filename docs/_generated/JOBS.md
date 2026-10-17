@@ -89,7 +89,8 @@ the service's `application.yml` or environment.
 | `orazaka-ai-engine` | `SandboxEvictionScheduler.evictExpiredSandboxes` | every 60 s | Scheduled eviction process — prunes expired or orphaned jobId sandbox contexts from memory. |
 | `orazaka-conversation-service` | `JobReconciliationService.reconcileScheduled` | every 60 s (`orazaka.jobs.reconcile-interval-ms`) | Recovers jobs whose result was written to disk but whose terminal status update never reached the database (e.g. |
 | `orazaka-conversation-service` | `JobStreamService.sendHeartbeats` | every 15 s | Service managing client Server-Sent Events (SSE) connections for real-time job lifecycle updates. |
-| `orazaka-job-service` | `JobRetentionSweeper.sweep` | every 60 s (`orazaka.jobs.retention-sweep-interval`) | Runs the job plane's retention on a fixed delay (ADR-065). |
+| `orazaka-job-service` | `JobRetentionSweeper.sweep` | every 60 s (`orazaka.jobs.retention-sweep-interval`) | Purges expired jobs, then deletes any purged job's directory that came back. |
+| `orazaka-job-service` | `JobRetentionSweeper.sweepUploads` | every 3600 s (`orazaka.jobs.upload-retention-interval`) | Deletes uploads older than the ordinary retention window; hourly, listing is not free. |
 | `orazaka-job-service` | `WorkerHeartbeatSweeper.markStaleWorkers` | every 30 s (`orazaka.jobs.worker-sweeper-interval`) | Marks workers that have stopped heartbeating as `STALE`. |
 | `orazaka-job-service` | `WorkerSelfRegistration.heartbeat` | every 30 s (`orazaka.jobs.worker-heartbeat-interval`) | Registers the job service in the worker registry from its own `worker.yaml`. |
 | `orazaka-knowledge-service` | `AnalyticsRetentionSchedule.purge` | cron `0 27 3 * * *` | Runs the analytics retention sweep once a day (03:27 UTC — after the recommender's). |

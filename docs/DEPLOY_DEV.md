@@ -150,8 +150,12 @@ port (`orazaka-assets`), chosen by environment: `MEDIA_STORAGE_PROVIDER=local|bu
 - `bunny`: a **private** storage zone (`orazaka-media-dev`, NY, standard tier, no pull zone, never a public URL — media is served only by
   the authenticated `/api/v1/assets/{jobId}/{file}` route, which restores a missing file after the ownership check).
   `MEDIA_STORAGE_ZONE`, `MEDIA_STORAGE_API_KEY` (the zone password, secret), `MEDIA_STORAGE_ENDPOINT`
-  (default `storage.bunnycdn.com`), `MEDIA_STORAGE_TENANT` (first key segment).
+  (default `storage.bunnycdn.com`, the Falkenstein host; **a zone answers 401 on any host but its own region's**, so
+  the NY zone sets `ny.storage.bunnycdn.com`), `MEDIA_STORAGE_TENANT` (first key segment).
 - Key layout (krizaka/.github#61): `t/<tenant>/u/<userId>/jobs/<jobId>/<file>`; retention deletes the job prefix.
+  Besides the outputs, the job's archived `input.json` / input file and `result.json` live in the same job prefix,
+  and what a user uploads under `t/<tenant>/u/<userId>/jobs/uploads/<assetId><ext>` (uploads belong to no job).
+  After a redeploy a read that finds one gone fetches the sealed envelope back, for its owner only.
 - Cost: Bunny Storage bills per GB stored (about 0.01 USD/GB/month, no minimum on top of the existing account), so dev
   outputs cost cents; DO Spaces would be 5 USD/month flat. No signed URL is needed: the zone has no public path, the
   only way out is the authenticated asset route (JWT expiry, ownership from the job row, other users get 404).
