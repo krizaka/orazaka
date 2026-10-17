@@ -65,7 +65,8 @@ runpod_start() {
   say "RunPod balance \$$balance, spending \$$spend/hour now"
 
   local max_hours="${GPU_MAX_HOURS:-8}" worker_ref
-  worker_ref=$(git ls-remote https://github.com/krizaka/orazaka-worker-media.git refs/heads/main | cut -c1-40)
+  # GPU_WORKER_REF runs a worker commit not yet on main (a branch under review), else main's head.
+  worker_ref="${GPU_WORKER_REF:-$(git ls-remote https://github.com/krizaka/orazaka-worker-media.git refs/heads/main | cut -c1-40)}"
   mkdir -p "$LOCAL"; chmod 700 "$LOCAL"
   [[ -f "$LOCAL/id_ed25519" ]] || ssh-keygen -q -t ed25519 -N "" -C "orazaka-gpu-dev" -f "$LOCAL/id_ed25519"
   local body="$LOCAL/runpod-body.json"
@@ -91,11 +92,14 @@ sys.exit(1)" || { say "  $dc: no stock"; continue; }
     IDLE_MINUTES="${GPU_IDLE_MINUTES:-30}" RP_IMAGE="$RP_IMAGE" PUBKEY="$(cat "$LOCAL/id_ed25519.pub")" \
     RELAY_URL="$RELAY_URL" RELAY_AUTH="gpu:$(secret AI_GPU_RELAY_PASSWORD)" RABBIT_PASSWORD="$(secret RABBITMQ_PASS_GPU)" \
     SERVICE_TOKEN="$(mint_service_token "$max_hours")" BROKER_CA_B64="$(broker_ca_b64)" BOOT="$ROOT/infra/gpu/runpod-bootstrap.sh" \
+    HF_TOKEN="$(secret AI_HUGGINGFACE_TOKEN 2>/dev/null || true)" DISK_GB="${GPU_RUNPOD_DISK_GB:-}" \
     python3 - "$body" <<'PY'
 import base64, json, os, sys
 e = os.environ
 boot = base64.b64encode(open(e["BOOT"], "rb").read()).decode()
 env = {k: e[k] for k in ("WORKER_REF", "PROFILE", "RELAY_URL", "RELAY_AUTH", "RABBIT_PASSWORD", "SERVICE_TOKEN", "BROKER_CA_B64", "MAX_HOURS", "IDLE_MINUTES")}
+if e.get("HF_TOKEN"):
+    env["HF_TOKEN"] = e["HF_TOKEN"]  # downloads of public weights, faster and not rate-limited
 env["PUBLIC_KEY"] = e["PUBKEY"]
 env["ORAZAKA_BOOT_B64"] = boot
 body = {
@@ -109,7 +113,8 @@ body = {
     "dataCenterIds": [e["DC"]],
     "networkVolumeId": e["VOLUME"],
     "volumeMountPath": "/models",
-    "containerDiskInGb": 60,
+    # A model kept on the host's own disk (`cache: scratch`: the I2V A14B, 115 GB) needs room: GPU_RUNPOD_DISK_GB.
+    "containerDiskInGb": int(e.get("DISK_GB") or 60),
     "ports": ["22/tcp"],
     "supportPublicIp": True,
     "env": env,

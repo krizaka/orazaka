@@ -189,3 +189,18 @@ test("runpod watchdog: the pod destroys ITSELF — through the API with the pod'
   // no pod id at all: it refuses rather than guess
   assert.throws(() => run({}), /Command failed/);
 });
+
+test("runpod bootstrap (cinema, ADR-080): the profile's image engine is served on :8086 through the relay, sound is enabled, scratch weights go to the container disk", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.match(boot, /MEDIA_SCRATCH_DIR=\/var\/lib\/orazaka-scratch/);
+  assert.match(boot, /get\('image'\)/); // read from models.yaml, never a hard-coded model
+  assert.match(boot, /\/models\/bin\/sd-server-\$\{SDCPP_REF:0:12\}/); // built once, kept on the volume
+  assert.match(boot, /IMAGE_REMOTE="R:0\.0\.0\.0:8086:127\.0\.0\.1:8086"/);
+  assert.match(boot, /R:0\.0\.0\.0:8188:127\.0\.0\.1:8188 \$IMAGE_REMOTE/);
+  assert.match(boot, /MEDIA_SOUND_ENABLED="\$SOUND_FLAG"/);
+  assert.match(boot, /fonts-dejavu-core/); // the cut's titles
+  const lib = read("scripts/lib/gpu-runpod.sh");
+  assert.match(lib, /"containerDiskInGb": int\(e\.get\("DISK_GB"\) or 60\)/);
+  assert.match(lib, /HF_TOKEN="\$\(secret AI_HUGGINGFACE_TOKEN/); // read from the secrets file, never an argument
+  assert.match(lib, /worker_ref="\$\{GPU_WORKER_REF:-/);
+});

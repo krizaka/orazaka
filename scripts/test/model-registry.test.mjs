@@ -143,3 +143,16 @@ test("the 720p A14B migration's INSERT is read by the registry (the \\c line mus
   assert.equal(row.runs_on, "local");
   assert.equal(row.licence, "Apache-2.0");
 });
+
+test("the cinematic short's shot model (ADR-080) is in the catalogue as a local GPU model, image-to-video, 4 steps", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { catalogue } = await import("../lib/model-registry.mjs");
+  for (const file of ["../../infra/migrations/2026-10-17-cinematic-short.sql", "../../infra/deploy/dev-data.sql"]) {
+    const row = catalogue(readFileSync(new URL(file, import.meta.url), "utf8")).find((r) => r.model_name === "wan2.2-i2v-a14b");
+    assert.ok(row, `wan2.2-i2v-a14b is in ${file}`);
+    assert.equal(row.provider_name, "localai-video");
+    assert.equal(row.runs_on, "local");
+    assert.equal(row.licence, "Apache-2.0");
+    assert.equal(String(row.max_steps), "4");
+  }
+});
