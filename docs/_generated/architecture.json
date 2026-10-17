@@ -5104,6 +5104,28 @@
       "lastVerified": null
     },
     {
+      "id": "seedvr2-3b",
+      "name": "SeedVR2 3B (video upscale, GPU)",
+      "vendor": "ByteDance Seed",
+      "family": "SeedVR2",
+      "category": "video-upscale",
+      "capabilities": [
+        "video-upscale"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/ByteDance-Seed/SeedVR2-3B"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "deepseek-v4-pro",
       "name": "DeepSeek V4 Pro",
       "vendor": "DeepSeek",
