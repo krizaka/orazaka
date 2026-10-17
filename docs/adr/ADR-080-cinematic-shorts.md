@@ -63,11 +63,21 @@ The GPU profile `cinema` serves, on one card: the I2V A14B (offloaded expert by 
 for the keyframes (reached by the platform's image provider at `gpu-relay:8086`, as on the droplets) and **ACE-Step** for
 the music. One pod at a time, the spend guard running (ADR-078), the pod stopped when the queue is empty.
 
+### 3b. Directed, not described: the Krizaka cinematic kit
+
+Brand films are Hollywood-grade (rule of 2026-10-17). The script Studio carries the **Krizaka cinematic kit** in its
+prompt (data): every shot names its lens in mm, its camera move and speed, its light (key, rim, practicals), depth of
+field, atmosphere and pace; shot sizes vary, the 180° rule holds, slow motion and a speed ramp land the hero moment.
+The director adds the kit's filmic finish to every keyframe and a negative against fused fingers, distorted faces and a
+CGI look. A person reviews the script before any GPU second (the production file is edited, and says so), and every
+shot is gated frame by frame after it is made: a shot that fails is reshot alone.
+
 ### 4. The cut is a capability with an edit decision list
 
 `orazaka.studio.media.compose` gains a second form: given `clips` (the actor's own shot outputs, resolved by the same
 ownership rule as a sound's video) and an `edit`, the worker (`app/cut.py`) trims, slows or **ramps** each shot,
-interpolates 16 fps to 30 with motion compensation, pushes in, scales to **1080p**, grades through a **3D LUT** generated
+upscales every shot to **1080p with SeedVR2 3B** (Apache-2.0, the upscaler the showcase comparison measured best; the
+short side to 1080, so 9:16 and 16:9 both keep their frame), interpolates 16 fps to 30 with motion compensation, pushes in, grades through a **3D LUT** generated
 from a named look, joins with **xfade** transitions (cut, dissolve, flash, whip, black, slide…), draws titles and
 captions, and labels the film. The edit is checked once at the edge; one it cannot make is refused by name.
 
@@ -80,8 +90,11 @@ captions, and labels the film. The edit is checked once at the edge; one it cann
 - Every film carries **"AI-generated"** drawn on the picture and in the file's metadata (`comment`, `description`
   with `aiGenerated: true`), which the sound mux carries over. C2PA signing is not done: no C2PA work exists in the
   platform yet; when it does, the cut is where it signs.
-- Foley is only made by a **commercially licensed** model; the only one installed (MMAudio) is non-commercial, so the
-  showcase films have music and voice only.
+- Foley is only made by a **commercially licensed** model. MMAudio's weights are non-commercial and Stable Audio Open
+  is gated behind a licence acceptance that is an account decision, so the cut **synthesizes** its foley with ffmpeg
+  (no model, no licence): an ambience bed (rain, storm, wind, city, room, nature) and whooshes and impacts placed on the
+  transitions and ramps of the edit. The sound step keeps that track as the foley of the mix, under the music and the
+  voice.
 
 ## Options refused
 
@@ -93,7 +106,8 @@ captions, and labels the film. The edit is checked once at the edge; one it cann
   metered per shot; review in between is impossible.
 - **The A14B at 40 steps.** ~$1.25 a shot on an H100; the 4-step distillation is the market's practice and is measured.
 - **A second, larger network volume.** A recurring cost for weights used a few hours a month.
-- **Foley with MMAudio.** CC-BY-NC weights: not for a film a customer publishes.
+- **Foley with MMAudio.** CC-BY-NC weights: not for a film a customer publishes. **Stable Audio Open**: commercial use
+  under its community licence, but gated — accepting that licence is a decision for the account owner; revisit then.
 
 ## Consequences
 
