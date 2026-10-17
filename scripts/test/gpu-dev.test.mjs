@@ -166,6 +166,13 @@ test("runpod bootstrap: a watchdog first, the worker built from its public repos
   assert.doesNotMatch(boot, /ghcr\.io/); // the private registry is never needed
 });
 
+test("runpod bootstrap: the venv lives on the network volume, so a later pod reuses it (no rebuild, no idle build for the spend guard to stop)", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.match(boot, /VENV=\/models\/venv/);
+  assert.match(boot, /ln -sfn \/models\/venv \/opt\/venv/);
+  assert.doesNotMatch(boot, /python3 -m venv \/opt\/venv/);
+});
+
 test("runpod watchdog: the pod destroys ITSELF — through the API with the pod's own key, then runpodctl; with no key it says so and falls back", () => {
   const boot = read("infra/gpu/runpod-bootstrap.sh");
   const watchdog = boot.slice(boot.indexOf("<<'WD'\n") + 7, boot.indexOf("\nWD\n"));

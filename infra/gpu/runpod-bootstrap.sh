@@ -77,12 +77,15 @@ step "watchdog armed (idle ${IDLE_MINUTES:-30} min, lifetime ${MAX_HOURS:-10} h)
 # --- 1. the runtime (once per container disk; the weights are on the volume) --------------------------
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null 2>&1; apt-get install -y -qq ffmpeg curl git ca-certificates fonts-dejavu-core >/dev/null 2>&1
-if [[ ! -x /opt/venv/bin/python ]]; then
-  step "building the worker runtime (venv, torch cu128, requirements)"
-  python3 -m venv /opt/venv
-  /opt/venv/bin/pip install -q --no-cache-dir --upgrade pip
-  /opt/venv/bin/pip install -q --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
+# The venv is on the network volume: a later pod finds it in place (a rebuild is ~15 min of idle GPU billed at the hourly rate).
+VENV=/models/venv
+if [[ ! -x $VENV/bin/python ]]; then
+  step "building the worker runtime (venv on the volume, torch cu128, requirements)"
+  python3 -m venv $VENV
+  $VENV/bin/pip install -q --no-cache-dir --upgrade pip
+  $VENV/bin/pip install -q --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
 fi
+ln -sfn /models/venv /opt/venv
 rm -rf /app-src && git clone -q https://github.com/krizaka/orazaka-worker-media.git /app-src
 git -C /app-src checkout -q "${WORKER_REF:-main}"
 /opt/venv/bin/pip install -q --no-cache-dir -r /app-src/requirements-cuda.txt
