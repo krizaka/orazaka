@@ -44,6 +44,7 @@ VALUES ('kokoro-82m', 'Kokoro 82M (GPU host)', 'speech', 'af_heart,af_bella,af_n
         'Kokoro-82M (Apache-2.0), served by the cinema GPU host — natural English voices for a voice-over (af_heart by default). The voice of a cinematic short (ADR-080).')
 ON CONFLICT (model_name) DO NOTHING;
 UPDATE orazaka_models SET vendor = 'hexgrad', family = 'Kokoro', capabilities = 'text-to-speech', runs_on = 'local', runtime = 'worker-media · CUDA', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/hexgrad/Kokoro-82M', commercial_use = 'yes', context_window = NULL, status = 'available' WHERE model_name = 'kokoro-82m';
--- Dev only: speech resolves to the provider of the DEFAULT speech model (RoutedTextToSpeechModel). The Mac's Piper voices
--- (localai at localhost:8085 in the core container) answer nothing on dev; while a GPU host runs, Kokoro does.
-UPDATE orazaka_models SET is_default = (model_name = 'kokoro-82m') WHERE category = 'speech';
+-- The default speech model stays the always-configured one (Piper). Kokoro answers only while a cinema GPU pod runs:
+-- a request names it (`model: kokoro-82m`) and speech routes to it while its provider answers, to the default otherwise
+-- (orazaka-ai-engine RoutedTextToSpeechModel). Never make a model on an optional host the default.
+UPDATE orazaka_models SET is_default = (model_name = 'piper-en-medium-ljspeech') WHERE category = 'speech';
