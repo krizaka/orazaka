@@ -48,20 +48,20 @@ a ceiling per service (what it may hold at once), kept under 22 with room for a 
 
 | Service | Path | Cap (server side) | Notes |
 |---|---|---:|---|
-| orazaka-dev core: conversation + job (`orazaka_db`) | `pool-orazaka` (transaction) | 2 | Hikari 3, min idle 0 |
+| orazaka-dev core: conversation + job (`orazaka_db`) | `pool-orazaka` (transaction) | 3 | Hikari 3, min idle 0 |
 | core: users (`krizaka_users_db`) | `pool-users` | 2 | |
-| core: studio | `pool-studio` | 1 | |
-| core: knowledge | `pool-knowledge` | 1 | |
-| core: billing | `pool-billing` | 1 | |
+| core: studio | `pool-studio` | 2 | |
+| core: knowledge | `pool-knowledge` | 2 | |
+| core: billing | `pool-billing` | 3 | outbox relay + requests: 1 starved it (`query_wait_timeout`, 2026-10-17) |
 | orochia-dev web | direct | 3 | pool 2 + 1 LISTEN (session by nature) |
 | orochia-admin-dev | direct | 1 | |
 | yasakia-dev, yomizaka-dev | `pool-yasakia` / `pool-yomizaka` (or direct) | 1 + 1 | `DATABASE_MAX_CONNECTIONS=2`; migrations on `DATABASE_DIRECT_URL` (a deploy-time job) |
 | kachizaka-dev, akinaza-dev | `pool-kachizaka`, `pool-akinaza` | 1 + 1 | `DATABASE_MAX_CONNECTIONS=1` |
 | accounts, newsletter (next services) | `pool-accounts`, `pool-newsletter` | 1 + 1 | reserved |
 | maintainer / `doadmin` | direct | 1 | |
-| **Ceiling** | | **18 of 22** | 4 left for a migrate job during a deploy |
+| **Ceiling** | | **21 of 22** | 1 left for a migrate job (accounts/newsletter pools are not counted until they deploy) during a deploy |
 
-Rules: JVM services go through a **transaction** pool on port 25061 with `prepareThreshold=0` (Flyway is off, so no
+Rules: a transaction pool must be at least as large as the service's real concurrent transactions (Hikari holds a connection for a whole transaction, including calls to other services): size 1 starves. JVM services go through a **transaction** pool on port 25061 with `prepareThreshold=0` (Flyway is off, so no
 session lock sits behind the pooler); a service that needs `LISTEN`/`NOTIFY` or session state keeps one direct connection,
 sized for it. Node apps keep `DATABASE_MAX_CONNECTIONS` ≤ 2 (their idle connections close after 10 s); Orochia and its console use
 App Platform's bindable `DATABASE_URL`, which is the direct address. A new service takes its pool before it deploys.
