@@ -141,11 +141,27 @@ if [[ -n "$IMAGE_MODEL" ]]; then
       || step "sd-server build FAILED: images will not be served"
   fi
   if [[ -x "$binary" ]]; then
-    (cd /app-src && MEDIA_SD_SERVER="$binary" MEDIA_IMAGE_PORT=8086 MEDIA_IMAGE_LISTEN_IP=127.0.0.1 \
-      nohup /opt/venv/bin/python -m app.sd_server "$IMAGE_MODEL" > /var/log/orazaka-sd-server.log 2>&1 &)
+    # A profile with a speech model puts the speech server on the relay's engine port (8086) and sd-server behind it.
+    SPEECH_MODEL=$(cd /app-src && /opt/venv/bin/python -c "from app.video_models import load_manifest; print(load_manifest()['profiles']['${PROFILE:-big}'].get('speech') or '')")
+    IMAGE_PORT=8086; [[ -n "$SPEECH_MODEL" ]] && IMAGE_PORT=8089
+    (cd /app-src && MEDIA_SD_SERVER="$binary" MEDIA_IMAGE_PORT=$IMAGE_PORT MEDIA_IMAGE_LISTEN_IP=127.0.0.1 \
+      nohup /opt/venv/bin/python -m app.sd_server "$IMAGE_MODEL" > /var/log/orazaka-sd-server.log 2>&1 < /dev/null &)
+    if [[ -n "$SPEECH_MODEL" ]]; then
+      apt-get install -y -qq espeak-ng >/dev/null 2>&1
+      (cd /app-src && MEDIA_SPEECH_PORT=8086 MEDIA_IMAGE_UPSTREAM=127.0.0.1:8089 \
+        nohup /opt/venv/bin/python -m app.speech_server > /var/log/orazaka-speech.log 2>&1 < /dev/null &)
+      step "speech ($SPEECH_MODEL) on :8086, sd-server ($IMAGE_MODEL) behind it on :8089"
+    else
+      step "sd-server ($IMAGE_MODEL) on :8086"
+    fi
     IMAGE_REMOTE="R:0.0.0.0:8086:127.0.0.1:8086"
-    step "sd-server ($IMAGE_MODEL) on :8086"
   fi
+fi
+# The Krizaka type for a cut's titles (@krizaka/fonts, OFL), once onto the volume.
+FONT=/models/fonts/PlusJakartaSans-ExtraBold.ttf
+if [[ ! -f "$FONT" ]]; then
+  mkdir -p /models/fonts && curl -fsSL https://registry.npmjs.org/@krizaka/fonts/-/fonts-0.2.1.tgz | tar -xz -C /tmp \
+    && cp /tmp/package/files/native/PlusJakartaSans-ExtraBold.ttf /tmp/package/licenses/PlusJakartaSans-OFL.txt /models/fonts/
 fi
 SOUND_FLAG=false; [[ -n "$SOUND_MODELS" ]] && SOUND_FLAG=true
 # The video upscaler (SeedVR2 3B, Apache-2.0) where the volume holds it (/models/up: a pinned checkout and its venv; weights
@@ -164,7 +180,7 @@ export SPRING_RABBITMQ_HOST=127.0.0.1 SPRING_RABBITMQ_PORT=15671 SPRING_RABBITMQ
   SPRING_RABBITMQ_SSL_SERVER_NAME=broker-dev.orazaka.com \
   MEDIA_ASSET_SINK_URL=http://127.0.0.1:18090 JOB_SERVICE_INTERNAL_URL=http://127.0.0.1:18090 \
   UPLOAD_DIR="$STATE/uploads" MEDIA_ACTIVITY_FILE="$STATE/state/last-activity" MEDIA_GPU_PROFILE="${PROFILE:-big}" \
-  ORAZAKA_MEDIA_MEM_HEADROOM_GB=4 PYTHONUNBUFFERED=1 MEDIA_WORKER_PORT=8188 MEDIA_SOUND_ENABLED="$SOUND_FLAG"
+  ORAZAKA_MEDIA_MEM_HEADROOM_GB=4 PYTHONUNBUFFERED=1 MEDIA_WORKER_PORT=8188 MEDIA_SOUND_ENABLED="$SOUND_FLAG" MEDIA_FONT_FILE="$FONT"
 # shellcheck disable=SC2086 # UPSCALER_ENV is a list of NAME=value words
 env $UPSCALER_ENV SPRING_RABBITMQ_PASSWORD="$RABBIT_PASSWORD" ORAZAKA_SERVICE_TOKEN="$SERVICE_TOKEN" \
   nohup /opt/venv/bin/python -u -m app.consumer > /var/log/orazaka-worker.log 2>&1 &
