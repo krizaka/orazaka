@@ -1,4 +1,5 @@
 \c orazaka_db
+BEGIN;
 -- Dev vision without the Mac: the vision DEFAULT of the dev environment is a model on DigitalOcean serverless inference
 -- (OpenAI-compatible, pay per token, no GPU, no tunnel) — as DATA, in the models table, like the chat default.
 --
@@ -17,3 +18,4 @@ UPDATE orazaka_models SET is_default = (model_name = 'nemotron-nano-12b-v2-vl') 
 
 -- Its registry metadata (ORA-MODELS): measured on the dev inference key on 2026-10-17 (a real image-analysis run answered).
 UPDATE orazaka_models SET vendor = 'NVIDIA', family = 'Nemotron Nano v2 VL', capabilities = 'vision,chat', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'NVIDIA Open Model License', licence_url = 'https://huggingface.co/nvidia/NVIDIA-Nemotron-Nano-12B-v2-VL-BF16', commercial_use = 'yes', status = 'available' WHERE model_name = 'nemotron-nano-12b-v2-vl';
+COMMIT;
