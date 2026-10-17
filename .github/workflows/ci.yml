@@ -52,6 +52,11 @@ jobs:
         working-directory: orazaka-apps/workers/orazaka-worker-media
         run: python -m pytest -q test_capability_contract.py
 
+      - name: Derive the UI workspace lock from the cloned members
+        # The members are cloned from their repositories' main: their dependency bumps must not break this build.
+        working-directory: orazaka-apps/ui
+        run: npm install --package-lock-only --legacy-peer-deps --no-audit --no-fund
+
       - name: Build and test the platform
         run: >
           ./mvnw -B -ntp install
