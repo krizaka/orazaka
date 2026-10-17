@@ -67,6 +67,7 @@ INSERT INTO analytics_event_kind (tenant_id, kind, unit, source, description) VA
     ('*', 'skip', 'none', 'recommender', 'An item was skipped.'),
     ('*', 'report', 'none', 'recommender', 'An item was reported.'),
     ('*', 'session_start', 'none', 'analytics', 'A person opened the product.'),
+    ('*', 'watch', 'percent', 'analytics', 'A person left an item; the value is the share watched.'),
     ('*', 'talk', 'seconds', 'analytics', 'A voice conversation ended; the value is its length.'),
     ('*', 'batch_open', 'none', 'analytics', 'A batch of candidates was opened.'),
     ('*', 'batch_answer', 'none', 'analytics', 'A candidate of a batch was answered.'),
