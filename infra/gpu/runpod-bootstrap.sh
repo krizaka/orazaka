@@ -131,6 +131,10 @@ if [[ -n "$IMAGE_MODEL" ]]; then
   fi
 fi
 SOUND_FLAG=false; [[ -n "$SOUND_MODELS" ]] && SOUND_FLAG=true
+# The video upscaler (SeedVR2 3B, Apache-2.0) where the volume holds it (/models/up: a pinned checkout and its venv; weights
+# under /models/seedvr2): the cut of a cinematic short upscales every shot with it (ADR-080).
+UPSCALER_ENV=""
+[[ -x /models/up/venv/bin/python && -f /models/up/seedvr2/inference_cli.py ]] && UPSCALER_ENV="SEEDVR2_HOME=/models/up/seedvr2 SEEDVR2_PYTHON=/models/up/venv/bin/python"
 
 # --- 4. the tunnel and the worker ---------------------------------------------------------------------
 # The same remotes as the droplet: the broker and the job service IN, the worker's pipeline back into the app.
@@ -144,7 +148,8 @@ export SPRING_RABBITMQ_HOST=127.0.0.1 SPRING_RABBITMQ_PORT=15671 SPRING_RABBITMQ
   MEDIA_ASSET_SINK_URL=http://127.0.0.1:18090 JOB_SERVICE_INTERNAL_URL=http://127.0.0.1:18090 \
   UPLOAD_DIR="$STATE/uploads" MEDIA_ACTIVITY_FILE="$STATE/state/last-activity" MEDIA_GPU_PROFILE="${PROFILE:-big}" \
   ORAZAKA_MEDIA_MEM_HEADROOM_GB=4 PYTHONUNBUFFERED=1 MEDIA_WORKER_PORT=8188 MEDIA_SOUND_ENABLED="$SOUND_FLAG"
-SPRING_RABBITMQ_PASSWORD="$RABBIT_PASSWORD" ORAZAKA_SERVICE_TOKEN="$SERVICE_TOKEN" \
+# shellcheck disable=SC2086 # UPSCALER_ENV is a list of NAME=value words
+env $UPSCALER_ENV SPRING_RABBITMQ_PASSWORD="$RABBIT_PASSWORD" ORAZAKA_SERVICE_TOKEN="$SERVICE_TOKEN" \
   nohup /opt/venv/bin/python -u -m app.consumer > /var/log/orazaka-worker.log 2>&1 &
 touch "$STATE/ready" "$STATE/state/last-activity"
 step "serving: worker (${PROFILE:-big}${IMAGE_MODEL:+, images $IMAGE_MODEL}${SOUND_MODELS:+, sound $SOUND_MODELS}), relay → ${RELAY_URL}"
