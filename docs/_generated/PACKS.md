@@ -28,7 +28,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Real-Estate Studio",
   "tagline": "Your listings become Reels ready to publish.",
   "tier": "DATA",
-  "category": "Business",
+  "category": "Creativity & media",
   "studios": 1
  },
  {
@@ -36,15 +36,23 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Media Studios",
   "tagline": "Generate, listen, describe — without leaving a run.",
   "tier": "DATA",
-  "category": "Business",
-  "studios": 12
+  "category": "Creativity & media",
+  "studios": 14
  },
  {
   "key": "outbound-prospection",
   "title": "Outbound Prospecting",
   "tagline": "From a prospect list to a sequence that ships.",
   "tier": "DATA",
-  "category": "Business",
+  "category": "Business & documents",
+  "studios": 3
+ },
+ {
+  "key": "data-analytics",
+  "title": "Recommendations & insights",
+  "tagline": "A feed per person and analytics per creator, on your own data.",
+  "tier": "DATA",
+  "category": "Data & analytics",
   "studios": 3
  },
  {
@@ -52,7 +60,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Wellbeing",
   "tagline": "Put into words what you live through, and bring it to your sessions.",
   "tier": "DATA",
-  "category": "Lifestyle",
+  "category": "Wellbeing",
   "studios": 4
  },
  {
@@ -60,7 +68,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Document Verification",
   "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
   "tier": "WORKER",
-  "category": "Business",
+  "category": "Business & documents",
   "studios": 2
  },
  {
@@ -87,7 +95,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": null,
  "distribution": "OSS",
  "regulatoryClass": "STANDARD",
- "category": "Business",
+ "category": "Creativity & media",
  "listed": true,
  "workers": [],
  "controls": {
@@ -139,12 +147,12 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Media Studios",
  "tagline": "Generate, listen, describe — without leaving a run.",
  "description": null,
- "version": "1.5.0",
+ "version": "1.7.0",
  "tier": "DATA",
  "kind": "TOOLKIT",
  "distribution": "OSS",
  "regulatoryClass": "STANDARD",
- "category": "Business",
+ "category": "Creativity & media",
  "listed": true,
  "workers": [],
  "controls": {
@@ -323,6 +331,68 @@ capability rows, a price, catalogue entries — and changes no code.
     "CAPABILITY"
    ],
    "credits": 3600
+  },
+  {
+   "key": "cinematic-script",
+   "label": "Cinematic short — script",
+   "summary": "A brief becomes a shot list: 8–12 shots, original characters, music, voice-over.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "brief",
+     "title": "Le brief"
+    },
+    {
+     "key": "format",
+     "title": "Le format"
+    },
+    {
+     "key": "aspect",
+     "title": "Format d'image"
+    },
+    {
+     "key": "durationSeconds",
+     "title": "Durée (secondes)"
+    },
+    {
+     "key": "shots",
+     "title": "Nombre de plans"
+    },
+    {
+     "key": "language",
+     "title": "Langue des textes"
+    },
+    {
+     "key": "model",
+     "title": "Modèle de langage (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 40
+  },
+  {
+   "key": "cinematic-cut",
+   "label": "Cinematic short — cut",
+   "summary": "Your shots edited into one film: cuts, ramps, grade, titles, the AI label.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "clips",
+     "title": "Les plans"
+    },
+    {
+     "key": "edit",
+     "title": "La liste de décisions de montage (JSON)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 900
   },
   {
    "key": "video-with-sound",
@@ -519,7 +589,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": null,
  "distribution": "OSS",
  "regulatoryClass": "STANDARD",
- "category": "Business",
+ "category": "Business & documents",
  "listed": true,
  "workers": [],
  "controls": {
@@ -615,6 +685,124 @@ capability rows, a price, catalogue entries — and changes no code.
 }
 ```
 
+### Recommendations & insights
+
+```pack
+{
+ "key": "data-analytics",
+ "title": "Recommendations & insights",
+ "tagline": "A feed per person and analytics per creator, on your own data.",
+ "description": "The recommender your product calls with a service key: send pseudonymous events and your eligible items, read a \"for you\" feed, similar items and creator insights — every item says why it is there. Two Studios read your videos and suggest titles and tags.",
+ "version": "1.3.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "OSS",
+ "regulatoryClass": "STANDARD",
+ "category": "Data & analytics",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "data-driven-ui",
+   "label": "Data-driven UI",
+   "summary": "A CSV and a question become a live dashboard.",
+   "description": "Give your data (a CSV, a JSON export of your analytics) and ask: the answer comes as figures, charts and a table you can read at a glance. Every number comes from your data.",
+   "inputs": [
+    {
+     "key": "data",
+     "title": "Vos données (facultatif)"
+    },
+    {
+     "key": "question",
+     "title": "Votre question"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    },
+    {
+     "key": "model",
+     "title": "Modèle de langage (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 30
+  },
+  {
+   "key": "video-understanding",
+   "label": "Video understanding",
+   "summary": "What a video is about — topics, tags and safety signals, from a keyframe.",
+   "description": "A keyframe goes through the vision model, then a reading in JSON: a summary, topics, tags, the language and safety labels. The labels go to a human moderator, never to an automatic takedown.",
+   "inputs": [
+    {
+     "key": "assetId",
+     "title": "L'image clé"
+    },
+    {
+     "key": "title",
+     "title": "Le titre de la vidéo"
+    },
+    {
+     "key": "description",
+     "title": "La description (facultative)"
+    },
+    {
+     "key": "language",
+     "title": "Langue de la lecture"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 40
+  },
+  {
+   "key": "creator-suggestions",
+   "label": "Creator suggestions",
+   "summary": "Three titles, a description and tags — proposals the creator approves.",
+   "description": "From the creator's own words and the tags that perform with their audience. Nothing is invented, nothing is published without the creator.",
+   "inputs": [
+    {
+     "key": "title",
+     "title": "Votre titre"
+    },
+    {
+     "key": "description",
+     "title": "Votre description (facultative)"
+    },
+    {
+     "key": "tags",
+     "title": "Vos mots-clés (facultatif)"
+    },
+    {
+     "key": "audienceTags",
+     "title": "Ce qui marche auprès de votre audience (facultatif)"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 15
+  }
+ ]
+}
+```
+
 ### Wellbeing
 
 ```pack
@@ -628,7 +816,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": null,
  "distribution": "CLOUD",
  "regulatoryClass": "REGULATED",
- "category": "Lifestyle",
+ "category": "Wellbeing",
  "listed": true,
  "workers": [],
  "controls": {
@@ -739,7 +927,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": null,
  "distribution": "CLOUD",
  "regulatoryClass": "SENSITIVE",
- "category": "Business",
+ "category": "Business & documents",
  "listed": true,
  "workers": [
   "orazaka-worker-validation"
@@ -881,9 +1069,10 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 
 | Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |
 |:---|:---|:---|:---|:---|:---|:---|:---|
+| `data-analytics` | 1.3.0 | DATA | OSS | STANDARD | yes | `data-driven-ui`, `video-understanding`, `creator-suggestions` | — |
 | `document-validation` | 1.1.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
 | `echo-toolkit` | 1.0.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
-| `orazaka-media` | 1.5.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
+| `orazaka-media` | 1.7.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.1.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
 | `realestate-studio` | 1.0.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
 | `trade-showcase` | 1.0.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |
@@ -967,7 +1156,7 @@ requires:
   capabilities: []                    # empty for DATA: you reuse orazaka.core.*
 
 catalog:
-  categoryKey: business
+  categoryKey: business-compliance     # business-compliance | creativity-media | wellbeing | data-analytics (closed list)
   iconKey: sparkles
 
 pricing:
