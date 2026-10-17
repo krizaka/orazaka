@@ -166,3 +166,11 @@ test("the recommender (ADR-078): knowledge runs in core with its own database, i
   assert.match(sql, /EXCEPTION WHEN duplicate_object THEN NULL/);
   assert.match(sql, /ON CONFLICT \(tenant_id, version\) DO NOTHING/);
 });
+
+test("orazaka-dev: dev.orazaka.com is open to search engines (Krizaka AGENTS §2.4) and its README claims no legal conformity", () => {
+  assert.match(spec("orazaka-dev"), /APP_SEARCH_INDEXING, scope: [A-Z_]+, value: "on"/);
+  assert.doesNotMatch(spec("orazaka-dev"), /APP_SEARCH_INDEXING, scope: [A-Z_]+, value: "off"/);
+  const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
+  assert.doesNotMatch(readme, /(Law 25|Loi 25|GDPR)[^\n]{0,40}by design/i, "no pack or certification backs a Law 25 / GDPR claim");
+  assert.doesNotMatch(readme, /krizaka\.com\/(en\/|fr\/)?(products\/orazaka|packages)/, "those addresses are 308s to dev.orazaka.com");
+});
