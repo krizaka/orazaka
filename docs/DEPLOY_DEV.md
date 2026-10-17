@@ -228,6 +228,20 @@ dev serves them (LocalAI, knowledge) — never passed. The report: `~/Documents/
 workflow `GPU smoke (sovereign)` runs it on Mondays once its secrets are set (see the workflow's header); a run on a
 warm Volume costs ≈ $0.20 (the first one also builds the image and fetches the weights).
 
+### Brand-level clips: Wan 2.2 A14B from an image, then SeedVR2 to 1080p/4K
+
+For a clip that is shown on our sites (the "Prompt → Image → Video" strip of dev.orazaka.com): the `hero` profile (80 GB card), the
+Studio `video-generation` with `model: wan2.2-t2v-a14b` **and an `image`** — the worker then loads the family's image-to-video
+checkpoint (`Wan-AI/Wan2.2-I2V-A14B-Diffusers`, 106 GB, pinned in the worker's `models.yaml`), 1280×720, 81 frames at 16 fps, about 20 minutes
+a clip on an H100. The checkpoint is **not** on the network volume (35 GB free): fetch it to the pod's container disk
+(`GPU_RUNPOD_DISK_GB=220`, `huggingface_hub.snapshot_download(..., cache_dir=/root/hfx)` — 2 minutes — then symlink
+`/models/hf/hub/models--Wan-AI--Wan2.2-I2V-A14B-Diffusers` to it). `GPU_WORKER_BRANCH` starts the pod on a worker branch under test.
+
+The optional Studio input `upscale` (`none` · `1080p` · `2160p`, blueprint 1.6.0) runs SeedVR2 3B after the clip, on the same GPU:
+about 107 s for a 5 s clip to 1080p, 280 s to 4K (docs/_generated/MEASURED_RUNS.md, "Video upscaling"). It is installed by the pod's bootstrap
+(pinned checkout and venv on the volume, weights fetched at the first use). Every clip is then reviewed frame by frame, graded and given its sound
+before it is published; a clip that drifts, shows text or morphs is regenerated, never shown.
+
 ### The Mac as the GPU (free)
 
 The Mac's Metal worker can drain the same queue:
