@@ -26,12 +26,14 @@ on:
 
 permissions:
   contents: read
-  packages: write
-  id-token: write
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     timeout-minutes: 60
     steps:
       - name: Check out the Orazaka workspace
