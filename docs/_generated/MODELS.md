@@ -50,6 +50,7 @@ How fast and at what price they really run — time, cost and every parameter of
 | `argmaxinc/mlx-FLUX.1-schnell-4bit-quantized` — FLUX.1 Schnell 4-bit (MLX) | Black Forest Labs · FLUX.1 schnell | Image | MLX · Apple Silicon | [Apache-2.0](https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md) | — | available | — |
 | `v1-5-pruned-emaonly` — Stable Diffusion 1.5 | Stability AI · Stable Diffusion 1.5 | Image | stable-diffusion.cpp · Metal, CUDA | [CreativeML OpenRAIL-M](https://huggingface.co/spaces/CompVis/stable-diffusion-license) — commercial use under conditions | — | available | — |
 | `z-image-turbo` — Z-Image Turbo | Tongyi Lab (Alibaba) · Z-Image | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/README.md) | — | available | — |
+| `kokoro-82m` — Kokoro 82M (GPU host) | hexgrad · Kokoro | Text to speech | worker-media · CUDA | [Apache-2.0](https://huggingface.co/hexgrad/Kokoro-82M) | — | available | — |
 | `piper-en-low` — Piper Low (en) | Rhasspy · Piper (en-US, Lessac) | Text to speech | LocalAI · Piper | [Lessac Blizzard 2013 data licence](https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html) — **non-commercial** | — | available | — |
 | `piper-en-medium-ryan` — Piper Ryan (en) | Rhasspy · Piper (en-US, Ryan) | Text to speech | LocalAI · Piper | [CC BY-NC-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ryan/medium/MODEL_CARD) — **non-commercial** | — | available | — |
 | `piper-fr-medium` — Piper Medium (fr) | Rhasspy · Piper (fr-FR, UPMC) | Text to speech | LocalAI · Piper | [CC BY-SA 4.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/upmc/medium/MODEL_CARD) — commercial use under conditions | — | available | — |
@@ -60,7 +61,6 @@ How fast and at what price they really run — time, cost and every parameter of
 | `wan2.2-i2v-a14b` — Wan 2.2 I2V A14B (720p, 4-step distill) | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA (80 GB) | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers) | — | available | — |
 | `wan2.2-t2v-a14b` — Wan 2.2 T2V A14B (720p, 80 GB GPU) | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA (80 GB) | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B-Diffusers) | — | available | — |
 | `wan2.2-ti2v-5b` — Wan 2.2 TI2V 5B | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers/blob/main/README.md) | — | available | — |
-| `seedvr2-3b` — SeedVR2 3B (video upscale, GPU) | ByteDance Seed · SeedVR2 | Video upscale | worker-media · CUDA | [Apache-2.0](https://huggingface.co/ByteDance-Seed/SeedVR2-3B) | — | available | — |
 
 ## Optional: served by a provider
 

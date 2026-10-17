@@ -4884,6 +4884,28 @@
       "lastVerified": null
     },
     {
+      "id": "kokoro-82m",
+      "name": "Kokoro 82M (GPU host)",
+      "vendor": "hexgrad",
+      "family": "Kokoro",
+      "category": "speech",
+      "capabilities": [
+        "text-to-speech"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA",
+      "provider": "gpu-speech",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/hexgrad/Kokoro-82M"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "piper-en-low",
       "name": "Piper Low (en)",
       "vendor": "Rhasspy",
@@ -5097,28 +5119,6 @@
       "licence": {
         "name": "Apache-2.0",
         "url": "https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers/blob/main/README.md"
-      },
-      "commercialUse": "yes",
-      "contextWindow": null,
-      "status": "available",
-      "lastVerified": null
-    },
-    {
-      "id": "seedvr2-3b",
-      "name": "SeedVR2 3B (video upscale, GPU)",
-      "vendor": "ByteDance Seed",
-      "family": "SeedVR2",
-      "category": "video-upscale",
-      "capabilities": [
-        "video-upscale"
-      ],
-      "runsOn": "local",
-      "runtime": "worker-media · CUDA",
-      "provider": "localai-video",
-      "openWeights": true,
-      "licence": {
-        "name": "Apache-2.0",
-        "url": "https://huggingface.co/ByteDance-Seed/SeedVR2-3B"
       },
       "commercialUse": "yes",
       "contextWindow": null,

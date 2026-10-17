@@ -33,6 +33,6 @@ const films = batch.films.map((f, i) =>
   }),
 );
 // The per-step medians are what the director's estimate multiplies (orazaka-cli src/services/cinema-estimate.json).
-const data = { ...cinemaDataset({ films, sessions: batch.sessions, measuredOn: batch.measuredOn, gpu: batch.gpu, rate: batch.rate }), steps: stepMeasures(productions, batch.rate) };
+const data = { ...cinemaDataset({ films, sessions: batch.sessions, measuredOn: batch.measuredOn, gpu: batch.gpu, rate: batch.rate, note: batch.note }), steps: stepMeasures(productions, batch.rate) };
 writeFileSync(join(root, "docs/measurements/cinema.json"), `${JSON.stringify(data, null, 2)}\n`);
 console.log(`${films.length} film(s), ${data.filmMinutes} min, $${data.usdPerFilmMinute} billed per minute of film`);

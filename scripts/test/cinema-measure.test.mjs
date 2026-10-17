@@ -62,4 +62,6 @@ test("the batch is billed by its pod sessions, divided by the minutes of finishe
   assert.match(md, /## Cinematic shorts/);
   assert.match(md, /\*\*\$6\.00\*\*/);
   assert.deepEqual(mdCinema({ films: [] }), []);
+  const noted = cinemaDataset({ films: [film], sessions: [], measuredOn: "x", gpu: "H100", rate: 4, note: "shared pod" });
+  assert.match(mdCinema(noted).join("\n"), /> shared pod/);
 });

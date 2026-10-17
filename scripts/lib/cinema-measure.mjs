@@ -85,12 +85,13 @@ export function stepMeasures(productions, rate) {
 }
 
 /** The batch: films, the billed pod sessions, and the cost and time per minute of finished film. */
-export function cinemaDataset({ films, sessions, measuredOn, gpu, rate }) {
+export function cinemaDataset({ films, sessions, measuredOn, gpu, rate, note }) {
   const billed = round(sessions.reduce((sum, s) => sum + s.hours * s.rate, 0));
   const minutes = films.reduce((sum, f) => sum + f.duration, 0) / 60;
   const wall = films.reduce((sum, f) => sum + (f.productionSeconds ?? 0), 0);
   return {
     measuredOn,
+    ...(note ? { note } : {}),
     gpu,
     rate,
     films,
@@ -110,7 +111,7 @@ export function mdCinema(data) {
   if (!data?.films?.length) return [];
   const lines = ["## Cinematic shorts", ""];
   lines.push(
-    `Three films made by \`orazaka cinema\` on **${data.measuredOn}** (ADR-080), every step an ordinary Studio run on dev.orazaka.com: ` +
+    `${data.films.length} film(s) made by \`orazaka cinema\` on **${data.measuredOn}** (ADR-080), every step an ordinary Studio run on dev.orazaka.com: ` +
       `script, character references and keyframes (FLUX.2 [klein]), shots (Wan 2.2 I2V A14B, 720p, 4 distilled steps, on ${data.gpu}), ` +
       "the cut (SeedVR2 3B to 1080p, speed ramps, LUT grade, titles, synthesized foley), the voice-over and the music (ACE-Step).",
     "",
@@ -137,6 +138,7 @@ export function mdCinema(data) {
   lines.push(row(["**Billed per minute of finished film**", `**$${data.usdPerFilmMinute?.toFixed(2)}**`]));
   lines.push(row(["The runs' own GPU time per minute of film (what the Studio's estimate multiplies)", `$${data.gpuUsdPerFilmMinute?.toFixed(2)}`]));
   lines.push(row(["Wall time per minute of film (one pod, runs in sequence)", `${data.wallMinutesPerFilmMinute} min`]));
+  if (data.note) lines.push("", `> ${data.note}`);
   lines.push("", "| Pod session | GPU | Hours | Rate | Billed |", "| --- | --- | --- | --- | --- |");
   for (const s of data.sessions) lines.push(row([s.label, s.gpu, s.hours.toFixed(2), `$${s.rate.toFixed(2)}/h`, `$${(s.hours * s.rate).toFixed(2)}`]));
   lines.push("");

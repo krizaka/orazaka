@@ -1,0 +1,105 @@
+{
+  "measuredOn": "2026-10-17",
+  "note": "The billed sessions also rendered the Montréal reel and the news explainer (shots, the reel's cut) that are not delivered yet, and the showcase session's own image-to-video jobs drained by the same pod: the billed figure per minute is this batch's, not a film's. A film's own cost is its runs' GPU time at the rate (the table above).",
+  "gpu": "one RunPod H100 80 GB (CA-MTL-1, $3.99/h)",
+  "rate": 3.99,
+  "films": [
+    {
+      "id": "nova-ardent",
+      "title": "NOVA ARDENT: DAWN OF CYAN",
+      "media": "products/orazaka/cinema/nova-ardent",
+      "aspect": "9:16",
+      "width": 1080,
+      "height": 1920,
+      "duration": 40.48,
+      "shots": 10,
+      "reshoots": 2,
+      "runs": 35,
+      "failedRuns": 5,
+      "scriptRunId": "b43a928c-8506-41ea-b0b0-25133e45b544",
+      "cutRunId": "75fcc97a-361b-40e5-8503-756abd64f4ac",
+      "soundRunId": "61cefebd-7051-4ae9-9709-f7cd954c7289",
+      "gpuSeconds": 7115,
+      "gpuUsd": 7.89,
+      "productionSeconds": 14241,
+      "models": {
+        "script": "deepseek-v4-pro",
+        "image": "FLUX.2 [klein] 4B",
+        "video": "Wan 2.2 I2V A14B (4-step distill)",
+        "upscale": "SeedVR2 3B",
+        "music": "ACE-Step 1.5 XL turbo",
+        "voice": "am_fenrir"
+      },
+      "command": "orazaka cinema new nova-ardent --format superhero-vfx --aspect 9:16 --duration 45 --shots 10 --seed 20261017 --script-model deepseek-v4-pro --brief \"Night city in the rain, an ORIGINAL superhero trailer…\""
+    }
+  ],
+  "sessions": [
+    {
+      "label": "pod 1 (first start: weights and sd-server build, then released while CI ran)",
+      "gpu": "H100 80 GB",
+      "hours": 0.3,
+      "rate": 3.99
+    },
+    {
+      "label": "pod 2 (superhero, reel and news shots, two cuts; shared with the showcase session's I2V jobs; stopped by an idle guard at ~14:45, destroyed 15:04)",
+      "gpu": "H100 80 GB",
+      "hours": 5.22,
+      "rate": 3.99
+    },
+    {
+      "label": "pod 3 (resumed for the reel's music and the news shots; stopped by the coordinator for the GPU queue before a run could start: dev's runs were refused by a saturated billing pool)",
+      "gpu": "H100 80 GB",
+      "hours": 0.4,
+      "rate": 3.99
+    }
+  ],
+  "billedUsd": 23.62,
+  "filmMinutes": 0.67,
+  "usdPerFilmMinute": 35.01,
+  "gpuUsdPerFilmMinute": 11.69,
+  "wallMinutesPerFilmMinute": 351.8,
+  "steps": {
+    "script": {
+      "studioKey": "cinematic-script",
+      "seconds": 36,
+      "gpuUsd": 0,
+      "n": 1
+    },
+    "character": {
+      "studioKey": "image-generation",
+      "seconds": 9,
+      "gpuUsd": 0.01,
+      "n": 1
+    },
+    "keyframe": {
+      "studioKey": "image-generation",
+      "seconds": 9,
+      "gpuUsd": 0.01,
+      "n": 12
+    },
+    "video": {
+      "studioKey": "video-generation",
+      "seconds": 328,
+      "gpuUsd": 0.364,
+      "n": 12
+    },
+    "cut": {
+      "studioKey": "cinematic-cut",
+      "seconds": 1420,
+      "gpuUsd": 1.574,
+      "n": 2
+    },
+    "voice": {
+      "studioKey": "speech-synthesis",
+      "seconds": 1,
+      "gpuUsd": 0,
+      "n": 1
+    },
+    "sound": {
+      "studioKey": "video-sound",
+      "seconds": 208,
+      "gpuUsd": 0.231,
+      "n": 1
+    }
+  }
+}
