@@ -14,3 +14,6 @@ VALUES ('nemotron-nano-12b-v2-vl', 'Nemotron Nano 12B v2 VL', 'vision', NULL, 'd
         || 'environment: no GPU to run, no tunnel to a laptop, billed per token.')
 ON CONFLICT (model_name) DO NOTHING;
 UPDATE orazaka_models SET is_default = (model_name = 'nemotron-nano-12b-v2-vl') WHERE category = 'vision';
+
+-- Its registry metadata (ORA-MODELS): measured on the dev inference key on 2026-10-17 (a real image-analysis run answered).
+UPDATE orazaka_models SET vendor = 'NVIDIA', family = 'Nemotron Nano v2 VL', capabilities = 'vision,chat', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'NVIDIA Open Model License', licence_url = 'https://huggingface.co/nvidia/NVIDIA-Nemotron-Nano-12B-v2-VL-BF16', commercial_use = 'yes', status = 'available' WHERE model_name = 'nemotron-nano-12b-v2-vl';
