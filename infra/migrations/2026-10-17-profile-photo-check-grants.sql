@@ -6,3 +6,10 @@ INSERT INTO billing_plan_entitlement (plan_key, entitlement_key, value_type, val
 ('premium',  'studio.profile-photo-check', 'boolean', 'true'),
 ('ultimate', 'studio.profile-photo-check', 'boolean', 'true')
 ON CONFLICT (plan_key, entitlement_key) DO NOTHING;
+
+-- message-authenticity (krizaka/orazaka-packs): the same, for the authenticity signal on messages.
+INSERT INTO billing_plan_entitlement (plan_key, entitlement_key, value_type, value) VALUES
+('free',     'studio.message-authenticity', 'boolean', 'true'),
+('premium',  'studio.message-authenticity', 'boolean', 'true'),
+('ultimate', 'studio.message-authenticity', 'boolean', 'true')
+ON CONFLICT (plan_key, entitlement_key) DO NOTHING;
