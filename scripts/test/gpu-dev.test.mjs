@@ -179,6 +179,7 @@ test("runpod bootstrap: the optional video upscaler (SeedVR2 3B, Apache-2.0) is 
   assert.match(boot, /SEEDVR2_REF=[0-9a-f]{40}/); // pinned, never a branch
   assert.match(boot, /git clone -q https:\/\/github\.com\/numz\/ComfyUI-SeedVR2_VideoUpscaler/);
   assert.match(boot, /SEEDVR2_HOME=\/models\/up\/seedvr2 SEEDVR2_PYTHON=\/models\/up\/venv\/bin\/python/); // main's UPSCALER_ENV: set where the volume holds the install (this block puts it there)
+  assert.match(boot, /ln -sfn \$UP\/seedvr \/models\/seedvr2/); // the weights live where upscale.py looks
   assert.ok(boot.indexOf("SEEDVR2_HOME") < boot.indexOf("app.consumer"), "the worker starts with the upscaler's location in its environment");
 });
 

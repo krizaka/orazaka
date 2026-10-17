@@ -102,6 +102,7 @@ if [[ ! -x $UP/venv/bin/python ]]; then
 fi
 [[ -d $UP/seedvr2/.git ]] || git clone -q https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler $UP/seedvr2
 git -C $UP/seedvr2 checkout -q "$SEEDVR2_REF" 2>/dev/null || { git -C $UP/seedvr2 fetch -q origin && git -C $UP/seedvr2 checkout -q "$SEEDVR2_REF"; }
+mkdir -p $UP/seedvr; [[ -e /models/seedvr2 ]] || ln -sfn $UP/seedvr /models/seedvr2   # the worker looks for the weights in <models>/seedvr2
 step "worker runtime ready: orazaka-worker-media@$(git -C /app-src rev-parse --short=12 HEAD)"
 
 # --- 2. chisel, the tunnel client ---------------------------------------------------------------------
