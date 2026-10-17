@@ -57,7 +57,7 @@ How fast and at what price they really run — time, cost and every parameter of
 | `piper-fr-tom-medium` — Piper Tom (fr-FR, masculine) | Rhasspy · Piper (fr-FR, Tom) | Text to speech | LocalAI · Piper | [AGPL-3.0](https://huggingface.co/rhasspy/piper-voices/blob/main/fr/fr_FR/tom/medium/MODEL_CARD) — commercial use under conditions | — | available | — |
 | `stable-video-diffusion-img2vid-xt` — Stable Video Diffusion XT (heavy, >64GB) | Stability AI · Stable Video Diffusion | Video | CUDA, more than 64 GB of memory | [Stability AI Community Licence](https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/blob/main/LICENSE.md) — commercial use under conditions | — | available | — |
 | `wan2.1-t2v-1.3b` — Wan 2.1 T2V 1.3B | Alibaba (Wan-AI) · Wan 2.1 | Video | worker-media · CUDA | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B-Diffusers/blob/main/README.md) | — | available | — |
-| `wan2.2-t2v-a14b` — Wan 2.2 T2V A14B (720p, GPU) | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA (80 GB) | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B-Diffusers) | — | available | — |
+| `wan2.2-t2v-a14b` — Wan 2.2 T2V A14B (720p, 80 GB GPU) | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA (80 GB) | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B-Diffusers) | — | available | — |
 | `wan2.2-ti2v-5b` — Wan 2.2 TI2V 5B | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers/blob/main/README.md) | — | available | — |
 
 ## Optional: served by a provider

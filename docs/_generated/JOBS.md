@@ -67,6 +67,7 @@ Service-to-service (`SERVICE` token): how a pack registers a capability and a wo
 | Method | Path | Access | Summary |
 |:---|:---|:---|:---|
 | GET | `/api/v1/jobs` | authenticated | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
+| DELETE | `/api/v1/jobs/{id}` | ADMIN + USER | Deletes a finished job's result: files out of every store, row marked deleted (orazaka-web-client#86). |
 | GET | `/api/v1/jobs/{id}` | ADMIN + USER | Fetches the single, atomic state of a specific job. |
 | POST | `/api/v1/jobs/{id}/progress` | ADMIN + USER | Updates progress of a running job and broadcasts it to connected users. |
 | POST | `/api/v1/jobs/{jobId}/approve` | ADMIN + USER | Approves a pending automation job and dispatches its payload to the execution queue. |
