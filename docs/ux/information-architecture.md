@@ -118,13 +118,49 @@ Tests: `Sidebar.test.tsx` (order snapshot, one section current per route, no Sig
 `Header.test.tsx` (avatar first, the menu's content, nothing the rail holds), `AppCommandPalette.test.tsx`,
 the phone's `app.test.tsx` / `app.fr.test.tsx` (the Settings tab).
 
-## 4. Decisions
+## 4. The home page — one story in six sections
+
+Oussama: « la page doit être plus simplifiée, trop de choses, et je ne sais pas s'il y a une logique ». The home had
+**12 sections** (hero · Made here · why · platform · comparison · how it works · phone · Mac · Studios · packs ·
+models · closing), several answering the same question, and **12,087 px** of scroll on a desktop (16,219 px on a phone).
+
+The story is now the order of a visitor's questions, one section each, one primary action each:
+
+| # | Question | Section | Proof on screen | Action |
+| :- | :--- | :--- | :--- | :--- |
+| 1 | What is it? | Hero (`LandingHero`) | a real chat answer, local | Sign in / Docs |
+| 2 | What can I do with it? | `#made` (`GalleryFeatured` + `LandingOutcomes`) | the prompt → image → video showcase; four Studio outcomes (`#studios`); one line for the packs (`#packs`) | See everything it made |
+| 3 | Where does it run? | `#how` (`LandingRuns`) | tabs Web · Mobile · Mac, the real app recorded in its frame (`StepShowcase`, @krizaka/ui) | the phone guide, Orazaka for Mac |
+| 4 | Why own it? | `#why` (`LandingCompare`) | `ComparisonTable`: four questions, aligned rows, Orazaka's band | — |
+| 5 | Can I trust it? | `#trust` (`LandingTrust`) | code (Apache-2.0), measured runs, docs — one row | each card |
+| 6 | How do I start? | `LandingClosing` | — | Talk to us / Get started |
+
+Moved off the home: the pillars (feature pages, footer), the platform list and the « three commands » (docs:
+self-hosting), the model list (/models), the pack shelves by category (/docs/packs, where the packs session groups
+them), the Mac band (the Mac tab and /desktop). Rationale: progressive disclosure — the home answers each question
+once, briefly, and links to the page that goes deeper (Nielsen Norman Group, *Progressive Disclosure*, 2006);
+a story arc in the visitor's order beats a catalogue (Krug, *Don't Make Me Think*, 2014).
+
+Honest media: the Web steps are recorded on dev.orazaka.com with the QA account (`scripts/record-web-steps.mjs`), the
+phone steps are the existing simulator recordings; the **Mac** shows its one real capture until a recording exists
+(recording the app needs macOS Screen Recording permission on the machine that films it).
+
+## 5. /desktop — Orazaka for Mac
+
+One sentence (run it here, or connect it to your workspace) and the app in a macOS window; **one** Download with its
+facts quiet and the SHA-256 in « Verify the download »; « First launch » in three steps (the build is not yet signed
+by Apple) with the quarantine fix folded in a `bash` block; the two modes and the folder scope; the services « Start »
+brings up (from the CLI's own start phases); troubleshooting (Run doctor, logs). Removed: a drawn « showcase » with
+figures nothing measured (« 0.8 ms vs 19 ms », « 18.4 tok/s ») and jargon (« studio sagas », « Metal acceleration »).
+
+## 6. Decisions
 
 | Decision | Problem | Principle | Refused | Cost | Signal we are wrong |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Three entries grouped by question (Product · Platforms · Docs) | six mixed items, a visitor scanned all of them | Hick's law — choice time grows with the number of options (Hick 1952); card-sorting by user goals (Spencer, *Card Sorting*, 2009) | « Models & infra » as a fourth menu (splits *what it does* from *which models*) | Demo and Mobile one click deeper | Analytics or interviews: visitors open Product looking for Self-host, or never find the Demo |
 | Compact menu, intent delay, one item lit | a sheet over the hero; menus flashing open on pass-over; two items lit | Recognition over recall, minimise visual noise (Nielsen, *10 Usability Heuristics*, 1994); hover intent (Amazon mega-menu pattern, Kalbach, *Designing Web Navigation*, 2007) | hover-only menus; a two-column mega-menu for nine links | descriptions must fit one line | people open menus by mistake, or miss that Product is a menu |
 | One list of sections for rail, palette and phone | the same place under three names | Consistency and standards (Nielsen 1994); the same word everywhere builds one mental model (Norman, *The Design of Everyday Things*, 2013) | separate per-surface wording | Studios moves before Chat on the web rail (the phone's order) | users of both surfaces look for « Profile » or « Task History » |
+| Six sections in the visitor's order | twelve sections, the same question answered three times | Progressive disclosure (Nielsen 2006); serial position — first and last are remembered (Ebbinghaus; Murdock 1962) | a long page « so everything is there » | Studios, packs and models one click deeper | scroll depth stops before « Where it runs », or visitors look for the models on the home |
 | Account under the avatar, sections on the rail | Sign out on the rail, language as a third header control | Spatial memory — controls in conventional places (Fitts' law on corners; Jakob's law, Nielsen 2000) | a Settings entry in both the rail and the menu | the language is one click deeper in the app | people ask where to sign out or change the language |
 
 *Owner: the UX lead session. Change a section here first, then in `site-nav.ts` / `app-sections.ts` and the phone's tab
