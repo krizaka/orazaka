@@ -9,7 +9,7 @@ order: 8
 > Architecture: [ADR-079](adr/ADR-079-automations-and-local-agents.md). What runs today is **slice 1**: scheduled
 > automations in the Mac app, local only. The next slices are listed at the end.
 
-[![Eric creates "Morning PDF summaries", the run reads three PDFs with qwen2.5:7b on his Mac, asks before writing, he approves always for the folder, then opens the trace, the audit log and a note (36 s)](https://krizaka-assets.b-cdn.net/site/products/orazaka/tour/automations-morning-pdfs.5e97b05460.jpg)](https://krizaka-assets.b-cdn.net/site/products/orazaka/tour/automations-morning-pdfs.5ff270db6b.mp4)
+[![Eric creates "Morning PDF summaries", the run reads three PDFs with qwen2.5:7b on his Mac, asks before writing, he approves always for the folder, then opens the trace, the audit log and a note (55 s, 1080p)](https://krizaka-assets.b-cdn.net/site/products/orazaka/tour/automations-morning-pdfs.764e15b23f.jpg)](https://krizaka-assets.b-cdn.net/site/products/orazaka/tour/automations-morning-pdfs.bd4e5ce3f0.mp4)
 
 *The journey, recorded on the app's interface: the states shown are those of a real run of the runner on a Mac —
 the filesystem MCP server limited to `Inbox`, `qwen2.5:7b` served by Ollama, three PDFs (a Québec lease, a power bill,
