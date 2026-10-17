@@ -89,7 +89,7 @@ sys.exit(1)" || { say "  $dc: no stock"; continue; }
     fi
     # Every credential reaches the pod as an environment variable (RunPod's own, visible to this account only).
     WORKER_REF="$worker_ref" PROFILE="${GPU_RUNPOD_PROFILE:-big}" GPU_LIST="$gpu_list" DC="$dc" VOLUME="$volume" MAX_HOURS="$max_hours" \
-    IDLE_MINUTES="${GPU_IDLE_MINUTES:-30}" RP_IMAGE="$RP_IMAGE" PUBKEY="$(cat "$LOCAL/id_ed25519.pub")" \
+    IDLE_MINUTES="${GPU_IDLE_MINUTES:-30}" DISK_GB="${GPU_RUNPOD_DISK_GB:-60}" RP_IMAGE="$RP_IMAGE" PUBKEY="$(cat "$LOCAL/id_ed25519.pub")" \
     RELAY_URL="$RELAY_URL" RELAY_AUTH="gpu:$(secret AI_GPU_RELAY_PASSWORD)" RABBIT_PASSWORD="$(secret RABBITMQ_PASS_GPU)" \
     SERVICE_TOKEN="$(mint_service_token "$max_hours")" BROKER_CA_B64="$(broker_ca_b64)" BOOT="$ROOT/infra/gpu/runpod-bootstrap.sh" \
     HF_TOKEN="$(secret AI_HUGGINGFACE_TOKEN 2>/dev/null || true)" DISK_GB="${GPU_RUNPOD_DISK_GB:-}" \
