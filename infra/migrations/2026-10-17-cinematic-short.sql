@@ -32,3 +32,15 @@ UPDATE studio_runtime_config
    SET config_value = '3600',
        description = 'Per-step ceiling in the BATCH lane — room for a cinematic cut (ten shots upscaled by SeedVR2, then interpolated and encoded: ~35 min measured 2026-10-17, ADR-080) and for queue wait behind image generations.'
  WHERE config_key = 'run.step-timeout-seconds.batch';
+
+-- The voice-over of a cinematic short: Kokoro-82M (Apache-2.0) on the cinema GPU host, on the image engine's relay port
+-- (orazaka-worker-media app/speech_server.py answers /v1/audio/speech and passes the rest to sd-server). Dev's other
+-- speech models are the Mac's Piper voices, reachable only while the Mac is connected.
+\c orazaka_db
+INSERT INTO ai_providers (name, base_url, api_key) VALUES ('gpu-speech', 'http://gpu-relay:8086/v1', 'not-required')
+ON CONFLICT (name) DO NOTHING;
+INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, max_steps, recommended_fps, supported_hardware, description)
+VALUES ('kokoro-82m', 'Kokoro 82M (GPU host)', 'speech', 'af_heart,af_bella,af_nicole,af_sarah,am_michael,am_fenrir,bf_emma,bm_george', 'gpu-speech', FALSE, NULL, NULL, NULL,
+        'Kokoro-82M (Apache-2.0), served by the cinema GPU host — natural English voices for a voice-over (af_heart by default). The voice of a cinematic short (ADR-080).')
+ON CONFLICT (model_name) DO NOTHING;
+UPDATE orazaka_models SET vendor = 'hexgrad', family = 'Kokoro', capabilities = 'speech', runs_on = 'local', runtime = 'worker-media · CUDA', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/hexgrad/Kokoro-82M', commercial_use = 'yes', context_window = NULL, status = 'available' WHERE model_name = 'kokoro-82m';
