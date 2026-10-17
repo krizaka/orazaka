@@ -4499,6 +4499,284 @@
       ]
     },
     {
+      "key": "media-safety",
+      "dir": "media-safety",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [
+        "orazaka.safety.media.assess"
+      ],
+      "workers": [
+        "orazaka-worker-safety"
+      ],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Media safety",
+          "tagline": "Is this photo, video or voice message safe to show?",
+          "description": "Judges pictures (a photo, or frames of a video) and a voice message's transcript against a short, public set of lines: no nudity or sexual content, no graphic violence, no threats or harassment. An answer nobody could read is never a pass."
+        },
+        "fr": {
+          "label": "Sécurité des médias",
+          "tagline": "Cette photo, cette vidéo ou ce message vocal peut-il être montré sans danger ?",
+          "description": "Juge des images (une photo, ou des images d'une vidéo) et la transcription d'un message vocal selon quelques lignes publiques : pas de nudité ni de contenu sexuel, pas de violence graphique, pas de menace ni de harcèlement. Une réponse que personne n'a pu lire n'est jamais un feu vert."
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "media-safety",
+          "profession": "general",
+          "iconKey": "shield-check",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 30,
+          "steps": 4,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "frames",
+              "title": "Les images à examiner"
+            },
+            {
+              "key": "frameCount",
+              "title": "Le nombre d'images"
+            },
+            {
+              "key": "audio",
+              "title": "Le son à juger (facultatif)"
+            },
+            {
+              "key": "expectsSpeech",
+              "title": "Il y a du son à juger"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "JSON"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Media safety",
+              "tagline": "A safety check that fails closed.",
+              "description": "A vision question per picture, a transcript and a text judgement for sound, then closed rules. Unreadable means held, never approved."
+            },
+            "fr": {
+              "label": "Sécurité des médias",
+              "tagline": "Un contrôle de sécurité qui échoue du côté prudent.",
+              "description": "Une question de vision par image, une transcription et un jugement du texte pour le son, puis des règles fermées. Illisible veut dire retenu, jamais approuvé."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "message-authenticity",
+      "dir": "message-authenticity",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [
+        "orazaka.message.authenticity.read"
+      ],
+      "workers": [
+        "orazaka-worker-authenticity"
+      ],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Message authenticity",
+          "tagline": "Does this message read like a person wrote it? A signal, never a verdict.",
+          "description": "Reads one message with a small open classifier and answers a coarse level — never a score. It can be wrong, above all on short texts and on non-native or French writing. It never writes a message for anyone."
+        },
+        "fr": {
+          "label": "Authenticité des messages",
+          "tagline": "Ce message ressemble-t-il à un texte écrit par une personne ? Un signal, jamais un verdict.",
+          "description": "Lit un message avec un petit classifieur ouvert et répond un niveau grossier — jamais un score. Il peut se tromper, surtout sur les textes courts et sur une écriture non native ou en français. Il n'écrit aucun message à la place de quiconque."
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "message-authenticity",
+          "profession": "general",
+          "iconKey": "shield-check",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 5,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "text",
+              "title": "Le message"
+            },
+            {
+              "key": "locale",
+              "title": "Langue du compte (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "JSON"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Message authenticity",
+              "tagline": "A coarse signal on a text, never a verdict.",
+              "description": "One step, no generative model. The text is read and forgotten; the answer is low, mid, high or unavailable."
+            },
+            "fr": {
+              "label": "Authenticité des messages",
+              "tagline": "Un signal grossier sur un texte, jamais un verdict.",
+              "description": "Une seule étape, aucun modèle génératif. Le texte est lu puis oublié ; la réponse est bas, moyen, haut ou indisponible."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "profile-photo-check",
+      "dir": "profile-photo-check",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [
+        "orazaka.photo.profile.inspect",
+        "orazaka.photo.profile.assess"
+      ],
+      "workers": [
+        "orazaka-worker-photo"
+      ],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Profile photo check",
+          "tagline": "Are these photos one real adult's profile?",
+          "description": "Checks a set of profile photos: enough of them, enough with a face, the same person from one face photo to the next, nothing written over the picture, no screenshots. It answers in codes, identifies no one and recognises no celebrity."
+        },
+        "fr": {
+          "label": "Vérification des photos de profil",
+          "tagline": "Ces photos forment-elles le profil d'une vraie personne adulte ?",
+          "description": "Vérifie un ensemble de photos de profil : assez de photos, assez de photos de visage, la même personne d'une photo de visage à l'autre, rien d'écrit sur l'image, pas de capture d'écran. Elle répond en codes, n'identifie personne et ne reconnaît aucune célébrité."
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "profile-photo-check",
+          "profession": "general",
+          "iconKey": "vision",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 3,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "photos",
+              "title": "Les photos (fichiers envoyés)"
+            },
+            {
+              "key": "photosBase64",
+              "title": "Les mêmes photos, en base64"
+            },
+            {
+              "key": "compareFaces",
+              "title": "Comparer les visages entre eux"
+            },
+            {
+              "key": "minPhotos",
+              "title": "Photos au moins"
+            },
+            {
+              "key": "maxPhotos",
+              "title": "Photos au plus"
+            },
+            {
+              "key": "minFacePhotos",
+              "title": "Photos de visage au moins"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "JSON"
+            },
+            {
+              "key": "passes",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Profile photo check",
+              "tagline": "Faces present, the same person throughout, nothing written on the photo.",
+              "description": "Finds the faces in each photo, asks a vision model three yes/no questions about it, and gives a verdict made of codes. The face vectors live for one job and are never kept; a model answer that cannot be read blocks nothing."
+            },
+            "fr": {
+              "label": "Vérification des photos de profil",
+              "tagline": "Des visages présents, la même personne partout, rien d'écrit sur la photo.",
+              "description": "Trouve les visages de chaque photo, pose à un modèle de vision trois questions par oui ou non, et rend un verdict fait de codes. Les vecteurs de visage vivent le temps d'un travail et ne sont jamais gardés ; une réponse illisible du modèle ne bloque rien."
+            }
+          }
+        }
+      ]
+    },
+    {
       "key": "trade-showcase",
       "dir": "trade-showcase",
       "version": "1.0.0",
@@ -5344,6 +5622,29 @@
       "licence": {
         "name": "Apache-2.0",
         "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "nemotron-nano-12b-v2-vl",
+      "name": "Nemotron Nano 12B v2 VL",
+      "vendor": "NVIDIA",
+      "family": "Nemotron Nano v2 VL",
+      "category": "vision",
+      "capabilities": [
+        "vision",
+        "chat"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "NVIDIA Open Model License",
+        "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-Nano-12B-v2-VL-BF16"
       },
       "commercialUse": "yes",
       "contextWindow": null,
