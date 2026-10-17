@@ -173,6 +173,15 @@ test("runpod bootstrap: the venv lives on the network volume, so a later pod reu
   assert.doesNotMatch(boot, /python3 -m venv \/opt\/venv/);
 });
 
+test("runpod bootstrap: the optional video upscaler (SeedVR2 3B, Apache-2.0) is a pinned checkout with its own venv on the volume, and the worker is told where", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.match(boot, /UP=\/models\/up/);
+  assert.match(boot, /SEEDVR2_REF=[0-9a-f]{40}/); // pinned, never a branch
+  assert.match(boot, /git clone -q https:\/\/github\.com\/numz\/ComfyUI-SeedVR2_VideoUpscaler/);
+  assert.match(boot, /SEEDVR2_HOME=\/models\/up\/seedvr2 SEEDVR2_PYTHON=\/models\/up\/venv\/bin\/python/); // main's UPSCALER_ENV: set where the volume holds the install (this block puts it there)
+  assert.ok(boot.indexOf("SEEDVR2_HOME") < boot.indexOf("app.consumer"), "the worker starts with the upscaler's location in its environment");
+});
+
 test("runpod watchdog: the pod destroys ITSELF — through the API with the pod's own key, then runpodctl; with no key it says so and falls back", () => {
   const boot = read("infra/gpu/runpod-bootstrap.sh");
   const watchdog = boot.slice(boot.indexOf("<<'WD'\n") + 7, boot.indexOf("\nWD\n"));

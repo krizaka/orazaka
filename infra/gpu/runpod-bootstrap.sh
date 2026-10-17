@@ -89,6 +89,19 @@ ln -sfn /models/venv /opt/venv
 rm -rf /app-src && git clone -q https://github.com/krizaka/orazaka-worker-media.git /app-src
 git -C /app-src checkout -q "${WORKER_REF:-main}"
 /opt/venv/bin/pip install -q --no-cache-dir -r /app-src/requirements-cuda.txt
+# The optional video upscaler (Studio `upscale`: SeedVR2 3B, Apache-2.0): a pinned checkout and its own venv, both on the volume, so a
+# later pod finds them in place; its weights (7 GB) are fetched by its CLI at the first upscale into /models/seedvr2.
+UP=/models/up
+SEEDVR2_REF=4490bd1f482e026674543386bb2a4d176da245b9
+if [[ ! -x $UP/venv/bin/python ]]; then
+  step "installing the video upscaler (SeedVR2 3B)"
+  python3 -m venv $UP/venv
+  echo /models/venv/lib/python3.11/site-packages > $UP/venv/lib/python3.11/site-packages/base.pth   # torch from the worker's venv
+  $UP/venv/bin/pip install -q --no-cache-dir --no-deps torchvision --index-url https://download.pytorch.org/whl/cu128
+  $UP/venv/bin/pip install -q --no-cache-dir omegaconf rotary_embedding_torch peft gguf matplotlib psutil einops opencv-python-headless
+fi
+[[ -d $UP/seedvr2/.git ]] || git clone -q https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler $UP/seedvr2
+git -C $UP/seedvr2 checkout -q "$SEEDVR2_REF" 2>/dev/null || { git -C $UP/seedvr2 fetch -q origin && git -C $UP/seedvr2 checkout -q "$SEEDVR2_REF"; }
 step "worker runtime ready: orazaka-worker-media@$(git -C /app-src rev-parse --short=12 HEAD)"
 
 # --- 2. chisel, the tunnel client ---------------------------------------------------------------------
