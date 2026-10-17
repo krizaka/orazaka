@@ -177,3 +177,18 @@ test("the analytics migration (ADR-081) is idempotent, seeds kinds and settings 
   const script = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
   assert.match(script, /command === "analytics"\) analytics\(\)/);
 });
+
+test("models: the bake-off winners, SeedVR2 and the video capability's `upscale` input, idempotent, and the command exists (password from the secrets file, never printed)", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-17-bakeoff-models.sql", import.meta.url), "utf8");
+  for (const name of ["ltx-video-0.9.8-13b-distilled", "wan2.2-i2v-a14b-hq", "seedvr2-3b"]) {
+    assert.match(sql, new RegExp(`\\('${name.replace(/[.]/g, "\\.")}',`), name);
+    assert.match(sql, new RegExp(`UPDATE orazaka_models SET [^\\n]*WHERE model_name = '${name.replace(/[.]/g, "\\.")}';`), `${name} has its registry metadata`);
+  }
+  assert.match(sql, /ON CONFLICT \(model_name\) DO NOTHING/);
+  assert.match(sql, /"upscale": \{"type": "string", "enum": \["none", "1080p", "2160p"\], "default": "none"/);
+  assert.match(sql, /WHERE feature_key = 'orazaka\.core\.media\.video'/);
+  assert.doesNotMatch(sql, /^\\c /m); // the command connects to orazaka_db itself
+  const deploy = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
+  assert.match(deploy, /command === "models"\) models\(\)/);
+  assert.match(deploy, /DATABASE_PASSWORD_ORAZAKA_DB/);
+});
