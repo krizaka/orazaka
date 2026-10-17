@@ -84,6 +84,23 @@ export function mdMeasuredRuns(dataset) {
     lines.push("");
   }
 
+  if (dataset.bakeOff?.rows?.length) {
+    const b = dataset.bakeOff;
+    lines.push("## Image-to-video bake-off", "");
+    lines.push(`${b.note}. One NVIDIA H100 80 GB; the cost is the run's own time at the GPU's hourly rate. The verdict is a person's, after looking at the frame grid (first, quarter, middle, three quarters, last) of both shots.`, "");
+    lines.push("| Model | Licence | Commercial use | Shot | Size | Time | Cost | VRAM | Verdict |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+    for (const r of b.rows) {
+      const ran = typeof r.seconds === "number";
+      lines.push(row([r.model, r.licence, r.commercial, r.shot, r.size, ran ? `${r.seconds} s` : "not finished", ran ? `$${((r.seconds / 3600) * b.gpuUsdPerHour).toFixed(2)}` : "—", r.vramGb ? `${r.vramGb} GB` : "—", r.verdict]));
+    }
+    lines.push("");
+    if (b.winners?.length) {
+      lines.push("**Winners:**", "");
+      for (const w of b.winners) lines.push(`- **${w.use}**: ${w.model} — ${w.why}`);
+      lines.push("");
+    }
+  }
+
   lines.push("## Failures, timeouts and limits", "");
   lines.push("| Kind | What happened | Cause |", "| --- | --- | --- |");
   for (const event of dataset.events) lines.push(row([event.kind, event.what, event.cause]));
