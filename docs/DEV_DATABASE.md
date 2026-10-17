@@ -55,16 +55,16 @@ a ceiling per service (what it may hold at once), kept under 22 with room for a 
 | core: billing | `pool-billing` | 1 | |
 | orochia-dev web | direct | 3 | pool 2 + 1 LISTEN (session by nature) |
 | orochia-admin-dev | direct | 1 | |
-| yasakia-dev, yomizaka-dev | direct | 2 + 2 | `DATABASE_MAX_CONNECTIONS=2` |
-| kachizaka-dev, akinaza-dev | direct | 1 + 1 | `DATABASE_MAX_CONNECTIONS=1` |
+| yasakia-dev, yomizaka-dev | `pool-yasakia` / `pool-yomizaka` (or direct) | 1 + 1 | `DATABASE_MAX_CONNECTIONS=2`; migrations on `DATABASE_DIRECT_URL` (a deploy-time job) |
+| kachizaka-dev, akinaza-dev | `pool-kachizaka`, `pool-akinaza` | 1 + 1 | `DATABASE_MAX_CONNECTIONS=1` |
 | accounts, newsletter (next services) | `pool-accounts`, `pool-newsletter` | 1 + 1 | reserved |
 | maintainer / `doadmin` | direct | 1 | |
-| **Ceiling** | | **20 of 22** | 2 left for a migrate job during a deploy |
+| **Ceiling** | | **18 of 22** | 4 left for a migrate job during a deploy |
 
 Rules: JVM services go through a **transaction** pool on port 25061 with `prepareThreshold=0` (Flyway is off, so no
 session lock sits behind the pooler); a service that needs `LISTEN`/`NOTIFY` or session state keeps one direct connection,
-sized for it. Node apps are direct for now (App Platform's bindable `DATABASE_URL` is the direct address) with
-`DATABASE_MAX_CONNECTIONS` ≤ 2; their idle connections close after 10 s. A new service takes its pool before it deploys.
+sized for it. Node apps keep `DATABASE_MAX_CONNECTIONS` ≤ 2 (their idle connections close after 10 s); Orochia and its console use
+App Platform's bindable `DATABASE_URL`, which is the direct address. A new service takes its pool before it deploys.
 
 DigitalOcean monitoring has no connection-count metric, so the alarm is a read-only query:
 
