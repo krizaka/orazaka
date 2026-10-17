@@ -24,3 +24,11 @@ SELECT plans.plan_key, 'studio.' || studios.studio, 'boolean', plans.value
   FROM (VALUES ('free', 'false'), ('premium', 'true'), ('ultimate', 'true')) AS plans(plan_key, value)
  CROSS JOIN (VALUES ('cinematic-script'), ('cinematic-cut')) AS studios(studio)
 ON CONFLICT (plan_key, entitlement_key) DO NOTHING;
+
+-- The BATCH lane's step ceiling: a cinematic cut (ten shots upscaled by SeedVR2, interpolated to 30 fps, graded and
+-- encoded at 1080p) measured ~35 min on an H100 pod on 2026-10-17; at 1800 s the run was failed while the cut was encoding.
+\c orazaka_studio_db
+UPDATE studio_runtime_config
+   SET config_value = '3600',
+       description = 'Per-step ceiling in the BATCH lane — room for a cinematic cut (ten shots upscaled by SeedVR2, then interpolated and encoded: ~35 min measured 2026-10-17, ADR-080) and for queue wait behind image generations.'
+ WHERE config_key = 'run.step-timeout-seconds.batch';
