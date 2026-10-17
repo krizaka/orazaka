@@ -12,7 +12,7 @@ generated: true
 
 ## Local first
 
-Orazaka supports **32 models**: **24 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **8 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
+Orazaka supports **33 models**: **25 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **8 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
 
 Every figure below is read from `orazaka_models` (the table the routing reads): the vendor, licence and context window are those of each model's own card; `last verified` is the date of the last passing sovereign smoke that named the model, empty until one is recorded.
 
@@ -60,6 +60,7 @@ How fast and at what price they really run — time, cost and every parameter of
 | `wan2.2-i2v-a14b` — Wan 2.2 I2V A14B (720p, 4-step distill) | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA (80 GB) | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers) | — | available | — |
 | `wan2.2-t2v-a14b` — Wan 2.2 T2V A14B (720p, 80 GB GPU) | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA (80 GB) | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B-Diffusers) | — | available | — |
 | `wan2.2-ti2v-5b` — Wan 2.2 TI2V 5B | Alibaba (Wan-AI) · Wan 2.2 | Video | worker-media · CUDA | [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers/blob/main/README.md) | — | available | — |
+| `seedvr2-3b` — SeedVR2 3B (video upscale, GPU) | ByteDance Seed · SeedVR2 | Video upscale | worker-media · CUDA | [Apache-2.0](https://huggingface.co/ByteDance-Seed/SeedVR2-3B) | — | available | — |
 
 ## Optional: served by a provider
 
