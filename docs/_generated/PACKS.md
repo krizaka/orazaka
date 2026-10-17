@@ -324,6 +324,10 @@ capability rows, a price, catalogue entries — and changes no code.
     {
      "key": "seed",
      "title": "Graine (facultatif)"
+    },
+    {
+     "key": "upscale",
+     "title": "Netteté (facultatif)"
     }
    ],
    "steps": 1,

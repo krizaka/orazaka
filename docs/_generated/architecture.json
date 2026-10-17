@@ -3203,6 +3203,10 @@
             {
               "key": "seed",
               "title": "Graine (facultatif)"
+            },
+            {
+              "key": "upscale",
+              "title": "Netteté (facultatif)"
             }
           ],
           "outputs": [
@@ -5016,6 +5020,28 @@
       "lastVerified": null
     },
     {
+      "id": "ltx-video-0.9.8-13b-distilled",
+      "name": "LTX-Video 0.9.8 13B distilled (720p, GPU)",
+      "vendor": "Lightricks",
+      "family": "LTX-Video",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA (80 GB)",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "LTX-Video Open Weights License 0.X",
+        "url": "https://huggingface.co/Lightricks/LTX-Video-0.9.8-13B-distilled/blob/main/LTX-Video-Open-Weights-License-0.X.txt"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "stable-video-diffusion-img2vid-xt",
       "name": "Stable Video Diffusion XT (heavy, >64GB)",
       "vendor": "Stability AI",
@@ -5082,6 +5108,28 @@
       "lastVerified": null
     },
     {
+      "id": "wan2.2-i2v-a14b-hq",
+      "name": "Wan 2.2 I2V A14B (720p, 40 steps)",
+      "vendor": "Alibaba (Wan-AI)",
+      "family": "Wan 2.2",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA (80 GB)",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "wan2.2-t2v-a14b",
       "name": "Wan 2.2 T2V A14B (720p, 80 GB GPU)",
       "vendor": "Alibaba (Wan-AI)",
@@ -5119,6 +5167,28 @@
       "licence": {
         "name": "Apache-2.0",
         "url": "https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers/blob/main/README.md"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "seedvr2-3b",
+      "name": "SeedVR2 3B (video upscale, GPU)",
+      "vendor": "ByteDance Seed",
+      "family": "SeedVR2",
+      "category": "video-upscale",
+      "capabilities": [
+        "video-upscale"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/ByteDance-Seed/SeedVR2-3B"
       },
       "commercialUse": "yes",
       "contextWindow": null,
