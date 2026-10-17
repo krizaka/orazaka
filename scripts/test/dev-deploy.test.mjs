@@ -166,3 +166,14 @@ test("the recommender (ADR-078): knowledge runs in core with its own database, i
   assert.match(sql, /EXCEPTION WHEN duplicate_object THEN NULL/);
   assert.match(sql, /ON CONFLICT \(tenant_id, version\) DO NOTHING/);
 });
+
+test("the analytics migration (ADR-081) is idempotent, seeds kinds and settings v1, and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-17-analytics.sql", import.meta.url), "utf8");
+  for (const statement of sql.match(/CREATE (TABLE|INDEX) [^\n]*/g)) assert.match(statement, /IF NOT EXISTS/, statement);
+  assert.match(sql, /CREATE OR REPLACE VIEW analytics_event_all/);
+  assert.equal(sql.match(/EXCEPTION WHEN duplicate_object THEN NULL/g).length, 2);
+  assert.match(sql, /ON CONFLICT \(tenant_id, kind\) DO NOTHING/);
+  assert.match(sql, /ON CONFLICT \(tenant_id, version\) DO NOTHING/);
+  const script = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
+  assert.match(script, /command === "analytics"\) analytics\(\)/);
+});
