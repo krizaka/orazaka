@@ -13,6 +13,10 @@ VALUES ('wan2.2-i2v-a14b', 'Wan 2.2 I2V A14B (720p, 4-step distill)', 'video', N
 ON CONFLICT (model_name) DO NOTHING;
 UPDATE orazaka_models SET vendor = 'Alibaba (Wan-AI)', family = 'Wan 2.2', capabilities = 'video', runs_on = 'local', runtime = 'worker-media · CUDA (80 GB)', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers', commercial_use = 'yes', context_window = NULL, status = 'available' WHERE model_name = 'wan2.2-i2v-a14b';
 
+-- The cut is the compose capability given `clips` + `edit` (orazaka-job-service 30-jobs-config.sql, same schema).
+UPDATE orazaka_capabilities SET input_schema = $${"type": "object", "properties": {"photos": {"type": "array", "items": {"type": "string", "format": "asset-id"}, "minItems": 1}, "audio": {"type": "string", "format": "asset-id"}, "clips": {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 24}, "edit": {"type": "string"}}, "anyOf": [{"required": ["photos"]}, {"required": ["clips", "edit"]}]}$$::jsonb
+ WHERE feature_key = 'orazaka.studio.media.compose';
+
 -- The script and the cut inherit capability.video, like video-generation (2026-09-22-media-toolkit-grants.sql).
 \c krizaka_billing_db
 INSERT INTO billing_plan_entitlement (plan_key, entitlement_key, value_type, value)
