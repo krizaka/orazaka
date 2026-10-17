@@ -23,6 +23,14 @@ ON CONFLICT (model_name) DO NOTHING;
 -- infra/deploy/dev-model-registry.sql, run after this file.
 UPDATE orazaka_models SET is_default = (model_name = 'mistral-3-14B') WHERE category = 'chat';
 
+-- Vision on the same provider, so dev does not depend on a laptop's Ollama (dev only, fictional personas' photos only).
+INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, description)
+VALUES ('nemotron-nano-12b-v2-vl', 'Nemotron Nano 12B v2 VL', 'vision', NULL, 'do-inference', FALSE,
+        'NVIDIA Nemotron Nano 12B v2 VL (NVIDIA Open Model License) on DigitalOcean serverless inference — the vision default of the dev '
+        || 'environment: no GPU to run, no tunnel to a laptop, billed per token.')
+ON CONFLICT (model_name) DO NOTHING;
+UPDATE orazaka_models SET is_default = (model_name = 'nemotron-nano-12b-v2-vl') WHERE category = 'vision';
+
 
 -- The image and video engines are the hourly GPU droplet (scripts/gpu-dev.sh), reached inside the app
 -- through the GPU relay: gpu-relay:8086 is its sd-server, gpu-relay:8188 its video pipeline. While it is
