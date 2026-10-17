@@ -13,3 +13,10 @@ INSERT INTO billing_plan_entitlement (plan_key, entitlement_key, value_type, val
 ('premium',  'studio.message-authenticity', 'boolean', 'true'),
 ('ultimate', 'studio.message-authenticity', 'boolean', 'true')
 ON CONFLICT (plan_key, entitlement_key) DO NOTHING;
+
+-- media-safety (krizaka/orazaka-packs): the safety check of photos, video frames and voice messages.
+INSERT INTO billing_plan_entitlement (plan_key, entitlement_key, value_type, value) VALUES
+('free',     'studio.media-safety', 'boolean', 'true'),
+('premium',  'studio.media-safety', 'boolean', 'true'),
+('ultimate', 'studio.media-safety', 'boolean', 'true')
+ON CONFLICT (plan_key, entitlement_key) DO NOTHING;
