@@ -60,7 +60,7 @@ export function filmRecord({ id, production, probe, rate, command }) {
       video: "Wan 2.2 I2V A14B (4-step distill)",
       upscale: "SeedVR2 3B",
       music: "ACE-Step 1.5 XL turbo",
-      ...(script?.voiceover ? { voice: production.brief.voice ?? "the catalogue's voice" } : {}),
+      ...(script?.voiceover ? { voice: `Kokoro-82M (${production.brief.voice ?? "af_heart"})` } : {}),
     },
     command,
   };

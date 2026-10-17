@@ -28,7 +28,7 @@
         "video": "Wan 2.2 I2V A14B (4-step distill)",
         "upscale": "SeedVR2 3B",
         "music": "ACE-Step 1.5 XL turbo",
-        "voice": "am_fenrir"
+        "voice": "Kokoro-82M (am_fenrir)"
       },
       "command": "orazaka cinema new nova-ardent --format superhero-vfx --aspect 9:16 --duration 45 --shots 10 --seed 20261017 --script-model deepseek-v4-pro --brief \"Night city in the rain, an ORIGINAL superhero trailer…\""
     }
