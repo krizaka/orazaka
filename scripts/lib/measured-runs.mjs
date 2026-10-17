@@ -75,7 +75,7 @@ export function mdMeasuredRuns(dataset) {
 
   if (dataset.upscaleTests?.length) {
     lines.push("## Video upscaling", "");
-    lines.push("The same clips, taken from 720p (or 480p) to 1080p or 4K by each candidate, on one NVIDIA H100 80 GB. The verdict is a person's, after looking at the frames side by side (a nearest-frame comparison against Lanczos scaling); the cost is the run's own time at the GPU's hourly rate.", "");
+    lines.push("The same clips, taken from 720p (or 480p) to 1080p or 4K by each candidate, on one NVIDIA H100 80 GB. The verdict is a person's, after looking at the same frames side by side with a plain Lanczos upscale; the cost is the run's own time at the GPU's hourly rate.", "");
     lines.push("| Model | Licence | Commercial use | Size | Time (5 s clip) | Cost per clip | Verdict |", "| --- | --- | --- | --- | --- | --- | --- |");
     for (const t of dataset.upscaleTests) {
       const ran = typeof t.seconds === "number";
