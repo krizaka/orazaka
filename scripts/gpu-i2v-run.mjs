@@ -67,6 +67,19 @@ export function factsOf(jobs) {
   return facts;
 }
 
+/** The Studio inputs of one clip: the plan's model unless the clip names its own (LTX or Wan HQ per shot), and the optional `upscale`. */
+export function clipInputs(plan, clip, assetId) {
+  return {
+    prompt: clip.prompt,
+    durationSeconds: clip.seconds ?? 5,
+    aspect: clip.aspect,
+    seed: String(clip.seed),
+    model: clip.model ?? plan.model,
+    ...(assetId ? { image: assetId } : {}),
+    ...(clip.upscale ? { upscale: clip.upscale } : {}),
+  };
+}
+
 /** Seconds a run took by the platform's own clock (its start and finish), not by when this script noticed. */
 export const runSeconds = (run) => (run?.startedAt && run?.finishedAt ? Math.round((Date.parse(run.finishedAt) - Date.parse(run.startedAt)) / 1000) : undefined);
 
