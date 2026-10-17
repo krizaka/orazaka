@@ -1513,12 +1513,6 @@
     },
     {
       "from": "orazaka-edge",
-      "to": "orazaka-knowledge-service",
-      "kind": "http",
-      "via": "route /api/v1/recommendations"
-    },
-    {
-      "from": "orazaka-edge",
       "to": "orazaka-studio-service",
       "kind": "http",
       "via": "route /api/v1/studios"
@@ -2642,7 +2636,7 @@
       "regulatoryClass": "STANDARD",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "business",
+      "category": "creativity-media",
       "iconKey": "studio",
       "sortWeight": 100,
       "pricing": {
@@ -2669,12 +2663,12 @@
       },
       "categoryText": {
         "en": {
-          "label": "Business",
-          "description": "The packs that do the job: prospect, validate, produce."
+          "label": "Creativity & media",
+          "description": "Packs that produce images, video, sound and showcases."
         },
         "fr": {
-          "label": "Business",
-          "description": "Les packs qui font le travail : prospecter, valider, produire."
+          "label": "Création et médias",
+          "description": "Les packs qui produisent images, vidéo, son et vitrines."
         }
       },
       "studios": [
@@ -2747,7 +2741,7 @@
       "regulatoryClass": "STANDARD",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "business",
+      "category": "creativity-media",
       "iconKey": "image",
       "sortWeight": 90,
       "pricing": {
@@ -2773,8 +2767,14 @@
         }
       },
       "categoryText": {
-        "en": null,
-        "fr": null
+        "en": {
+          "label": "Creativity & media",
+          "description": "Packs that produce images, video, sound and showcases."
+        },
+        "fr": {
+          "label": "Création et médias",
+          "description": "Les packs qui produisent images, vidéo, son et vitrines."
+        }
       },
       "studios": [
         {
@@ -3437,7 +3437,7 @@
       "regulatoryClass": "STANDARD",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "business",
+      "category": "business-compliance",
       "iconKey": "target",
       "sortWeight": 90,
       "pricing": {
@@ -3464,12 +3464,12 @@
       },
       "categoryText": {
         "en": {
-          "label": "Business",
-          "description": "The packs that do the job: prospect, validate, produce."
+          "label": "Business & compliance",
+          "description": "Packs that do the work and keep it in order: validate, prospect, comply."
         },
         "fr": {
-          "label": "Business",
-          "description": "Les packs qui font le travail : prospecter, valider, produire."
+          "label": "Affaires et conformité",
+          "description": "Les packs qui font le travail et le mettent en règle : valider, prospecter, se conformer."
         }
       },
       "studios": [
@@ -3636,7 +3636,7 @@
       "regulatoryClass": "REGULATED",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "lifestyle",
+      "category": "wellbeing",
       "iconKey": "sparkles",
       "sortWeight": 30,
       "pricing": {
@@ -3663,11 +3663,11 @@
       },
       "categoryText": {
         "en": {
-          "label": "Lifestyle",
-          "description": "The packs for you, not for your work."
+          "label": "Wellbeing",
+          "description": "Packs for you, not for your work."
         },
         "fr": {
-          "label": "Vie personnelle",
+          "label": "Bien-être",
           "description": "Les packs pour vous, pas pour votre travail."
         }
       },
@@ -3844,7 +3844,7 @@
       "regulatoryClass": "SENSITIVE",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "business",
+      "category": "business-compliance",
       "iconKey": "shield-check",
       "sortWeight": 20,
       "pricing": {
@@ -3906,12 +3906,12 @@
       },
       "categoryText": {
         "en": {
-          "label": "Business",
-          "description": "The packs that do the job: prospect, validate, produce."
+          "label": "Business & compliance",
+          "description": "Packs that do the work and keep it in order: validate, prospect, comply."
         },
         "fr": {
-          "label": "Business",
-          "description": "Les packs qui font le travail : prospecter, valider, produire."
+          "label": "Affaires et conformité",
+          "description": "Les packs qui font le travail et le mettent en règle : valider, prospecter, se conformer."
         }
       },
       "studios": [
@@ -4019,7 +4019,7 @@
       "regulatoryClass": "STANDARD",
       "status": "DRAFT",
       "showcase": false,
-      "category": "business",
+      "category": "business-compliance",
       "iconKey": "repeat",
       "sortWeight": 5,
       "pricing": {

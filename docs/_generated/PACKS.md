@@ -28,7 +28,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Real-Estate Studio",
   "tagline": "Your listings become Reels ready to publish.",
   "tier": "DATA",
-  "category": "Business",
+  "category": "Creativity & media",
   "studios": 1
  },
  {
@@ -36,7 +36,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Media Studios",
   "tagline": "Generate, listen, describe — without leaving a run.",
   "tier": "DATA",
-  "category": "Business",
+  "category": "Creativity & media",
   "studios": 12
  },
  {
@@ -44,7 +44,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Outbound Prospecting",
   "tagline": "From a prospect list to a sequence that ships.",
   "tier": "DATA",
-  "category": "Business",
+  "category": "Business & compliance",
   "studios": 3
  },
  {
@@ -52,7 +52,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Wellbeing",
   "tagline": "Put into words what you live through, and bring it to your sessions.",
   "tier": "DATA",
-  "category": "Lifestyle",
+  "category": "Wellbeing",
   "studios": 4
  },
  {
@@ -60,7 +60,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "title": "Document Verification",
   "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
   "tier": "WORKER",
-  "category": "Business",
+  "category": "Business & compliance",
   "studios": 2
  },
  {
@@ -87,7 +87,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": null,
  "distribution": "OSS",
  "regulatoryClass": "STANDARD",
- "category": "Business",
+ "category": "Creativity & media",
  "listed": true,
  "workers": [],
  "controls": {
@@ -144,7 +144,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": "TOOLKIT",
  "distribution": "OSS",
  "regulatoryClass": "STANDARD",
- "category": "Business",
+ "category": "Creativity & media",
  "listed": true,
  "workers": [],
  "controls": {
@@ -519,7 +519,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": null,
  "distribution": "OSS",
  "regulatoryClass": "STANDARD",
- "category": "Business",
+ "category": "Business & compliance",
  "listed": true,
  "workers": [],
  "controls": {
@@ -628,7 +628,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": null,
  "distribution": "CLOUD",
  "regulatoryClass": "REGULATED",
- "category": "Lifestyle",
+ "category": "Wellbeing",
  "listed": true,
  "workers": [],
  "controls": {
@@ -739,7 +739,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "kind": null,
  "distribution": "CLOUD",
  "regulatoryClass": "SENSITIVE",
- "category": "Business",
+ "category": "Business & compliance",
  "listed": true,
  "workers": [
   "orazaka-worker-validation"
@@ -967,7 +967,7 @@ requires:
   capabilities: []                    # empty for DATA: you reuse orazaka.core.*
 
 catalog:
-  categoryKey: business
+  categoryKey: business-compliance     # business-compliance | creativity-media | wellbeing | data-analytics (closed list)
   iconKey: sparkles
 
 pricing:
