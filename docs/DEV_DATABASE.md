@@ -40,3 +40,35 @@ Passwords live in the maintainer's `CREDENTIALS.local.md`, never in the reposito
 
 New connection → PostgreSQL: host and port of the cluster (25060), the database and its role, SSL tab → *Use SSL*,
 mode `verify-full`, root certificate = the cluster CA. Your IP must be a trusted source.
+
+## Connection budget
+
+`max_connections` is 25 on this plan and DigitalOcean keeps 3: **22 usable**, shared by every dev service. The budget is
+a ceiling per service (what it may hold at once), kept under 22 with room for a rolling deploy.
+
+| Service | Path | Cap (server side) | Notes |
+|---|---|---:|---|
+| orazaka-dev core: conversation + job (`orazaka_db`) | `pool-orazaka` (transaction) | 2 | Hikari 3, min idle 0 |
+| core: users (`krizaka_users_db`) | `pool-users` | 2 | |
+| core: studio | `pool-studio` | 1 | |
+| core: knowledge | `pool-knowledge` | 1 | |
+| core: billing | `pool-billing` | 1 | |
+| orochia-dev web | direct | 3 | pool 2 + 1 LISTEN (session by nature) |
+| orochia-admin-dev | direct | 1 | |
+| yasakia-dev, yomizaka-dev | direct | 2 + 2 | `DATABASE_MAX_CONNECTIONS=2` |
+| kachizaka-dev, akinaza-dev | direct | 1 + 1 | `DATABASE_MAX_CONNECTIONS=1` |
+| accounts, newsletter (next services) | `pool-accounts`, `pool-newsletter` | 1 + 1 | reserved |
+| maintainer / `doadmin` | direct | 1 | |
+| **Ceiling** | | **20 of 22** | 2 left for a migrate job during a deploy |
+
+Rules: JVM services go through a **transaction** pool on port 25061 with `prepareThreshold=0` (Flyway is off, so no
+session lock sits behind the pooler); a service that needs `LISTEN`/`NOTIFY` or session state keeps one direct connection,
+sized for it. Node apps are direct for now (App Platform's bindable `DATABASE_URL` is the direct address) with
+`DATABASE_MAX_CONNECTIONS` ≤ 2; their idle connections close after 10 s. A new service takes its pool before it deploys.
+
+DigitalOcean monitoring has no connection-count metric, so the alarm is a read-only query:
+
+```bash
+psql "$URL" -At -F, -c "select usename, count(*) from pg_stat_activity where datname is not null group by 1" \
+  | node scripts/db-connections.mjs     # exit 1 above 80 % of the 22 usable
+```

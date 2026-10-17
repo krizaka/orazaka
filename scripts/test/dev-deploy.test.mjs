@@ -154,7 +154,7 @@ test("the core image build cache is busted at every apply: CORE_REBUILD is fille
 
 test("the recommender (ADR-078): knowledge runs in core with its own database, its migration is idempotent", () => {
   const dev = spec("orazaka-dev");
-  assert.match(dev, /key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql:\/\/__DATABASE_HOST__:__DATABASE_PORT__\/orazaka_knowledge_db\?sslmode=require"/);
+  assert.match(dev, /key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql:\/\/__DATABASE_HOST__:25061\/pool-knowledge\?sslmode=require&prepareThreshold=0"/);
   assert.match(dev, /key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__"/);
   const docker = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
   assert.match(docker, /orazaka-apps\/services\/orazaka-knowledge-service \\/);
@@ -185,4 +185,13 @@ test("orazaka-dev: outputs go to the private Bunny zone, the key is a SECRET, de
   assert.match(text, /MEDIA_STORAGE_API_KEY, scope: RUN_TIME, type: SECRET, value: "__MEDIA_STORAGE_API_KEY__"/);
   assert.match(text, /MEDIA_STORAGE_ENDPOINT, scope: RUN_TIME, value: ny\.storage\.bunnycdn\.com/); // the zone's own region host
   assert.match(text, /MEDIA_RETENTION_DAYS, scope: RUN_TIME, value: "30"/);
+
+test("connection budget: every JVM of the core goes through its PgBouncer pool (25061, prepareThreshold=0), none direct", () => {
+  const dev = spec("orazaka-dev");
+  const urls = [...dev.matchAll(/key: (\w+_URL|SPRING_DATASOURCE_URL), scope: RUN_TIME, value: "(jdbc:postgresql:[^"]+)"/g)];
+  assert.equal(urls.length, 5, "orazaka_db, users, studio, knowledge, billing");
+  for (const [, key, url] of urls) {
+    assert.match(url, /:25061\/pool-[a-z]+\?sslmode=require&prepareThreshold=0$/, `${key} must use its pool`);
+  }
+  assert.doesNotMatch(dev, /__DATABASE_PORT__/, "no direct (25060) datasource left in the core");
 });
