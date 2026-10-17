@@ -98,7 +98,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 ## Commands
 
 ```cli-commands
-32 commands, 24 subcommands — every one in the table below.
+33 commands, 30 subcommands — every one in the table below.
 ```
 
 | Command | Description |
@@ -106,6 +106,13 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka agent` | Manage Orazaka local executing agent |
 | `orazaka agent listen` | Start CLI agent listener and reverse tunnel |
 | `orazaka chat [prompt...]` | Execute interactive REPL or single-shot chat |
+| `orazaka cinema` | A cinematic short (30–60 s) from a brief: script, keyframes, shots, cut, sound — each an ordinary Studio run |
+| `orazaka cinema new <dir>` | Start a production from a brief |
+| `orazaka cinema estimate <dir>` | What the rest of the production will cost and take, before it runs |
+| `orazaka cinema run <dir>` | Run (or resume) the production: script, references, keyframes, shots, cut, voice, sound |
+| `orazaka cinema fetch <dir>` | Download the references, keyframes, shots and the film into the production's folder |
+| `orazaka cinema reshoot <dir> <shots>` | Make shots again (a new seed): their video, then the cut and the sound |
+| `orazaka cinema status <dir>` | Where the production is |
 | `orazaka config` | Interactive configuration wizard — review and update .env variables |
 | `orazaka db` | Database maintenance operations |
 | `orazaka db reseed` | Drop & re-apply infra/initdb/*.sql (schema + seed). Destroys all local dev data. |
@@ -177,6 +184,66 @@ Execute interactive REPL or single-shot chat
 | `-m, --model <model>` | Specify AI model name |
 | `-v, --voice <voice>` | Specify voice name |
 | `-o, --save <path>` | Specific file path to save output media |
+
+### `orazaka cinema new <dir>`
+
+Start a production from a brief
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `-a, --aspect <aspect>` | 9:16 or 16:9 (default: `9:16`) |
+| `-d, --duration <seconds>` | 30 to 60 (default: `45`) |
+| `-n, --shots <count>` | 8 to 12 (default: `10`) |
+| `-l, --language <lang>` | en or fr (default: `en`) |
+| `--seed <seed>` | The production's seed (every shot's seed derives from it) |
+| `--voice <voice>` | A voice of the speech catalogue for the voice-over |
+| `--script-model <model>` | The language model that writes the script (default: the catalogue's) |
+
+### `orazaka cinema estimate <dir>`
+
+What the rest of the production will cost and take, before it runs
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+
+### `orazaka cinema run <dir>`
+
+Run (or resume) the production: script, references, keyframes, shots, cut, voice, sound
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `-y, --yes` | Do not ask before spending |
+| `--max-runs <n>` | Stop after this many runs (review in between) |
+| `--model <name>` | The video model of the shots (default: `wan2.2-i2v-a14b`) |
+
+### `orazaka cinema fetch <dir>`
+
+Download the references, keyframes, shots and the film into the production's folder
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+
+### `orazaka cinema reshoot <dir> <shots>`
+
+Make shots again (a new seed): their video, then the cut and the sound
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `<shots>` | Shot numbers, comma-separated |
+| `--new-keyframe` | Make the keyframe again too |
+
+### `orazaka cinema status <dir>`
+
+Where the production is
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
 
 ### `orazaka config`
 

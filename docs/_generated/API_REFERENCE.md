@@ -38,6 +38,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/intent` | authenticated | IntentController | Dispatches a synchronous user intention through the App Factory and returns the result. |
 | POST | `/api/v1/intent/route` | public | IntentController | M2M Level-0 gate routing: verifies the envelope and returns a signed intent token. |
 | GET | `/api/v1/jobs` | authenticated | JobController | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
+| DELETE | `/api/v1/jobs/{id}` | ADMIN + USER | JobController | Deletes a finished job's result: files out of every store, row marked deleted (orazaka-web-client#86). |
 | GET | `/api/v1/jobs/{id}` | ADMIN + USER | JobController | Fetches the single, atomic state of a specific job. |
 | POST | `/api/v1/jobs/{id}/progress` | ADMIN + USER | JobController | Updates progress of a running job and broadcasts it to connected users. |
 | POST | `/api/v1/jobs/{jobId}/approve` | ADMIN + USER | JobController | Approves a pending automation job and dispatches its payload to the execution queue. |
@@ -96,6 +97,10 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| POST | `/api/v1/analytics/erasures` | authenticated | AnalyticsController | Forgets subjects and items, in the analytics and the recommender's events. |
+| POST | `/api/v1/analytics/events` | authenticated | AnalyticsController | Records a batch of events (idempotent by id). |
+| GET | `/api/v1/analytics/funnel` | authenticated | AnalyticsController | The ordered funnel of steps over [from, to). |
+| GET | `/api/v1/analytics/insights` | authenticated | AnalyticsController | KPIs, series, top items and cohorts over [from, to) (UTC dates, to excluded). |
 | POST | `/api/v1/recommendations/erasures` | authenticated | RecommendationController | Forgets people and items. |
 | POST | `/api/v1/recommendations/events` | authenticated | RecommendationController | Records a batch of interaction events (idempotent by id). |
 | GET | `/api/v1/recommendations/for-you` | authenticated | RecommendationController | The person's "For you" feed. |
