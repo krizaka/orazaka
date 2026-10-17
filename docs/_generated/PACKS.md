@@ -926,7 +926,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
  "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
- "version": "1.1.0",
+ "version": "1.2.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -962,7 +962,7 @@ capability rows, a price, catalogue entries — and changes no code.
   {
    "label": "Bail de logement — Québec",
    "jurisdiction": "QC",
-   "rules": 9,
+   "rules": 10,
    "versions": [
     "2024-02-21"
    ]
@@ -1074,7 +1074,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | `data-analytics` | 1.3.0 | DATA | OSS | STANDARD | yes | `data-driven-ui`, `video-understanding`, `creator-suggestions` | — |
-| `document-validation` | 1.1.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
+| `document-validation` | 1.2.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
 | `echo-toolkit` | 1.0.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
 | `orazaka-media` | 1.7.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.1.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |

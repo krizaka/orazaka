@@ -4244,7 +4244,7 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -4296,7 +4296,7 @@
           "versions": [
             "2024-02-21"
           ],
-          "rules": 9
+          "rules": 10
         }
       ],
       "text": {
