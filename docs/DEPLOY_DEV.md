@@ -147,11 +147,16 @@ leaves a run whose file is gone (the run page then says "This result is no longe
 envelope (ADR-054: encrypted before it leaves the process) is therefore also stored through the `DurableAssetStore`
 port (`orazaka-assets`), chosen by environment: `MEDIA_STORAGE_PROVIDER=local|bunny|directory`.
 
-- `bunny`: a **private** storage zone (`orazaka-dev`, no pull zone, never a public URL — media is served only by
+- `bunny`: a **private** storage zone (`orazaka-media-dev`, NY, standard tier, no pull zone, never a public URL — media is served only by
   the authenticated `/api/v1/assets/{jobId}/{file}` route, which restores a missing file after the ownership check).
   `MEDIA_STORAGE_ZONE`, `MEDIA_STORAGE_API_KEY` (the zone password, secret), `MEDIA_STORAGE_ENDPOINT`
   (default `storage.bunnycdn.com`), `MEDIA_STORAGE_TENANT` (first key segment).
 - Key layout (krizaka/.github#61): `t/<tenant>/u/<userId>/jobs/<jobId>/<file>`; retention deletes the job prefix.
+- Cost: Bunny Storage bills per GB stored (about 0.01 USD/GB/month, no minimum on top of the existing account), so dev
+  outputs cost cents; DO Spaces would be 5 USD/month flat. No signed URL is needed: the zone has no public path, the
+  only way out is the authenticated asset route (JWT expiry, ownership from the job row, other users get 404).
+- Retention is data: `MEDIA_RETENTION_DAYS` (dev: 30; `0` keeps) — the job-service sweeper deletes the job's files,
+  its durable prefix, then its row. Protected data classes keep their own, shorter window.
 - `local` (default) keeps today's behaviour; self-hosted customers keep local disk (or S3/Bunny adapters later).
 
 ## Routing is data

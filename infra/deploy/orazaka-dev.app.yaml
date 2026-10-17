@@ -115,10 +115,13 @@ services:
       - { key: CRYPTO_SALT, scope: RUN_TIME, type: SECRET, value: "__CRYPTO_SALT__" }
       - { key: MEDIA_ENCRYPTION_KEY, scope: RUN_TIME, type: SECRET, value: "__MEDIA_ENCRYPTION_KEY__" }
       # Generated media. The container disk is wiped by every deploy, so the sealed envelopes are also kept in a
-      # private Bunny Storage zone (docs/DEPLOY_DEV.md § Media). `local` = disk only; switching to `bunny` adds
-      # MEDIA_STORAGE_ZONE / MEDIA_STORAGE_API_KEY (SECRET, from the local secrets file) — see the doc.
-      - { key: MEDIA_STORAGE_PROVIDER, scope: RUN_TIME, value: local }
+      # private Bunny Storage zone (no pull zone; docs/DEPLOY_DEV.md § Media). Ordinary jobs and their files are
+      # purged after MEDIA_RETENTION_DAYS (0 = keep).
+      - { key: MEDIA_STORAGE_PROVIDER, scope: RUN_TIME, value: bunny }
+      - { key: MEDIA_STORAGE_ZONE, scope: RUN_TIME, value: orazaka-media-dev }
+      - { key: MEDIA_STORAGE_API_KEY, scope: RUN_TIME, type: SECRET, value: "__MEDIA_STORAGE_API_KEY__" }
       - { key: MEDIA_STORAGE_TENANT, scope: RUN_TIME, value: orazaka }
+      - { key: MEDIA_RETENTION_DAYS, scope: RUN_TIME, value: "30" }
       # Sign-in open, sign-up closed — the backend refuses a registration too (403).
       - { key: AUTH_SIGNUP_ENABLED, scope: RUN_TIME, value: "false" }
       - { key: EMAIL_VERIFICATION_ENABLED, scope: RUN_TIME, value: "false" }

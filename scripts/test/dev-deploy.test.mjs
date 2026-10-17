@@ -177,3 +177,11 @@ test("the analytics migration (ADR-081) is idempotent, seeds kinds and settings 
   const script = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
   assert.match(script, /command === "analytics"\) analytics\(\)/);
 });
+
+test("orazaka-dev: outputs go to the private Bunny zone, the key is a SECRET, dev keeps them 30 days", () => {
+  const text = spec("orazaka-dev");
+  assert.match(text, /MEDIA_STORAGE_PROVIDER, scope: RUN_TIME, value: bunny/);
+  assert.match(text, /MEDIA_STORAGE_ZONE, scope: RUN_TIME, value: orazaka-media-dev/);
+  assert.match(text, /MEDIA_STORAGE_API_KEY, scope: RUN_TIME, type: SECRET, value: "__MEDIA_STORAGE_API_KEY__"/);
+  assert.match(text, /MEDIA_RETENTION_DAYS, scope: RUN_TIME, value: "30"/);
+});
