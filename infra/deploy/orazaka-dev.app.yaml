@@ -120,6 +120,8 @@ services:
       - { key: MEDIA_STORAGE_PROVIDER, scope: RUN_TIME, value: bunny }
       - { key: MEDIA_STORAGE_ZONE, scope: RUN_TIME, value: orazaka-media-dev }
       - { key: MEDIA_STORAGE_API_KEY, scope: RUN_TIME, type: SECRET, value: "__MEDIA_STORAGE_API_KEY__" }
+      # The zone is in New York: a regional zone answers 401 on the default (Falkenstein) host.
+      - { key: MEDIA_STORAGE_ENDPOINT, scope: RUN_TIME, value: ny.storage.bunnycdn.com }
       - { key: MEDIA_STORAGE_TENANT, scope: RUN_TIME, value: orazaka }
       - { key: MEDIA_RETENTION_DAYS, scope: RUN_TIME, value: "30" }
       # Sign-in open, sign-up closed — the backend refuses a registration too (403).
