@@ -3203,6 +3203,10 @@
             {
               "key": "seed",
               "title": "Graine (facultatif)"
+            },
+            {
+              "key": "upscale",
+              "title": "Netteté (facultatif)"
             }
           ],
           "outputs": [
@@ -4884,6 +4888,28 @@
       "lastVerified": null
     },
     {
+      "id": "kokoro-82m",
+      "name": "Kokoro 82M (GPU host)",
+      "vendor": "hexgrad",
+      "family": "Kokoro",
+      "category": "speech",
+      "capabilities": [
+        "text-to-speech"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA",
+      "provider": "gpu-speech",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/hexgrad/Kokoro-82M"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "piper-en-low",
       "name": "Piper Low (en)",
       "vendor": "Rhasspy",
@@ -4994,6 +5020,28 @@
       "lastVerified": null
     },
     {
+      "id": "ltx-video-0.9.8-13b-distilled",
+      "name": "LTX-Video 0.9.8 13B distilled (720p, GPU)",
+      "vendor": "Lightricks",
+      "family": "LTX-Video",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA (80 GB)",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "LTX-Video Open Weights License 0.X",
+        "url": "https://huggingface.co/Lightricks/LTX-Video-0.9.8-13B-distilled/blob/main/LTX-Video-Open-Weights-License-0.X.txt"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "stable-video-diffusion-img2vid-xt",
       "name": "Stable Video Diffusion XT (heavy, >64GB)",
       "vendor": "Stability AI",
@@ -5040,6 +5088,28 @@
     {
       "id": "wan2.2-i2v-a14b",
       "name": "Wan 2.2 I2V A14B (720p, 4-step distill)",
+      "vendor": "Alibaba (Wan-AI)",
+      "family": "Wan 2.2",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA (80 GB)",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "wan2.2-i2v-a14b-hq",
+      "name": "Wan 2.2 I2V A14B (720p, 40 steps)",
       "vendor": "Alibaba (Wan-AI)",
       "family": "Wan 2.2",
       "category": "video",
