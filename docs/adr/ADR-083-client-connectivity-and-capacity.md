@@ -49,7 +49,7 @@ by a restart). Everything else is the services'.
 
 1. **No idempotency on run start.** A cut connection after the engine accepted leaves a paid orphan run or a lost one
    (the integrations post says so; the billing ledger is idempotent, the door in front of it was not).
-2. **Polling only** for long runs. Seeding Orochia's dataset would have polled ~360 jobs a pass against a 2 000-call daily
+2. **Polling only** for long runs (slice A of #189 now offers a stream; products still poll until they adopt it). Seeding Orochia's dataset would have polled ~360 jobs a pass against a 2 000-call daily
    quota; no push exists (#189, open, **no owner**).
 3. **No per-minute limit at the edge.** The tiers exist as data (`rate_limits.requests_per_minute`, `concurrent_jobs`, a
    `users.rate_limit_tier`), a Redis bucket4j filter enforces them in the conversation service, but it is **off** in dev
@@ -282,7 +282,7 @@ Nothing here is bought by this ADR. No paid resource above $5/month is created w
 | 1 | Idempotency key on run start ([orazaka-studio#20](https://github.com/krizaka/orazaka-studio/pull/20)); per-key rate limit, observe mode ([orazaka-edge#22](https://github.com/krizaka/orazaka-edge/pull/22), [krizaka-users#34](https://github.com/krizaka/krizaka-users/pull/34)); k6 suite + CI smoke (this PR) | **shipped** |
 | 2 | Service accounts on a fitting tier, dev to `enforce`, Retry-After on the concurrency cap | issue |
 | 3 | Shared limiter store for more than one edge | issue (later) |
-| 4 | **#189**: SSE run events (`/runs/{id}/events`, per-key stream, `Last-Event-ID`, heartbeat) then signed webhooks | issue, first slice next |
+| 4 | **#189**: slice A, SSE `GET /runs/{id}/events` — snapshots on change, heartbeat, bounded per actor ([orazaka-studio#21](https://github.com/krizaka/orazaka-studio/pull/21)); then the per-key stream and signed webhooks | **A shipped**; B open on #189 |
 | 5 | Admission control by queue depth; provider circuit breakers; a defined answer to `rejectPublish` | issue |
 | 6 | Generated TypeScript and Java SDKs | issue |
 | 7 | OpenAPI as the source of truth + the contract-fixture test across repositories | issue |
