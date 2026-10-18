@@ -84,7 +84,7 @@ jobs:
           done
           path=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='orazaka-edge').path)")
           ./mvnw -B -ntp -f "$path/pom.xml" package -DskipTests
-          echo "EDGE_JAR=$(ls $PWD/$path/target/orazaka-edge-*.jar | grep -v original | head -1)" >> "$GITHUB_ENV"
+          echo "EDGE_JAR=$(find "$PWD/$path/target" -maxdepth 1 -name 'orazaka-edge-*.jar' ! -name '*.original' | head -1)" >> "$GITHUB_ENV"
 
       - name: Install k6 (pinned, checksum verified)
         run: |
