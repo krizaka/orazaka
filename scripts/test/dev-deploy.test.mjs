@@ -61,6 +61,11 @@ test("the GPU relay allows exactly the broker, the job service and the reverse p
   assert.match(dockerfile, /sha256sum -c/);
 });
 
+test("the relay exposes LocalAI's port to the app as well as allowing it", () => {
+  const spec = readFileSync(new URL("../../infra/deploy/orazaka-dev.app.yaml", import.meta.url), "utf8");
+  assert.match(spec, /internal_ports: \[8085, 8086, 8188, 11434\]/);
+});
+
 test("password: long, mixed, different each time", () => {
   const a = password();
   assert.ok(a.length >= 28 && /[A-Za-z]/.test(a) && /\d/.test(a) && /[^A-Za-z0-9]/.test(a));
