@@ -75,7 +75,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Build the edge (its upstreams from source, no tests: the component pipeline runs them)
+      - name: Build the edge, upstreams from source, without tests (the component pipeline runs them)
         working-directory: workspace
         run: |
           for r in $(node scripts/workspace.mjs deps orazaka-edge); do
