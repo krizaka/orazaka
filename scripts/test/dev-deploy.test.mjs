@@ -185,6 +185,7 @@ test("orazaka-dev: outputs go to the private Bunny zone, the key is a SECRET, de
   assert.match(text, /MEDIA_STORAGE_API_KEY, scope: RUN_TIME, type: SECRET, value: "__MEDIA_STORAGE_API_KEY__"/);
   assert.match(text, /MEDIA_STORAGE_ENDPOINT, scope: RUN_TIME, value: ny\.storage\.bunnycdn\.com/); // the zone's own region host
   assert.match(text, /MEDIA_RETENTION_DAYS, scope: RUN_TIME, value: "30"/);
+});
 
 test("connection budget: every JVM of the core goes through its PgBouncer pool (25061, prepareThreshold=0), none direct", () => {
   const dev = spec("orazaka-dev");
