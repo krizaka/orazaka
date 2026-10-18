@@ -80,23 +80,23 @@ services:
     envs:
       # Databases (krizaka-dev-pg). orazaka_db holds conversation, jobs and governance.
       - { key: CORE_REBUILD, scope: BUILD_TIME, value: "__CORE_REBUILD__" }
-      - { key: SPRING_DATASOURCE_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/orazaka_db?sslmode=require" }
-      # Connection budget (krizaka/.github#60): the cluster allows 22 usable connections for every dev service.
-      # conversation + job share this datasource, capped here; the studio goes through the PgBouncer pool
-      # `pool-studio` (transaction mode: pgjdbc needs prepareThreshold=0). users and orazaka_db stay direct while
-      # Flyway's session advisory lock is not proven safe behind a transaction pooler.
+      - { key: SPRING_DATASOURCE_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-orazaka?sslmode=require&prepareThreshold=0" }
+      # Connection budget (docs/DEV_DATABASE.md, "Connection budget"): the cluster allows 22 usable connections for
+      # every dev service. Every JVM of this container goes through its PgBouncer pool (port 25061, transaction mode:
+      # pgjdbc needs prepareThreshold=0) — the pool size is the cap on the server, whatever the services' Hikari size.
+      # Flyway is off in every service (DDL = infra/initdb), so no session advisory lock sits behind the pooler.
       - { key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE, scope: RUN_TIME, value: "3" }
       - { key: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE, scope: RUN_TIME, value: "0" }
       - { key: SPRING_DATASOURCE_USERNAME, scope: RUN_TIME, value: orazaka_db }
       - { key: SPRING_DATASOURCE_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_DB__" }
-      - { key: IDENTITY_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/krizaka_users_db?sslmode=require" }
+      - { key: IDENTITY_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-users?sslmode=require&prepareThreshold=0" }
       - { key: IDENTITY_DB_USERNAME, scope: RUN_TIME, value: krizaka_users_db }
       - { key: IDENTITY_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_KRIZAKA_USERS_DB__" }
       - { key: STUDIO_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-studio?sslmode=require&prepareThreshold=0" }
       - { key: STUDIO_DB_USER, scope: RUN_TIME, value: orazaka_studio_db }
       - { key: STUDIO_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_STUDIO_DB__" }
       # The knowledge service: the recommender's store (ADR-078, pgvector).
-      - { key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/orazaka_knowledge_db?sslmode=require" }
+      - { key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-knowledge?sslmode=require&prepareThreshold=0" }
       - { key: KNOWLEDGE_DB_USERNAME, scope: RUN_TIME, value: orazaka_knowledge_db }
       - { key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__" }
       # Broker: RabbitMQ on the orazaka-broker-dev Droplet, TLS only, VPC only (`dev-deploy.mjs broker`).
@@ -133,7 +133,7 @@ services:
       # Enforcement stays DRY_RUN (a billing_runtime_config row): it meters, it never blocks chat.
       - { key: BILLING_ENABLED, scope: RUN_TIME, value: "true" }
       - { key: BILLING_INTERNAL_URL, scope: RUN_TIME, value: "http://localhost:8095" }
-      - { key: BILLING_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/krizaka_billing_db?sslmode=require" }
+      - { key: BILLING_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-billing?sslmode=require&prepareThreshold=0" }
       - { key: BILLING_DB_USERNAME, scope: RUN_TIME, value: krizaka_billing_db }
       - { key: BILLING_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_KRIZAKA_BILLING_DB__" }
       # Identity events on the Orazaka exchanges (as locally), Orazaka's reserved preference prefix.
