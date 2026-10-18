@@ -154,7 +154,7 @@ function pollUntilTerminal(runId, headers) {
     const r = http.get(`${BASE_URL}/api/v1/studios/runs/${runId}`, { headers, tags: { endpoint: 'sync' } });
     noteLimit(r);
     const status = r.status === 200 ? r.json('status') : null;
-    if (status && status !== 'RUNNING' && status !== 'PENDING' && status !== 'AWAITING_APPROVAL') {
+    if (status === 'SUCCEEDED' || status === 'FAILED' || status === 'CANCELLED') {
       runToTerminal.add(Date.now() - t0);
       check(r, { 'run reached a terminal state': () => true });
       return;
