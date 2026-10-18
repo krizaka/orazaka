@@ -52,10 +52,10 @@ test("broker cloud-init: TLS only, bound to the private address, secrets as plac
   }
 });
 
-test("the GPU relay allows exactly the broker, the job service and the two reverse ports", () => {
+test("the GPU relay allows exactly the broker, the job service and the reverse ports of the Mac and the pods (LocalAI 8085, sd-server 8086, pipeline 8188, Ollama 11434)", () => {
   const entry = readFileSync(new URL("../../infra/deploy/gpu-relay/entrypoint.sh", import.meta.url), "utf8");
   const allowed = [...entry.matchAll(/^\s+"(\^[^"]+)",?$/gm)].map((m) => m[1]);
-  assert.deepEqual(allowed, ["^broker-dev\\\\\\\\.orazaka\\\\\\\\.com:5671\\$", "^core:8090\\$", "^R:0\\\\\\\\.0\\\\\\\\.0\\\\\\\\.0:(8086|8188|11434)\\$"]);
+  assert.deepEqual(allowed, ["^broker-dev\\\\\\\\.orazaka\\\\\\\\.com:5671\\$", "^core:8090\\$", "^R:0\\\\\\\\.0\\\\\\\\.0\\\\\\\\.0:(8085|8086|8188|11434)\\$"]);
   assert.match(entry, /-lt 32/);
   const dockerfile = readFileSync(new URL("../../infra/deploy/gpu-relay/Dockerfile", import.meta.url), "utf8");
   assert.match(dockerfile, /sha256sum -c/);
