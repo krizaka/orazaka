@@ -166,6 +166,23 @@ test("runpod bootstrap: a watchdog first, the worker built from its public repos
   assert.doesNotMatch(boot, /ghcr\.io/); // the private registry is never needed
 });
 
+test("runpod bootstrap: the venv lives on the network volume, so a later pod reuses it (no rebuild, no idle build for the spend guard to stop)", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.match(boot, /VENV=\/models\/venv/);
+  assert.match(boot, /ln -sfn \/models\/venv \/opt\/venv/);
+  assert.doesNotMatch(boot, /python3 -m venv \/opt\/venv/);
+});
+
+test("runpod bootstrap: the optional video upscaler (SeedVR2 3B, Apache-2.0) is a pinned checkout with its own venv on the volume, and the worker is told where", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.match(boot, /UP=\/models\/up/);
+  assert.match(boot, /SEEDVR2_REF=[0-9a-f]{40}/); // pinned, never a branch
+  assert.match(boot, /git clone -q https:\/\/github\.com\/numz\/ComfyUI-SeedVR2_VideoUpscaler/);
+  assert.match(boot, /SEEDVR2_HOME=\/models\/up\/seedvr2 SEEDVR2_PYTHON=\/models\/up\/venv\/bin\/python/); // main's UPSCALER_ENV: set where the volume holds the install (this block puts it there)
+  assert.match(boot, /ln -sfn \$UP\/seedvr \/models\/seedvr2/); // the weights live where upscale.py looks
+  assert.ok(boot.indexOf("SEEDVR2_HOME") < boot.indexOf("app.consumer"), "the worker starts with the upscaler's location in its environment");
+});
+
 test("runpod watchdog: the pod destroys ITSELF — through the API with the pod's own key, then runpodctl; with no key it says so and falls back", () => {
   const boot = read("infra/gpu/runpod-bootstrap.sh");
   const watchdog = boot.slice(boot.indexOf("<<'WD'\n") + 7, boot.indexOf("\nWD\n"));
@@ -188,4 +205,23 @@ test("runpod watchdog: the pod destroys ITSELF — through the API with the pod'
   assert.equal(readFileSync(calls, "utf8").trim(), "runpodctl remove pod pod123");
   // no pod id at all: it refuses rather than guess
   assert.throws(() => run({}), /Command failed/);
+});
+
+test("runpod bootstrap (cinema, ADR-080): the profile's image engine is served on :8086 through the relay, sound is enabled, scratch weights go to the container disk", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.match(boot, /MEDIA_SCRATCH_DIR=\/var\/lib\/orazaka-scratch/);
+  assert.match(boot, /get\('image'\)/); // read from models.yaml, never a hard-coded model
+  assert.match(boot, /\/models\/bin\/sd-server-\$\{SDCPP_REF:0:12\}/); // built once, kept on the volume
+  assert.match(boot, /IMAGE_REMOTE="R:0\.0\.0\.0:8086:127\.0\.0\.1:8086"/);
+  assert.match(boot, /R:0\.0\.0\.0:8188:127\.0\.0\.1:8188 \$IMAGE_REMOTE/);
+  assert.match(boot, /MEDIA_SOUND_ENABLED="\$SOUND_FLAG"/);
+  assert.match(boot, /fonts-dejavu-core/); // the cut's titles
+  assert.match(boot, /SEEDVR2_HOME=\/models\/up\/seedvr2/); // the upscaler on the volume, when it is there
+  assert.match(boot, /MEDIA_SPEECH_PORT=8086 MEDIA_IMAGE_UPSTREAM=127\.0\.0\.1:8089/); // speech in front of sd-server
+  assert.match(boot, /get\('speech'\)/);
+  assert.match(boot, /MEDIA_FONT_FILE="\$FONT"/); // the Krizaka type for titles
+  const lib = read("scripts/lib/gpu-runpod.sh");
+  assert.match(lib, /"containerDiskInGb": int\(e\.get\("DISK_GB"\) or 60\)/);
+  assert.match(lib, /HF_TOKEN="\$\(secret AI_HUGGINGFACE_TOKEN/); // read from the secrets file, never an argument
+  assert.match(lib, /worker_ref="\$\{GPU_WORKER_REF:-/);
 });

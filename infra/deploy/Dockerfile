@@ -5,8 +5,8 @@
 # context: the repository root). The platform is one repository per component, so the image clones
 # every repository listed in orazaka.workspace.json at its default branch — exactly what CI does —
 # and builds the seven services the dev environment runs, without tests (CI ran them).
-# Redeploy with `doctl apps create-deployment <app> --force-rebuild`: a cached clone layer would
-# otherwise keep yesterday's code.
+# Redeploy with `doctl apps create-deployment <app> --force-rebuild`. The clone layer's cache follows the
+# repositories' heads (the ADD lines of stage 1), so a change in any of them is cloned again.
 # ==============================================================================
 
 # ── 1. Sources: every repository of the workspace, shallow ───────────────────
@@ -14,6 +14,31 @@ FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18
 RUN apk add --no-cache git
 WORKDIR /workspace
 COPY . .
+# The cache key of the clone below: each workspace repository's ref advertisement (its branch heads). A push to any of
+# them changes a file here, so the clone runs again — `--force-rebuild` alone reused the cached clone and shipped
+# yesterday's code (2026-10-16: a krizaka-users security fix did not reach dev). One line per repository of
+# orazaka.workspace.json; scripts/test/dockerfile-clone-cache.test.mjs keeps them in step.
+ADD https://github.com/krizaka/krizaka-build.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-build
+ADD https://github.com/krizaka/krizaka-platform-kit.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-platform-kit
+ADD https://github.com/krizaka/krizaka-users.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-users
+ADD https://github.com/krizaka/krizaka-notifications.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-notifications
+ADD https://github.com/krizaka/krizaka-billing.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-billing
+ADD https://github.com/krizaka/orazaka-build.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-build
+ADD https://github.com/krizaka/orazaka-contracts.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-contracts
+ADD https://github.com/krizaka/orazaka-studio.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-studio
+ADD https://github.com/krizaka/orazaka-ai-engine.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-ai-engine
+ADD https://github.com/krizaka/orazaka-conversation-service.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-conversation-service
+ADD https://github.com/krizaka/orazaka-job-service.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-job-service
+ADD https://github.com/krizaka/orazaka-knowledge-service.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-knowledge-service
+ADD https://github.com/krizaka/orazaka-automation-service.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-automation-service
+ADD https://github.com/krizaka/orazaka-edge.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-edge
+ADD https://github.com/krizaka/orazaka-worker-media.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-worker-media
+ADD https://github.com/krizaka/orazaka-ui-kit.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-ui-kit
+ADD https://github.com/krizaka/orazaka-web-client.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-web-client
+ADD https://github.com/krizaka/orazaka-web-admin.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-web-admin
+ADD https://github.com/krizaka/orazaka-mobile-client.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-mobile-client
+ADD https://github.com/krizaka/orazaka-cli.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-cli
+ADD https://github.com/krizaka/orazaka-packs.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-packs
 RUN node scripts/workspace.mjs clone --depth 1
 
 # ── 2. Build the seven services and what they depend on ──────────────────────
