@@ -198,6 +198,7 @@ Start a production from a brief
 | `-l, --language <lang>` | en or fr (default: `en`) |
 | `--seed <seed>` | The production's seed (every shot's seed derives from it) |
 | `--voice <voice>` | A voice of the speech catalogue for the voice-over |
+| `--voice-model <model>` | The speech model of the voice-over (e.g. kokoro-82m while a cinema GPU host runs) |
 | `--script-model <model>` | The language model that writes the script (default: the catalogue's) |
 
 ### `orazaka cinema estimate <dir>`
