@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { factsOf, gpuCostUsd, runSeconds } from "../gpu-i2v-run.mjs";
+import { clipInputs, factsOf, gpuCostUsd, runSeconds } from "../gpu-i2v-run.mjs";
 
 const plan = JSON.parse(readFileSync(new URL("../gpu-i2v-plan.json", import.meta.url), "utf8"));
 
@@ -47,4 +47,19 @@ test("GPU cost is wall seconds at the hourly rate", () => {
 test("a run's time is the platform's own clock, never when the script noticed", () => {
   assert.equal(runSeconds({ startedAt: "2026-10-15T20:02:19.118878Z", finishedAt: "2026-10-15T20:20:44.854535Z" }), 1106);
   assert.equal(runSeconds({}), undefined);
+});
+
+test("a clip may carry its own model and the Studio's optional upscale (the cinematic kit: LTX or Wan HQ per shot, then SeedVR2)", () => {
+  const plan = { model: "wan2.2-ti2v-5b" };
+  const base = { prompt: "slow dolly-in", seconds: 5, aspect: "16:9", seed: 7 };
+  assert.deepEqual(clipInputs(plan, base, "asset-1"), { prompt: "slow dolly-in", durationSeconds: 5, aspect: "16:9", seed: "7", model: "wan2.2-ti2v-5b", image: "asset-1" });
+  const kit = clipInputs(plan, { ...base, model: "ltx-video-0.9.8-13b-distilled", upscale: "1080p" }, "asset-2");
+  assert.equal(kit.model, "ltx-video-0.9.8-13b-distilled");
+  assert.equal(kit.upscale, "1080p");
+  assert.equal(clipInputs(plan, base).image, undefined); // a text-to-video clip has no image
+});
+
+test("the facts of a run include what the upscale step and the image crop reported", () => {
+  const facts = factsOf([{ result: { metrics: { model: "ltx-video-0.9.8-13b-distilled", imageKept: 0.99, upscaleModel: "seedvr2-3b", upscaleFrom: "1216x704", upscaleTo: "1920x1080", upscaleSeconds: 108.2, width: 1920, height: 1080 } } }]);
+  assert.deepEqual([facts.imageKept, facts.upscaleModel, facts.upscaleFrom, facts.upscaleTo, facts.upscaleSeconds], [0.99, "seedvr2-3b", "1216x704", "1920x1080", 108.2]);
 });
