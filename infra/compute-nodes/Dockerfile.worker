@@ -1,7 +1,7 @@
 # Dockerfile for RunPod Serverless GPU Worker
 # Configured for image synthesis and LTX-Video rendering
 
-FROM pytorch/pytorch:2.2.1-cuda12.1-cudnn8-runtime
+FROM pytorch/pytorch:2.2.1-cuda12.1-cudnn8-runtime@sha256:11691e035a3651d25a87116b4f6adc113a27a29d8f5a6a583f8569e0ee5ff897
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
