@@ -12,7 +12,10 @@ test("speech goes to LocalAI, everything else to sd-server", () => {
 });
 
 const engine = (name) => new Promise((resolve) => {
-  const s = http.createServer((req, res) => res.end(`${name}:${req.url}`));
+  const s = http.createServer((req, res) => {
+    res.setHeader("content-type", "text/plain; charset=utf-8"); // a plain-text echo of the path, never HTML
+    res.end(`${name}:${req.url}`);
+  });
   s.listen(0, "127.0.0.1", () => resolve(s));
 });
 const get = (port, path) => new Promise((resolve, reject) => {
