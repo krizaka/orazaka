@@ -29,6 +29,11 @@ permissions:
 
 jobs:
   verify:
+    # Write scopes live on the job, not at the top level (Scorecard TokenPermissions).
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     runs-on: ubuntu-latest
     permissions:
       contents: read
