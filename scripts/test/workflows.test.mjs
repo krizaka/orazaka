@@ -34,3 +34,15 @@ test("no workflow reads runner/steps/job in a job-level env", () => {
     .flatMap((f) => jobEnvViolations(f, readFileSync(new URL(f, dir), "utf8")));
   assert.deepEqual(found, [], `GitHub refuses these (the run fails in 0 s):\n${found.join("\n")}`);
 });
+
+test("docs-sync starts CI on its branch itself (a GITHUB_TOKEN PR starts none) and keeps write scopes on the job", () => {
+  const text = readFileSync(new URL("docs-sync.yml", dir), "utf8");
+  assert.match(text, /gh workflow run ci\.yml[^\n]*--ref chore\/docs-sync/);
+  assert.match(text, /actions: write/);
+  assert.doesNotMatch(text.split("jobs:")[0], /: write/, "no write scope at the top level (Scorecard TokenPermissions)");
+});
+
+test("the reusable component workflow keeps packages/id-token write on the job, not at the top level", () => {
+  const text = readFileSync(new URL("component.yml", dir), "utf8");
+  assert.doesNotMatch(text.split("jobs:")[0], /: write/);
+});
