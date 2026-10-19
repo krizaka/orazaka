@@ -72,6 +72,30 @@ capability rows, a price, catalogue entries — and changes no code.
   "studios": 2
  },
  {
+  "key": "media-safety",
+  "title": "Media safety",
+  "tagline": "Is this photo, video or voice message safe to show?",
+  "tier": "WORKER",
+  "category": null,
+  "studios": 1
+ },
+ {
+  "key": "message-authenticity",
+  "title": "Message authenticity",
+  "tagline": "Does this message read like a person wrote it? A signal, never a verdict.",
+  "tier": "WORKER",
+  "category": null,
+  "studios": 1
+ },
+ {
+  "key": "profile-photo-check",
+  "title": "Profile photo check",
+  "tagline": "Are these photos one real adult's profile?",
+  "tier": "WORKER",
+  "category": null,
+  "studios": 1
+ },
+ {
   "key": "trade-showcase",
   "title": "Trade Showcase",
   "tagline": null,
@@ -324,6 +348,10 @@ capability rows, a price, catalogue entries — and changes no code.
     {
      "key": "seed",
      "title": "Graine (facultatif)"
+    },
+    {
+     "key": "upscale",
+     "title": "Netteté (facultatif)"
     }
    ],
    "steps": 1,
@@ -922,7 +950,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
  "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
- "version": "1.1.0",
+ "version": "1.2.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -958,7 +986,7 @@ capability rows, a price, catalogue entries — and changes no code.
   {
    "label": "Bail de logement — Québec",
    "jurisdiction": "QC",
-   "rules": 9,
+   "rules": 10,
    "versions": [
     "2024-02-21"
    ]
@@ -1010,6 +1038,180 @@ capability rows, a price, catalogue entries — and changes no code.
     "CAPABILITY"
    ],
    "credits": 120
+  }
+ ]
+}
+```
+
+### Media safety
+
+```pack
+{
+ "key": "media-safety",
+ "title": "Media safety",
+ "tagline": "Is this photo, video or voice message safe to show?",
+ "description": "Judges pictures (a photo, or frames of a video) and a voice message's transcript against a short, public set of lines: no nudity or sexual content, no graphic violence, no threats or harassment. An answer nobody could read is never a pass.",
+ "version": "1.0.0",
+ "tier": "WORKER",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": null,
+ "listed": false,
+ "workers": [
+  "orazaka-worker-safety"
+ ],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "media-safety",
+   "label": "Media safety",
+   "summary": "A safety check that fails closed.",
+   "description": "A vision question per picture, a transcript and a text judgement for sound, then closed rules. Unreadable means held, never approved.",
+   "inputs": [
+    {
+     "key": "frames",
+     "title": "Les images à examiner"
+    },
+    {
+     "key": "frameCount",
+     "title": "Le nombre d'images"
+    },
+    {
+     "key": "audio",
+     "title": "Le son à juger (facultatif)"
+    },
+    {
+     "key": "expectsSpeech",
+     "title": "Il y a du son à juger"
+    }
+   ],
+   "steps": 4,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 30
+  }
+ ]
+}
+```
+
+### Message authenticity
+
+```pack
+{
+ "key": "message-authenticity",
+ "title": "Message authenticity",
+ "tagline": "Does this message read like a person wrote it? A signal, never a verdict.",
+ "description": "Reads one message with a small open classifier and answers a coarse level — never a score. It can be wrong, above all on short texts and on non-native or French writing. It never writes a message for anyone.",
+ "version": "1.0.0",
+ "tier": "WORKER",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": null,
+ "listed": false,
+ "workers": [
+  "orazaka-worker-authenticity"
+ ],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "message-authenticity",
+   "label": "Message authenticity",
+   "summary": "A coarse signal on a text, never a verdict.",
+   "description": "One step, no generative model. The text is read and forgotten; the answer is low, mid, high or unavailable.",
+   "inputs": [
+    {
+     "key": "text",
+     "title": "Le message"
+    },
+    {
+     "key": "locale",
+     "title": "Langue du compte (facultatif)"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 5
+  }
+ ]
+}
+```
+
+### Profile photo check
+
+```pack
+{
+ "key": "profile-photo-check",
+ "title": "Profile photo check",
+ "tagline": "Are these photos one real adult's profile?",
+ "description": "Checks a set of profile photos: enough of them, enough with a face, the same person from one face photo to the next, nothing written over the picture, no screenshots. It answers in codes, identifies no one and recognises no celebrity.",
+ "version": "1.0.0",
+ "tier": "WORKER",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": null,
+ "listed": false,
+ "workers": [
+  "orazaka-worker-photo"
+ ],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "profile-photo-check",
+   "label": "Profile photo check",
+   "summary": "Faces present, the same person throughout, nothing written on the photo.",
+   "description": "Finds the faces in each photo, asks a vision model three yes/no questions about it, and gives a verdict made of codes. The face vectors live for one job and are never kept; a model answer that cannot be read blocks nothing.",
+   "inputs": [
+    {
+     "key": "photos",
+     "title": "Les photos (fichiers envoyés)"
+    },
+    {
+     "key": "photosBase64",
+     "title": "Les mêmes photos, en base64"
+    },
+    {
+     "key": "compareFaces",
+     "title": "Comparer les visages entre eux"
+    },
+    {
+     "key": "minPhotos",
+     "title": "Photos au moins"
+    },
+    {
+     "key": "maxPhotos",
+     "title": "Photos au plus"
+    },
+    {
+     "key": "minFacePhotos",
+     "title": "Photos de visage au moins"
+    }
+   ],
+   "steps": 3,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 40
   }
  ]
 }
@@ -1070,10 +1272,13 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | `data-analytics` | 1.3.0 | DATA | OSS | STANDARD | yes | `data-driven-ui`, `video-understanding`, `creator-suggestions` | — |
-| `document-validation` | 1.1.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
+| `document-validation` | 1.2.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
 | `echo-toolkit` | 1.0.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
+| `media-safety` | 1.0.0 | WORKER | CLOUD | SENSITIVE | no | `media-safety` | `orazaka.safety.media.assess` (worker `orazaka-worker-safety`) |
+| `message-authenticity` | 1.0.0 | WORKER | CLOUD | SENSITIVE | no | `message-authenticity` | `orazaka.message.authenticity.read` (worker `orazaka-worker-authenticity`) |
 | `orazaka-media` | 1.7.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.1.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
+| `profile-photo-check` | 1.0.0 | WORKER | CLOUD | SENSITIVE | no | `profile-photo-check` | `orazaka.photo.profile.inspect`, `orazaka.photo.profile.assess` (worker `orazaka-worker-photo`) |
 | `realestate-studio` | 1.0.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
 | `trade-showcase` | 1.0.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |
 | `bien-etre` | 1.0.0 | DATA | CLOUD | REGULATED | yes | `guided-journaling`, `session-preparation`, `mood-tracking`, `session-summary` | — |
