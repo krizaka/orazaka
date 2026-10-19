@@ -34,6 +34,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSy
 import { join, basename, relative } from "node:path";
 import { buildModels, catalogue, manifestLicences, readmeLicences } from "./lib/model-registry.mjs";
 import { walk } from "./lib/walk.mjs";
+import { mdCell, stripTags, xmlDecode } from "./lib/doc-text.mjs";
 import { packsSection } from "./lib/pack-blocks.mjs";
 import { mdMeasuredRuns } from "./lib/measured-runs.mjs";
 import { mdCinema } from "./lib/cinema-measure.mjs";
@@ -155,7 +156,7 @@ function sourceDir(relDir, tail) {
   return found[0];
 }
 
-const xmlText = (s) => s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
+const xmlText = (s) => xmlDecode(s).replace(/\s+/g, " ").trim();
 /** A pom without its <parent>, <build> and <dependencyManagement>: what the module itself declares. */
 const ownPom = (pom) =>
   pom
@@ -807,12 +808,11 @@ function classSummary(src, name) {
   if (at < 0) return null;
   const doc = src.slice(0, at).match(/\/\*\*([\s\S]*?)\*\/[^/]*$/)?.[1];
   if (!doc) return null;
-  const text = doc
+  const text = stripTags(doc
     .split("\n")
     .map((l) => l.replace(/^\s*\*\s?/, ""))
     .filter((l) => !l.startsWith("@"))
-    .join(" ")
-    .replace(/<[^>]+>/g, "")
+    .join(" "))
     .replace(/\{@\w+\s+([^}]*)\}/g, "`$1`")
     .replace(/[{}]/g, "")
     .replace(/\s+/g, " ")
@@ -995,7 +995,7 @@ function summaryAbove(src, index) {
     .filter((l) => l && !l.startsWith("@"))
     .join(" ");
   const sentence = text.split(/(?<=\.)\s/)[0] ?? "";
-  return sentence.replace(/\{@\w+\s+([^}]*)\}/g, "$1").replace(/[{}]/g, "").replace(/\|/g, "\\|").trim();
+  return sentence.replace(/\{@\w+\s+([^}]*)\}/g, "$1").replace(/[{}]/g, "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|").trim();
 }
 
 /**
@@ -1549,7 +1549,7 @@ const mdCli = (rows) => {
   const alias = { name: model.alias };
   const bin = model.bin;
   const runner = alias.name ? `npx ${alias.name}` : `npx ${pkg.name}`;
-  const cell = (s) => (s || "—").replace(/\|/g, "\\|");
+  const cell = (s) => mdCell(s || "—");
   const usage = (c) => [`${bin} ${c.name}`, ...c.args.map((a) => a.name)].join(" ");
 
   // Quick start and dev loop (authored here, single-sourced in the generator — see AGENTS.md §1).
@@ -1747,14 +1747,14 @@ function javadocAbove(src, index) {
 
 /** Javadoc text as Markdown-safe prose: inline tags as code, HTML and braces dropped. */
 function docText(doc) {
-  return doc
+  return stripTags(doc
     .split("\n")
     .map((l) => l.replace(/^\s*\*\s?/, ""))
     .filter((l) => !l.trim().startsWith("@"))
-    .join(" ")
-    .replace(/<[^>]+>/g, "")
+    .join(" "))
     .replace(/\{@\w+\s+([^}]*)\}/g, "`$1`")
     .replace(/[{}]/g, "")
+    .replace(/\\/g, "\\\\")
     .replace(/\|/g, "\\|")
     .replace(/\s+/g, " ")
     .trim();
@@ -2087,7 +2087,7 @@ const mdTools = (t, api, cli) => {
     "|:---|:---|:---|:---|",
   );
   for (const x of t.tools) {
-    lines.push(`| ${code(x.name)} | ${x.description.replace(/\|/g, "\\|")} | ${code(x.input)} | ${x.fields.map((f) => code(f.name)).join(", ") || "—"} |`);
+    lines.push(`| ${code(x.name)} | ${mdCell(x.description)} | ${code(x.input)} | ${x.fields.map((f) => code(f.name)).join(", ") || "—"} |`);
   }
   lines.push(
     "",
@@ -2632,7 +2632,7 @@ const mdPacks = (p, cli, catalog) => {
     for (const c of packCli) lines.push(`| ${code(["orazaka", c.name, ...c.args.map((a) => a.name)].join(" "))} | ${c.description} |`);
   }
   lines.push("", "## Manifest fields", "", "From `pack.schema.json` — the schema `orazaka pack validate` checks against.", "", "| Field | Required | Values | Meaning |", "|:---|:---|:---|:---|");
-  for (const f of p.fields) lines.push(`| ${code(f.name)} | ${f.required ? "yes" : "—"} | ${f.values ? f.values.map(code).join(" · ") : "—"} | ${f.description.replace(/\|/g, "\\|") || "—"} |`);
+  for (const f of p.fields) lines.push(`| ${code(f.name)} | ${f.required ? "yes" : "—"} | ${f.values ? f.values.map(code).join(" · ") : "—"} | ${mdCell(f.description) || "—"} |`);
   if (p.guide) {
     // The pack authors' guide, as written in orazaka-packs — one heading level down, under this page.
     const body = p.guide

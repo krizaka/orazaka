@@ -7,6 +7,7 @@ import { ThemeToggle, useTheme } from "@krizaka/ui/theme";
 import { Alert } from "@krizaka/ui/alert";
 import { api, errorMessage, hostOf, on, type Probe, type Settings, type Snapshot } from "./lib/api";
 import { I18nProvider, useI18n, type Locale } from "./lib/i18n";
+import { AutomationsPanel } from "./components/automations/AutomationsPanel";
 import { FilesPanel } from "./components/FilesPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { StackPanel } from "./components/StackPanel";
@@ -76,6 +77,7 @@ function Shell({ snap, error, refresh, setSnap }: { snap: Snapshot | null; error
         <TabsList className="px-5">
           <TabsTrigger value="stack">{t("tabs.stack")}</TabsTrigger>
           <TabsTrigger value="files">{t("tabs.files")}</TabsTrigger>
+          <TabsTrigger value="automations">{t("tabs.automations")}</TabsTrigger>
           <TabsTrigger value="settings">{t("tabs.settings")}</TabsTrigger>
         </TabsList>
         <main className="min-h-0 flex-1 overflow-auto p-5">
@@ -83,6 +85,7 @@ function Shell({ snap, error, refresh, setSnap }: { snap: Snapshot | null; error
             <>
               <TabsContent value="stack"><StackPanel snap={snap} goSettings={() => setTab("settings")} /></TabsContent>
               <TabsContent value="files"><FilesPanel snap={snap} refresh={refresh} /></TabsContent>
+              <TabsContent value="automations"><AutomationsPanel snap={snap} /></TabsContent>
               <TabsContent value="settings"><SettingsPanel snap={snap} onSaved={(s) => setSnap(s)} refresh={refresh} /></TabsContent>
             </>
           ) : null}

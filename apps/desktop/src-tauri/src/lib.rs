@@ -4,7 +4,9 @@
 //! * `scope`     — the folders the user granted; every read of a file goes through it.
 //! * `files`     — listing / preview of granted files.
 //! * `settings`  — connect mode, the remote Orazaka, the workspace folder.
+//! * `automation` — scheduled automations run on this Mac, tools over MCP behind approvals (ADR-079).
 
+pub mod automation;
 pub mod files;
 pub mod scope;
 pub mod settings;
@@ -55,7 +57,8 @@ struct TrayItems {
 pub struct AppState {
     data_dir: PathBuf,
     settings: Mutex<Settings>,
-    scope: Mutex<ScopeStore>,
+    scope: Arc<Mutex<ScopeStore>>,
+    automations: Arc<automation::Service>,
     drops: Mutex<Drops>,
     watchers: Mutex<HashMap<PathBuf, RecommendedWatcher>>,
     busy: Mutex<bool>,
@@ -320,6 +323,7 @@ fn revoke_folder(state: State<'_, AppState>, path: String) -> Res<Vec<String>> {
     scope.revoke(&root);
     state.persist_scope(&scope)?;
     stop_watchers_outside(&state, &scope);
+    state.automations.revoke_grants_under(&root);
     drop_session_files_under(&state, &root);
     Ok(scope.roots().iter().map(|p| p.display().to_string()).collect())
 }
@@ -329,6 +333,7 @@ fn revoke_all(state: State<'_, AppState>) -> Res<()> {
     let mut scope = state.scope.lock().unwrap();
     scope.revoke_all();
     state.persist_scope(&scope)?;
+    state.automations.revoke_grants_under(Path::new("/"));
     state.watchers.lock().unwrap().clear();
     let mut s = state.settings.lock().unwrap();
     s.watched.clear();
@@ -461,6 +466,103 @@ fn start_watch(app: &AppHandle, state: &AppState, dir: &Path) -> Res<()> {
     watcher.watch(dir, RecursiveMode::NonRecursive).map_err(|e| e.to_string())?;
     watchers.insert(dir.to_path_buf(), watcher);
     Ok(())
+}
+
+// ───────────────────────────── automations (ADR-079) ─────────────────────────────
+
+/// The real tools, behind the folder scope: an automation whose folder was revoked cannot start its MCP server.
+struct ScopedBackends {
+    scope: Arc<Mutex<ScopeStore>>,
+}
+
+impl automation::Backends for ScopedBackends {
+    fn fs(&self, root: &Path) -> Result<Box<dyn automation::mcp::FsTools>, String> {
+        let resolved = self.scope.lock().unwrap().resolve(root).map_err(|e| format!("the folder is no longer granted: {e}"))?;
+        automation::RealBackends.fs(&resolved)
+    }
+    fn model(&self, target: &automation::types::ModelTarget) -> Box<dyn automation::model::ModelClient> {
+        automation::RealBackends.model(target)
+    }
+}
+
+/// Every 20 s: expire stale approvals, start what is due (each run on its own thread).
+fn spawn_scheduler(svc: Arc<automation::Service>) {
+    std::thread::spawn(move || loop {
+        for id in svc.due() {
+            let svc = svc.clone();
+            std::thread::spawn(move || {
+                let _ = svc.run_now(&id, automation::types::RunTrigger::Schedule);
+            });
+        }
+        std::thread::sleep(Duration::from_secs(20));
+    });
+}
+
+#[tauri::command]
+fn automations_overview(state: State<'_, AppState>) -> automation::Overview {
+    state.automations.overview()
+}
+
+#[tauri::command]
+fn automation_create(state: State<'_, AppState>, input: automation::NewAutomation) -> Res<automation::types::Automation> {
+    let scope = state.scope.clone();
+    state.automations.create(input, |p| scope.lock().unwrap().resolve(p).map_err(|e| e.to_string()))
+}
+
+#[tauri::command]
+fn automation_set_enabled(state: State<'_, AppState>, id: String, enabled: bool) -> Res<()> {
+    state.automations.set_enabled(&id, enabled)
+}
+
+#[tauri::command]
+fn automation_set_dry_run(state: State<'_, AppState>, id: String, dry_run: bool) -> Res<()> {
+    state.automations.set_dry_run(&id, dry_run)
+}
+
+#[tauri::command]
+fn automation_delete(state: State<'_, AppState>, id: String) -> Res<()> {
+    state.automations.delete(&id)
+}
+
+#[tauri::command]
+async fn automation_run_now(state: State<'_, AppState>, id: String) -> Res<String> {
+    let svc = state.automations.clone();
+    tauri::async_runtime::spawn_blocking(move || svc.run_now(&id, automation::types::RunTrigger::Manual))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+fn automation_run(state: State<'_, AppState>, id: String) -> Res<automation::types::Run> {
+    state.automations.run(&id).ok_or_else(|| "unknown run".into())
+}
+
+#[tauri::command]
+async fn approval_decide(state: State<'_, AppState>, id: String, decision: automation::types::Decision) -> Res<automation::RunSummary> {
+    let svc = state.automations.clone();
+    tauri::async_runtime::spawn_blocking(move || svc.decide(&id, decision)).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+fn grant_revoke(state: State<'_, AppState>, id: String) -> Res<()> {
+    state.automations.revoke_grant(&id)
+}
+
+#[tauri::command]
+fn kill_switch_set(state: State<'_, AppState>, halted: bool) {
+    state.automations.set_halted(halted)
+}
+
+#[tauri::command]
+fn audit_log(state: State<'_, AppState>, limit: Option<usize>) -> automation::AuditView {
+    state.automations.audit_view(limit.unwrap_or(200).min(1000))
+}
+
+#[tauri::command]
+async fn models_list(base_url: String) -> Res<Vec<String>> {
+    tauri::async_runtime::spawn_blocking(move || automation::model::OpenAiCompatible::list_models(&base_url, Duration::from_secs(5)))
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 // ───────────────────────────── workspace window ─────────────────────────────
@@ -699,12 +801,23 @@ pub fn run() {
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
             let settings = Settings::load(&data_dir.join("settings.json"));
-            let scope = ScopeStore::load(&data_dir.join("scope.json"));
+            let scope = Arc::new(Mutex::new(ScopeStore::load(&data_dir.join("scope.json"))));
             let watched = settings.watched.clone();
+            let emitter = app.handle().clone();
+            let automations = automation::Service::open(
+                &data_dir,
+                Arc::new(ScopedBackends { scope: scope.clone() }),
+                Arc::new(automation::now_local),
+                Arc::new(move || {
+                    let _ = emitter.emit("automations-changed", ());
+                }),
+            );
+            spawn_scheduler(automations.clone());
             app.manage(AppState {
                 data_dir,
                 settings: Mutex::new(settings),
-                scope: Mutex::new(scope),
+                scope,
+                automations,
                 drops: Mutex::new(Drops::default()),
                 watchers: Mutex::new(HashMap::new()),
                 busy: Mutex::new(false),
@@ -761,6 +874,18 @@ pub fn run() {
             open_workspace,
             workspace_send_file,
             autostart_set,
+            automations_overview,
+            automation_create,
+            automation_set_enabled,
+            automation_set_dry_run,
+            automation_delete,
+            automation_run_now,
+            automation_run,
+            approval_decide,
+            grant_revoke,
+            kill_switch_set,
+            audit_log,
+            models_list,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Orazaka Desktop");

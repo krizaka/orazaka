@@ -10,7 +10,7 @@
 # ==============================================================================
 
 # ── 1. Sources: every repository of the workspace, shallow ───────────────────
-FROM node:22-alpine AS sources
+FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS sources
 RUN apk add --no-cache git
 WORKDIR /workspace
 COPY . .
@@ -42,7 +42,7 @@ ADD https://github.com/krizaka/orazaka-packs.git/info/refs?service=git-upload-pa
 RUN node scripts/workspace.mjs clone --depth 1
 
 # ── 2. Build the seven services and what they depend on ──────────────────────
-FROM eclipse-temurin:21-jdk AS build
+FROM eclipse-temurin:21-jdk@sha256:f9bf7e9fe2f9bc4657537c1a7e20c768f0c3bafca41598263be4714783dd62eb AS build
 WORKDIR /workspace
 COPY --from=sources /workspace /workspace
 # The cloned repositories change under an unchanged Dockerfile: App Platform's layer cache then reuses yesterday's
@@ -68,7 +68,7 @@ RUN echo "core build ${CORE_REBUILD}" \
  && cp -r orazaka-packs /out/orazaka-packs
 
 # ── 3. Runtime: a JRE, the jars, one supervisor ──────────────────────────────
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre@sha256:ccbad9e7cb84c27092b12c40a4143e5733e050db9c3784d84f632dcf423fb2ef
 # The document-validation worker (orazaka-packs, Tier-W, Python): it drains job.validation.* for the document
 # Studios. Its venv is built here with the pack's pinned dependencies; run-services.sh starts it beside the JVMs.
 RUN export DEBIAN_FRONTEND=noninteractive \
