@@ -77,3 +77,4 @@ generated: true
 | ADR-080 | ADR-080 — Cinematic shorts: a production is a plan of Studio runs | `adr/ADR-080-cinematic-shorts.md` |
 | ADR-081 | _(cited in code, no dedicated file)_ | — |
 | ADR-082 | _(cited in code, no dedicated file)_ | — |
+| ADR-083 | ADR-083 — Client connectivity and capacity | `adr/ADR-083-client-connectivity-and-capacity.md` |

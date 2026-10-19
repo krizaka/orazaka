@@ -246,3 +246,29 @@ A droplet is billed from its creation to its destruction: the sessions include t
 The local models cost nothing per output; the energy of the Mac was **not measured**, so none is claimed. Probes and refused calls (a 403, a size test) are not runs and are not in this table.
 
 See also: [Supported models](MODELS.md) for the registry, and the comparison images on the gallery (`/gallery?kind=compare`).
+
+## Cinematic shorts
+
+1 film(s) made by `orazaka cinema` on **2026-10-17** (ADR-080), every step an ordinary Studio run on dev.orazaka.com: script, character references and keyframes (FLUX.2 [klein]), shots (Wan 2.2 I2V A14B, 720p, 4 distilled steps, on one RunPod H100 80 GB (CA-MTL-1, $3.99/h)), the cut (SeedVR2 3B to 1080p, speed ramps, LUT grade, titles, synthesized foley), the voice-over and the music (ACE-Step).
+
+| Film | Frame | Length | Shots (reshot) | Runs (failed) | GPU time of its runs | At the GPU rate | Wall time |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **NOVA ARDENT: DAWN OF CYAN** | 1080×1920 (9:16) | 40.5 s | 10 (2) | 35 (5) | 119 min | $7.89 | 237 min |
+
+### What it cost per minute of finished film
+
+| Measure | Value |
+| --- | --- |
+| Finished film | 0.67 min |
+| GPU pod sessions billed (setup, reviews and reshoots included) | $23.62 |
+| **Billed per minute of finished film** | **$35.01** |
+| The runs' own GPU time per minute of film (what the Studio's estimate multiplies) | $11.69 |
+| Wall time per minute of film (one pod, runs in sequence) | 351.8 min |
+
+> The billed sessions also rendered the Montréal reel and the news explainer (shots, the reel's cut) that are not delivered yet, and the showcase session's own image-to-video jobs drained by the same pod: the billed figure per minute is this batch's, not a film's. A film's own cost is its runs' GPU time at the rate (the table above).
+
+| Pod session | GPU | Hours | Rate | Billed |
+| --- | --- | --- | --- | --- |
+| pod 1 (first start: weights and sd-server build, then released while CI ran) | H100 80 GB | 0.30 | $3.99/h | $1.20 |
+| pod 2 (superhero, reel and news shots, two cuts; shared with the showcase session's I2V jobs; stopped by an idle guard at ~14:45, destroyed 15:04) | H100 80 GB | 5.22 | $3.99/h | $20.83 |
+| pod 3 (resumed for the reel's music and the news shots; stopped by the coordinator for the GPU queue before a run could start: dev's runs were refused by a saturated billing pool) | H100 80 GB | 0.40 | $3.99/h | $1.60 |

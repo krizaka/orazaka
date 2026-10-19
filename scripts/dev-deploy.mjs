@@ -157,6 +157,14 @@ function analytics() {
   console.log("orazaka_knowledge_db: analytics tables, kinds and settings v1 in place");
 }
 
+/** The Idempotency-Key columns and index of studio_run (ADR-083) — idempotent, additive, safe before the code ships. */
+function runIdempotency() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-18-studio-run-idempotency.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: studio_run idempotency columns and index in place");
+}
+
 function policy() {
   const env = secrets();
   const sql = readFileSync(join(DEPLOY, "dev-content-policy.sql"), "utf8");
@@ -481,12 +489,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "policy") policy();
     else if (command === "recommendations") recommendations();
     else if (command === "analytics") analytics();
+    else if (command === "run-idempotency") runIdempotency();
     else if (command === "seed") seed();
     else if (command === "service-account") await createServiceAccount(rest[0], rest.slice(1));
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {
