@@ -5807,6 +5807,11 @@
             "default": null
           },
           {
+            "flag": "--voice-model <model>",
+            "desc": "The speech model of the voice-over (e.g. kokoro-82m while a cinema GPU host runs)",
+            "default": null
+          },
+          {
             "flag": "--script-model <model>",
             "desc": "The language model that writes the script (default: the catalogue's)",
             "default": null
