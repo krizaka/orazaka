@@ -7,7 +7,8 @@
   "tabs": {
     "stack": "Panneau de contrôle",
     "files": "Fichiers",
-    "settings": "Réglages"
+    "settings": "Réglages",
+    "automations": "Automatisations"
   },
   "common": {
     "theme": "Thème : {mode}",
@@ -17,7 +18,8 @@
     "save": "Enregistrer",
     "saved": "Enregistré",
     "cancel": "Annuler",
-    "error": "Une erreur est survenue : {message}"
+    "error": "Une erreur est survenue : {message}",
+    "dateLocale": "fr-CA"
   },
   "mode": {
     "local": "Pile locale",
@@ -39,7 +41,11 @@
     "openWorkspace": "Ouvrir l'espace de travail",
     "services": "Services",
     "noServices": "État non lu — appuyez sur Actualiser.",
-    "serviceHeader": { "name": "Service", "port": "Port", "state": "État" },
+    "serviceHeader": {
+      "name": "Service",
+      "port": "Port",
+      "state": "État"
+    },
     "logs": "Journaux",
     "logsEmpty": "Rien pour l'instant. Démarrez la pile, lancez doctor ou affichez les journaux d'un service.",
     "logService": "Journaux d'un service",
@@ -101,5 +107,104 @@
     "startupHelp": "Désactivé par défaut. Tourne dans la barre des menus ; rien n'est démarré sans votre demande.",
     "language": "Langue",
     "about": "Orazaka Desktop n'est pas encore signée : si macOS refuse de l'ouvrir, faites un clic droit sur l'app puis Ouvrir."
+  },
+  "automations": {
+    "title": "Automatisations",
+    "lead": "Le travail qu'Orazaka fait seul, sur ce Mac, avec votre modèle local. Il ne lit que le dossier que vous choisissez et vous demande avant d'écrire quoi que ce soit.",
+    "killSwitch": "Arrêter tous les agents",
+    "killSwitchOn": "Tous les agents sont arrêtés sur ce Mac",
+    "killSwitchOnLead": "Aucune automatisation ne tourne et toutes les planifications sont en pause jusqu'à la reprise.",
+    "resumeAll": "Reprendre",
+    "new": "Nouvelle automatisation",
+    "templates": "Partir d'un modèle",
+    "templateSummarise": "Résumer les nouveaux PDF chaque matin",
+    "templateSummariseLead": "Chaque matin, lit les PDF arrivés dans un dossier et enregistre une courte note de résumé à côté de chacun.",
+    "noneTitle": "Aucune automatisation",
+    "noneLead": "Partez d'un modèle : Orazaka vous demandera avant d'écrire le premier fichier.",
+    "form": {
+      "name": "Nom",
+      "nameDefault": "Résumés des PDF du matin",
+      "folder": "Dossier",
+      "folderHint": "Seulement un dossier partagé dans Fichiers. Orazaka le lit et écrit les notes à côté des PDF — nulle part ailleurs.",
+      "noFolder": "Partagez d'abord un dossier dans Fichiers.",
+      "time": "Chaque jour à",
+      "weekdays": "En semaine seulement",
+      "model": "Modèle",
+      "modelHint": "Un modèle servi sur ce Mac (Ollama, LocalAI, mlx_lm.server) — rien ne quitte le Mac.",
+      "baseUrl": "Adresse du modèle",
+      "dryRun": "Essai à blanc d'abord",
+      "dryRunHint": "Montre ce qu'il écrirait, n'écrit rien.",
+      "create": "Créer l'automatisation",
+      "cancel": "Annuler"
+    },
+    "card": {
+      "schedule": "Chaque jour à {time}",
+      "scheduleWeekdays": "En semaine à {time}",
+      "folder": "Dossier",
+      "model": "Modèle",
+      "next": "Prochaine exécution",
+      "never": "Non planifiée",
+      "last": "Dernière exécution",
+      "noRun": "Jamais exécutée",
+      "dryRun": "Essai à blanc",
+      "paused": "En pause",
+      "active": "Active",
+      "running": "En cours…",
+      "runNow": "Exécuter maintenant",
+      "pause": "Mettre en pause",
+      "resume": "Reprendre",
+      "delete": "Supprimer",
+      "deleteConfirm": "Supprimer pour de bon ?",
+      "dryRunToggle": "Essai à blanc"
+    },
+    "approvals": {
+      "title": "Approbations",
+      "count": "{count} en attente",
+      "lead": "Orazaka veut écrire ces fichiers. Rien n'est écrit tant que vous n'avez pas décidé.",
+      "none": "Rien n'attend votre approbation.",
+      "tool": "{tool} dans {folder}",
+      "expires": "Expire {time}",
+      "once": "Approuver une fois",
+      "always": "Toujours pour ce dossier",
+      "alwaysHint": "Crée une permission pour cette automatisation, cet outil et ce dossier seulement. Vous pouvez la retirer plus bas.",
+      "deny": "Refuser"
+    },
+    "grants": {
+      "title": "Permissions accordées",
+      "none": "Aucune permission permanente. Chaque écriture demande d'abord.",
+      "item": "{automation} peut utiliser {tool} dans {folder}",
+      "revoke": "Retirer"
+    },
+    "runs": {
+      "title": "Historique des exécutions",
+      "none": "Aucune exécution.",
+      "trace": "Étape par étape",
+      "close": "Fermer",
+      "job": "Tâche {id}",
+      "tokens": "{prompt} → {completion} jetons",
+      "duration": "{seconds} s",
+      "credits": "{credits} crédits (modèle local)",
+      "written": "{count} note(s) écrite(s)",
+      "trigger": {
+        "schedule": "Planifiée",
+        "manual": "Manuelle"
+      },
+      "status": {
+        "running": "En cours",
+        "awaiting-approval": "Vous attend",
+        "succeeded": "Terminée",
+        "failed": "Échec",
+        "cancelled": "Annulée",
+        "halted": "Arrêtée",
+        "skipped-budget": "Budget atteint"
+      }
+    },
+    "audit": {
+      "title": "Journal d'audit",
+      "lead": "Tout ce que les automatisations ont fait sur ce Mac, dans l'ordre. Chaque entrée est chaînée à la précédente : une ligne modifiée ou supprimée est détectée.",
+      "verified": "Chaîne vérifiée · {count} entrées",
+      "broken": "Chaîne rompue à l'entrée {seq}",
+      "none": "Rien pour l'instant."
+    }
   }
 }
