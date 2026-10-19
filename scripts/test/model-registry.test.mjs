@@ -41,7 +41,7 @@ test("a capability outside the vocabulary, a bad context window or a non-https l
   assert.throws(() => buildModels(seed + meta("qwen2.5:7b", { capabilities: "chat,telepathy" })), /capability "telepathy"/);
   assert.throws(() => buildModels(seed + meta("qwen2.5:7b", { context_window: 0 })), /context_window must be a positive integer/);
   assert.throws(() => buildModels(seed + meta("qwen2.5:7b", { licence_url: "http://insecure.example" })), /licence_url must be an https URL/);
-  for (const c of ["chat", "reasoning", "vision", "embeddings", "image", "video", "speech-to-text", "text-to-speech", "music", "video-to-audio"]) assert.ok(CAPABILITIES.includes(c), c);
+  for (const c of ["chat", "reasoning", "vision", "embeddings", "image", "video", "speech-to-text", "text-to-speech", "music", "video-to-audio", "video-upscale"]) assert.ok(CAPABILITIES.includes(c), c);
 });
 
 test("metadata for a model no INSERT created is an error, not a silent no-op", () => {
@@ -142,4 +142,24 @@ test("the 720p A14B migration's INSERT is read by the registry (the \\c line mus
   assert.equal(row.provider_name, "localai-video");
   assert.equal(row.runs_on, "local");
   assert.equal(row.licence, "Apache-2.0");
+});
+
+test("the cinematic short's shot model (ADR-080) is in the catalogue as a local GPU model, image-to-video, 4 steps", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { catalogue } = await import("../lib/model-registry.mjs");
+  for (const file of ["../../infra/migrations/2026-10-17-cinematic-short.sql", "../../infra/deploy/dev-data.sql"]) {
+    const row = catalogue(readFileSync(new URL(file, import.meta.url), "utf8")).find((r) => r.model_name === "wan2.2-i2v-a14b");
+    assert.ok(row, `wan2.2-i2v-a14b is in ${file}`);
+    assert.equal(row.provider_name, "localai-video");
+    assert.equal(row.runs_on, "local");
+    assert.equal(row.licence, "Apache-2.0");
+    assert.equal(String(row.max_steps), "4");
+  }
+});
+
+test("the default speech model is never one on an optional GPU host (ADR-080: Kokoro is asked for by name)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-17-cinematic-short.sql", import.meta.url), "utf8");
+  assert.doesNotMatch(sql, /is_default = \(model_name = 'kokoro-82m'\)/);
+  assert.match(sql, /is_default = \(model_name = 'piper-en-medium-ljspeech'\) WHERE category = 'speech'/);
 });
