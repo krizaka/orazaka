@@ -950,7 +950,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
  "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
- "version": "1.2.0",
+ "version": "1.3.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -981,6 +981,14 @@ capability rows, a price, catalogue entries — and changes no code.
    "versions": [
     "2024-07-01",
     "2026-07-01"
+   ]
+  },
+  {
+   "label": "Facture — Québec (TPS et TVQ)",
+   "jurisdiction": "QC",
+   "rules": 8,
+   "versions": [
+    "2024-06-20"
    ]
   },
   {
@@ -1031,6 +1039,10 @@ capability rows, a price, catalogue entries — and changes no code.
     {
      "key": "asOf",
      "title": "Règles en vigueur à la date du"
+    },
+    {
+     "key": "ruleset",
+     "title": "Corpus nommé"
     }
    ],
    "steps": 3,
@@ -1272,7 +1284,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | `data-analytics` | 1.3.0 | DATA | OSS | STANDARD | yes | `data-driven-ui`, `video-understanding`, `creator-suggestions` | — |
-| `document-validation` | 1.2.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
+| `document-validation` | 1.3.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
 | `echo-toolkit` | 1.0.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
 | `media-safety` | 1.0.0 | WORKER | CLOUD | SENSITIVE | no | `media-safety` | `orazaka.safety.media.assess` (worker `orazaka-worker-safety`) |
 | `message-authenticity` | 1.0.0 | WORKER | CLOUD | SENSITIVE | no | `message-authenticity` | `orazaka.message.authenticity.read` (worker `orazaka-worker-authenticity`) |
