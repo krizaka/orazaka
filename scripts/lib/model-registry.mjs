@@ -9,7 +9,7 @@
  */
 
 /** The closed vocabulary of what a model does. */
-export const CAPABILITIES = ["chat", "reasoning", "vision", "code", "embeddings", "image", "video", "speech-to-text", "text-to-speech", "music", "video-to-audio"];
+export const CAPABILITIES = ["chat", "reasoning", "vision", "code", "embeddings", "image", "video", "speech-to-text", "text-to-speech", "music", "video-to-audio", "video-upscale"];
 /** Where a model runs: on the operator's own hardware, or at a provider the workspace opts in to. */
 export const RUNS_ON = ["local", "provider"];
 /** `internal` rows stay in the catalogue (aliases, runtime variants, test fixtures) but are never published. */

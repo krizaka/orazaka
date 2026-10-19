@@ -30,11 +30,17 @@ jobs:
       DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       ORAZAKA_QA_EMAIL: ${{ secrets.ORAZAKA_QA_EMAIL }}
       ORAZAKA_QA_PASSWORD: ${{ secrets.ORAZAKA_QA_PASSWORD }}
-      ORAZAKA_DEV_ENV_FILE: ${{ runner.temp }}/secrets/orazaka-dev.env
-      GPU_LEDGER: ${{ runner.temp }}/secrets/orazaka-gpu-ledger.tsv
-      GPU_LOCAL_DIR: ${{ runner.temp }}/gpu-dev
-      GPU_SMOKE_OUT: ${{ runner.temp }}/smoke/last.json
     steps:
+      # `runner` is not readable in a job-level env (GitHub refuses the whole workflow), so the paths are set here.
+      - name: Paths
+        run: |
+          {
+            echo "ORAZAKA_DEV_ENV_FILE=$RUNNER_TEMP/secrets/orazaka-dev.env"
+            echo "GPU_LEDGER=$RUNNER_TEMP/secrets/orazaka-gpu-ledger.tsv"
+            echo "GPU_LOCAL_DIR=$RUNNER_TEMP/gpu-dev"
+            echo "GPU_SMOKE_OUT=$RUNNER_TEMP/smoke/last.json"
+          } >> "$GITHUB_ENV"
+
       - name: Configured?
         id: configured
         env:

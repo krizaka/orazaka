@@ -36,6 +36,7 @@ import { walk } from "./lib/walk.mjs";
 import { mdCell, stripTags, xmlDecode } from "./lib/doc-text.mjs";
 import { packsSection } from "./lib/pack-blocks.mjs";
 import { mdMeasuredRuns } from "./lib/measured-runs.mjs";
+import { mdCinema } from "./lib/cinema-measure.mjs";
 
 const ROOT = process.cwd();
 const GEN_DIR = join(ROOT, "docs", "_generated");
@@ -1679,7 +1680,7 @@ const mdGovernance = (rows) => {
   return lines.join("\n") + "\n";
 };
 
-const CAP_LABEL = { chat: "Chat", reasoning: "Reasoning", vision: "Vision", code: "Code", embeddings: "Embeddings", image: "Image", video: "Video", "speech-to-text": "Speech to text", "text-to-speech": "Text to speech", music: "Music", "video-to-audio": "Video to audio (foley)" };
+const CAP_LABEL = { chat: "Chat", reasoning: "Reasoning", vision: "Vision", code: "Code", embeddings: "Embeddings", image: "Image", video: "Video", "speech-to-text": "Speech to text", "text-to-speech": "Text to speech", music: "Music", "video-to-audio": "Video to audio (foley)", "video-upscale": "Video upscale" };
 const mdModels = (models, rows) => {
   const lines = [frontmatter("Supported Models", "Every model Orazaka supports: where it runs, its licence, its context window — read from the registry the routing reads.", "Models", 8)];
   const local = models.filter((m) => m.runsOn === "local");
@@ -2770,7 +2771,8 @@ const outputs = {
   "ADMIN.md": mdAdmin(extractAdmin(api)),
   "GOVERNANCE.md": mdGovernance(extractGovernance()),
   "MODELS.md": mdModels(registry, extractModels()),
-  "MEASURED_RUNS.md": frontmatter("Measured runs", "Time, cost and every parameter of the video and image runs Orazaka made, per model and provider — generated from the run records.", "Models", 9) + mdMeasuredRuns(JSON.parse(read(join(ROOT, "docs/measurements/runs.json")))),
+  "MEASURED_RUNS.md": frontmatter("Measured runs", "Time, cost and every parameter of the video and image runs Orazaka made, per model and provider — generated from the run records.", "Models", 9) + mdMeasuredRuns(JSON.parse(read(join(ROOT, "docs/measurements/runs.json")))) +
+    (existsSync(join(ROOT, "docs/measurements/cinema.json")) ? `\n${mdCinema(JSON.parse(read(join(ROOT, "docs/measurements/cinema.json")))).join("\n")}` : ""),
   "ADRS.md": mdAdrs(extractAdrs()),
 };
 
