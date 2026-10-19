@@ -13,6 +13,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.request
 
 GRAPHQL = "https://api.runpod.io/graphql"
@@ -39,11 +40,25 @@ def decide(pods, idle_since, now):
     return stop, kept
 
 
+USER_AGENT = "orazaka-runpod-guard/1.0 (+https://github.com/krizaka/orazaka)"  # urllib's default UA gets intermittent 403s
+RETRY_STATUSES = {403, 429, 500, 502, 503, 504}
+ATTEMPTS = 4
+
+
 def call(url, key, body=None, method=None):
-    request = urllib.request.Request(url, data=json.dumps(body).encode() if body else None, method=method,
-                                     headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.loads(response.read() or b"{}")
+    """One API call. Retries 403/429/5xx with a growing pause (GPU_RETRY_SLEEP seconds, default 2); other errors raise."""
+    pause = float(os.environ.get("GPU_RETRY_SLEEP", "2"))
+    for attempt in range(1, ATTEMPTS + 1):
+        request = urllib.request.Request(url, data=json.dumps(body).encode() if body else None, method=method,
+                                         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                                                  "Accept": "application/json", "User-Agent": USER_AGENT})
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return json.loads(response.read() or b"{}")
+        except urllib.error.HTTPError as error:
+            if error.code not in RETRY_STATUSES or attempt == ATTEMPTS:
+                raise
+            time.sleep(pause * attempt)
 
 
 def running(key):

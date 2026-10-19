@@ -7,7 +7,8 @@
   "tabs": {
     "stack": "Control panel",
     "files": "Files",
-    "settings": "Settings"
+    "settings": "Settings",
+    "automations": "Automations"
   },
   "common": {
     "theme": "Theme: {mode}",
@@ -17,7 +18,8 @@
     "save": "Save",
     "saved": "Saved",
     "cancel": "Cancel",
-    "error": "Something went wrong: {message}"
+    "error": "Something went wrong: {message}",
+    "dateLocale": "en-CA"
   },
   "mode": {
     "local": "Local stack",
@@ -39,7 +41,11 @@
     "openWorkspace": "Open workspace",
     "services": "Services",
     "noServices": "Status not read yet — press Refresh.",
-    "serviceHeader": { "name": "Service", "port": "Port", "state": "State" },
+    "serviceHeader": {
+      "name": "Service",
+      "port": "Port",
+      "state": "State"
+    },
     "logs": "Logs",
     "logsEmpty": "Nothing yet. Start the stack, run doctor or fetch the service logs.",
     "logService": "Service logs",
@@ -101,5 +107,104 @@
     "startupHelp": "Off by default. Runs in the menu bar; nothing is started unless you ask.",
     "language": "Language",
     "about": "Orazaka Desktop is unsigned for now: if macOS refuses to open it, right-click the app and choose Open."
+  },
+  "automations": {
+    "title": "Automations",
+    "lead": "Work Orazaka does on its own, on this Mac, with your local model. It reads only the folder you choose and asks you before it writes anything.",
+    "killSwitch": "Stop all agents",
+    "killSwitchOn": "All agents are stopped on this Mac",
+    "killSwitchOnLead": "No automation runs and every schedule is paused until you resume.",
+    "resumeAll": "Resume",
+    "new": "New automation",
+    "templates": "Start from a template",
+    "templateSummarise": "Summarise new PDFs every morning",
+    "templateSummariseLead": "Every morning, reads the PDFs that arrived in a folder and saves a short summary note next to each one.",
+    "noneTitle": "No automation yet",
+    "noneLead": "Start from a template: Orazaka will ask you before it writes the first file.",
+    "form": {
+      "name": "Name",
+      "nameDefault": "Morning PDF summaries",
+      "folder": "Folder",
+      "folderHint": "Only a folder you shared in Files. Orazaka reads it and writes the notes next to the PDFs — nowhere else.",
+      "noFolder": "Share a folder in Files first.",
+      "time": "Every day at",
+      "weekdays": "Weekdays only",
+      "model": "Model",
+      "modelHint": "A model served on this Mac (Ollama, LocalAI, mlx_lm.server) — nothing leaves the Mac.",
+      "baseUrl": "Model address",
+      "dryRun": "Dry run first",
+      "dryRunHint": "Shows what it would write, writes nothing.",
+      "create": "Create the automation",
+      "cancel": "Cancel"
+    },
+    "card": {
+      "schedule": "Every day at {time}",
+      "scheduleWeekdays": "Weekdays at {time}",
+      "folder": "Folder",
+      "model": "Model",
+      "next": "Next run",
+      "never": "Not scheduled",
+      "last": "Last run",
+      "noRun": "Not run yet",
+      "dryRun": "Dry run",
+      "paused": "Paused",
+      "active": "Active",
+      "running": "Running…",
+      "runNow": "Run now",
+      "pause": "Pause",
+      "resume": "Resume",
+      "delete": "Delete",
+      "deleteConfirm": "Delete for good?",
+      "dryRunToggle": "Dry run"
+    },
+    "approvals": {
+      "title": "Approvals",
+      "count": "{count} waiting",
+      "lead": "Orazaka wants to write these files. Nothing is written until you decide.",
+      "none": "Nothing waits for your approval.",
+      "tool": "{tool} in {folder}",
+      "expires": "Expires {time}",
+      "once": "Approve once",
+      "always": "Always for this folder",
+      "alwaysHint": "Creates a permission for this automation, this tool and this folder only. You can take it back below.",
+      "deny": "Deny"
+    },
+    "grants": {
+      "title": "Permissions you gave",
+      "none": "No permanent permission. Every write asks first.",
+      "item": "{automation} may use {tool} in {folder}",
+      "revoke": "Take back"
+    },
+    "runs": {
+      "title": "Run history",
+      "none": "No run yet.",
+      "trace": "Step by step",
+      "close": "Close",
+      "job": "Job {id}",
+      "tokens": "{prompt} → {completion} tokens",
+      "duration": "{seconds} s",
+      "credits": "{credits} credits (local model)",
+      "written": "{count} note(s) written",
+      "trigger": {
+        "schedule": "Scheduled",
+        "manual": "Run now"
+      },
+      "status": {
+        "running": "Running",
+        "awaiting-approval": "Waiting for you",
+        "succeeded": "Done",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "halted": "Stopped",
+        "skipped-budget": "Budget reached"
+      }
+    },
+    "audit": {
+      "title": "Audit log",
+      "lead": "Everything automations did on this Mac, in order. Each entry is chained to the previous one: an edited or deleted line is detected.",
+      "verified": "Chain verified · {count} entries",
+      "broken": "Chain broken at entry {seq}",
+      "none": "Nothing yet."
+    }
   }
 }
