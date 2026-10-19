@@ -38,6 +38,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/intent` | authenticated | IntentController | Dispatches a synchronous user intention through the App Factory and returns the result. |
 | POST | `/api/v1/intent/route` | public | IntentController | M2M Level-0 gate routing: verifies the envelope and returns a signed intent token. |
 | GET | `/api/v1/jobs` | authenticated | JobController | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
+| DELETE | `/api/v1/jobs/{id}` | ADMIN + USER | JobController | Deletes a finished job's result: files out of every store, row marked deleted (orazaka-web-client#86). |
 | GET | `/api/v1/jobs/{id}` | ADMIN + USER | JobController | Fetches the single, atomic state of a specific job. |
 | POST | `/api/v1/jobs/{id}/progress` | ADMIN + USER | JobController | Updates progress of a running job and broadcasts it to connected users. |
 | POST | `/api/v1/jobs/{jobId}/approve` | ADMIN + USER | JobController | Approves a pending automation job and dispatches its payload to the execution queue. |
@@ -53,6 +54,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/mcp/servers/user/{id}` | authenticated | McpController |  |
 | GET | `/api/v1/mcp/tools` | authenticated | McpController | Retrieves all registered tools and their schemas. |
 | POST | `/api/v1/mcp/tools/{name}/execute` | authenticated | McpController | Executes a tool by name with the provided arguments. |
+| DELETE | `/api/v1/media/assets/{assetId}` | authenticated | MediaAnalysisController | Deletes one of the caller's own uploads (the sealed file in <uploads>/<user>/temp). |
 | GET | `/api/v1/media/search` | authenticated | MediaAnalysisController | Performs a passive RAG context search against the semantic index. |
 | POST | `/api/v1/media/upload` | authenticated | MediaAnalysisController | Securely uploads a raw binary asset, isolated per authenticated user. |
 | GET | `/api/v1/models` | ADMIN + USER | ModelController | Retrieves the local catalog of Ollama models. |
@@ -96,6 +98,16 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| POST | `/api/v1/analytics/erasures` | authenticated | AnalyticsController | Forgets subjects and items, in the analytics and the recommender's events. |
+| POST | `/api/v1/analytics/events` | authenticated | AnalyticsController | Records a batch of events (idempotent by id). |
+| GET | `/api/v1/analytics/funnel` | authenticated | AnalyticsController | The ordered funnel of steps over [from, to). |
+| GET | `/api/v1/analytics/insights` | authenticated | AnalyticsController | KPIs, series, top items and cohorts over [from, to) (UTC dates, to excluded). |
+| POST | `/api/v1/recommendations/erasures` | authenticated | RecommendationController | Forgets people and items. |
+| POST | `/api/v1/recommendations/events` | authenticated | RecommendationController | Records a batch of interaction events (idempotent by id). |
+| GET | `/api/v1/recommendations/for-you` | authenticated | RecommendationController | The person's "For you" feed. |
+| GET | `/api/v1/recommendations/insights` | authenticated | RecommendationController | A creator's analytics. |
+| POST | `/api/v1/recommendations/items` | authenticated | RecommendationController | Upserts eligible items; the ones whose text changed are embedded. |
+| GET | `/api/v1/recommendations/similar` | authenticated | RecommendationController | Items like an item. |
 | POST | `/internal/v1/knowledge/retrieve` | SERVICE | KnowledgeController | Semantic RAG retrieval over the vector store. |
 | POST | `/internal/v1/knowledge/sources/search` | SERVICE | KnowledgeController | Substring search over a tool's registered RAG sources. |
 
@@ -192,6 +204,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | PUT | `/api/v1/studios/{studioKey}/blueprints/{version}` | ADMIN | StudioBlueprintController | Creates or replaces a draft version. |
 | POST | `/api/v1/studios/{studioKey}/blueprints/{version}/publish` | ADMIN | StudioBlueprintController | Publishes a draft, minting it as the Studio's latest version. |
 | POST | `/api/v1/studios/{studioKey}/installations` | authenticated | StudioInstallationController | Installs a Studio, pinning its newest published version. |
+| POST | `/api/v1/studios/{studioKey}/policy-check` | authenticated | StudioRunController | Dry-run of the content policy: what would a run with these inputs do? Nothing is held, stored or sent to a provider. |
 | POST | `/api/v1/studios/{studioKey}/runs` | authenticated | StudioRunController | Starts a run of a Studio, addressed by its key rather than by an installation. |
 | GET | `/api/v1/studios/{studioKey}/versions` | authenticated | StudioController | A Studio's version history. |
 | GET | `/api/v1/studios/composer` | authenticated | StudioController | The Studios that belong in a chat composer, for this actor. |
