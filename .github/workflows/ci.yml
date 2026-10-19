@@ -74,7 +74,23 @@ jobs:
           npm run validate:admin
 
       - name: Docs are generated from this code
-        run: node scripts/generate-docs.mjs --check
+        # The generated docs also read the default branches of the other repositories, so they drift when those merge,
+        # whoever opens the pull request. A pull request is held to the gate only when it touches what the docs are
+        # made from here (docs, scripts, infra, the workspace manifest); any other drift is a warning, and docs-sync
+        # (daily, CI dispatched on its branch) brings main back in step.
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          node scripts/generate-docs.mjs --check && exit 0
+          if [ "$EVENT" = "pull_request" ]; then
+            git fetch --quiet --depth=1 origin "$BASE"
+            if git diff --name-only "origin/$BASE" HEAD | grep -qE '^(docs/|scripts/|infra/|AGENTS\.md|README\.md|orazaka\.workspace\.json)'; then
+              echo "::error::docs are stale and this pull request touches what they are made from"
+              exit 1
+            fi
+          fi
+          echo "::warning::docs/_generated drifted from the workspace; the docs-sync workflow opens the pull request"
 
   # Main must not go red unnoticed: a failed run on main opens (or updates) a single issue.
   red-main:
