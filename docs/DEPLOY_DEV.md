@@ -147,11 +147,20 @@ leaves a run whose file is gone (the run page then says "This result is no longe
 envelope (ADR-054: encrypted before it leaves the process) is therefore also stored through the `DurableAssetStore`
 port (`orazaka-assets`), chosen by environment: `MEDIA_STORAGE_PROVIDER=local|bunny|directory`.
 
-- `bunny`: a **private** storage zone (`orazaka-dev`, no pull zone, never a public URL — media is served only by
+- `bunny`: a **private** storage zone (`orazaka-media-dev`, NY, standard tier, no pull zone, never a public URL — media is served only by
   the authenticated `/api/v1/assets/{jobId}/{file}` route, which restores a missing file after the ownership check).
   `MEDIA_STORAGE_ZONE`, `MEDIA_STORAGE_API_KEY` (the zone password, secret), `MEDIA_STORAGE_ENDPOINT`
-  (default `storage.bunnycdn.com`), `MEDIA_STORAGE_TENANT` (first key segment).
+  (default `storage.bunnycdn.com`, the Falkenstein host; **a zone answers 401 on any host but its own region's**, so
+  the NY zone sets `ny.storage.bunnycdn.com`), `MEDIA_STORAGE_TENANT` (first key segment).
 - Key layout (krizaka/.github#61): `t/<tenant>/u/<userId>/jobs/<jobId>/<file>`; retention deletes the job prefix.
+  Besides the outputs, the job's archived `input.json` / input file and `result.json` live in the same job prefix,
+  and what a user uploads under `t/<tenant>/u/<userId>/jobs/uploads/<assetId><ext>` (uploads belong to no job).
+  After a redeploy a read that finds one gone fetches the sealed envelope back, for its owner only.
+- Cost: Bunny Storage bills per GB stored (about 0.01 USD/GB/month, no minimum on top of the existing account), so dev
+  outputs cost cents; DO Spaces would be 5 USD/month flat. No signed URL is needed: the zone has no public path, the
+  only way out is the authenticated asset route (JWT expiry, ownership from the job row, other users get 404).
+- Retention is data: `MEDIA_RETENTION_DAYS` (dev: 30; `0` keeps) — the job-service sweeper deletes the job's files,
+  its durable prefix, then its row. Protected data classes keep their own, shorter window.
 - `local` (default) keeps today's behaviour; self-hosted customers keep local disk (or S3/Bunny adapters later).
 
 ## Routing is data
@@ -195,7 +204,7 @@ scripts/gpu-dev.sh cost                  # every session (ledger in ~/Documents/
 **How it connects — nothing is exposed.** The droplet opens no port (SSH from the caller's IP only). A chisel client
 on it dials **out** to `https://dev.orazaka.com/gpu-relay` (App Platform's TLS, a 256-bit credential
 `AI_GPU_RELAY_PASSWORD`) and may open exactly five remotes — the relay's allow-list: `broker-dev.orazaka.com:5671` (the TLS broker of the VPC, as the narrow `gpu-worker` user, verified end to end against the dev CA),
-`core:8090` (the job service: worker registry and output hand-over), and back inside the app `gpu-relay:8086`
+`core:8090` (the job service: worker registry and output hand-over), and back inside the app `gpu-relay:8085` (LocalAI: Whisper and Piper, the `localai` provider), `gpu-relay:8086`
 (sd-server), `gpu-relay:8188` (the video pipeline) and `gpu-relay:11434` (Ollama: `qwen2.5:7b` for the Studios'
 text steps, `llava` for their photo steps — sovereign, Apache-2.0 / open weights, while the GPU runs). The broker stays VPC-only. While no GPU is connected nothing
 listens on `gpu-relay:8086/8188`, which is exactly what greys the image and video capabilities out.

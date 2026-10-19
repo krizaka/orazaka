@@ -35,6 +35,11 @@ VALUES ('gte-large-en-v1.5', 'GTE Large (en) v1.5', 'embedding', NULL, 'do-infer
 ON CONFLICT (model_name) DO NOTHING;
 UPDATE orazaka_models SET vendor = 'Alibaba-NLP', family = 'GTE', capabilities = 'embeddings', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5/blob/main/README.md', commercial_use = 'yes', context_window = 8192, status = 'available' WHERE model_name = 'gte-large-en-v1.5';
 
+INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default)
+VALUES ('nemotron-nano-12b-v2-vl', 'Nemotron Nano 12B v2 VL', 'vision', NULL, 'do-inference', FALSE)
+ON CONFLICT (model_name) DO NOTHING;
+UPDATE orazaka_models SET vendor = 'NVIDIA', family = 'Nemotron Nano v2 VL', capabilities = 'vision,chat', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'NVIDIA Open Model License', licence_url = 'https://huggingface.co/nvidia/NVIDIA-Nemotron-Nano-12B-v2-VL-BF16', commercial_use = 'yes', status = 'available' WHERE model_name = 'nemotron-nano-12b-v2-vl';
+
 -- The embedding model of dev (POST /api/v1/embeddings resolves the default of the `embedding` category, never a model the caller
 -- names). GTE Large (en) v1.5 is the one the dev inference key may call (1024 dimensions, the size Orochia's Explorer stores in
 -- pgvector); BGE-M3, multilingual (English and French), answers 403 on that key today and replaces it as the default the day the

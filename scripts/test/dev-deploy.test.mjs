@@ -52,13 +52,18 @@ test("broker cloud-init: TLS only, bound to the private address, secrets as plac
   }
 });
 
-test("the GPU relay allows exactly the broker, the job service and the two reverse ports", () => {
+test("the GPU relay allows exactly the broker, the job service and the reverse ports of the Mac and the pods (LocalAI 8085, sd-server 8086, pipeline 8188, Ollama 11434)", () => {
   const entry = readFileSync(new URL("../../infra/deploy/gpu-relay/entrypoint.sh", import.meta.url), "utf8");
   const allowed = [...entry.matchAll(/^\s+"(\^[^"]+)",?$/gm)].map((m) => m[1]);
-  assert.deepEqual(allowed, ["^broker-dev\\\\\\\\.orazaka\\\\\\\\.com:5671\\$", "^core:8090\\$", "^R:0\\\\\\\\.0\\\\\\\\.0\\\\\\\\.0:(8086|8188|11434)\\$"]);
+  assert.deepEqual(allowed, ["^broker-dev\\\\\\\\.orazaka\\\\\\\\.com:5671\\$", "^core:8090\\$", "^R:0\\\\\\\\.0\\\\\\\\.0\\\\\\\\.0:(8085|8086|8188|11434)\\$"]);
   assert.match(entry, /-lt 32/);
   const dockerfile = readFileSync(new URL("../../infra/deploy/gpu-relay/Dockerfile", import.meta.url), "utf8");
   assert.match(dockerfile, /sha256sum -c/);
+});
+
+test("the relay exposes LocalAI's port to the app as well as allowing it", () => {
+  const spec = readFileSync(new URL("../../infra/deploy/orazaka-dev.app.yaml", import.meta.url), "utf8");
+  assert.match(spec, /internal_ports: \[8085, 8086, 8188, 11434\]/);
 });
 
 test("password: long, mixed, different each time", () => {
@@ -154,7 +159,7 @@ test("the core image build cache is busted at every apply: CORE_REBUILD is fille
 
 test("the recommender (ADR-078): knowledge runs in core with its own database, its migration is idempotent", () => {
   const dev = spec("orazaka-dev");
-  assert.match(dev, /key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql:\/\/__DATABASE_HOST__:__DATABASE_PORT__\/orazaka_knowledge_db\?sslmode=require"/);
+  assert.match(dev, /key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql:\/\/__DATABASE_HOST__:25061\/pool-knowledge\?sslmode=require&prepareThreshold=0"/);
   assert.match(dev, /key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__"/);
   const docker = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
   assert.match(docker, /orazaka-apps\/services\/orazaka-knowledge-service \\/);
@@ -176,4 +181,23 @@ test("the analytics migration (ADR-081) is idempotent, seeds kinds and settings 
   assert.match(sql, /ON CONFLICT \(tenant_id, version\) DO NOTHING/);
   const script = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
   assert.match(script, /command === "analytics"\) analytics\(\)/);
+});
+
+test("orazaka-dev: outputs go to the private Bunny zone, the key is a SECRET, dev keeps them 30 days", () => {
+  const text = spec("orazaka-dev");
+  assert.match(text, /MEDIA_STORAGE_PROVIDER, scope: RUN_TIME, value: bunny/);
+  assert.match(text, /MEDIA_STORAGE_ZONE, scope: RUN_TIME, value: orazaka-media-dev/);
+  assert.match(text, /MEDIA_STORAGE_API_KEY, scope: RUN_TIME, type: SECRET, value: "__MEDIA_STORAGE_API_KEY__"/);
+  assert.match(text, /MEDIA_STORAGE_ENDPOINT, scope: RUN_TIME, value: ny\.storage\.bunnycdn\.com/); // the zone's own region host
+  assert.match(text, /MEDIA_RETENTION_DAYS, scope: RUN_TIME, value: "30"/);
+});
+
+test("connection budget: every JVM of the core goes through its PgBouncer pool (25061, prepareThreshold=0), none direct", () => {
+  const dev = spec("orazaka-dev");
+  const urls = [...dev.matchAll(/key: (\w+_URL|SPRING_DATASOURCE_URL), scope: RUN_TIME, value: "(jdbc:postgresql:[^"]+)"/g)];
+  assert.equal(urls.length, 5, "orazaka_db, users, studio, knowledge, billing");
+  for (const [, key, url] of urls) {
+    assert.match(url, /:25061\/pool-[a-z]+\?sslmode=require&prepareThreshold=0$/, `${key} must use its pool`);
+  }
+  assert.doesNotMatch(dev, /__DATABASE_PORT__/, "no direct (25060) datasource left in the core");
 });
