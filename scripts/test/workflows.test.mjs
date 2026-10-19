@@ -46,3 +46,10 @@ test("the reusable component workflow keeps packages/id-token write on the job, 
   const text = readFileSync(new URL("component.yml", dir), "utf8");
   assert.doesNotMatch(text.split("jobs:")[0], /^  [a-z-]+: write/m);
 });
+
+test("CI holds a pull request to the docs gate only when it touches what the docs are made from", () => {
+  const text = readFileSync(new URL("ci.yml", dir), "utf8");
+  assert.match(text, /generate-docs\.mjs --check && exit 0/);
+  assert.match(text, /::warning::docs\/_generated drifted/);
+  assert.match(text, /docs\/\|scripts\/\|infra\//);
+});
