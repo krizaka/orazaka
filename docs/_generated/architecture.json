@@ -824,6 +824,21 @@
       }
     },
     {
+      "id": "krizaka-app-config",
+      "path": "krizaka/krizaka-platform-kit/krizaka-app-config",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "Version compatibility between a backend and the apps that call it, written once: a public cached app-config endpoint (minimum and latest version, update mode, maintenance, contract range, store URL, flags, localized message) read from database parameters, a filter that answers 426 Upgrade Required to a client below the minimum, N-1 contract compatibility with Deprecation and Sunset headers, and an audited admin API with rollback.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "krizaka-messaging",
       "path": "krizaka/krizaka-platform-kit/krizaka-messaging",
       "repository": "krizaka-platform-kit",
@@ -863,6 +878,21 @@
       "runtime": "jvm",
       "version": "0.2.0",
       "description": "Stateless JWT security for Spring Boot services: the shared HS256 session-token decoder, the roles-claim authority mapping, one security baseline (CORS preflight, health, error page, SERVICE-only internal surface) and the service-to-service token.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "krizaka-spring-boot-starter-app-config",
+      "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-app-config",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "App version compatibility in one dependency: krizaka-app-config (the public app-config endpoint, the 426 Upgrade Required filter, N-1 contract compatibility, the audited admin API) with Spring MVC and JDBC.",
       "ports": {
         "inbound": [],
         "outbound": []
@@ -974,6 +1004,10 @@
       "to": "krizaka-notifications-api"
     },
     {
+      "from": "krizaka-spring-boot-starter-app-config",
+      "to": "krizaka-app-config"
+    },
+    {
       "from": "krizaka-spring-boot-starter-observability",
       "to": "krizaka-observability"
     },
@@ -1040,6 +1074,10 @@
     {
       "from": "orazaka-conversation-service",
       "to": "krizaka-billing-client"
+    },
+    {
+      "from": "orazaka-conversation-service",
+      "to": "krizaka-spring-boot-starter-app-config"
     },
     {
       "from": "orazaka-conversation-service",
@@ -1361,7 +1399,7 @@
       "kind": "amqp",
       "via": "orazaka.events.job-relay",
       "exchange": "orazaka.events",
-      "routingKey": "job.{…}.done"
+      "routingKey": "job.{…}.cancelled"
     },
     {
       "from": "orazaka-job-service",
@@ -1510,6 +1548,12 @@
       "to": "orazaka-conversation-service",
       "kind": "http",
       "via": "route /"
+    },
+    {
+      "from": "orazaka-edge",
+      "to": "orazaka-knowledge-service",
+      "kind": "http",
+      "via": "route /api/v1/analytics"
     },
     {
       "from": "orazaka-edge",
@@ -1898,12 +1942,22 @@
       {
         "module": "orazaka-job-service",
         "exchange": "orazaka.events",
+        "routingKey": "job.{…}.cancelled"
+      },
+      {
+        "module": "orazaka-job-service",
+        "exchange": "orazaka.events",
         "routingKey": "job.{…}.done"
       },
       {
         "module": "orazaka-job-service",
         "exchange": "orazaka.events",
         "routingKey": "job.{…}.error"
+      },
+      {
+        "module": "orazaka-job-service",
+        "exchange": "orazaka.events",
+        "routingKey": "job.{…}.progress"
       },
       {
         "module": "orazaka-studio-service",
@@ -1929,6 +1983,11 @@
         "module": "orazaka-studio-service",
         "exchange": "orazaka.jobs",
         "routingKey": "job.automation.approved"
+      },
+      {
+        "module": "orazaka-studio-service",
+        "exchange": "orazaka.jobs",
+        "routingKey": "job.cancel.{…}"
       }
     ],
     "consumers": [
@@ -2219,6 +2278,15 @@
         "description": "Identity principal contract (the User record) — the only identity type downstream services keep after the Phase 2 extraction; pure JDK, no dependencies"
       },
       {
+        "id": "krizaka-spring-boot-starter-app-config",
+        "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-app-config",
+        "repository": "krizaka-platform-kit",
+        "role": "starter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "App version compatibility in one dependency: krizaka-app-config (the public app-config endpoint, the 426 Upgrade Required filter, N-1 contract compatibility, the audited admin API) with Spring MVC and JDBC."
+      },
+      {
         "id": "krizaka-spring-boot-starter-observability",
         "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-observability",
         "repository": "krizaka-platform-kit",
@@ -2253,6 +2321,15 @@
         "packaging": "jar",
         "version": "0.2.0",
         "description": "HTTP service baseline in one dependency: krizaka-web (Problem Details, request correlation, Jackson defaults, cursor pagination, declared CORS) with Spring MVC, bean validation and Actuator."
+      },
+      {
+        "id": "krizaka-app-config",
+        "path": "krizaka/krizaka-platform-kit/krizaka-app-config",
+        "repository": "krizaka-platform-kit",
+        "role": "platform",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Version compatibility between a backend and the apps that call it, written once: a public cached app-config endpoint (minimum and latest version, update mode, maintenance, contract range, store URL, flags, localized message) read from database parameters, a filter that answers 426 Upgrade Required to a client below the minimum, N-1 contract compatibility with Deprecation and Sunset headers, and an audited admin API with rollback."
       },
       {
         "id": "krizaka-messaging",
@@ -2319,6 +2396,16 @@
       }
     ],
     "dependencies": [
+      {
+        "from": "krizaka-app-config",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-app-config",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
       {
         "from": "krizaka-billing-api",
         "to": "krizaka-bom",
@@ -2468,6 +2555,16 @@
         "from": "krizaka-security",
         "to": "krizaka-test-support",
         "kind": "test"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-app-config",
+        "to": "krizaka-app-config",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-app-config",
+        "to": "krizaka-parent",
+        "kind": "parent"
       },
       {
         "from": "krizaka-spring-boot-starter-observability",
@@ -2642,7 +2739,7 @@
       "regulatoryClass": "STANDARD",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "business",
+      "category": "creativity-media",
       "iconKey": "studio",
       "sortWeight": 100,
       "pricing": {
@@ -2669,12 +2766,12 @@
       },
       "categoryText": {
         "en": {
-          "label": "Business",
-          "description": "The packs that do the job: prospect, validate, produce."
+          "label": "Creativity & media",
+          "description": "Packs that produce images, video, sound and showcases."
         },
         "fr": {
-          "label": "Business",
-          "description": "Les packs qui font le travail : prospecter, valider, produire."
+          "label": "Création et médias",
+          "description": "Les packs qui produisent images, vidéo, son et vitrines."
         }
       },
       "studios": [
@@ -2740,14 +2837,14 @@
     {
       "key": "orazaka-media",
       "dir": "orazaka-media",
-      "version": "1.5.0",
+      "version": "1.7.0",
       "tier": "DATA",
       "kind": "TOOLKIT",
       "distribution": "OSS",
       "regulatoryClass": "STANDARD",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "business",
+      "category": "creativity-media",
       "iconKey": "image",
       "sortWeight": 90,
       "pricing": {
@@ -2773,8 +2870,14 @@
         }
       },
       "categoryText": {
-        "en": null,
-        "fr": null
+        "en": {
+          "label": "Creativity & media",
+          "description": "Packs that produce images, video, sound and showcases."
+        },
+        "fr": {
+          "label": "Création et médias",
+          "description": "Les packs qui produisent images, vidéo, son et vitrines."
+        }
       },
       "studios": [
         {
@@ -3100,6 +3203,10 @@
             {
               "key": "seed",
               "title": "Graine (facultatif)"
+            },
+            {
+              "key": "upscale",
+              "title": "Netteté (facultatif)"
             }
           ],
           "outputs": [
@@ -3117,6 +3224,106 @@
             "fr": {
               "label": "Génération vidéo",
               "tagline": "Un short vertical (9:16) ou un plan large, décrit puis rendu.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "cinematic-script",
+          "profession": "creative",
+          "iconKey": "video",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "brief",
+              "title": "Le brief"
+            },
+            {
+              "key": "format",
+              "title": "Le format"
+            },
+            {
+              "key": "aspect",
+              "title": "Format d'image"
+            },
+            {
+              "key": "durationSeconds",
+              "title": "Durée (secondes)"
+            },
+            {
+              "key": "shots",
+              "title": "Nombre de plans"
+            },
+            {
+              "key": "language",
+              "title": "Langue des textes"
+            },
+            {
+              "key": "model",
+              "title": "Modèle de langage (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "script",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Cinematic short — script",
+              "tagline": "A brief becomes a shot list: 8–12 shots, original characters, music, voice-over.",
+              "description": null
+            },
+            "fr": {
+              "label": "Court métrage — script",
+              "tagline": "Un brief devient une liste de plans : 8 à 12 plans, personnages originaux, musique, voix off.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "cinematic-cut",
+          "profession": "creative",
+          "iconKey": "video",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 900,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "clips",
+              "title": "Les plans"
+            },
+            {
+              "key": "edit",
+              "title": "La liste de décisions de montage (JSON)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "film",
+              "type": "VIDEO"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Cinematic short — cut",
+              "tagline": "Your shots edited into one film: cuts, ramps, grade, titles, the AI label.",
+              "description": null
+            },
+            "fr": {
+              "label": "Court métrage — montage",
+              "tagline": "Vos plans montés en un film : coupes, ralentis, étalonnage, titres, la mention IA.",
               "description": null
             }
           }
@@ -3437,7 +3644,7 @@
       "regulatoryClass": "STANDARD",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "business",
+      "category": "business-compliance",
       "iconKey": "target",
       "sortWeight": 90,
       "pricing": {
@@ -3464,12 +3671,12 @@
       },
       "categoryText": {
         "en": {
-          "label": "Business",
-          "description": "The packs that do the job: prospect, validate, produce."
+          "label": "Business & documents",
+          "description": "Packs that do the work: check documents, prospect."
         },
         "fr": {
-          "label": "Business",
-          "description": "Les packs qui font le travail : prospecter, valider, produire."
+          "label": "Affaires et documents",
+          "description": "Les packs qui font le travail : vérifier des documents, prospecter."
         }
       },
       "studios": [
@@ -3627,6 +3834,206 @@
       ]
     },
     {
+      "key": "data-analytics",
+      "dir": "data-analytics",
+      "version": "1.3.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "OSS",
+      "regulatoryClass": "STANDARD",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "data-analytics",
+      "iconKey": "chart",
+      "sortWeight": 40,
+      "pricing": {
+        "priceCents": 4900,
+        "includedCredits": 300
+      },
+      "capabilities": [],
+      "workers": [],
+      "scopeGuard": false,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Recommendations & insights",
+          "tagline": "A feed per person and analytics per creator, on your own data.",
+          "description": "The recommender your product calls with a service key: send pseudonymous events and your eligible items, read a \"for you\" feed, similar items and creator insights — every item says why it is there. Two Studios read your videos and suggest titles and tags."
+        },
+        "fr": {
+          "label": "Recommandations et statistiques",
+          "tagline": "Un fil par personne et des statistiques par créateur, sur vos propres données.",
+          "description": "Le recommandeur que votre produit appelle avec une clé de service : envoyez des événements pseudonymes et vos articles admissibles, lisez un fil « pour vous », des articles semblables et les statistiques d'un créateur — chaque article dit pourquoi il est là. Deux Studios lisent vos vidéos et proposent titres et mots-clés."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Data & analytics",
+          "description": "Packs that read your product's data: recommendations, insights, dashboards."
+        },
+        "fr": {
+          "label": "Données et analyse",
+          "description": "Les packs qui lisent les données de votre produit : recommandations, statistiques, tableaux de bord."
+        }
+      },
+      "studios": [
+        {
+          "key": "data-driven-ui",
+          "profession": "general",
+          "iconKey": "chart",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 30,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "data",
+              "title": "Vos données (facultatif)"
+            },
+            {
+              "key": "question",
+              "title": "Votre question"
+            },
+            {
+              "key": "language",
+              "title": "Langue"
+            },
+            {
+              "key": "model",
+              "title": "Modèle de langage (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "answer",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Data-driven UI",
+              "tagline": "A CSV and a question become a live dashboard.",
+              "description": "Give your data (a CSV, a JSON export of your analytics) and ask: the answer comes as figures, charts and a table you can read at a glance. Every number comes from your data."
+            },
+            "fr": {
+              "label": "Interface pilotée par les données",
+              "tagline": "Un CSV et une question deviennent un tableau de bord.",
+              "description": "Donnez vos données (un CSV, l'export JSON de vos statistiques) et posez votre question : la réponse arrive en chiffres, graphiques et tableau, lisible d'un coup d'œil. Chaque nombre vient de vos données."
+            }
+          }
+        },
+        {
+          "key": "video-understanding",
+          "profession": "general",
+          "iconKey": "vision",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 2,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "assetId",
+              "title": "L'image clé"
+            },
+            {
+              "key": "title",
+              "title": "Le titre de la vidéo"
+            },
+            {
+              "key": "description",
+              "title": "La description (facultative)"
+            },
+            {
+              "key": "language",
+              "title": "Langue de la lecture"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "reading",
+              "type": "TEXT"
+            },
+            {
+              "key": "frame",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Video understanding",
+              "tagline": "What a video is about — topics, tags and safety signals, from a keyframe.",
+              "description": "A keyframe goes through the vision model, then a reading in JSON: a summary, topics, tags, the language and safety labels. The labels go to a human moderator, never to an automatic takedown."
+            },
+            "fr": {
+              "label": "Compréhension vidéo",
+              "tagline": "De quoi parle une vidéo — sujets, mots-clés et signaux de sécurité, à partir d'une image clé.",
+              "description": "Une image clé passe par le modèle de vision, puis une lecture en JSON : un résumé, des sujets, des mots-clés, la langue et des étiquettes de sécurité. Les étiquettes vont à un modérateur humain, jamais à un retrait automatique."
+            }
+          }
+        },
+        {
+          "key": "creator-suggestions",
+          "profession": "creative",
+          "iconKey": "sparkles",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 15,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "title",
+              "title": "Votre titre"
+            },
+            {
+              "key": "description",
+              "title": "Votre description (facultative)"
+            },
+            {
+              "key": "tags",
+              "title": "Vos mots-clés (facultatif)"
+            },
+            {
+              "key": "audienceTags",
+              "title": "Ce qui marche auprès de votre audience (facultatif)"
+            },
+            {
+              "key": "language",
+              "title": "Langue"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "suggestions",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Creator suggestions",
+              "tagline": "Three titles, a description and tags — proposals the creator approves.",
+              "description": "From the creator's own words and the tags that perform with their audience. Nothing is invented, nothing is published without the creator."
+            },
+            "fr": {
+              "label": "Suggestions pour créateurs",
+              "tagline": "Trois titres, une description et des mots-clés — des propositions que le créateur valide.",
+              "description": "À partir des mots du créateur et des mots-clés qui marchent auprès de son audience. Rien n'est inventé, rien n'est publié sans le créateur."
+            }
+          }
+        }
+      ]
+    },
+    {
       "key": "bien-etre",
       "dir": "wellbeing",
       "version": "1.0.0",
@@ -3636,7 +4043,7 @@
       "regulatoryClass": "REGULATED",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "lifestyle",
+      "category": "wellbeing",
       "iconKey": "sparkles",
       "sortWeight": 30,
       "pricing": {
@@ -3663,11 +4070,11 @@
       },
       "categoryText": {
         "en": {
-          "label": "Lifestyle",
-          "description": "The packs for you, not for your work."
+          "label": "Wellbeing",
+          "description": "Packs for you, not for your work."
         },
         "fr": {
-          "label": "Vie personnelle",
+          "label": "Bien-être",
           "description": "Les packs pour vous, pas pour votre travail."
         }
       },
@@ -3837,14 +4244,14 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
       "regulatoryClass": "SENSITIVE",
       "status": "PUBLISHED",
       "showcase": true,
-      "category": "business",
+      "category": "business-compliance",
       "iconKey": "shield-check",
       "sortWeight": 20,
       "pricing": {
@@ -3889,7 +4296,7 @@
           "versions": [
             "2024-02-21"
           ],
-          "rules": 9
+          "rules": 10
         }
       ],
       "text": {
@@ -3906,12 +4313,12 @@
       },
       "categoryText": {
         "en": {
-          "label": "Business",
-          "description": "The packs that do the job: prospect, validate, produce."
+          "label": "Business & documents",
+          "description": "Packs that do the work: check documents, prospect."
         },
         "fr": {
-          "label": "Business",
-          "description": "Les packs qui font le travail : prospecter, valider, produire."
+          "label": "Affaires et documents",
+          "description": "Les packs qui font le travail : vérifier des documents, prospecter."
         }
       },
       "studios": [
@@ -4019,7 +4426,7 @@
       "regulatoryClass": "STANDARD",
       "status": "DRAFT",
       "showcase": false,
-      "category": "business",
+      "category": "business-compliance",
       "iconKey": "repeat",
       "sortWeight": 5,
       "pricing": {
@@ -4086,6 +4493,284 @@
               "label": "Miroir",
               "tagline": "Votre texte, à l'envers.",
               "description": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "media-safety",
+      "dir": "media-safety",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [
+        "orazaka.safety.media.assess"
+      ],
+      "workers": [
+        "orazaka-worker-safety"
+      ],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Media safety",
+          "tagline": "Is this photo, video or voice message safe to show?",
+          "description": "Judges pictures (a photo, or frames of a video) and a voice message's transcript against a short, public set of lines: no nudity or sexual content, no graphic violence, no threats or harassment. An answer nobody could read is never a pass."
+        },
+        "fr": {
+          "label": "Sécurité des médias",
+          "tagline": "Cette photo, cette vidéo ou ce message vocal peut-il être montré sans danger ?",
+          "description": "Juge des images (une photo, ou des images d'une vidéo) et la transcription d'un message vocal selon quelques lignes publiques : pas de nudité ni de contenu sexuel, pas de violence graphique, pas de menace ni de harcèlement. Une réponse que personne n'a pu lire n'est jamais un feu vert."
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "media-safety",
+          "profession": "general",
+          "iconKey": "shield-check",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 30,
+          "steps": 4,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "frames",
+              "title": "Les images à examiner"
+            },
+            {
+              "key": "frameCount",
+              "title": "Le nombre d'images"
+            },
+            {
+              "key": "audio",
+              "title": "Le son à juger (facultatif)"
+            },
+            {
+              "key": "expectsSpeech",
+              "title": "Il y a du son à juger"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "JSON"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Media safety",
+              "tagline": "A safety check that fails closed.",
+              "description": "A vision question per picture, a transcript and a text judgement for sound, then closed rules. Unreadable means held, never approved."
+            },
+            "fr": {
+              "label": "Sécurité des médias",
+              "tagline": "Un contrôle de sécurité qui échoue du côté prudent.",
+              "description": "Une question de vision par image, une transcription et un jugement du texte pour le son, puis des règles fermées. Illisible veut dire retenu, jamais approuvé."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "message-authenticity",
+      "dir": "message-authenticity",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [
+        "orazaka.message.authenticity.read"
+      ],
+      "workers": [
+        "orazaka-worker-authenticity"
+      ],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Message authenticity",
+          "tagline": "Does this message read like a person wrote it? A signal, never a verdict.",
+          "description": "Reads one message with a small open classifier and answers a coarse level — never a score. It can be wrong, above all on short texts and on non-native or French writing. It never writes a message for anyone."
+        },
+        "fr": {
+          "label": "Authenticité des messages",
+          "tagline": "Ce message ressemble-t-il à un texte écrit par une personne ? Un signal, jamais un verdict.",
+          "description": "Lit un message avec un petit classifieur ouvert et répond un niveau grossier — jamais un score. Il peut se tromper, surtout sur les textes courts et sur une écriture non native ou en français. Il n'écrit aucun message à la place de quiconque."
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "message-authenticity",
+          "profession": "general",
+          "iconKey": "shield-check",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 5,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "text",
+              "title": "Le message"
+            },
+            {
+              "key": "locale",
+              "title": "Langue du compte (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "JSON"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Message authenticity",
+              "tagline": "A coarse signal on a text, never a verdict.",
+              "description": "One step, no generative model. The text is read and forgotten; the answer is low, mid, high or unavailable."
+            },
+            "fr": {
+              "label": "Authenticité des messages",
+              "tagline": "Un signal grossier sur un texte, jamais un verdict.",
+              "description": "Une seule étape, aucun modèle génératif. Le texte est lu puis oublié ; la réponse est bas, moyen, haut ou indisponible."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "profile-photo-check",
+      "dir": "profile-photo-check",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [
+        "orazaka.photo.profile.inspect",
+        "orazaka.photo.profile.assess"
+      ],
+      "workers": [
+        "orazaka-worker-photo"
+      ],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Profile photo check",
+          "tagline": "Are these photos one real adult's profile?",
+          "description": "Checks a set of profile photos: enough of them, enough with a face, the same person from one face photo to the next, nothing written over the picture, no screenshots. It answers in codes, identifies no one and recognises no celebrity."
+        },
+        "fr": {
+          "label": "Vérification des photos de profil",
+          "tagline": "Ces photos forment-elles le profil d'une vraie personne adulte ?",
+          "description": "Vérifie un ensemble de photos de profil : assez de photos, assez de photos de visage, la même personne d'une photo de visage à l'autre, rien d'écrit sur l'image, pas de capture d'écran. Elle répond en codes, n'identifie personne et ne reconnaît aucune célébrité."
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "profile-photo-check",
+          "profession": "general",
+          "iconKey": "vision",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 3,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "photos",
+              "title": "Les photos (fichiers envoyés)"
+            },
+            {
+              "key": "photosBase64",
+              "title": "Les mêmes photos, en base64"
+            },
+            {
+              "key": "compareFaces",
+              "title": "Comparer les visages entre eux"
+            },
+            {
+              "key": "minPhotos",
+              "title": "Photos au moins"
+            },
+            {
+              "key": "maxPhotos",
+              "title": "Photos au plus"
+            },
+            {
+              "key": "minFacePhotos",
+              "title": "Photos de visage au moins"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "JSON"
+            },
+            {
+              "key": "passes",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Profile photo check",
+              "tagline": "Faces present, the same person throughout, nothing written on the photo.",
+              "description": "Finds the faces in each photo, asks a vision model three yes/no questions about it, and gives a verdict made of codes. The face vectors live for one job and are never kept; a model answer that cannot be read blocks nothing."
+            },
+            "fr": {
+              "label": "Vérification des photos de profil",
+              "tagline": "Des visages présents, la même personne partout, rien d'écrit sur la photo.",
+              "description": "Trouve les visages de chaque photo, pose à un modèle de vision trois questions par oui ou non, et rend un verdict fait de codes. Les vecteurs de visage vivent le temps d'un travail et ne sont jamais gardés ; une réponse illisible du modèle ne bloque rien."
             }
           }
         }
@@ -4481,6 +5166,28 @@
       "lastVerified": null
     },
     {
+      "id": "kokoro-82m",
+      "name": "Kokoro 82M (GPU host)",
+      "vendor": "hexgrad",
+      "family": "Kokoro",
+      "category": "speech",
+      "capabilities": [
+        "text-to-speech"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA",
+      "provider": "gpu-speech",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/hexgrad/Kokoro-82M"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "piper-en-low",
       "name": "Piper Low (en)",
       "vendor": "Rhasspy",
@@ -4591,6 +5298,28 @@
       "lastVerified": null
     },
     {
+      "id": "ltx-video-0.9.8-13b-distilled",
+      "name": "LTX-Video 0.9.8 13B distilled (720p, GPU)",
+      "vendor": "Lightricks",
+      "family": "LTX-Video",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA (80 GB)",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "LTX-Video Open Weights License 0.X",
+        "url": "https://huggingface.co/Lightricks/LTX-Video-0.9.8-13B-distilled/blob/main/LTX-Video-Open-Weights-License-0.X.txt"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "stable-video-diffusion-img2vid-xt",
       "name": "Stable Video Diffusion XT (heavy, >64GB)",
       "vendor": "Stability AI",
@@ -4635,8 +5364,52 @@
       "lastVerified": null
     },
     {
+      "id": "wan2.2-i2v-a14b",
+      "name": "Wan 2.2 I2V A14B (720p, 4-step distill)",
+      "vendor": "Alibaba (Wan-AI)",
+      "family": "Wan 2.2",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA (80 GB)",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "wan2.2-i2v-a14b-hq",
+      "name": "Wan 2.2 I2V A14B (720p, 40 steps)",
+      "vendor": "Alibaba (Wan-AI)",
+      "family": "Wan 2.2",
+      "category": "video",
+      "capabilities": [
+        "video"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA (80 GB)",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "wan2.2-t2v-a14b",
-      "name": "Wan 2.2 T2V A14B (720p, GPU)",
+      "name": "Wan 2.2 T2V A14B (720p, 80 GB GPU)",
       "vendor": "Alibaba (Wan-AI)",
       "family": "Wan 2.2",
       "category": "video",
@@ -4672,6 +5445,28 @@
       "licence": {
         "name": "Apache-2.0",
         "url": "https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers/blob/main/README.md"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "seedvr2-3b",
+      "name": "SeedVR2 3B (video upscale, GPU)",
+      "vendor": "ByteDance Seed",
+      "family": "SeedVR2",
+      "category": "video-upscale",
+      "capabilities": [
+        "video-upscale"
+      ],
+      "runsOn": "local",
+      "runtime": "worker-media · CUDA",
+      "provider": "localai-video",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/ByteDance-Seed/SeedVR2-3B"
       },
       "commercialUse": "yes",
       "contextWindow": null,
@@ -4834,6 +5629,29 @@
       "lastVerified": null
     },
     {
+      "id": "nemotron-nano-12b-v2-vl",
+      "name": "Nemotron Nano 12B v2 VL",
+      "vendor": "NVIDIA",
+      "family": "Nemotron Nano v2 VL",
+      "category": "vision",
+      "capabilities": [
+        "vision",
+        "chat"
+      ],
+      "runsOn": "provider",
+      "runtime": "DigitalOcean serverless inference",
+      "provider": "do-inference",
+      "openWeights": true,
+      "licence": {
+        "name": "NVIDIA Open Model License",
+        "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-Nano-12B-v2-VL-BF16"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
       "id": "bge-m3",
       "name": "BGE-M3",
       "vendor": "BAAI",
@@ -4935,6 +5753,161 @@
             "default": null
           }
         ]
+      },
+      {
+        "name": "cinema",
+        "top": "cinema",
+        "isTop": true,
+        "description": "A cinematic short (30–60 s) from a brief: script, keyframes, shots, cut, sound — each an ordinary Studio run",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "cinema new",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Start a production from a brief",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-a, --aspect <aspect>",
+            "desc": "9:16 or 16:9",
+            "default": "9:16"
+          },
+          {
+            "flag": "-d, --duration <seconds>",
+            "desc": "30 to 60",
+            "default": "45"
+          },
+          {
+            "flag": "-n, --shots <count>",
+            "desc": "8 to 12",
+            "default": "10"
+          },
+          {
+            "flag": "-l, --language <lang>",
+            "desc": "en or fr",
+            "default": "en"
+          },
+          {
+            "flag": "--seed <seed>",
+            "desc": "The production's seed (every shot's seed derives from it)",
+            "default": null
+          },
+          {
+            "flag": "--voice <voice>",
+            "desc": "A voice of the speech catalogue for the voice-over",
+            "default": null
+          },
+          {
+            "flag": "--script-model <model>",
+            "desc": "The language model that writes the script (default: the catalogue's)",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "cinema estimate",
+        "top": "cinema",
+        "isTop": false,
+        "description": "What the rest of the production will cost and take, before it runs",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "cinema run",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Run (or resume) the production: script, references, keyframes, shots, cut, voice, sound",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-y, --yes",
+            "desc": "Do not ask before spending",
+            "default": null
+          },
+          {
+            "flag": "--max-runs <n>",
+            "desc": "Stop after this many runs (review in between)",
+            "default": null
+          },
+          {
+            "flag": "--model <name>",
+            "desc": "The video model of the shots",
+            "default": "wan2.2-i2v-a14b"
+          }
+        ]
+      },
+      {
+        "name": "cinema fetch",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Download the references, keyframes, shots and the film into the production's folder",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "cinema reshoot",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Make shots again (a new seed): their video, then the cut and the sound",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          },
+          {
+            "name": "<shots>",
+            "desc": "Shot numbers, comma-separated"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--new-keyframe",
+            "desc": "Make the keyframe again too",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "cinema status",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Where the production is",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          }
+        ],
+        "aliases": [],
+        "options": []
       },
       {
         "name": "config",
