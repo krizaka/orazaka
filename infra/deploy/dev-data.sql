@@ -23,6 +23,14 @@ ON CONFLICT (model_name) DO NOTHING;
 -- infra/deploy/dev-model-registry.sql, run after this file.
 UPDATE orazaka_models SET is_default = (model_name = 'mistral-3-14B') WHERE category = 'chat';
 
+-- Vision on the same provider, so dev does not depend on a laptop's Ollama (dev only, fictional personas' photos only).
+INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, description)
+VALUES ('nemotron-nano-12b-v2-vl', 'Nemotron Nano 12B v2 VL', 'vision', NULL, 'do-inference', FALSE,
+        'NVIDIA Nemotron Nano 12B v2 VL (NVIDIA Open Model License) on DigitalOcean serverless inference — the vision default of the dev '
+        || 'environment: no GPU to run, no tunnel to a laptop, billed per token.')
+ON CONFLICT (model_name) DO NOTHING;
+UPDATE orazaka_models SET is_default = (model_name = 'nemotron-nano-12b-v2-vl') WHERE category = 'vision';
+
 
 -- The image and video engines are the hourly GPU droplet (scripts/gpu-dev.sh), reached inside the app
 -- through the GPU relay: gpu-relay:8086 is its sd-server, gpu-relay:8188 its video pipeline. While it is
@@ -46,6 +54,13 @@ VALUES ('wan2.2-t2v-a14b', 'Wan 2.2 T2V A14B (720p, GPU)', 'video', NULL, 'local
         'Wan 2.2 A14B (Apache-2.0) run on our own 80 GB GPU worker — text-to-video at 1280x720 (16:9) or 720x1280 (9:16), 5 s at 16 fps, two experts, the seed makes the same shot again. The showcase model.')
 ON CONFLICT (model_name) DO NOTHING;
 UPDATE orazaka_models SET vendor = 'Alibaba (Wan-AI)', family = 'Wan 2.2', capabilities = 'video', runs_on = 'local', runtime = 'worker-media · CUDA (80 GB)', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B-Diffusers', commercial_use = 'yes', context_window = NULL, status = 'available' WHERE model_name = 'wan2.2-t2v-a14b';
+
+-- Wan 2.2 I2V A14B (4-step distill), the shots of a cinematic short (ADR-080). Same rows as infra/migrations/2026-10-17-cinematic-short.sql.
+INSERT INTO orazaka_models (model_name, model_label, category, options, provider_name, is_default, max_steps, recommended_fps, supported_hardware, description)
+VALUES ('wan2.2-i2v-a14b', 'Wan 2.2 I2V A14B (720p, 4-step distill)', 'video', NULL, 'localai-video', FALSE, 4, 16, NULL,
+        'Wan 2.2 I2V A14B (Apache-2.0) with lightx2v''s 4-step distillation LoRAs (Apache-2.0), run on our own 80 GB GPU worker — image-to-video at 1280x720 (16:9) or 720x1280 (9:16), 5 s at 16 fps, from a starting image only. The shots of a cinematic short.')
+ON CONFLICT (model_name) DO NOTHING;
+UPDATE orazaka_models SET vendor = 'Alibaba (Wan-AI)', family = 'Wan 2.2', capabilities = 'video', runs_on = 'local', runtime = 'worker-media · CUDA (80 GB)', open_weights = TRUE, licence = 'Apache-2.0', licence_url = 'https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers', commercial_use = 'yes', context_window = NULL, status = 'available' WHERE model_name = 'wan2.2-i2v-a14b';
 
 -- Stable Diffusion 3.5 Large, hosted by DigitalOcean serverless inference ($0.08 an image) and routed by Orazaka's image capability
 -- (provider do-inference: its own key, the prompt without <sd_cpp_extra_args>, ImageGeneratorClientImpl). No steps declared: hosted.

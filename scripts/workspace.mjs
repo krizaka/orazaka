@@ -166,9 +166,10 @@ function ci(name) {
     const dir = join(ROOT, target.path);
     run("python3", ["-m", "pip", "install", "--quiet", "pytest", "pyyaml", "pika", "Pillow", "psutil", "cryptography"], { cwd: dir });
     run("python3", ["-m", "pytest", "-q", "test_capability_contract.py"], { cwd: dir });
-    // The CUDA host's own suite (ADR-077) — present once the worker carries it.
-    if (existsSync(join(dir, "test_gpu_runtime.py"))) {
-      run("python3", ["-m", "pytest", "-q", "test_gpu_runtime.py"], { cwd: dir });
+    // The CUDA host's own suites (ADR-077, ADR-080) — each run once the worker carries it: the GPU runtime, image to
+    // video (the I2V A14B of a cinematic short) and the cut. The cut's ffmpeg test skips itself where ffmpeg lacks drawtext.
+    for (const suite of ["test_gpu_runtime.py", "test_image_to_video.py", "test_cut.py"]) {
+      if (existsSync(join(dir, suite))) run("python3", ["-m", "pytest", "-q", suite], { cwd: dir });
     }
     return;
   }

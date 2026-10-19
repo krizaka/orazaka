@@ -9,7 +9,12 @@
 # relay of dev.orazaka.com and runs the consumer. Nothing listens publicly but sshd (the key of this machine only).
 #
 # Settings come from the environment gpu-dev.sh gives the pod (credentials included, never printed): WORKER_REF, PROFILE,
-# RELAY_URL, RELAY_AUTH, RABBIT_PASSWORD, SERVICE_TOKEN, BROKER_CA_B64, IDLE_MINUTES, MAX_HOURS.
+# RELAY_URL, RELAY_AUTH, RABBIT_PASSWORD, SERVICE_TOKEN, BROKER_CA_B64, IDLE_MINUTES, MAX_HOURS (and HF_TOKEN, optional).
+#
+# A profile that declares an image model (`cinema`, ADR-080) also serves sd-server (FLUX.2 klein keyframes) on :8086 — the
+# address the platform's image provider already names (gpu-relay:8086) — built once for CUDA and kept on the volume. A
+# profile that declares sound models enables the sound queue (ACE-Step music). Weights a model keeps on the host's own
+# disk (`cache: scratch`) go to MEDIA_SCRATCH_DIR, on the pod's container disk.
 # ==============================================================================
 set -uo pipefail
 LOG=/var/log/orazaka-boot.log
@@ -71,16 +76,33 @@ step "watchdog armed (idle ${IDLE_MINUTES:-30} min, lifetime ${MAX_HOURS:-10} h)
 
 # --- 1. the runtime (once per container disk; the weights are on the volume) --------------------------
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -qq >/dev/null 2>&1; apt-get install -y -qq ffmpeg curl git ca-certificates >/dev/null 2>&1
-if [[ ! -x /opt/venv/bin/python ]]; then
-  step "building the worker runtime (venv, torch cu128, requirements)"
-  python3 -m venv /opt/venv
-  /opt/venv/bin/pip install -q --no-cache-dir --upgrade pip
-  /opt/venv/bin/pip install -q --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
+apt-get update -qq >/dev/null 2>&1; apt-get install -y -qq ffmpeg curl git ca-certificates fonts-dejavu-core >/dev/null 2>&1
+# The venv is on the network volume: a later pod finds it in place (a rebuild is ~15 min of idle GPU billed at the hourly rate).
+VENV=/models/venv
+if [[ ! -x $VENV/bin/python ]]; then
+  step "building the worker runtime (venv on the volume, torch cu128, requirements)"
+  python3 -m venv $VENV
+  $VENV/bin/pip install -q --no-cache-dir --upgrade pip
+  $VENV/bin/pip install -q --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
 fi
+ln -sfn /models/venv /opt/venv
 rm -rf /app-src && git clone -q https://github.com/krizaka/orazaka-worker-media.git /app-src
 git -C /app-src checkout -q "${WORKER_REF:-main}"
 /opt/venv/bin/pip install -q --no-cache-dir -r /app-src/requirements-cuda.txt
+# The optional video upscaler (Studio `upscale`: SeedVR2 3B, Apache-2.0): a pinned checkout and its own venv, both on the volume, so a
+# later pod finds them in place; its weights (7 GB) are fetched by its CLI at the first upscale into /models/seedvr2.
+UP=/models/up
+SEEDVR2_REF=4490bd1f482e026674543386bb2a4d176da245b9
+if [[ ! -x $UP/venv/bin/python ]]; then
+  step "installing the video upscaler (SeedVR2 3B)"
+  python3 -m venv $UP/venv
+  echo /models/venv/lib/python3.11/site-packages > $UP/venv/lib/python3.11/site-packages/base.pth   # torch from the worker's venv
+  $UP/venv/bin/pip install -q --no-cache-dir --no-deps torchvision --index-url https://download.pytorch.org/whl/cu128
+  $UP/venv/bin/pip install -q --no-cache-dir omegaconf rotary_embedding_torch peft gguf matplotlib psutil einops opencv-python-headless
+fi
+[[ -d $UP/seedvr2/.git ]] || git clone -q https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler $UP/seedvr2
+git -C $UP/seedvr2 checkout -q "$SEEDVR2_REF" 2>/dev/null || { git -C $UP/seedvr2 fetch -q origin && git -C $UP/seedvr2 checkout -q "$SEEDVR2_REF"; }
+mkdir -p $UP/seedvr; [[ -e /models/seedvr2 ]] || ln -sfn $UP/seedvr /models/seedvr2   # the worker looks for the weights in <models>/seedvr2
 step "worker runtime ready: orazaka-worker-media@$(git -C /app-src rev-parse --short=12 HEAD)"
 
 # --- 2. chisel, the tunnel client ---------------------------------------------------------------------
@@ -89,18 +111,68 @@ if ! command -v chisel >/dev/null; then
 fi
 mkdir -p /etc/orazaka && printf '%s' "$BROKER_CA_B64" | base64 -d > /etc/orazaka/broker-ca.pem
 
-# --- 3. weights, once, onto the network volume --------------------------------------------------------
+# --- 3. weights, once, onto the network volume (or the container disk: `cache: scratch`) -------------
 export MEDIA_MODELS_DIR=/models HF_HOME=/models/hf HF_HUB_CACHE=/models/hf/hub HF_HUB_DISABLE_TELEMETRY=1
+export MEDIA_SCRATCH_DIR=/var/lib/orazaka-scratch
+mkdir -p "$MEDIA_SCRATCH_DIR"
 touch "$STATE/state/last-activity"
 started=$(date +%s)
 (cd /app-src && /opt/venv/bin/python -m app.fetch_models "${PROFILE:-big}")
 step "weights ready in $(( $(date +%s) - started ))s"
 step "GPU: $(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader | head -1)"
+# What the profile declares beside video: an image engine, sound models (models.yaml `profiles`).
+IMAGE_MODEL=$(cd /app-src && /opt/venv/bin/python -c "from app.video_models import load_manifest; print(load_manifest()['profiles']['${PROFILE:-big}'].get('image') or '')")
+SOUND_MODELS=$(cd /app-src && /opt/venv/bin/python -c "from app.video_models import load_manifest; print(','.join(load_manifest()['profiles']['${PROFILE:-big}'].get('sound') or []))")
+
+# --- 3b. sd-server for the profile's image model: built once for CUDA (stable-diffusion.cpp, the Dockerfile.cuda ref) --
+SDCPP_REF=a397e03488cc27e1a42da646b82dfce9f50741c0
+IMAGE_REMOTE=""
+if [[ -n "$IMAGE_MODEL" ]]; then
+  binary="/models/bin/sd-server-${SDCPP_REF:0:12}"
+  if [[ ! -x "$binary" ]]; then
+    step "building sd-server (stable-diffusion.cpp ${SDCPP_REF:0:12}, CUDA) once onto the volume"
+    apt-get install -y -qq cmake build-essential >/dev/null 2>&1
+    rm -rf /tmp/sdcpp && git clone -q https://github.com/leejet/stable-diffusion.cpp /tmp/sdcpp \
+      && git -C /tmp/sdcpp checkout -q "$SDCPP_REF" && git -C /tmp/sdcpp submodule update -q --init --recursive \
+      && cmake -S /tmp/sdcpp -B /tmp/sdcpp/build -DCMAKE_BUILD_TYPE=Release -DSD_CUDA=ON \
+           -DCMAKE_CUDA_ARCHITECTURES="80;89;90" -DSD_SERVER_BUILD_FRONTEND=OFF >/dev/null \
+      && cmake --build /tmp/sdcpp/build --config Release -j"$(nproc)" --target sd-server >/dev/null \
+      && mkdir -p /models/bin && cp "$(find /tmp/sdcpp/build -type f -name sd-server -perm -u+x | head -1)" "$binary" \
+      || step "sd-server build FAILED: images will not be served"
+  fi
+  if [[ -x "$binary" ]]; then
+    # A profile with a speech model puts the speech server on the relay's engine port (8086) and sd-server behind it.
+    SPEECH_MODEL=$(cd /app-src && /opt/venv/bin/python -c "from app.video_models import load_manifest; print(load_manifest()['profiles']['${PROFILE:-big}'].get('speech') or '')")
+    IMAGE_PORT=8086; [[ -n "$SPEECH_MODEL" ]] && IMAGE_PORT=8089
+    (cd /app-src && MEDIA_SD_SERVER="$binary" MEDIA_IMAGE_PORT=$IMAGE_PORT MEDIA_IMAGE_LISTEN_IP=127.0.0.1 \
+      nohup /opt/venv/bin/python -m app.sd_server "$IMAGE_MODEL" > /var/log/orazaka-sd-server.log 2>&1 < /dev/null &)
+    if [[ -n "$SPEECH_MODEL" ]]; then
+      apt-get install -y -qq espeak-ng >/dev/null 2>&1
+      (cd /app-src && MEDIA_SPEECH_PORT=8086 MEDIA_IMAGE_UPSTREAM=127.0.0.1:8089 \
+        nohup /opt/venv/bin/python -m app.speech_server > /var/log/orazaka-speech.log 2>&1 < /dev/null &)
+      step "speech ($SPEECH_MODEL) on :8086, sd-server ($IMAGE_MODEL) behind it on :8089"
+    else
+      step "sd-server ($IMAGE_MODEL) on :8086"
+    fi
+    IMAGE_REMOTE="R:0.0.0.0:8086:127.0.0.1:8086"
+  fi
+fi
+# The Krizaka type for a cut's titles (@krizaka/fonts, OFL), once onto the volume.
+FONT=/models/fonts/PlusJakartaSans-ExtraBold.ttf
+if [[ ! -f "$FONT" ]]; then
+  mkdir -p /models/fonts && curl -fsSL https://registry.npmjs.org/@krizaka/fonts/-/fonts-0.2.1.tgz | tar -xz -C /tmp \
+    && cp /tmp/package/files/native/PlusJakartaSans-ExtraBold.ttf /tmp/package/licenses/PlusJakartaSans-OFL.txt /models/fonts/
+fi
+SOUND_FLAG=false; [[ -n "$SOUND_MODELS" ]] && SOUND_FLAG=true
+# The video upscaler (SeedVR2 3B, Apache-2.0) where the volume holds it (/models/up: a pinned checkout and its venv; weights
+# under /models/seedvr2): the cut of a cinematic short upscales every shot with it (ADR-080).
+UPSCALER_ENV=""
+[[ -x /models/up/venv/bin/python && -f /models/up/seedvr2/inference_cli.py ]] && UPSCALER_ENV="SEEDVR2_HOME=/models/up/seedvr2 SEEDVR2_PYTHON=/models/up/venv/bin/python"
 
 # --- 4. the tunnel and the worker ---------------------------------------------------------------------
 # The same remotes as the droplet: the broker and the job service IN, the worker's pipeline back into the app.
 AUTH="$RELAY_AUTH" nohup chisel client --keepalive 25s --max-retry-interval 30s "$RELAY_URL" \
-  127.0.0.1:15671:broker-dev.orazaka.com:5671 127.0.0.1:18090:core:8090 R:0.0.0.0:8188:127.0.0.1:8188 \
+  127.0.0.1:15671:broker-dev.orazaka.com:5671 127.0.0.1:18090:core:8090 R:0.0.0.0:8188:127.0.0.1:8188 $IMAGE_REMOTE \
   > /var/log/orazaka-relay.log 2>&1 &
 cd /app-src
 export SPRING_RABBITMQ_HOST=127.0.0.1 SPRING_RABBITMQ_PORT=15671 SPRING_RABBITMQ_USERNAME=gpu-worker \
@@ -108,9 +180,10 @@ export SPRING_RABBITMQ_HOST=127.0.0.1 SPRING_RABBITMQ_PORT=15671 SPRING_RABBITMQ
   SPRING_RABBITMQ_SSL_SERVER_NAME=broker-dev.orazaka.com \
   MEDIA_ASSET_SINK_URL=http://127.0.0.1:18090 JOB_SERVICE_INTERNAL_URL=http://127.0.0.1:18090 \
   UPLOAD_DIR="$STATE/uploads" MEDIA_ACTIVITY_FILE="$STATE/state/last-activity" MEDIA_GPU_PROFILE="${PROFILE:-big}" \
-  ORAZAKA_MEDIA_MEM_HEADROOM_GB=4 PYTHONUNBUFFERED=1 MEDIA_WORKER_PORT=8188
-SPRING_RABBITMQ_PASSWORD="$RABBIT_PASSWORD" ORAZAKA_SERVICE_TOKEN="$SERVICE_TOKEN" \
+  ORAZAKA_MEDIA_MEM_HEADROOM_GB=4 PYTHONUNBUFFERED=1 MEDIA_WORKER_PORT=8188 MEDIA_SOUND_ENABLED="$SOUND_FLAG" MEDIA_FONT_FILE="$FONT"
+# shellcheck disable=SC2086 # UPSCALER_ENV is a list of NAME=value words
+env $UPSCALER_ENV SPRING_RABBITMQ_PASSWORD="$RABBIT_PASSWORD" ORAZAKA_SERVICE_TOKEN="$SERVICE_TOKEN" \
   nohup /opt/venv/bin/python -u -m app.consumer > /var/log/orazaka-worker.log 2>&1 &
 touch "$STATE/ready" "$STATE/state/last-activity"
-step "serving: worker (${PROFILE:-big}), relay → ${RELAY_URL}"
+step "serving: worker (${PROFILE:-big}${IMAGE_MODEL:+, images $IMAGE_MODEL}${SOUND_MODELS:+, sound $SOUND_MODELS}), relay → ${RELAY_URL}"
 wait
