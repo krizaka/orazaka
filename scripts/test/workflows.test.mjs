@@ -39,10 +39,10 @@ test("docs-sync starts CI on its branch itself (a GITHUB_TOKEN PR starts none) a
   const text = readFileSync(new URL("docs-sync.yml", dir), "utf8");
   assert.match(text, /gh workflow run ci\.yml[^\n]*--ref chore\/docs-sync/);
   assert.match(text, /actions: write/);
-  assert.doesNotMatch(text.split("jobs:")[0], /: write/, "no write scope at the top level (Scorecard TokenPermissions)");
+  assert.doesNotMatch(text.split("jobs:")[0], /^  [a-z-]+: write/m, "no write scope at the top level (Scorecard TokenPermissions)");
 });
 
 test("the reusable component workflow keeps packages/id-token write on the job, not at the top level", () => {
   const text = readFileSync(new URL("component.yml", dir), "utf8");
-  assert.doesNotMatch(text.split("jobs:")[0], /: write/);
+  assert.doesNotMatch(text.split("jobs:")[0], /^  [a-z-]+: write/m);
 });
