@@ -51,6 +51,11 @@ test("the committed measurements are consistent: every run is of a known model, 
     const model = dataset.models[run.model];
     assert.ok(model, `${run.runId}: unknown model ${run.model}`);
     assert.match(run.runId, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    if (model.gpuUsdPerHour) {
+      // A GPU droplet is billed by the hour: a run costs its own start-to-finish time at the model's hourly rate.
+      assert.ok(Math.abs(run.costUsd - (run.seconds / 3600) * model.gpuUsdPerHour) < 0.01, `${run.runId}: GPU time cost`);
+      continue;
+    }
     if (run.costUsd != null) assert.equal(run.costUsd, model.costUsd, run.runId);
     if (model.costUsd == null) assert.equal(run.costUsd ?? null, null, run.runId);
   }
@@ -58,7 +63,39 @@ test("the committed measurements are consistent: every run is of a known model, 
   assert.match(dataset.commit, /^[0-9a-f]{7,}$/);
 });
 
+test("a GPU-hour model costs the GPU time of its own runs, and the page says what the droplet sessions were billed", () => {
+  const gpu = {
+    ...fake,
+    models: { g: { label: "G", kind: "video", where: "gpu", licence: "L", gpuUsdPerHour: 0.76, costUsd: null, parameters: {} } },
+    engineSeconds: {},
+    runs: [
+      { model: "g", outcome: "succeeded", seconds: 1800, costUsd: 0.38 },
+      { model: "g", outcome: "succeeded", seconds: 900, costUsd: 0.19 },
+      { model: "g", outcome: "failed", seconds: 17, costUsd: 0 },
+    ],
+    gpuSessions: [{ what: "batch", gpu: "RTX 4000 Ada", hours: 2, usdPerHour: 0.76 }],
+  };
+  assert.equal(summarise(gpu).g.costUsd, 0.57);
+  const md = mdMeasuredRuns(gpu);
+  for (const text of ["$0.76 per GPU hour", "$0.57", "GPU droplet sessions (what was billed)", "$1.52", "setup (image build, weights)"]) assert.ok(md.includes(text), `missing: ${text}`);
+});
+
 test("the committed measurements contain no key, token or account identifier", () => {
   const text = readFileSync(new URL("../../docs/measurements/runs.json", import.meta.url), "utf8");
   assert.doesNotMatch(text, /Bearer |api[_-]?key|secret|password|dop_v1|sk-[A-Za-z0-9]{10}/i);
+});
+
+test("video upscaling: every tested upscaler is a row with its licence, size, time, cost and the verdict a person gave after looking at the frames", () => {
+  const md = mdMeasuredRuns({
+    ...fake,
+    upscaleTests: [
+      { model: "Up A", licence: "Apache-2.0", commercial: "yes", clip: "5 s", from: "1280×704", to: "1920×1080", seconds: 66, gpuUsdPerHour: 3.99, verdict: "winner: clean detail" },
+      { model: "Up B", licence: "BSD-3-Clause", commercial: "yes", clip: "5 s", from: "1280×704", to: "3840×2160", seconds: 168, gpuUsdPerHour: 3.99, verdict: "grainy" },
+      { model: "Native C", licence: "Community", commercial: "conditions", clip: "5 s", from: "—", to: "—", seconds: null, gpuUsdPerHour: 3.99, verdict: "not run: weights too large" },
+    ],
+  });
+  assert.match(md, /## Video upscaling/);
+  assert.match(md, /\| Up A \| Apache-2\.0 \| yes \| 1280×704 → 1920×1080 \| 66 s \| \$0\.07 \| winner: clean detail \|/); // 66 s of a $3.99 hour
+  assert.match(md, /\| Up B \| BSD-3-Clause \| yes \| 1280×704 → 3840×2160 \| 168 s \| \$0\.19 \| grainy \|/);
+  assert.match(md, /\| Native C \| Community \| conditions \| — \| not run \| — \| not run: weights too large \|/); // nothing is claimed for a test that did not run
 });

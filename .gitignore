@@ -137,6 +137,7 @@ ehthumbs.db
 # The hourly GPU host (docs/DEPLOY_DEV.md § GPU): it drives a cloud resource and runs on the droplet and in
 # the relay image, not in the local workspace — the same ERR-125 exception.
 !scripts/gpu-dev.sh
+!scripts/lib/gpu-runpod.sh
 !infra/gpu/*.sh
 !infra/deploy/gpu-relay/*.sh
 .idea
