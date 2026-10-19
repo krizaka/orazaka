@@ -47,6 +47,7 @@ generated: true
 
 **Inbound ports**
 
+- `AdminUserService`
 - `ApiKeyService`
 - `IdentityReconciliationService`
 - `IdentityService`
@@ -57,6 +58,7 @@ generated: true
 
 **Outbound ports**
 
+- `AdminUserRepositoryPort`
 - `ApiKeyRepositoryPort`
 - `AuthorityRepositoryPort`
 - `CryptographyPort`

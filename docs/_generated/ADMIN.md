@@ -22,8 +22,12 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | Screen | What it is for | Tabs |
 |:---|:---|:---|
 | `/(console)` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
+| `/(console)/audit` | `/audit` — the audit trail of account administration. | — |
 | `/(console)/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
+| `/(console)/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
+| `/(console)/operations` | `/operations` — dependencies, queue depth, recent errors, runs and the deployed version. | — |
 | `/(console)/studios` | The Studio Builder console (ADR-034 §12.4). | — |
+| `/(console)/users` | `/users` — the platform's accounts: state, role, Law 25 export and erasure. | — |
 | `/login` | — | — |
 
 ![Billing — consumption per capability and model, refusals included](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/02-billing-usage.png)
@@ -56,10 +60,14 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 
 | Method | Path | Access | Summary |
 |:---|:---|:---|:---|
+| PUT | `/api/v1/features/{featureKey}` | ADMIN | Admin: toggles an existing capability's enabled state. |
 | GET | `/api/v1/features/all` | ADMIN | Admin: all capabilities (enabled or not) from the database. |
 | GET | `/api/v1/jobs` | authenticated | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
 | GET | `/api/v1/jobs/active-connections` | ADMIN | Retrieves the current active SSE connection count. |
 | GET | `/api/v1/models/catalog` | authenticated | Retrieves the complete AI model catalog definitions from the database. |
+| GET | `/api/v1/models/providers` | authenticated | Retrieves all available AI provider names from the database. |
+| GET | `/api/v1/status/health` | public | Returns sovereign readiness health details (public probe). |
+| GET | `/api/v1/status/infrastructure` | authenticated | Returns the current online/offline snapshot of the local inference engines. |
 | GET | `/api/v1/billing/configuration` | ADMIN | The declared key vocabulary — type, permitted domain and code default per key. |
 | PATCH | `/api/v1/billing/configuration` | ADMIN | Applies one validated configuration change. |
 | GET | `/api/v1/billing/packs` | authenticated | The priced catalogue. |
@@ -81,6 +89,13 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | GET | `/api/v1/billing/wallets/{actorId}` | ADMIN | Reads an actor's balances. |
 | POST | `/api/v1/billing/wallets/{actorId}/adjustments` | ADMIN | Issues a manual credit adjustment — support goodwill, or a claw-back. |
 | GET | `/api/v1/billing/wallets/adjustments/today` | ADMIN | What an admin has already adjusted today, against their ceiling. |
+| GET | `/api/v1/admin/users` | ADMIN | — |
+| DELETE | `/api/v1/admin/users/{id}` | ADMIN | — |
+| GET | `/api/v1/admin/users/{id}` | ADMIN | — |
+| PUT | `/api/v1/admin/users/{id}/admin` | ADMIN | — |
+| POST | `/api/v1/admin/users/{id}/restore` | ADMIN | — |
+| POST | `/api/v1/admin/users/{id}/suspend` | ADMIN | — |
+| GET | `/api/v1/admin/users/audit` | ADMIN | — |
 | GET | `/api/v1/studios` | authenticated | The catalogue, optionally narrowed to one profession. |
 | GET | `/api/v1/studios/{studioKey}` | authenticated | One Studio's detail, including the schemas its forms are generated from. |
 | GET | `/api/v1/studios/{studioKey}/blueprints` | ADMIN | Every version of a Studio, drafts included — the Builder's version list. |
@@ -140,6 +155,19 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | POST | `/api/v1/billing/wallets/{actorId}/adjustments` | Issues a manual credit adjustment — support goodwill, or a claw-back. |
 | GET | `/api/v1/billing/wallets/{actorId}/entitlements` | Reads an actor's effective entitlements plus their balance summary. |
 | GET | `/api/v1/billing/wallets/adjustments/today` | What an admin has already adjusted today, against their ceiling. |
+
+### krizaka-users-service
+
+| Method | Path | Summary |
+|:---|:---|:---|
+| GET | `/api/v1/admin/users` | — |
+| DELETE | `/api/v1/admin/users/{id}` | — |
+| GET | `/api/v1/admin/users/{id}` | — |
+| PUT | `/api/v1/admin/users/{id}/admin` | — |
+| GET | `/api/v1/admin/users/{id}/export` | — |
+| POST | `/api/v1/admin/users/{id}/restore` | — |
+| POST | `/api/v1/admin/users/{id}/suspend` | — |
+| GET | `/api/v1/admin/users/audit` | — |
 
 ### studio-service
 

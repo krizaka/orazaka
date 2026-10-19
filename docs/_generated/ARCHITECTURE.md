@@ -20,7 +20,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | **Application** | the orchestration, pipeline and capability libraries around the core (AGENTS.md §2: business, interceptors, tools) | `orazaka-business`, `orazaka-interceptors`, `orazaka-tools` |
 | **Domain core** | a `*-core` module — the centre of its hexagon, depending on no outer layer | `orazaka-core`, `krizaka-users-core` |
 | **Contracts** | a Tier-1 `*-api` module — pure interfaces and records | `orazaka-jobs-api`, `orazaka-persistence-app-api`, `orazaka-studio-api`, `krizaka-billing-api`, `krizaka-notifications-api`, `krizaka-users-api` |
-| **Krizaka platform kit** | a module of krizaka-platform-kit — the cross-cutting code with one author (ADR-073), starters included | `krizaka-messaging`, `krizaka-observability`, `krizaka-security`, `krizaka-spring-boot-starter-observability`, `krizaka-spring-boot-starter-rabbitmq`, `krizaka-spring-boot-starter-security`, `krizaka-spring-boot-starter-web`, `krizaka-web` |
+| **Krizaka platform kit** | a module of krizaka-platform-kit — the cross-cutting code with one author (ADR-073), starters included | `krizaka-app-config`, `krizaka-messaging`, `krizaka-observability`, `krizaka-security`, `krizaka-spring-boot-starter-app-config`, `krizaka-spring-boot-starter-observability`, `krizaka-spring-boot-starter-rabbitmq`, `krizaka-spring-boot-starter-security`, `krizaka-spring-boot-starter-web`, `krizaka-web` |
 
 ## Modules
 
@@ -51,16 +51,18 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-interceptors` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-tools` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AiClient, CatalogModelService, ChatSessionService, JobService, McpService | AudioGeneratorClient, CapabilityProvider, ChatGeneratorClient, ChatMemoryStore, EmbeddingClient, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, SemanticClassifierPort, TestShaperPort, ToolRegistry, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
-| `krizaka-users-core` | domain | `krizaka-users` | 0.2.0 | ApiKeyService, IdentityReconciliationService, IdentityService, PasswordRecoveryService, RateLimitProvider, TokenService, UserProfileProvider | ApiKeyRepositoryPort, AuthorityRepositoryPort, CryptographyPort, OAuth2ProviderVerifier, PasswordEventPublisher, PasswordResetTokenRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
+| `krizaka-users-core` | domain | `krizaka-users` | 0.2.0 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, PasswordRecoveryService, RateLimitProvider, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, CryptographyPort, OAuth2ProviderVerifier, PasswordEventPublisher, PasswordResetTokenRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
 | `orazaka-jobs-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-persistence-app-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | CapabilityManager, CatalogModelManager, ChatMemoryPersistenceProvider, ChatSessionPersistenceProvider, JobPersistenceProvider, OutboxStore, PipelineConfigManager, PlatformMcpServerPersistenceProvider, PlatformToolConfigPersistenceProvider, RuntimeConfigProvider, SpeechVoiceManager, UserMcpServerPersistenceProvider, ValidationPipelineManager | — |
 | `orazaka-studio-api` | contract | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
 | `krizaka-billing-api` | contract | `krizaka-billing` | 0.2.0 | — | — |
 | `krizaka-notifications-api` | contract | `krizaka-notifications` | 0.2.0 | — | — |
 | `krizaka-users-api` | contract | `krizaka-users` | 0.2.0 | — | — |
+| `krizaka-app-config` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-messaging` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-observability` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-security` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
+| `krizaka-spring-boot-starter-app-config` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-spring-boot-starter-observability` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-spring-boot-starter-security` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
@@ -74,7 +76,7 @@ Build dependencies between the modules above (test scope excluded): who packages
 | Module | Depends on |
 |:---|:---|
 | `orazaka-automation-service` | `krizaka-billing-client`, `krizaka-messaging` |
-| `orazaka-conversation-service` | `krizaka-billing-client`, `krizaka-spring-boot-starter-observability`, `krizaka-spring-boot-starter-rabbitmq`, `krizaka-spring-boot-starter-security`, `krizaka-spring-boot-starter-web`, `krizaka-users-api`, `krizaka-users-client`, `orazaka-assets`, `orazaka-business`, `orazaka-core`, `orazaka-interceptors`, `orazaka-jobs-api`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-studio-client`, `orazaka-tools` |
+| `orazaka-conversation-service` | `krizaka-billing-client`, `krizaka-spring-boot-starter-app-config`, `krizaka-spring-boot-starter-observability`, `krizaka-spring-boot-starter-rabbitmq`, `krizaka-spring-boot-starter-security`, `krizaka-spring-boot-starter-web`, `krizaka-users-api`, `krizaka-users-client`, `orazaka-assets`, `orazaka-business`, `orazaka-core`, `orazaka-interceptors`, `orazaka-jobs-api`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-studio-client`, `orazaka-tools` |
 | `orazaka-edge` | `krizaka-security` |
 | `orazaka-job-service` | `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security`, `krizaka-users-api`, `krizaka-users-client`, `orazaka-assets`, `orazaka-business`, `orazaka-core`, `orazaka-interceptors`, `orazaka-jobs-api`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-tools` |
 | `orazaka-knowledge-service` | `krizaka-messaging`, `krizaka-security` |
@@ -95,6 +97,7 @@ Build dependencies between the modules above (test scope excluded): who packages
 | `krizaka-users-core` | `krizaka-users-api`, `krizaka-users-persistence` |
 | `orazaka-persistence-app-api` | `orazaka-jobs-api` |
 | `orazaka-studio-api` | `orazaka-jobs-api` |
+| `krizaka-spring-boot-starter-app-config` | `krizaka-app-config` |
 | `krizaka-spring-boot-starter-observability` | `krizaka-observability` |
 | `krizaka-spring-boot-starter-rabbitmq` | `krizaka-messaging` |
 | `krizaka-spring-boot-starter-security` | `krizaka-security` |
@@ -113,13 +116,13 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-conversation-service` | `orazaka-job-service` | amqp | `orazaka.jobs.batch` (`job.media.generate`) |
 | `orazaka-conversation-service` | `orazaka-job-service` | amqp | `orazaka.jobs.interactive` (`job.text.*, job.media.analyze`) |
 | `orazaka-conversation-service` | `orazaka-studio-service` | amqp | `orazaka.events.studio.capability` (`evt.capability.changed`) |
-| `orazaka-conversation-service` | `orazaka-worker-media` | amqp | `orazaka.jobs.video` (`job.video.*, job.compose.*`) |
+| `orazaka-conversation-service` | `orazaka-worker-media` | amqp | `orazaka.jobs.video` (`job.video.*, job.compose.*, job.sound.*`) |
 | `orazaka-job-service` | `krizaka-billing-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `krizaka-notifications-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `krizaka-users-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `orazaka-automation-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `orazaka-conversation-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
-| `orazaka-job-service` | `orazaka-conversation-service` | amqp | `orazaka.events.job-relay` (`job.{…}.done`) |
+| `orazaka-job-service` | `orazaka-conversation-service` | amqp | `orazaka.events.job-relay` (`job.{…}.cancelled`) |
 | `orazaka-job-service` | `orazaka-knowledge-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `orazaka-studio-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `orazaka-studio-service` | amqp | `orazaka.events.studio` (`job.{…}.done`) |
@@ -127,7 +130,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-studio-service` | `orazaka-automation-service` | amqp | `orazaka.jobs.automation` (`job.automation.approved`) |
 | `orazaka-studio-service` | `orazaka-job-service` | amqp | `orazaka.jobs.batch` (`job.media.generate`) |
 | `orazaka-studio-service` | `orazaka-job-service` | amqp | `orazaka.jobs.interactive` (`job.text.*, job.media.analyze`) |
-| `orazaka-studio-service` | `orazaka-worker-media` | amqp | `orazaka.jobs.video` (`job.video.*, job.compose.*`) |
+| `orazaka-studio-service` | `orazaka-worker-media` | amqp | `orazaka.jobs.video` (`job.video.*, job.compose.*, job.sound.*`) |
 | `orazaka-automation-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
 | `orazaka-cli` | `orazaka-conversation-service` | http | `localhost:8080` |
 | `orazaka-cli` | `orazaka-edge` | http | `localhost:8088` |
@@ -135,12 +138,15 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-conversation-service` | `krizaka-users-service` | http | `krizaka-users-client` |
 | `orazaka-conversation-service` | `orazaka-studio-service` | http | `orazaka-studio-client` |
 | `orazaka-edge` | `krizaka-billing-service` | http | `route /api/v1/billing` |
+| `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/admin/users` |
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/api-keys` |
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/auth` |
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/credentials` |
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/interceptions` |
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/profile` |
 | `orazaka-edge` | `orazaka-conversation-service` | http | `route /` |
+| `orazaka-edge` | `orazaka-knowledge-service` | http | `route /api/v1/analytics` |
+| `orazaka-edge` | `orazaka-knowledge-service` | http | `route /api/v1/recommendations` |
 | `orazaka-edge` | `orazaka-studio-service` | http | `route /api/v1/studios` |
 | `orazaka-job-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
 | `orazaka-job-service` | `krizaka-users-service` | http | `krizaka-users-client` |
@@ -205,7 +211,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka.jobs.batch` | `orazaka.jobs` | `job.media.generate` | `orazaka.jobs.batch.dlq` | `orazaka-persistence-app` | `orazaka-job-service` |
 | `orazaka.jobs.interactive` | `orazaka.jobs` | `job.text.*, job.media.analyze` | `orazaka.jobs.interactive.dlq` | `orazaka-persistence-app` | `orazaka-job-service` |
 | `orazaka.jobs.rag` | `orazaka.jobs` | `job.rag.*` | `orazaka.jobs.rag.dlq` | `orazaka-knowledge-service` | `orazaka-knowledge-service` |
-| `orazaka.jobs.video` | `orazaka.jobs` | `job.video.*, job.compose.*` | `orazaka.jobs.video.dlq` | `orazaka-persistence-app` | `orazaka-worker-media` (own retry) |
+| `orazaka.jobs.video` | `orazaka.jobs` | `job.video.*, job.compose.*, job.sound.*` | `orazaka.jobs.video.dlq` | `orazaka-persistence-app` | `orazaka-worker-media` (own retry) |
 
 **Producers**
 
@@ -223,13 +229,16 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-conversation-service` | `orazaka.jobs` | `job.automation.approved` |
 | `orazaka-job-service` | `orazaka.events` | `(dynamic)` |
 | `orazaka-job-service` | `orazaka.events` | `evt.capability.changed` |
+| `orazaka-job-service` | `orazaka.events` | `job.{…}.cancelled` |
 | `orazaka-job-service` | `orazaka.events` | `job.{…}.done` |
 | `orazaka-job-service` | `orazaka.events` | `job.{…}.error` |
+| `orazaka-job-service` | `orazaka.events` | `job.{…}.progress` |
 | `orazaka-studio-service` | `orazaka.jobs` | `(capability route)` |
 | `orazaka-studio-service` | `orazaka.events` | `evt.studio.run.failed` |
 | `orazaka-studio-service` | `orazaka.events` | `evt.studio.run.started` |
 | `orazaka-studio-service` | `orazaka.events` | `evt.studio.run.succeeded` |
 | `orazaka-studio-service` | `orazaka.jobs` | `job.automation.approved` |
+| `orazaka-studio-service` | `orazaka.jobs` | `job.cancel.{…}` |
 
 **Capability routes** (`orazaka_capabilities`: where a job of each capability is published)
 
@@ -240,6 +249,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka.core.media.audio.analysis` | `audio.analyze` | `job.media.generate` |
 | `orazaka.core.media.image` | `image.generate` | `job.media.generate` |
 | `orazaka.core.media.video.analysis` | `video.analyze` | `job.media.generate` |
+| `orazaka.studio.media.sound` | `media.sound` | `job.sound.generate` |
 | `orazaka.core.chat.completion` | `text.generate` | `job.text.process` |
 | `orazaka.core.media.speech` | `speech.synthesize` | `job.text.process` |
 | `orazaka.core.media.video` | `video.generate` | `job.video.generate` |

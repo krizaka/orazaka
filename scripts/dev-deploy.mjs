@@ -4,6 +4,9 @@
  *
  *   node scripts/dev-deploy.mjs apply <orazaka-dev|orazaka-admin-dev> [--dry-run] [--drop-attached-db]
  *   node scripts/dev-deploy.mjs data        # infra/deploy/dev-data.sql into orazaka_db (routing is data)
+ *   node scripts/dev-deploy.mjs policy      # infra/deploy/dev-content-policy.sql into orazaka_studio_db (docs/CONTENT_POLICY.md)
+ *   node scripts/dev-deploy.mjs recommendations  # the recommender's tables on orazaka_knowledge_db (ADR-078)
+ *   node scripts/dev-deploy.mjs analytics        # the analytics tables, kinds and settings v1 (ADR-081)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
  *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
@@ -27,7 +30,8 @@ const PROJECT = "orazaka";
 const ENV_FILE = process.env.ORAZAKA_DEV_ENV_FILE ?? join(homedir(), "Documents/krizaka/orazaka-dev.env");
 const QA_FILE = process.env.ORAZAKA_QA_FILE ?? join(homedir(), "krizaka-com/company/QA.md");
 /** Placeholders that are settings, not secrets, and their defaults. */
-const DEFAULTS = {};
+/** CORE_REBUILD busts the image build cache of the core component at every apply (see infra/deploy/Dockerfile). */
+const DEFAULTS = { CORE_REBUILD: new Date().toISOString().replace(/[:.]/g, "-") };
 
 export function readEnvFile(text) {
   const env = {};
@@ -135,6 +139,37 @@ function data() {
   const key = inferenceKey.replace(/'/g, "''");
   psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], `\\set ai_inference_key '${key}'\n${sql}`);
   console.log("orazaka_db: dev routing data applied");
+}
+
+/** The recommender's tables on orazaka_knowledge_db (ADR-078) — idempotent. */
+function recommendations() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-15-recommendations.sql"), "utf8");
+  psql(env, "orazaka_knowledge_db", "orazaka_knowledge_db", "DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB", [], sql);
+  console.log("orazaka_knowledge_db: recommendation tables and settings v1 in place");
+}
+
+/** The analytics tables, kinds and settings v1 on orazaka_knowledge_db (ADR-081) — idempotent. */
+function analytics() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-17-analytics.sql"), "utf8");
+  psql(env, "orazaka_knowledge_db", "orazaka_knowledge_db", "DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB", [], sql);
+  console.log("orazaka_knowledge_db: analytics tables, kinds and settings v1 in place");
+}
+
+/** The Idempotency-Key columns and index of studio_run (ADR-083) — idempotent, additive, safe before the code ships. */
+function runIdempotency() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-18-studio-run-idempotency.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: studio_run idempotency columns and index in place");
+}
+
+function policy() {
+  const env = secrets();
+  const sql = readFileSync(join(DEPLOY, "dev-content-policy.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: content policy applied (video capability: no adult content, DigitalOcean terms)");
 }
 
 /** A password with letters, digits and symbols from 24 random bytes. */
@@ -451,12 +486,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   try {
     if (command === "apply") apply(rest[0], rest.slice(1));
     else if (command === "data") data();
+    else if (command === "policy") policy();
+    else if (command === "recommendations") recommendations();
+    else if (command === "analytics") analytics();
+    else if (command === "run-idempotency") runIdempotency();
     else if (command === "seed") seed();
     else if (command === "service-account") await createServiceAccount(rest[0], rest.slice(1));
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {

@@ -18,6 +18,11 @@ on:
         description: "Repository name, as listed in orazaka.workspace.json"
         required: true
         type: string
+      rewrite:
+        description: "Fail when an OpenRewrite recipe of krizaka-parent would change code (rewrite:dryRun). A repository turns it on in the pull request that applies rewrite:run."
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -73,6 +78,15 @@ jobs:
       - name: Verify ${{ inputs.component }} against its upstreams
         working-directory: workspace
         run: node scripts/workspace.mjs ci "${{ inputs.component }}"
+
+      # The recipes live in krizaka-parent (every repository inherits them). A change a recipe would make is
+      # debt: `./mvnw rewrite:run` then `./mvnw spotless:apply` (twice until clean), run the tests, commit.
+      - name: OpenRewrite — no change pending
+        if: inputs.rewrite
+        working-directory: workspace
+        run: |
+          target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='${{ inputs.component }}').path)")
+          cd "$target" && ./mvnw -B -ntp rewrite:dryRun
 
       - name: npm with trusted publishing
         if: startsWith(github.ref, 'refs/tags/v')

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHmac } from "node:crypto";
-import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -95,4 +95,133 @@ test("gpu-dev.sh: stop always destroys, and the sizes are the stated ones", () =
   assert.doesNotMatch(script, /power-?off|droplet-action shutdown/);
   assert.match(script, /big\) echo "gpu-l40sx1-48gb:1\.57 gpu-6000adax1-48gb:1\.57"/);
   assert.match(script, /small\) echo "gpu-4000adax1-20gb:0\.76"/);
+});
+
+// RunPod spend guard (ADR-078): the rule alone, on fixtures — no network, no key.
+function decide(fixture) {
+  const dir = mkdtempSync(join(tmpdir(), "runpod-guard-"));
+  const file = join(dir, "fixture.json");
+  writeFileSync(file, JSON.stringify(fixture));
+  return JSON.parse(execFileSync("python3", [join(root, "scripts/runpod-guard.py"), "decide", file], { encoding: "utf8" }));
+}
+
+test("runpod guard: a busy pod is kept, an idle one is stopped after 20 minutes", () => {
+  const busy = { id: "a", name: "busy", uptime: 3600, util: 80 };
+  const idle = { id: "b", name: "idle", uptime: 3600, util: 0 };
+  assert.deepEqual(decide({ now: 10_000, pods: [busy, idle], idle_since: { b: 10_000 - 19 * 60 } }), []);
+  const stopped = decide({ now: 10_000, pods: [busy, idle], idle_since: { a: 0, b: 10_000 - 21 * 60 } });
+  assert.deepEqual(stopped.map(([id]) => id), ["b"]);
+});
+
+test("runpod guard: a pod older than 6 hours is stopped even when busy", () => {
+  const stopped = decide({ now: 1, pods: [{ id: "c", name: "old", uptime: 6 * 3600 + 1, util: 90 }] });
+  assert.deepEqual(stopped.map(([id]) => id), ["c"]);
+});
+
+test("runpod guard: gpu-dev.sh routes `runpod` to the guard and the key never travels as an argument", () => {
+  const script = read("scripts/lib/gpu-runpod.sh");
+  assert.match(script, /once\|loop\)[\s\S]*runpod-guard\.py/);
+  assert.doesNotMatch(read("scripts/runpod-guard.py"), /sys\.argv\[\d\].*key/i);
+});
+
+test("the volume's creation message never reaches stdout (it is read as the volume id), and the host builds with buildx", () => {
+  const script = read("scripts/gpu-dev.sh");
+  assert.match(script, /kept between droplets\)" >&2/);
+  const host = read("infra/gpu/host.sh");
+  assert.match(host, /docker buildx version[\s\S]*apt-get install -y -qq docker-buildx[\s\S]*docker build/);
+  // one image per worker commit: a new main commit is a new tar, hence a rebuild
+  assert.match(host, /orazaka-worker-media-\$\{sha\}\.tar/);
+});
+
+test("GPU_SERVICES=video starts neither the image engine nor Ollama (their memory is the video model's)", () => {
+  const script = read("scripts/gpu-dev.sh");
+  assert.match(script, /SERVICES=\{os\.environ\.get\('GPU_SERVICES', 'all'\)\}/);
+  const host = read("infra/gpu/host.sh");
+  assert.match(host, /if \[\[ "\$\{SERVICES:-all\}" != "video" \]\]; then\s+docker run -d --name sd-server/);
+  assert.match(host, /if \[\[ "\$\{SERVICES:-all\}" != "video" \]\]; then\s+mkdir -p \/models\/ollama/);
+});
+
+test("runpod: the key comes from the secrets file and is never echoed, a pod is destroyed (never left), and the volume keeps the weights", () => {
+  const script = read("scripts/lib/gpu-runpod.sh");
+  assert.match(script, /secret AI_GPU_RUNPOD_API_KEY/);
+  assert.doesNotMatch(script, /echo[^\n]*rp_key|printf[^\n]*rp_key|say[^\n]*\$\(rp_key\)/);
+  assert.match(script, /rp_call DELETE "\/pods\/\$id"/);
+  assert.match(script, /"volumeMountPath": "\/models"/);
+  assert.match(script, /"networkVolumeId": e\["VOLUME"\]/);
+  assert.match(script, /GPU_RUNPOD_MIN_BALANCE/); // a budget guard before any pod
+  assert.match(script, /ledger_add .*rp-/); // the same ledger as the droplets
+  // gpu-dev.sh stop destroys RunPod pods too, even when no droplet runs
+  const main = read("scripts/gpu-dev.sh");
+  assert.equal((main.match(/runpod_stop/g) ?? []).length >= 2, true);
+  assert.match(main, /runpod\) shift; runpod "\$@"/);
+});
+
+test("runpod bootstrap: a watchdog first, the worker built from its public repository, weights on the volume, the tunnel dials out", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.ok(boot.indexOf("orazaka-watchdog armed") < 0 && boot.indexOf("watchdog armed") < boot.indexOf("building the worker runtime"));
+  assert.match(boot, /rest\.runpod\.io\/v1\/pods\/\$\{RUNPOD_POD_ID\}/); // the pod ends itself
+  assert.match(boot, /git clone -q https:\/\/github\.com\/krizaka\/orazaka-worker-media\.git/);
+  assert.match(boot, /MEDIA_MODELS_DIR=\/models/);
+  assert.match(boot, /127\.0\.0\.1:15671:broker-dev\.orazaka\.com:5671/);
+  assert.doesNotMatch(boot, /ghcr\.io/); // the private registry is never needed
+});
+
+test("runpod bootstrap: the venv lives on the network volume, so a later pod reuses it (no rebuild, no idle build for the spend guard to stop)", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.match(boot, /VENV=\/models\/venv/);
+  assert.match(boot, /ln -sfn \/models\/venv \/opt\/venv/);
+  assert.doesNotMatch(boot, /python3 -m venv \/opt\/venv/);
+});
+
+test("runpod bootstrap: the optional video upscaler (SeedVR2 3B, Apache-2.0) is a pinned checkout with its own venv on the volume, and the worker is told where", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.match(boot, /UP=\/models\/up/);
+  assert.match(boot, /SEEDVR2_REF=[0-9a-f]{40}/); // pinned, never a branch
+  assert.match(boot, /git clone -q https:\/\/github\.com\/numz\/ComfyUI-SeedVR2_VideoUpscaler/);
+  assert.match(boot, /SEEDVR2_HOME=\/models\/up\/seedvr2 SEEDVR2_PYTHON=\/models\/up\/venv\/bin\/python/); // main's UPSCALER_ENV: set where the volume holds the install (this block puts it there)
+  assert.match(boot, /ln -sfn \$UP\/seedvr \/models\/seedvr2/); // the weights live where upscale.py looks
+  assert.ok(boot.indexOf("SEEDVR2_HOME") < boot.indexOf("app.consumer"), "the worker starts with the upscaler's location in its environment");
+});
+
+test("runpod watchdog: the pod destroys ITSELF — through the API with the pod's own key, then runpodctl; with no key it says so and falls back", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  const watchdog = boot.slice(boot.indexOf("<<'WD'\n") + 7, boot.indexOf("\nWD\n"));
+  const dir = mkdtempSync(join(tmpdir(), "rp-watchdog-"));
+  const bin = join(dir, "bin"); mkdirSync(bin);
+  const script = join(dir, "watchdog.sh"); writeFileSync(script, watchdog, { mode: 0o755 });
+  const calls = join(dir, "calls.log");
+  // stubs: curl records the request and answers 204; runpodctl records its arguments
+  writeFileSync(join(bin, "curl"), `#!/bin/sh\necho "curl $*" >> ${calls}\nprintf 204\n`, { mode: 0o755 });
+  writeFileSync(join(bin, "runpodctl"), `#!/bin/sh\necho "runpodctl $*" >> ${calls}\n`, { mode: 0o755 });
+  const run = (env) => execFileSync("bash", [script, "--destroy", "idle for 31 min"], { encoding: "utf8", env: { PATH: `${bin}:/usr/bin:/bin`, ...env } });
+  const withKey = run({ RUNPOD_POD_ID: "pod123", RUNPOD_API_KEY: "k-test" });
+  assert.match(withKey, /destroyed through the API \(204\)/);
+  assert.match(readFileSync(calls, "utf8"), /-X DELETE .*Bearer k-test.*rest\.runpod\.io\/v1\/pods\/pod123/);
+  // no key in the environment: the REST call is skipped, runpodctl (authenticated by the pod) removes it
+  writeFileSync(calls, "");
+  const noKey = run({ RUNPOD_POD_ID: "pod123" });
+  assert.match(noKey, /no RUNPOD_API_KEY/);
+  assert.match(noKey, /destroyed through runpodctl/);
+  assert.equal(readFileSync(calls, "utf8").trim(), "runpodctl remove pod pod123");
+  // no pod id at all: it refuses rather than guess
+  assert.throws(() => run({}), /Command failed/);
+});
+
+test("runpod bootstrap (cinema, ADR-080): the profile's image engine is served on :8086 through the relay, sound is enabled, scratch weights go to the container disk", () => {
+  const boot = read("infra/gpu/runpod-bootstrap.sh");
+  assert.match(boot, /MEDIA_SCRATCH_DIR=\/var\/lib\/orazaka-scratch/);
+  assert.match(boot, /get\('image'\)/); // read from models.yaml, never a hard-coded model
+  assert.match(boot, /\/models\/bin\/sd-server-\$\{SDCPP_REF:0:12\}/); // built once, kept on the volume
+  assert.match(boot, /IMAGE_REMOTE="R:0\.0\.0\.0:8086:127\.0\.0\.1:8086"/);
+  assert.match(boot, /R:0\.0\.0\.0:8188:127\.0\.0\.1:8188 \$IMAGE_REMOTE/);
+  assert.match(boot, /MEDIA_SOUND_ENABLED="\$SOUND_FLAG"/);
+  assert.match(boot, /fonts-dejavu-core/); // the cut's titles
+  assert.match(boot, /SEEDVR2_HOME=\/models\/up\/seedvr2/); // the upscaler on the volume, when it is there
+  assert.match(boot, /MEDIA_SPEECH_PORT=8086 MEDIA_IMAGE_UPSTREAM=127\.0\.0\.1:8089/); // speech in front of sd-server
+  assert.match(boot, /get\('speech'\)/);
+  assert.match(boot, /MEDIA_FONT_FILE="\$FONT"/); // the Krizaka type for titles
+  const lib = read("scripts/lib/gpu-runpod.sh");
+  assert.match(lib, /"containerDiskInGb": int\(e\.get\("DISK_GB"\) or 60\)/);
+  assert.match(lib, /HF_TOKEN="\$\(secret AI_HUGGINGFACE_TOKEN/); // read from the secrets file, never an argument
+  assert.match(lib, /worker_ref="\$\{GPU_WORKER_REF:-/);
 });
