@@ -7,6 +7,7 @@
  *   node scripts/dev-deploy.mjs policy      # infra/deploy/dev-content-policy.sql into orazaka_studio_db (docs/CONTENT_POLICY.md)
  *   node scripts/dev-deploy.mjs recommendations  # the recommender's tables on orazaka_knowledge_db (ADR-078)
  *   node scripts/dev-deploy.mjs analytics        # the analytics tables, kinds and settings v1 (ADR-081)
+ *   node scripts/dev-deploy.mjs service-tier     # the `service` rate-limit tier, svc_* users moved onto it (ADR-083)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
  *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
@@ -165,6 +166,14 @@ function runIdempotency() {
   console.log("orazaka_studio_db: studio_run idempotency columns and index in place");
 }
 
+/** The `service` rate-limit tier and the existing svc_* users moved onto it (ADR-083 slice 2) — idempotent. */
+function serviceTier() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-20-service-rate-tier.sql"), "utf8");
+  psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], sql);
+  console.log("krizaka_users_db: tier `service` (1000/min, 20 concurrent) in place; svc_* users moved onto it");
+}
+
 /** The signed-webhook tables and limits of the Studio service (orazaka#189 slice B) — idempotent, additive. */
 function webhooks() {
   const env = secrets();
@@ -253,11 +262,11 @@ _Injectés dans \`krizaka_users_db\` (cluster \`krizaka-dev-pg\`) par \`node scr
 // ── Service accounts: a Krizaka product calling Orazaka (products consume AI only through Orazaka) ──
 const EDGE_URL = process.env.ORAZAKA_EDGE_URL ?? "https://dev.orazaka.com/edge";
 
-/** The account a product calls Orazaka with: a plain ROLE_USER, never an admin. */
+/** The account a product calls Orazaka with: a plain ROLE_USER, never an admin, on the `service` rate-limit tier (ADR-083). */
 export function serviceAccount(product) {
   if (!/^[a-z][a-z0-9-]{1,30}$/.test(product ?? "")) throw new Error(`not a product id: ${product}`);
   const id = product.replace(/-/g, "_");
-  return { key: product, username: `svc_${id}`, email: `svc+${product}@orazaka.com`, tier: "free", roles: ["ROLE_USER"] };
+  return { key: product, username: `svc_${id}`, email: `svc+${product}@orazaka.com`, tier: "service", roles: ["ROLE_USER"] };
 }
 
 /**
@@ -500,13 +509,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "recommendations") recommendations();
     else if (command === "analytics") analytics();
     else if (command === "run-idempotency") runIdempotency();
+    else if (command === "service-tier") serviceTier();
     else if (command === "webhooks") webhooks();
     else if (command === "seed") seed();
     else if (command === "service-account") await createServiceAccount(rest[0], rest.slice(1));
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | webhooks | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | service-tier | webhooks | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {
