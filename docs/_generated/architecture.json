@@ -194,7 +194,8 @@
       "description": "Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry.",
       "dependsOn": [
         "orazaka-build",
-        "krizaka-billing"
+        "krizaka-billing",
+        "orazaka-ai-engine"
       ]
     },
     {
@@ -1058,6 +1059,10 @@
     {
       "from": "orazaka-automation-service",
       "to": "krizaka-messaging"
+    },
+    {
+      "from": "orazaka-automation-service",
+      "to": "krizaka-security"
     },
     {
       "from": "orazaka-business",

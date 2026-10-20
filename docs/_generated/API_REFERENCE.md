@@ -17,6 +17,16 @@ order Spring Security applies. `SERVICE` is the machine-to-machine authority req
 no matcher covers the path — the service has no security on it whatsoever.
 
 
+## automation-service
+
+| Method | Path | Access | Controller | Summary |
+|:---|:---|:---|:---|:---|
+| GET | `/api/v1/automations` | authenticated | AutomationController | The caller's automations. |
+| POST | `/api/v1/automations` | authenticated | AutomationController | Creates an automation. |
+| DELETE | `/api/v1/automations/{id}` | authenticated | AutomationController | Removes an automation with its triggers and history. |
+| GET | `/api/v1/automations/{id}` | authenticated | AutomationController | One automation. |
+| PATCH | `/api/v1/automations/{id}` | authenticated | AutomationController | Changes an automation; a missing field is left as it is. |
+
 ## conversation-service
 
 | Method | Path | Access | Controller | Summary |
