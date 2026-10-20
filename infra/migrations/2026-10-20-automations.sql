@@ -38,27 +38,14 @@ INSERT INTO automation_settings (version, rules, active) VALUES (1, '{
   "catchUp": "ONCE"
 }'::jsonb, TRUE) ON CONFLICT (version) DO NOTHING;
 
--- Rule set v2 (orazaka#195, ADR-084): the limits of the cloud automation API, webhooks and schedules. v1's keys are kept
--- and the new ones added; exactly one version is active. Code clamps every value to hard bounds and falls back to a
--- default when a key is absent, so a missing key is never an outage. Idempotent; a value already set is kept.
+-- Rule set v2 (orazaka#195, ADR-084): the limits of the cloud automation API. v1's keys are kept, the new ones added;
+-- exactly one version is active. Code clamps every value to hard bounds and falls back to a default when a key is absent.
 INSERT INTO automation_settings (version, rules, active)
-SELECT 2, rules, FALSE FROM automation_settings WHERE version = 1
-ON CONFLICT (version) DO NOTHING;
-UPDATE automation_settings SET rules = '{
+SELECT 2, rules || '{
   "maxAutomationsPerUser": 20,
-  "maxInputsBytes": 16384,
-  "maxTriggersPerAutomation": 5,
-  "webhookBodyMaxBytes": 65536,
-  "webhookToleranceSeconds": 300,
-  "webhookGlobalPerMinute": 3000,
-  "webhookPreverifyPerMinute": 600,
-  "webhookRunsPerMinute": 60,
-  "webhookSecretGraceHours": 24,
-  "webhookReplayRetentionHours": 24,
-  "scheduleLateToleranceSeconds": 120,
-  "runQueuedStaleSeconds": 30,
-  "runReconcileAfterSeconds": 120
-}'::jsonb || rules WHERE version = 2;
+  "maxInputsBytes": 16384
+}'::jsonb, FALSE FROM automation_settings WHERE version = 1
+ON CONFLICT (version) DO NOTHING;
 UPDATE automation_settings SET active = FALSE
  WHERE version = 1 AND active AND EXISTS (SELECT 1 FROM automation_settings WHERE version = 2);
 UPDATE automation_settings SET active = TRUE
@@ -222,10 +209,11 @@ DROP TRIGGER IF EXISTS trg_audit_event_immutable ON audit_event;
 CREATE TRIGGER trg_audit_event_immutable BEFORE UPDATE OR DELETE ON audit_event FOR EACH ROW EXECUTE FUNCTION audit_event_immutable();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- TRIGGERS, WEBHOOK LEDGER, CLOUD RUNS (ADR-084; orazaka#195, #196). Idempotent: safe to re-apply.
--- A webhook trigger's secret is stored SEALED under the master keyring (v1.<keyId>.<wrapped>.<nonce>.<ct>),
--- never in clear; `secret_hint` is its last four characters. A schedule trigger keeps its slot in `spec`
--- ({"time":"08:00","zone":"America/Toronto","days":["MON",…]}) and the next slot in `next_fire_at`.
+-- TRIGGERS (ADR-084; orazaka#195, #196). A webhook trigger's secret is stored SEALED under the master keyring
+-- (v1.<keyId>.<wrapped>.<nonce>.<ciphertext>), never in clear; `secret_hint` is its last four characters, and the previous
+-- secret keeps verifying until `previous_secret_until` (rotation without losing a call). A schedule trigger keeps its slot
+-- in `spec` ({"time":"08:00","zone":"America/Toronto","days":["MON",…]}) and its next slot in `next_fire_at`.
+-- Idempotent: safe to re-apply.
 -- ─────────────────────────────────────────────────────────────────────────────
 ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS enabled                BOOLEAN     NOT NULL DEFAULT TRUE;
 ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS secret_sealed          TEXT;
@@ -242,7 +230,16 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 CREATE INDEX IF NOT EXISTS idx_automation_trigger_due ON automation_trigger (next_fire_at)
     WHERE kind = 'SCHEDULE' AND enabled;
 
--- Every webhook-id ever accepted for a trigger, kept for the replay window: the primary key IS the replay guard.
+-- The limits of triggers, as rows of the active rule set (v2). A value already set is kept.
+UPDATE automation_settings SET rules = '{"maxTriggersPerAutomation": 5, "webhookSecretGraceHours": 24}'::jsonb || rules
+ WHERE version = 2;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SIGNED WEBHOOK → RUN (ADR-084 §2, §3). `webhook_delivery` is the replay guard: every webhook-id accepted for a trigger,
+-- its PRIMARY KEY (trigger_id, webhook_id) is what makes a reused id fail, whoever the instance. The run row gains who
+-- started it, the Studio run it is, why it failed, and the webhook body it was started with (a JSON object, capped).
+-- Idempotent: safe to re-apply.
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS webhook_delivery (
     trigger_id  UUID         NOT NULL REFERENCES automation_trigger(id) ON DELETE CASCADE,
     webhook_id  VARCHAR(128) NOT NULL,
@@ -252,7 +249,6 @@ CREATE TABLE IF NOT EXISTS webhook_delivery (
 );
 CREATE INDEX IF NOT EXISTS idx_webhook_delivery_received ON webhook_delivery (received_at);
 
--- What the cloud runs add to the run row: who started it, the Studio run it is, why it failed.
 ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS trigger_id    UUID REFERENCES automation_trigger(id) ON DELETE SET NULL;
 ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS trigger_kind  automation_trigger_kind;
 ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS studio_run_id UUID;
@@ -263,3 +259,18 @@ ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS payload       JSONB;
 ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS payload_bytes INT;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_automation_run_studio ON automation_run (studio_run_id) WHERE studio_run_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_automation_run_status ON automation_run (status, started_at) WHERE status IN ('QUEUED', 'RUNNING');
+
+-- The limits of the webhook and of the run sweep, as rows of the active rule set (v2). A value already set is kept.
+UPDATE automation_settings SET rules = '{
+  "webhookBodyMaxBytes": 65536,
+  "webhookToleranceSeconds": 300,
+  "webhookGlobalPerMinute": 3000,
+  "webhookPreverifyPerMinute": 600,
+  "webhookRunsPerMinute": 60,
+  "webhookReplayRetentionHours": 24,
+  "runQueuedStaleSeconds": 30,
+  "runReconcileAfterSeconds": 120
+}'::jsonb || rules WHERE version = 2;
+
+-- The late tolerance of a schedule slot (seconds before the catch-up policy decides), a row of the active rule set (v2).
+UPDATE automation_settings SET rules = '{"scheduleLateToleranceSeconds": 120}'::jsonb || rules WHERE version = 2;
