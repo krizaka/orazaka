@@ -167,7 +167,8 @@
       "description": "Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry.",
       "dependsOn": [
         "orazaka-build",
-        "krizaka-billing"
+        "krizaka-billing",
+        "orazaka-ai-engine"
       ],
       "initdb": [
         "50-automation.sql"

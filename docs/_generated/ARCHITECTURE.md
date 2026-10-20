@@ -75,7 +75,7 @@ Build dependencies between the modules above (test scope excluded): who packages
 
 | Module | Depends on |
 |:---|:---|
-| `orazaka-automation-service` | `krizaka-billing-client`, `krizaka-messaging` |
+| `orazaka-automation-service` | `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security` |
 | `orazaka-conversation-service` | `krizaka-billing-client`, `krizaka-spring-boot-starter-app-config`, `krizaka-spring-boot-starter-observability`, `krizaka-spring-boot-starter-rabbitmq`, `krizaka-spring-boot-starter-security`, `krizaka-spring-boot-starter-web`, `krizaka-users-api`, `krizaka-users-client`, `orazaka-assets`, `orazaka-business`, `orazaka-core`, `orazaka-interceptors`, `orazaka-jobs-api`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-studio-client`, `orazaka-tools` |
 | `orazaka-edge` | `krizaka-security` |
 | `orazaka-job-service` | `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security`, `krizaka-users-api`, `krizaka-users-client`, `orazaka-assets`, `orazaka-business`, `orazaka-core`, `orazaka-interceptors`, `orazaka-jobs-api`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-tools` |
@@ -116,7 +116,6 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-conversation-service` | `orazaka-job-service` | amqp | `orazaka.jobs.batch` (`job.media.generate`) |
 | `orazaka-conversation-service` | `orazaka-job-service` | amqp | `orazaka.jobs.interactive` (`job.text.*, job.media.analyze`) |
 | `orazaka-conversation-service` | `orazaka-studio-service` | amqp | `orazaka.events.studio.capability` (`evt.capability.changed`) |
-| `orazaka-conversation-service` | `orazaka-worker-media` | amqp | `orazaka.jobs.video` (`job.video.*, job.compose.*, job.sound.*`) |
 | `orazaka-job-service` | `krizaka-billing-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `krizaka-notifications-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `krizaka-users-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
@@ -130,7 +129,6 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-studio-service` | `orazaka-automation-service` | amqp | `orazaka.jobs.automation` (`job.automation.approved`) |
 | `orazaka-studio-service` | `orazaka-job-service` | amqp | `orazaka.jobs.batch` (`job.media.generate`) |
 | `orazaka-studio-service` | `orazaka-job-service` | amqp | `orazaka.jobs.interactive` (`job.text.*, job.media.analyze`) |
-| `orazaka-studio-service` | `orazaka-worker-media` | amqp | `orazaka.jobs.video` (`job.video.*, job.compose.*, job.sound.*`) |
 | `orazaka-automation-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
 | `orazaka-cli` | `orazaka-conversation-service` | http | `localhost:8080` |
 | `orazaka-cli` | `orazaka-edge` | http | `localhost:8088` |
@@ -211,7 +209,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka.jobs.batch` | `orazaka.jobs` | `job.media.generate` | `orazaka.jobs.batch.dlq` | `orazaka-persistence-app` | `orazaka-job-service` |
 | `orazaka.jobs.interactive` | `orazaka.jobs` | `job.text.*, job.media.analyze` | `orazaka.jobs.interactive.dlq` | `orazaka-persistence-app` | `orazaka-job-service` |
 | `orazaka.jobs.rag` | `orazaka.jobs` | `job.rag.*` | `orazaka.jobs.rag.dlq` | `orazaka-knowledge-service` | `orazaka-knowledge-service` |
-| `orazaka.jobs.video` | `orazaka.jobs` | `job.video.*, job.compose.*, job.sound.*` | `orazaka.jobs.video.dlq` | `orazaka-persistence-app` | `orazaka-worker-media` (own retry) |
+| `orazaka.jobs.video` | `orazaka.jobs` | `job.video.*` | `orazaka.jobs.video.dlq` | `orazaka-persistence-app` | — |
 
 **Producers**
 

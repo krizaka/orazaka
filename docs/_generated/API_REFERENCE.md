@@ -17,6 +17,16 @@ order Spring Security applies. `SERVICE` is the machine-to-machine authority req
 no matcher covers the path — the service has no security on it whatsoever.
 
 
+## automation-service
+
+| Method | Path | Access | Controller | Summary |
+|:---|:---|:---|:---|:---|
+| GET | `/api/v1/automations` | authenticated | AutomationController | The caller's automations. |
+| POST | `/api/v1/automations` | authenticated | AutomationController | Creates an automation. |
+| DELETE | `/api/v1/automations/{id}` | authenticated | AutomationController | Removes an automation with its triggers and history. |
+| GET | `/api/v1/automations/{id}` | authenticated | AutomationController | One automation. |
+| PATCH | `/api/v1/automations/{id}` | authenticated | AutomationController | Changes an automation; a missing field is left as it is. |
+
 ## conversation-service
 
 | Method | Path | Access | Controller | Summary |
@@ -92,6 +102,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/internal/v1/jobs/{jobId}/output/{filename}` | SERVICE | JobOutputController | Reads one of the actor's own outputs back (a step whose input is an earlier step's clip). |
 | PUT | `/internal/v1/jobs/{jobId}/output/{filename}` | SERVICE | JobOutputController | Stores one output file of a job, sealed, and answers the URL it is served under. |
 | GET | `/internal/v1/models/options` | SERVICE | ModelOptionsController | The published models of one category, the ones that answer first, the default marked. |
+| GET | `/internal/v1/models/queue` | SERVICE | ModelOptionsController | The queue a job on a model is published with when it is not the capability's own (a hosted video model is run by the CPU worker's queue, a self-hosted one by the GPU worker's). |
 | POST | `/internal/v1/workers` | SERVICE | WorkerController | Registers a worker, or refreshes what is known about it. |
 | POST | `/internal/v1/workers/{workerName}/heartbeat` | SERVICE | WorkerController | Records a heartbeat from an already-registered worker. |
 
