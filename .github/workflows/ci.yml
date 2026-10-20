@@ -23,25 +23,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Clone every repository
         run: node scripts/workspace.mjs clone --depth 1
 
-      - uses: actions/setup-java@v6
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "22"
 
       - name: Workspace scripts
         run: node --test 'scripts/test/*.test.mjs'
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
 
@@ -74,7 +74,23 @@ jobs:
           npm run validate:admin
 
       - name: Docs are generated from this code
-        run: node scripts/generate-docs.mjs --check
+        # The generated docs also read the default branches of the other repositories, so they drift when those merge,
+        # whoever opens the pull request. A pull request is held to the gate only when it touches what the docs are
+        # made from here (docs, scripts, infra, the workspace manifest); any other drift is a warning, and docs-sync
+        # (daily, CI dispatched on its branch) brings main back in step.
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          node scripts/generate-docs.mjs --check && exit 0
+          if [ "$EVENT" = "pull_request" ]; then
+            git fetch --quiet --depth=1 origin "$BASE"
+            if git diff --name-only "origin/$BASE" HEAD | grep -qE '^(docs/|scripts/|infra/|AGENTS\.md|README\.md|orazaka\.workspace\.json)'; then
+              echo "::error::docs are stale and this pull request touches what they are made from"
+              exit 1
+            fi
+          fi
+          echo "::warning::docs/_generated drifted from the workspace; the docs-sync workflow opens the pull request"
 
   # Main must not go red unnoticed: a failed run on main opens (or updates) a single issue.
   red-main:

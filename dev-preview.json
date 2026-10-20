@@ -1,0 +1,124 @@
+{
+  "$schema": "https://raw.githubusercontent.com/krizaka/.github/main/docs/standards/dev-preview.schema.json",
+  "version": 1,
+  "product": "orazaka",
+  "index": "on",
+  "criteria": {
+    "site.healthy": {
+      "evidence": "https://dev.orazaka.com/api/healthz",
+      "checked": "2026-10-19"
+    },
+    "site.signup-closed": {
+      "evidence": "https://github.com/krizaka/orazaka-web-client/blob/main/src/app/api/auth/register/route.ts",
+      "checked": "2026-10-19"
+    },
+    "site.qa-signin": {
+      "evidence": null,
+      "gap": "The QA sign-in on the real backend is not yet replayed by a CI run or a recorded request id.",
+      "issue": "https://github.com/krizaka/orazaka/issues/178"
+    },
+    "journey.core": {
+      "evidence": null,
+      "gap": "No recorded run of chat, document analysis and a 9:16 video on dev with run ids.",
+      "issue": "https://github.com/krizaka/orazaka/issues/178"
+    },
+    "journey.ai-via-orazaka": {
+      "evidence": null,
+      "gap": "The run trace of the engine is not linked as evidence.",
+      "issue": "https://github.com/krizaka/orazaka/issues/178"
+    },
+    "ui.krizaka-ui": {
+      "evidence": "https://dev.orazaka.com/",
+      "checked": "2026-10-19"
+    },
+    "ui.themes-devices": {
+      "evidence": null,
+      "gap": "No Playwright crawl in CI proves dark/light and phone/desktop on the key screens.",
+      "issue": "https://github.com/krizaka/orazaka-web-client/issues/124"
+    },
+    "ux.ia-review": {
+      "evidence": null,
+      "gap": "docs/UX_DECISIONS.md entry and nav shape test for the app rail and the public bar are not final.",
+      "issue": "https://github.com/krizaka/orazaka-web-client/issues/125"
+    },
+    "mobile.build": {
+      "evidence": null,
+      "gap": "No recorded launch of the mobile build against dev.orazaka.com.",
+      "issue": "https://github.com/krizaka/orazaka-mobile-client/issues/36"
+    },
+    "mobile.ux-review": {
+      "evidence": null,
+      "gap": "No UX/IA review of the mobile app.",
+      "issue": "https://github.com/krizaka/orazaka-mobile-client/issues/37"
+    },
+    "mobile.app-links": {
+      "evidence": null,
+      "gap": "No app-links config (AASA / assetlinks) for the product yet.",
+      "issue": "https://github.com/krizaka/orazaka-mobile-client/issues/36"
+    },
+    "quality.ci-green": {
+      "evidence": null,
+      "gap": "CI on main of krizaka/orazaka is red until the generated docs are re-synced (main is red, orazaka#243).",
+      "issue": "https://github.com/krizaka/orazaka/issues/179"
+    },
+    "quality.tests": {
+      "evidence": null,
+      "gap": "Evidence waits for a green CI on main.",
+      "issue": "https://github.com/krizaka/orazaka/issues/179"
+    },
+    "security.alerts": {
+      "evidence": null,
+      "gap": "8 open high CodeQL alerts and 6 high Dependabot alerts over the product repositories.",
+      "issue": "https://github.com/krizaka/orazaka/issues/119"
+    },
+    "docs.current": {
+      "evidence": null,
+      "gap": "README, AGENTS and docs not yet checked against the dev deployment.",
+      "issue": "https://github.com/krizaka/orazaka/issues/180"
+    },
+    "seo.family": {
+      "evidence": null,
+      "gap": "check-seo-family not yet run in CI against the container of dev.orazaka.com.",
+      "issue": "https://github.com/krizaka/orazaka-web-client/issues/126"
+    },
+    "ops.cost": {
+      "evidence": null,
+      "gap": "The dev deployment cost is not yet in the cost table and DEPLOYMENT.md; the core resize waits for Oussama.",
+      "issue": "https://github.com/krizaka/orazaka/issues/215"
+    },
+    "admin.gated": {
+      "evidence": null,
+      "gap": "Gate test of the console to be linked.",
+      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/33"
+    },
+    "admin.noindex": {
+      "evidence": "https://admin.orazaka.com/robots.txt",
+      "checked": "2026-10-19"
+    },
+    "admin.operator-tasks": {
+      "evidence": null,
+      "gap": "Operator tasks not yet proven against the real DB.",
+      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/33"
+    },
+    "admin.audit-log": {
+      "evidence": null,
+      "gap": "The audit log screen and its test are not yet linked.",
+      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/34"
+    },
+    "admin.shell": {
+      "evidence": null,
+      "gap": "Screenshots of the admin shell in both themes are not yet captured.",
+      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/35"
+    },
+    "admin.ux-review": {
+      "evidence": null,
+      "gap": "No UX/IA review of the console.",
+      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/36"
+    },
+    "admin.ci": {
+      "evidence": null,
+      "gap": "CI link of the console to be recorded once green.",
+      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/33"
+    }
+  }
+}

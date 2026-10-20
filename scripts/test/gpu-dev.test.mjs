@@ -217,6 +217,9 @@ test("runpod bootstrap (cinema, ADR-080): the profile's image engine is served o
   assert.match(boot, /MEDIA_SOUND_ENABLED="\$SOUND_FLAG"/);
   assert.match(boot, /fonts-dejavu-core/); // the cut's titles
   assert.match(boot, /SEEDVR2_HOME=\/models\/up\/seedvr2/); // the upscaler on the volume, when it is there
+  assert.match(boot, /MEDIA_SPEECH_PORT=8086 MEDIA_IMAGE_UPSTREAM=127\.0\.0\.1:8089/); // speech in front of sd-server
+  assert.match(boot, /get\('speech'\)/);
+  assert.match(boot, /MEDIA_FONT_FILE="\$FONT"/); // the Krizaka type for titles
   const lib = read("scripts/lib/gpu-runpod.sh");
   assert.match(lib, /"containerDiskInGb": int\(e\.get\("DISK_GB"\) or 60\)/);
   assert.match(lib, /HF_TOKEN="\$\(secret AI_HUGGINGFACE_TOKEN/); // read from the secrets file, never an argument
