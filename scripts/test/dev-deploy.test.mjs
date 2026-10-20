@@ -251,6 +251,21 @@ test("dev-deploy reads its secrets through secret.sh @dev or --env-file, never a
   assert.doesNotMatch(audit, new RegExp(["orazaka", "dev\\.env"].join("-")));
 });
 
+test("the run-event migration is idempotent (triggers are dropped before they are created) and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-run-events.sql", import.meta.url), "utf8");
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS event_seq/);
+  assert.match(sql, /CREATE TABLE IF NOT EXISTS studio_run_event/);
+  for (const trigger of sql.match(/CREATE TRIGGER (\w+)/g)) {
+    const name = trigger.split(" ")[2];
+    assert.match(sql, new RegExp(`DROP TRIGGER IF EXISTS ${name} ON`), name);
+  }
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-events"\) runEvents\(\)/);
+});
+
 test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
   assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
+});
+
+test("orazaka-dev enforces the per-key rate limit (ADR-083 slice 2: service accounts are on the `service` tier, 1000 a minute)", () => {
+  assert.match(spec("orazaka-dev"), /key: ABUSE_RATE_LIMIT_MODE, scope: RUN_TIME, value: enforce/);
 });
