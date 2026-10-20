@@ -124,3 +124,40 @@ captions, and labels the film. The edit is checked once at the edge; one it cann
 Characters that drift from shot to shot despite the keyframes (then: a reference model, or keyframes conditioned on a
 character sheet), distilled shots whose motion is too stiff for action (then: 6–8 steps), or a production whose
 re-shoots cost more than one long job would have.
+
+## Addendum 2026-10-20 — the cinema pack completed (orazaka#259), proven by « l'aube »
+
+The four gaps #259 named are closed in the director (orazaka-cli) and the worker (orazaka-worker-media), and a 4K brand
+film was made with them (krizaka-ui `tools/brand-films/dawn/`, measured in [Measured runs](../_generated/MEASURED_RUNS.md)):
+
+1. **Shot-list planner** — `orazaka cinema plan --treatment`: a directed treatment (shots with duration, lens, camera, light,
+   air, action, cast and **the video model of each shot**) becomes the script without a language model, checked once and
+   refused by name. `plan --update` applies a changed treatment and keeps every shot already made.
+2. **Tail-frame chaining** — a reshoot now reshoots the shots chained to it (they started from a frame that no longer
+   exists: the old behaviour was a bug). `chainAt` starts a chained shot from a chosen second of the previous take: the
+   film showed why — a bird that flies out of frame leaves an empty last frame, and the next shot would have to invent it.
+3. **Redo one shot** — `reshoot`, `take` (a take made on a GPU host) and `jobs` (the pending shots for a host that runs the
+   worker's own `generate_wan_frames`): the same production file whether the shots run as Studio runs or on a pod.
+   A shot is made only as long as it is used (frames per shot, plus a 0.4 s handle).
+4. **The edit and the deliverables** — the cut can make a **4K master** (`master: "2160p"`, SeedVR2 with a tiled VAE) and a
+   clean one (`text: false`); `app/deliver.py` cuts **2160p, 1080p and 9:16** from it, the 9:16 window following each
+   shot's subject, the captions and the « AI-generated » label drawn per language after the reframe.
+
+**Characters stay on-model by construction** (§2 revisited): a free image edit redrew a brand's bird (the falcon lost its
+visor). The keyframe is made from the character's own render instead: an empty plate, the render composited and lit like
+the plate, then FLUX.2 [klein] image-to-image at a high image strength (0.60 for one character, 0.80 for a group: a group of
+five drifted at 0.60). Each character has a reference sheet from its render, and every take gets a review sheet (a frame
+every 8 under the cast's sheet): 4 of 19 takes were cut to their good part or reshot.
+
+**Measured on an H200 141 GB** (RunPod secure, $5.29/h): Wan 2.2 I2V A14B **at 40 steps**, 1280×720, 81 frames: 1567 s
+alone (36 s a step, no offload); SageAttention (BSD-3) 31 s a step (−13 %: kept, not decisive). LTX-Video 0.9.8: 11–20 s
+a clip. SeedVR2 3B to 2160p beside a resident Wan: ~17 min a clip at batch 5, **290 s at batch 21** (`SEEDVR2_BATCH_SIZE`),
+so the 4K upscale runs behind the generation instead of after it.
+
+**What this changes**: the Studio's video model stays the catalogue's (the 4-step distill for dev runs); a brand film names
+`wan2.2-i2v-a14b-hq` per shot. The image Studio still has no reference-image input, so on-model keyframes run outside
+it (on a Mac, $0) — a gap to close in `orazaka.core.media.image` (an `images` input to FLUX.2 [klein]'s edit).
+
+**« l'aube » cost** (docs/measurements/cinema.json): 62.5 s of 4K film, 19 planned shots (18 in the cut), 23 takes of
+which 4 were rejected or cut down; $34.42 billed on RunPod (6.5 h of one H200, setup and a guard stop at 6 h included)
+= **$33.09 per finished minute**; the runs' own GPU time was 5.5 h ($29.00). Keyframes, score and narrator: $0 (a Mac).

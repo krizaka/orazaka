@@ -1,8 +1,8 @@
 {
-  "measuredOn": "2026-10-17",
-  "note": "The billed sessions also rendered the Montréal reel and the news explainer (shots, the reel's cut) that are not delivered yet, and the showcase session's own image-to-video jobs drained by the same pod: the billed figure per minute is this batch's, not a film's. A film's own cost is its runs' GPU time at the rate (the table above).",
-  "gpu": "one RunPod H100 80 GB (CA-MTL-1, $3.99/h)",
-  "rate": 3.99,
+  "measuredOn": "2026-10-20",
+  "note": "The billed sessions also rendered the Montréal reel and the news explainer (shots, the reel's cut) that are not delivered yet, and the showcase session's own image-to-video jobs drained by the same pod: the billed figure per minute is this batch's, not a film's. A film's own cost is its runs' GPU time at the rate (the table above). « l'aube » was made outside the Studios on a GPU host running the media worker's own generator and upscaler (orazaka cinema jobs / take), 40-step Wan takes beside concurrent SeedVR2 4K upscales; its keyframes, score and narrator were made on a Mac (Metal, $0).",
+  "gpu": "one RunPod H200 141 GB (secure cloud, $5.29/h)",
+  "rate": 5.29,
   "films": [
     {
       "id": "nova-ardent",
@@ -21,6 +21,8 @@
       "soundRunId": "61cefebd-7051-4ae9-9709-f7cd954c7289",
       "gpuSeconds": 7115,
       "gpuUsd": 7.89,
+      "gpu": "one RunPod H100 80 GB (CA-MTL-1, $3.99/h)",
+      "rate": 3.99,
       "productionSeconds": 14241,
       "models": {
         "script": "deepseek-v4-pro",
@@ -31,6 +33,34 @@
         "voice": "Kokoro-82M (am_fenrir)"
       },
       "command": "orazaka cinema new nova-ardent --format superhero-vfx --aspect 9:16 --duration 45 --shots 10 --seed 20261017 --script-model deepseek-v4-pro --brief \"Night city in the rain, an ORIGINAL superhero trailer…\""
+    },
+    {
+      "id": "dawn",
+      "title": "The World of Krizaka: Dawn",
+      "media": "products/orazaka/cinema/dawn",
+      "aspect": "16:9",
+      "width": 3840,
+      "height": 2160,
+      "duration": 62.46,
+      "shots": 19,
+      "reshoots": 1,
+      "runs": 20,
+      "failedRuns": 0,
+      "scriptRunId": "treatment",
+      "gpuSeconds": 19736,
+      "gpuUsd": 29,
+      "gpu": "one RunPod H200 141 GB (secure cloud, $5.29/h)",
+      "rate": 5.29,
+      "productionSeconds": null,
+      "models": {
+        "script": "the catalogue's chat default",
+        "image": "FLUX.2 [klein] 4B (plate, the Mascot render composited, img2img) on a Mac",
+        "video": "Wan 2.2 I2V A14B (40 steps), LTX-Video 0.9.8 13B distilled",
+        "upscale": "SeedVR2 3B to 2160p (batch 21)",
+        "music": "ACE-Step 1.5 XL turbo (on a Mac)",
+        "voice": "Kokoro-82M (af_heart EN, ff_siwis FR, on a Mac)"
+      },
+      "command": "orazaka cinema plan dawn --treatment krizaka-ui/tools/brand-films/dawn/treatment.json --references loops/"
     }
   ],
   "sessions": [
@@ -51,13 +81,25 @@
       "gpu": "H100 80 GB",
       "hours": 0.4,
       "rate": 3.99
+    },
+    {
+      "label": "« l'aube »: H200 141 GB, secure cloud, 03:47–09:47 UTC (stopped by the spend guard at 6 h)",
+      "gpu": "H200 141 GB",
+      "hours": 6,
+      "rate": 5.29
+    },
+    {
+      "label": "« l'aube »: the same pod resumed for one reshoot and three 4K upscales, then terminated",
+      "gpu": "H200 141 GB",
+      "hours": 0.5,
+      "rate": 5.29
     }
   ],
-  "billedUsd": 23.62,
-  "filmMinutes": 0.67,
-  "usdPerFilmMinute": 35.01,
-  "gpuUsdPerFilmMinute": 11.69,
-  "wallMinutesPerFilmMinute": 351.8,
+  "billedUsd": 58.01,
+  "filmMinutes": 1.72,
+  "usdPerFilmMinute": 33.81,
+  "gpuUsdPerFilmMinute": 21.5,
+  "wallMinutesPerFilmMinute": 138.3,
   "steps": {
     "script": {
       "studioKey": "cinematic-script",
