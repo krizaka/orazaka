@@ -1065,6 +1065,10 @@
       "to": "krizaka-security"
     },
     {
+      "from": "orazaka-automation-service",
+      "to": "orazaka-assets"
+    },
+    {
       "from": "orazaka-business",
       "to": "orazaka-core"
     },
@@ -1534,6 +1538,18 @@
     },
     {
       "from": "orazaka-edge",
+      "to": "orazaka-automation-service",
+      "kind": "http",
+      "via": "route /api/v1/automations"
+    },
+    {
+      "from": "orazaka-edge",
+      "to": "orazaka-automation-service",
+      "kind": "http",
+      "via": "route /hooks/"
+    },
+    {
+      "from": "orazaka-edge",
       "to": "orazaka-conversation-service",
       "kind": "http",
       "via": "route /"
@@ -1797,6 +1813,13 @@
         "declaredBy": "krizaka-notifications-service"
       },
       {
+        "name": "orazaka.automation.studio-runs",
+        "exchange": "orazaka.events",
+        "binding": null,
+        "dlq": "orazaka.automation.studio-runs.dlq",
+        "declaredBy": "orazaka-automation-service"
+      },
+      {
         "name": "orazaka.events.job-relay",
         "exchange": "orazaka.events",
         "binding": "job.#",
@@ -2008,6 +2031,11 @@
       {
         "module": "krizaka-notifications-service",
         "queue": "krizaka.notifications.user-events",
+        "retry": "kit"
+      },
+      {
+        "module": "orazaka-automation-service",
+        "queue": "orazaka.automation.studio-runs",
         "retry": "kit"
       },
       {

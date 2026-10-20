@@ -75,7 +75,7 @@ Build dependencies between the modules above (test scope excluded): who packages
 
 | Module | Depends on |
 |:---|:---|
-| `orazaka-automation-service` | `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security` |
+| `orazaka-automation-service` | `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security`, `orazaka-assets` |
 | `orazaka-conversation-service` | `krizaka-billing-client`, `krizaka-spring-boot-starter-app-config`, `krizaka-spring-boot-starter-observability`, `krizaka-spring-boot-starter-rabbitmq`, `krizaka-spring-boot-starter-security`, `krizaka-spring-boot-starter-web`, `krizaka-users-api`, `krizaka-users-client`, `orazaka-assets`, `orazaka-business`, `orazaka-core`, `orazaka-interceptors`, `orazaka-jobs-api`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-studio-client`, `orazaka-tools` |
 | `orazaka-edge` | `krizaka-security` |
 | `orazaka-job-service` | `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security`, `krizaka-users-api`, `krizaka-users-client`, `orazaka-assets`, `orazaka-business`, `orazaka-core`, `orazaka-interceptors`, `orazaka-jobs-api`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-tools` |
@@ -142,6 +142,8 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/credentials` |
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/interceptions` |
 | `orazaka-edge` | `krizaka-users-service` | http | `route /api/v1/profile` |
+| `orazaka-edge` | `orazaka-automation-service` | http | `route /api/v1/automations` |
+| `orazaka-edge` | `orazaka-automation-service` | http | `route /hooks/` |
 | `orazaka-edge` | `orazaka-conversation-service` | http | `route /` |
 | `orazaka-edge` | `orazaka-knowledge-service` | http | `route /api/v1/analytics` |
 | `orazaka-edge` | `orazaka-knowledge-service` | http | `route /api/v1/recommendations` |
@@ -200,6 +202,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `krizaka.notifications.password-events` | `orazaka.events` | `evt.password.*` | `krizaka.notifications.password-events.dlq` | `krizaka-notifications-service` | `krizaka-notifications-service` |
 | `krizaka.notifications.requests` | `orazaka.events` | `evt.notification.requested` | `krizaka.notifications.requests.dlq` | `krizaka-notifications-service` | `krizaka-notifications-service` |
 | `krizaka.notifications.user-events` | `orazaka.events` | `evt.user.*` | `krizaka.notifications.user-events.dlq` | `krizaka-notifications-service` | `krizaka-notifications-service` |
+| `orazaka.automation.studio-runs` | `orazaka.events` | — | `orazaka.automation.studio-runs.dlq` | `orazaka-automation-service` | `orazaka-automation-service` |
 | `orazaka.events.job-relay` | `orazaka.events` | `job.#` | `orazaka.events.job-relay.dlq` | `orazaka-persistence-app` | `orazaka-conversation-service` |
 | `orazaka.events.studio` | `orazaka.events` | `job.*.done, job.*.error` | `orazaka.events.studio.dlq` | `orazaka-studio-service` | `orazaka-studio-service` |
 | `orazaka.events.studio.capability` | `orazaka.events` | `evt.capability.*` | `orazaka.events.studio.capability.dlq` | `orazaka-studio-service` | `orazaka-studio-service` |
