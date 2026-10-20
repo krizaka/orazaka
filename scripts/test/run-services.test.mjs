@@ -1,6 +1,7 @@
 // node --test scripts/test — the core container's supervisor (infra/deploy/run-services.sh).
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
@@ -36,4 +37,26 @@ test("a failing worker is restarted with a doubling, capped backoff while the pl
   assert.match(r.stdout, /restarting in 2s/);
   assert.doesNotMatch(r.stdout, /restarting in 4s/); // capped at ORAZAKA_WORKER_BACKOFF_MAX
   assert.match(r.stdout, /jvm=0/);
+});
+
+test("a stopped container takes its worker down: SIGTERM ends the supervisor and the worker it supervises (no stray consumer)", () => {
+  // Before: the supervisor had no TERM handler, so the container's `wait` hung on it until the platform's SIGKILL, and the
+  // worker kept consuming the broker's queue next to the new deployment's worker (orazaka validation queue, 2026-10-20).
+  const r = bash(`
+    supervise w sleep 31337 > /dev/null 2>&1 &
+    sup=$!
+    sleep 1
+    kill -TERM $sup
+    for i in 1 2 3 4 5 6 7 8 9 10; do kill -0 $sup 2>/dev/null || break; sleep 0.5; done
+    kill -0 $sup 2>/dev/null && echo "supervisor-alive" || echo "supervisor-gone"
+    pgrep -f "sleep 31337" >/dev/null && echo "worker-alive" || echo "worker-gone"
+    pkill -f "sleep 31337" 2>/dev/null; true`);
+  assert.match(r.stdout, /supervisor-gone/, r.stdout + r.stderr);
+  assert.match(r.stdout, /worker-gone/, r.stdout + r.stderr);
+});
+
+test("the container stops its supervised workers when it stops (stop_all signals them)", () => {
+  const text = readFileSync(script, "utf8");
+  assert.match(text, /workers\+=\("\$!"\)/);
+  assert.match(text, /for pid in "\$\{pids\[@\]\}" "\$\{workers\[@\]\}"; do kill -TERM/);
 });
