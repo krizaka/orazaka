@@ -2850,7 +2850,7 @@
     {
       "key": "orazaka-media",
       "dir": "orazaka-media",
-      "version": "1.9.0",
+      "version": "1.10.0",
       "tier": "DATA",
       "kind": "TOOLKIT",
       "distribution": "OSS",
@@ -3238,6 +3238,102 @@
             "fr": {
               "label": "Génération vidéo",
               "tagline": "Un short vertical (9:16) ou un plan large, décrit puis rendu.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "cinematic-treatment",
+          "profession": "creative",
+          "iconKey": "video",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 30,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "brief",
+              "title": "Le brief"
+            },
+            {
+              "key": "aspect",
+              "title": "Format d'image"
+            },
+            {
+              "key": "durationSeconds",
+              "title": "Durée (secondes)"
+            },
+            {
+              "key": "notes",
+              "title": "Notes de la critique"
+            },
+            {
+              "key": "language",
+              "title": "Langue des textes"
+            },
+            {
+              "key": "model",
+              "title": "Modèle de langage"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "treatment",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Cinematic short — treatment",
+              "tagline": "A short brief becomes a story: an arc, intentions, living shots, directed lines, music, sound.",
+              "description": null
+            },
+            "fr": {
+              "label": "Court métrage — traitement",
+              "tagline": "Un brief court devient une histoire : un arc, des intentions, des plans vivants, des répliques dirigées, musique et sons.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "cinematic-critique",
+          "profession": "creative",
+          "iconKey": "video",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 10,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "treatment",
+              "title": "Le traitement à juger"
+            },
+            {
+              "key": "model",
+              "title": "Modèle de langage"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "critique",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Cinematic short — critique",
+              "tagline": "A director's read of a treatment: scores, flat or off-topic shots rejected, what to change.",
+              "description": null
+            },
+            "fr": {
+              "label": "Court métrage — critique",
+              "tagline": "La lecture d'un réalisateur : des notes, les plans plats ou hors sujet rejetés, quoi changer.",
               "description": null
             }
           }
