@@ -4,7 +4,7 @@
 # Built by DigitalOcean App Platform from this repository (dockerfile_path: infra/deploy/Dockerfile,
 # context: the repository root). The platform is one repository per component, so the image clones
 # every repository listed in orazaka.workspace.json at its default branch — exactly what CI does —
-# and builds the seven services the dev environment runs, without tests (CI ran them).
+# and builds the eight services the dev environment runs, without tests (CI ran them).
 # Redeploy with `doctl apps create-deployment <app> --force-rebuild`. The clone layer's cache follows the
 # repositories' heads (the ADD lines of stage 1), so a change in any of them is cloned again.
 # ==============================================================================
@@ -41,7 +41,7 @@ ADD https://github.com/krizaka/orazaka-cli.git/info/refs?service=git-upload-pack
 ADD https://github.com/krizaka/orazaka-packs.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-packs
 RUN node scripts/workspace.mjs clone --depth 1
 
-# ── 2. Build the seven services and what they depend on ──────────────────────
+# ── 2. Build the eight services and what they depend on ──────────────────────
 FROM eclipse-temurin:21-jdk@sha256:f9bf7e9fe2f9bc4657537c1a7e20c768f0c3bafca41598263be4714783dd62eb AS build
 WORKDIR /workspace
 COPY --from=sources /workspace /workspace
@@ -55,7 +55,7 @@ RUN echo "core build ${CORE_REBUILD}" \
       -DskipTests -DskipITs=true -Dspotless.check.skip=true -Dexec.skip=true \
       -Dskip.npm=true -Dskip.installnodenpm=true \
       -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dgpg.skip=true \
-      -pl orazaka-apps/services/orazaka-edge,krizaka/krizaka-users/krizaka-users-service,krizaka/krizaka-billing/krizaka-billing-service,orazaka-apps/services/orazaka-conversation-service,orazaka-apps/services/orazaka-studio/orazaka-studio-service,orazaka-apps/services/orazaka-job-service,orazaka-apps/services/orazaka-knowledge-service \
+      -pl orazaka-apps/services/orazaka-edge,krizaka/krizaka-users/krizaka-users-service,krizaka/krizaka-billing/krizaka-billing-service,orazaka-apps/services/orazaka-conversation-service,orazaka-apps/services/orazaka-studio/orazaka-studio-service,orazaka-apps/services/orazaka-job-service,orazaka-apps/services/orazaka-knowledge-service,orazaka-apps/services/orazaka-automation-service \
       -am \
  && mkdir -p /out \
  && cp orazaka-apps/services/orazaka-edge/target/orazaka-edge-*[0-9T].jar /out/edge.jar \
@@ -65,6 +65,7 @@ RUN echo "core build ${CORE_REBUILD}" \
  && cp orazaka-apps/services/orazaka-studio/orazaka-studio-service/target/orazaka-studio-service-*[0-9T].jar /out/studio.jar \
  && cp orazaka-apps/services/orazaka-job-service/target/orazaka-job-service-*[0-9T].jar /out/job.jar \
  && cp orazaka-apps/services/orazaka-knowledge-service/target/orazaka-knowledge-service-*[0-9T].jar /out/knowledge.jar \
+ && cp orazaka-apps/services/orazaka-automation-service/target/orazaka-automation-service-*[0-9T].jar /out/automation.jar \
  && cp -r orazaka-packs /out/orazaka-packs \
  && cp -r orazaka-apps/workers/orazaka-worker-media /out/orazaka-worker-media
 
