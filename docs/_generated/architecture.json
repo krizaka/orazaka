@@ -2850,7 +2850,7 @@
     {
       "key": "orazaka-media",
       "dir": "orazaka-media",
-      "version": "1.10.0",
+      "version": "1.11.0",
       "tier": "DATA",
       "kind": "TOOLKIT",
       "distribution": "OSS",

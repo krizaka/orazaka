@@ -108,3 +108,23 @@ test("dev data gives hosted video its own queue, and migrates the table of the f
   assert.match(sql, /\('video', FALSE,\s+'job\.video\.generate'\)/);
   assert.match(sql, /ON CONFLICT \(category, hosted\) DO NOTHING/);
 });
+
+// ── Start order: the job service answers before the services that call it at startup are started ──
+test("wait_port returns as soon as something listens, and gives up (status 1) after its timeout", async () => {
+  const { createServer } = await import("node:net");
+  const server = createServer().listen(0, "127.0.0.1");
+  await new Promise((resolve) => server.once("listening", resolve));
+  const { port } = server.address();
+  const up = bash(`wait_port 127.0.0.1 ${port} 5 && echo up=0 || echo up=1`);
+  assert.match(up.stdout, /up=0/, up.stderr);
+  await new Promise((resolve) => server.close(resolve));
+  const started = Date.now();
+  const down = bash(`wait_port 127.0.0.1 ${port} 2 && echo down=0 || echo down=1`);
+  assert.match(down.stdout, /down=1/, down.stderr);
+  assert.ok(Date.now() - started < 8000, "bounded by its timeout");
+});
+
+test("the supervisor waits for the job service before it starts the services that call it (8 JVMs in 2 GB started Studio before job: PackInstallException, exit 1)", () => {
+  const sh = root("infra/deploy/run-services.sh");
+  assert.match(sh, /job\) wait_port localhost 8090 "\$\{ORAZAKA_JOB_READY_TIMEOUT:-240\}"/);
+});
