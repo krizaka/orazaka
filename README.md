@@ -10,15 +10,15 @@
 
 **The AI that never leaves home.**
 
-Sovereign AI platform by [Krizaka](https://krizaka.com) — and the **workspace** that assembles it.
+**[Orazaka](https://dev.orazaka.com)** is the open-source sovereign AI platform by [Krizaka](https://www.krizaka.com) (Montréal) — chat, documents, images, video and agents on your own machines — and this is the **workspace** that assembles it. Website: [dev.orazaka.com](https://dev.orazaka.com).
 
 [![CI](https://github.com/krizaka/orazaka/actions/workflows/ci.yml/badge.svg)](https://github.com/krizaka/orazaka/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/krizaka/orazaka/badge)](https://scorecard.dev/viewer/?uri=github.com/krizaka/orazaka)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Orazaka](https://img.shields.io/badge/part%20of-Orazaka-f67e23)](https://github.com/krizaka/orazaka#repositories)
-[![Docs](https://img.shields.io/badge/docs-krizaka.com%2Fdocs%2Forazaka-f67e23)](https://www.krizaka.com/docs/orazaka)
+[![Website](https://img.shields.io/badge/site-dev.orazaka.com-f67e23)](https://dev.orazaka.com)
 
-[Documentation](https://www.krizaka.com/docs/orazaka) · [How it works](https://www.krizaka.com/en/products/orazaka/architecture) · [Demos](https://www.krizaka.com/en/products/orazaka/demos) · [Website](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
+[Website](https://dev.orazaka.com) · [Documentation](https://dev.orazaka.com/docs) · [Demos](https://dev.orazaka.com/gallery) · [Krizaka](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
 
 </div>
 <!-- /krizaka-header -->

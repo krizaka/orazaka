@@ -34,3 +34,48 @@ test("no workflow reads runner/steps/job in a job-level env", () => {
     .flatMap((f) => jobEnvViolations(f, readFileSync(new URL(f, dir), "utf8")));
   assert.deepEqual(found, [], `GitHub refuses these (the run fails in 0 s):\n${found.join("\n")}`);
 });
+
+test("docs-sync starts CI on its branch itself (a GITHUB_TOKEN PR starts none) and keeps write scopes on the job", () => {
+  const text = readFileSync(new URL("docs-sync.yml", dir), "utf8");
+  assert.match(text, /gh workflow run ci\.yml[^\n]*--ref chore\/docs-sync/);
+  assert.match(text, /actions: write/);
+  assert.doesNotMatch(text.split("jobs:")[0], /^  [a-z-]+: write/m, "no write scope at the top level (Scorecard TokenPermissions)");
+});
+
+test("the reusable component workflow keeps packages/id-token write on the job, not at the top level", () => {
+  const text = readFileSync(new URL("component.yml", dir), "utf8");
+  assert.doesNotMatch(text.split("jobs:")[0], /^  [a-z-]+: write/m);
+});
+
+test("CI holds a pull request to the docs gate only when it touches what the docs are made from", () => {
+  const text = readFileSync(new URL("ci.yml", dir), "utf8");
+  assert.match(text, /generate-docs\.mjs --check && exit 0/);
+  assert.match(text, /::warning::docs\/_generated drifted/);
+  assert.match(text, /docs\/\|scripts\/\|infra\//);
+});
+
+/** Duplicate keys inside one job (two `permissions:` after a merge) make GitHub refuse the whole file at startup. */
+export function duplicateJobKeys(name, text) {
+  const out = [];
+  let job = null;
+  let seen = new Set();
+  text.split("\n").forEach((line, i) => {
+    if (/^ {2}[\w-]+:\s*$/.test(line) && text.split("\n").slice(0, i).some((l) => /^jobs:\s*$/.test(l))) {
+      job = line.trim();
+      seen = new Set();
+    } else if (job) {
+      const m = /^ {4}([\w-]+):/.exec(line);
+      if (m) {
+        if (seen.has(m[1])) out.push(`${name}:${i + 1}: duplicate key "${m[1]}" in job ${job}`);
+        seen.add(m[1]);
+      }
+    }
+  });
+  return out;
+}
+
+test("no workflow repeats a key inside a job (a merge once left two `permissions:` in component.yml and broke every repository's CI)", () => {
+  const bad = readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).flatMap((f) => duplicateJobKeys(f, readFileSync(new URL(f, dir), "utf8")));
+  assert.deepEqual(bad, []);
+  assert.equal(duplicateJobKeys("t.yml", "jobs:\n  a:\n    permissions:\n      contents: read\n    runs-on: x\n    permissions:\n      contents: write\n").length, 1);
+});
