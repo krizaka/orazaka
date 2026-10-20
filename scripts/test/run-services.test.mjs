@@ -81,6 +81,9 @@ test("the hosted-video worker is the media worker in hosted-only mode, on the le
   assert.match(fn, /JOB_SERVICE_INTERNAL_URL=http:\/\/localhost:8090/);
   assert.match(fn, /AI_INFERENCE_KEY="\$\{AI_INFERENCE_KEY_ALL:-\$\{AI_INFERENCE_KEY:-\}\}"/, "the all-models key lists the hosted Wan");
   assert.match(fn, /exec .*-m app\.consumer/);
+  // The worker resolves its upload root from its own file (…/orazaka-worker-media/app/main.py, 4 levels up = « / » in the image):
+  // « Permission denied: /var/orazaka-uploads ». The image's own uploads folder (owned by the orazaka user) is named explicitly.
+  assert.match(fn, /UPLOAD_DIR="\$\{ORAZAKA_APP_DIR:-\/app\}\/var\/orazaka-uploads"/);
   // The media worker reads Spring's variable names for the broker (SPRING_RABBITMQ_*), the container carries RABBITMQ_*: without
   // this map it dialled localhost as guest and never connected (dev, 2026-10-20).
   for (const [spring, plain] of [["HOST", "HOST"], ["PORT", "PORT"], ["USERNAME", "USER"], ["PASSWORD", "PASS"]]) {
