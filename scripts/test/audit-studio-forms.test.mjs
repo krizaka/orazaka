@@ -111,3 +111,38 @@ test("dev data says which categories an external worker runs: a model of those i
   assert.match(sql, /\('video', FALSE, 'job\.video\.generate'\)/);
   assert.match(sql, /ON CONFLICT \(category, hosted\) DO NOTHING/);
 });
+
+test("every output needs its label in English and French too (« Votre image », « Graine… » on the English page)", () => {
+  const withOutputs = (outputs) => [{ studioKey: "s", version: "1.0.0", inputSchema: { properties: {} }, outputs }];
+  const found = auditForms(
+    withOutputs([
+      { key: "image", label: "Votre image" },
+      { key: "seed", label: "Graine", "x-i18n": { fr: { label: "Graine" } } },
+      { key: "ok", label: "Ok", "x-i18n": { en: { label: "Ok" }, fr: { label: "Ok" } } },
+    ]),
+    models,
+  );
+  assert.ok(found.some((f) => /s@1\.0\.0#output:image: no en label \(x-i18n\.en\.label\)/.test(f)), found.join("\n"));
+  assert.ok(found.some((f) => /#output:image: no fr label/.test(f)));
+  assert.ok(found.some((f) => /#output:seed: no en label/.test(f)));
+  assert.ok(!found.some((f) => /#output:seed: no fr label/.test(f)) && !found.some((f) => /#output:ok/.test(f)));
+});
+
+test("a model's declared aspects must lie within its aspect field's enum, and every model of the field must be declared", () => {
+  const bp = (aspects, extra = {}) => [
+    {
+      studioKey: "v",
+      version: "1.0.0",
+      inputSchema: {
+        properties: {
+          aspect: { enum: ["9:16", "16:9"], "x-i18n": { en: { title: "T", description: "d", options: { "9:16": "a", "16:9": "b" } }, fr: { title: "T", description: "d", options: { "9:16": "a", "16:9": "b" } } } },
+          model: { "x-options": { source: "models", category: "video", aspectField: "aspect", aspects, ...extra }, "x-i18n": { en: { title: "M", description: "d" }, fr: { title: "M", description: "d" } } },
+        },
+      },
+    },
+  ];
+  const videoModels = [{ model_name: "wan-hosted", category: "video", status: "available" }];
+  assert.deepEqual(auditForms(bp({ "wan-hosted": ["16:9"] }), videoModels), []);
+  assert.ok(auditForms(bp({ "wan-hosted": ["4:3"] }), videoModels).some((f) => /aspect « 4:3 » is not in the enum/.test(f)));
+  assert.ok(auditForms(bp({}), videoModels).some((f) => /model « wan-hosted » declares no aspects/.test(f)));
+});
