@@ -65,7 +65,8 @@ RUN echo "core build ${CORE_REBUILD}" \
  && cp orazaka-apps/services/orazaka-studio/orazaka-studio-service/target/orazaka-studio-service-*[0-9T].jar /out/studio.jar \
  && cp orazaka-apps/services/orazaka-job-service/target/orazaka-job-service-*[0-9T].jar /out/job.jar \
  && cp orazaka-apps/services/orazaka-knowledge-service/target/orazaka-knowledge-service-*[0-9T].jar /out/knowledge.jar \
- && cp -r orazaka-packs /out/orazaka-packs
+ && cp -r orazaka-packs /out/orazaka-packs \
+ && cp -r orazaka-apps/workers/orazaka-worker-media /out/orazaka-worker-media
 
 # ── 3. Runtime: a JRE, the jars, one supervisor ──────────────────────────────
 FROM eclipse-temurin:21-jre@sha256:ccbad9e7cb84c27092b12c40a4143e5733e050db9c3784d84f632dcf423fb2ef
@@ -76,7 +77,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get install -y --no-install-recommends python3 python3-venv \
  && rm -rf /var/lib/apt/lists/* \
  && python3 -m venv /opt/validation-venv \
- && /opt/validation-venv/bin/pip install --no-cache-dir pika==1.4.4 pyyaml==6.0.3 pypdf==6.20.0
+ && /opt/validation-venv/bin/pip install --no-cache-dir pika==1.4.4 pyyaml==6.0.3 pypdf==6.20.0 cryptography==46.0.3 pillow==11.3.0 psutil==7.1.3
 RUN groupadd --system orazaka && useradd --system --gid orazaka --create-home orazaka
 WORKDIR /app
 COPY --from=build /out/ /app/

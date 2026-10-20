@@ -108,6 +108,6 @@ test("dev data says which categories an external worker runs: a model of those i
   const { readFileSync } = await import("node:fs");
   const sql = readFileSync(new URL("../../infra/deploy/dev-data.sql", import.meta.url), "utf8");
   assert.match(sql, /CREATE TABLE IF NOT EXISTS model_category_queue/);
-  assert.match(sql, /\('video', 'job\.video\.generate'\)/);
-  assert.match(sql, /ON CONFLICT \(category\) DO NOTHING/);
+  assert.match(sql, /\('video', FALSE, 'job\.video\.generate'\)/);
+  assert.match(sql, /ON CONFLICT \(category, hosted\) DO NOTHING/);
 });
