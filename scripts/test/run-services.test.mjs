@@ -49,6 +49,7 @@ test("a stopped container takes its worker down: SIGTERM ends the supervisor and
     kill -TERM $sup
     for i in 1 2 3 4 5 6 7 8 9 10; do kill -0 $sup 2>/dev/null || break; sleep 0.5; done
     kill -0 $sup 2>/dev/null && echo "supervisor-alive" || echo "supervisor-gone"
+    for i in 1 2 3 4 5 6 7 8 9 10; do pgrep -f "sleep 31337" >/dev/null || break; sleep 0.2; done
     pgrep -f "sleep 31337" >/dev/null && echo "worker-alive" || echo "worker-gone"
     pkill -f "sleep 31337" 2>/dev/null; true`);
   assert.match(r.stdout, /supervisor-gone/, r.stdout + r.stderr);
