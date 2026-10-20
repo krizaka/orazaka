@@ -1060,6 +1060,10 @@
       "to": "krizaka-messaging"
     },
     {
+      "from": "orazaka-automation-service",
+      "to": "krizaka-security"
+    },
+    {
       "from": "orazaka-business",
       "to": "orazaka-core"
     },
