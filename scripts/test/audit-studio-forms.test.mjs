@@ -51,12 +51,63 @@ test("an empty enum, a missing language, a long helper and an unlabelled value a
   assert.ok(found.some((f) => /no en label for « b »/.test(f)));
 });
 
-test("a field that is not a list is not audited", () => {
-  assert.deepEqual(auditForms(bp({ prompt: { type: "string" } }), models), []);
+test("a field that is not a list is audited too: no words in English and French is a finding (« Vos données » on the English page)", () => {
+  const found = auditForms(
+    bp({
+      data: { type: "string", title: "Vos données", description: "Un CSV." },
+      question: { type: "string", format: "prose", "x-i18n": { en: { title: "Your question", description: "What you want to see." } } },
+      count: { type: "integer", "x-i18n": { en: { title: "Count", description: "How many." }, fr: { title: "Nombre", description: "Combien." } } },
+    }),
+    models,
+  );
+  assert.ok(found.some((f) => /#data: no en title and helper/.test(f)), found.join("\n"));
+  assert.ok(found.some((f) => /#data: no fr title and helper/.test(f)), found.join("\n"));
+  assert.ok(found.some((f) => /#question: no fr title and helper/.test(f)), found.join("\n"));
+  assert.ok(!found.some((f) => /#count/.test(f)), "a number has words and needs no placeholder");
+});
+
+test("a free-text field also needs its placeholder in both languages; a number, a seed, a file and a list do not", () => {
+  const text = (extra = {}) => ({
+    type: "string",
+    "x-i18n": { en: { title: "T", description: "d", ...extra.en }, fr: { title: "T", description: "d", ...extra.fr } },
+  });
+  const found = auditForms(
+    bp({
+      noPh: text(),
+      oneLang: text({ en: { placeholder: "x" } }),
+      ok: text({ en: { placeholder: "x" }, fr: { placeholder: "y" } }),
+      seed: { ...text(), "x-control": "seed" },
+      file: { ...text(), format: "asset:image" },
+      files: { ...text(), type: "array", items: { type: "string", format: "asset-id" } },
+      ids: { ...text(), type: "array", items: { type: "string" } },
+    }),
+    models,
+  );
+  assert.ok(found.some((f) => /#noPh: no en placeholder/.test(f)), found.join("\n"));
+  assert.ok(found.some((f) => /#noPh: no fr placeholder/.test(f)), found.join("\n"));
+  assert.ok(found.some((f) => /#oneLang: no fr placeholder/.test(f)) && !found.some((f) => /#oneLang: no en placeholder/.test(f)));
+  assert.ok(found.some((f) => /#ids: no en placeholder/.test(f)));
+  for (const quiet of ["ok", "seed", "file", "files"]) assert.ok(!found.some((f) => f.includes(`#${quiet}:`)), `${quiet}: ${found.join("\n")}`);
+});
+
+test("a helper over 140 characters is a finding on any field, not only on a list", () => {
+  const found = auditForms(
+    bp({ long: { type: "integer", "x-i18n": { en: { title: "T", description: "y".repeat(141) }, fr: { title: "T", description: "d" } } } }),
+    models,
+  );
+  assert.ok(found.some((f) => /#long: en helper is 141 characters/.test(f)), found.join("\n"));
 });
 
 test("dev data makes the default video model the hosted one, which answers without a GPU droplet", async () => {
   const { readFileSync } = await import("node:fs");
   const sql = readFileSync(new URL("../../infra/deploy/dev-data.sql", import.meta.url), "utf8");
   assert.match(sql, /UPDATE orazaka_models SET is_default = \(model_name = 'wan2-2-t2v-a14b'\) WHERE category = 'video'/);
+});
+
+test("dev data says which categories an external worker runs: a model of those is runnable only while a worker drains their queue", async () => {
+  const { readFileSync } = await import("node:fs");
+  const sql = readFileSync(new URL("../../infra/deploy/dev-data.sql", import.meta.url), "utf8");
+  assert.match(sql, /CREATE TABLE IF NOT EXISTS model_category_queue/);
+  assert.match(sql, /\('video', 'job\.video\.generate'\)/);
+  assert.match(sql, /ON CONFLICT \(category\) DO NOTHING/);
 });
