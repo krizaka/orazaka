@@ -23,12 +23,25 @@ const median = (values) => {
 
 const round = (n, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
 
+/** The catalogue's video models, as a person reads them (orazaka-worker-media models.yaml). */
+export const VIDEO_LABELS = {
+  "wan2.2-i2v-a14b": "Wan 2.2 I2V A14B (4-step distill)",
+  "wan2.2-i2v-a14b-hq": "Wan 2.2 I2V A14B (40 steps)",
+  "ltx-video-0.9.8-13b-distilled": "LTX-Video 0.9.8 13B distilled",
+};
+
+/** The video models a production's shots name (a planned treatment names one per shot), in order of first use. */
+function videoModels(script) {
+  const named = [...new Set((script?.shots ?? []).map((s) => s.model).filter(Boolean))];
+  return named.length ? named.map((m) => VIDEO_LABELS[m] ?? m).join(", ") : VIDEO_LABELS["wan2.2-i2v-a14b"];
+}
+
 /**
  * One film's record: production file + the film's probe + the GPU rate. GPU seconds are the platform's run times of the
  * GPU steps (queue wait included: what the pod was held for); the wall time runs from the first run's start to the last
  * run's finish.
  */
-export function filmRecord({ id, production, probe, rate, command }) {
+export function filmRecord({ id, production, probe, rate, command, gpu, models }) {
   const history = production.history ?? [];
   const script = production.script?.parsed;
   const ok = history.filter((r) => r.status === "SUCCEEDED");
@@ -53,14 +66,18 @@ export function filmRecord({ id, production, probe, rate, command }) {
     soundRunId: production.sound?.runId,
     gpuSeconds: Math.round(gpuSeconds),
     gpuUsd: round((gpuSeconds / 3600) * rate),
+    ...(gpu ? { gpu } : {}),
+    rate,
     productionSeconds: starts.length && ends.length ? Math.round((Math.max(...ends) - Math.min(...starts)) / 1000) : null,
     models: {
       script: production.brief.scriptModel ?? "the catalogue's chat default",
       image: "FLUX.2 [klein] 4B",
-      video: "Wan 2.2 I2V A14B (4-step distill)",
+      video: videoModels(script),
       upscale: "SeedVR2 3B",
       music: "ACE-Step 1.5 XL turbo",
       ...(script?.voiceover ? { voice: `Kokoro-82M (${production.brief.voice ?? "af_heart"})` } : {}),
+      // What ran outside the Studios for this film (a batch says it: keyframes on a Mac, a 4K upscale, a narrator).
+      ...(models ?? {}),
     },
     command,
   };
@@ -111,11 +128,13 @@ export function mdCinema(data) {
   if (!data?.films?.length) return [];
   const lines = ["## Cinematic shorts", ""];
   lines.push(
-    `${data.films.length} film(s) made by \`orazaka cinema\` on **${data.measuredOn}** (ADR-080), every step an ordinary Studio run on dev.orazaka.com: ` +
-      `script, character references and keyframes (FLUX.2 [klein]), shots (Wan 2.2 I2V A14B, 720p, 4 distilled steps, on ${data.gpu}), ` +
-      "the cut (SeedVR2 3B to 1080p, speed ramps, LUT grade, titles, synthesized foley), the voice-over and the music (ACE-Step).",
+    `${data.films.length} film(s) made by \`orazaka cinema\` (ADR-080, last measured **${data.measuredOn}**): ` +
+      "script or treatment, character references and keyframes (FLUX.2 [klein]), shots, the cut (SeedVR2 3B, speed ramps, LUT grade, " +
+      "titles, synthesized foley), the voice-over and the music (ACE-Step). Each film's shots, on its GPU:",
     "",
   );
+  for (const f of data.films) lines.push(`- **${f.title}**: ${f.models.video} on ${f.gpu ?? data.gpu}${f.models.upscale ? `, upscaled by ${f.models.upscale}` : ""}`);
+  lines.push("");
   lines.push("| Film | Frame | Length | Shots (reshot) | Runs (failed) | GPU time of its runs | At the GPU rate | Wall time |", "| --- | --- | --- | --- | --- | --- | --- | --- |");
   for (const f of data.films) {
     lines.push(
