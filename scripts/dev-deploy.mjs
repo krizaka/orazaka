@@ -14,8 +14,8 @@
  *   node scripts/dev-deploy.mjs broker      # the TLS RabbitMQ Droplet in the tor1 VPC (once; idempotent)
  *   node scripts/dev-deploy.mjs status
  *
- * Secrets are read through `~/.krizaka-worktrees/tools/secret.sh @dev KEY` (the company folder's `env/dev.env`, then
- * `env/org.env`), or from one file given with `--env-file ~/Documents/krizaka/env/dev.env` (or ORAZAKA_DEV_ENV_FILE);
+ * Secrets are read through `~/.krizaka-worktrees/tools/secret.sh @orazaka KEY` (secrets.map: `env/orazaka.env` — the keys that
+ * differ for Orazaka, its Bunny zone — then `env/dev.env`, then `env/org.env`), or from one file given with `--env-file ~/Documents/krizaka/env/dev.env` (or ORAZAKA_DEV_ENV_FILE);
  * never from the repository, and never printed: each `__NAME__` of infra/deploy/<app>.app.yaml is filled from them and
  * App Platform stores the SECRET ones encrypted. `--env-file` may sit anywhere on the command line.
  */
