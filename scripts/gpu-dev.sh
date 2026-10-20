@@ -44,7 +44,7 @@ RELAY_URL="${GPU_RELAY_URL:-https://dev.orazaka.com/gpu-relay}"
 VOLUME_GB="${GPU_VOLUME_GB:-80}"
 IDLE_MINUTES="${GPU_IDLE_MINUTES:-30}"
 MAX_HOURS="${GPU_MAX_HOURS:-8}"
-ENV_FILE="${ORAZAKA_DEV_ENV_FILE:-$HOME/Documents/krizaka/orazaka-dev.env}"
+ENV_FILE="${ORAZAKA_DEV_ENV_FILE:-$HOME/Documents/krizaka/env/dev.env}"
 LEDGER="${GPU_LEDGER:-$HOME/Documents/krizaka/orazaka-gpu-ledger.tsv}"
 LOCAL="${GPU_LOCAL_DIR:-$HOME/.orazaka/gpu-dev}"
 

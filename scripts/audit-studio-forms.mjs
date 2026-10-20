@@ -7,15 +7,12 @@
  * For the latest PUBLISHED blueprint of every Studio, each field that should be a list (an `enum`, or `x-options`
  * fed by the model catalogue) is checked: it has at least one choice (a catalogue category with at least one
  * `available` model), its words exist in English and French (`x-i18n`), and its helper is one line (≤ 140
- * characters). Exits 1 on a finding. Secrets come from the dev secrets file (ORAZAKA_DEV_ENV_FILE, as dev-deploy),
+ * characters). Exits 1 on a finding. Secrets come from secret.sh @dev (or --env-file, as dev-deploy),
  * never printed.
  */
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readEnvFile } from "./dev-deploy.mjs";
+import { devSecrets, envFileFromArgs } from "./lib/dev-secrets.mjs";
 
 // @fixed: a helper is one line of the form (≤ 140 characters, the same limit as orazaka-packs/tests/closed-sets)
 export const HELPER_MAX = 140;
@@ -63,8 +60,8 @@ function query(env, db, passwordKey, sql) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const file = process.env.ORAZAKA_DEV_ENV_FILE ?? join(homedir(), "Documents/krizaka/orazaka-dev.env");
-  const env = readEnvFile(readFileSync(file, "utf8"));
+  const { envFile } = envFileFromArgs(process.argv.slice(2));
+  const env = devSecrets({ envFile });
   const blueprints = query(
     env,
     "orazaka_studio_db",
