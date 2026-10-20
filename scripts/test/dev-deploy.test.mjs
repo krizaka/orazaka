@@ -222,6 +222,7 @@ test("service accounts sit on the `service` rate-limit tier, whose migration is 
   assert.equal(serviceAccount("orochia").tier, "service");
   const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-service-rate-tier.sql", import.meta.url), "utf8");
   assert.match(sql, /VALUES \('service', 1000, 20, FALSE\)\s*ON CONFLICT \(tier_key\) DO NOTHING/);
+  assert.match(sql, /INSERT INTO rate_limit_tiers \(id, capacity, refill_tokens, refill_seconds\)\s*VALUES \('service', 1000, 1000, 60\)/, "users.rate_limit_tier has a foreign key to rate_limit_tiers");
   assert.match(sql, /UPDATE users SET rate_limit_tier = 'service'\s*WHERE username LIKE 'svc\\_%'/);
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "service-tier"\) serviceTier\(\)/);
 });
