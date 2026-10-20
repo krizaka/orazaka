@@ -130,7 +130,7 @@ Cut-over (the old app serves the live console until step 3):
 
 ## Deploy
 
-Secrets never enter the repository: `~/Documents/krizaka/orazaka-dev.env` (mode 600) holds the database role
+Secrets never enter the repository: `~/Documents/krizaka/env/dev.env` (mode 600; read through `~/.krizaka-worktrees/tools/secret.sh @dev KEY`, or give it with `--env-file`) holds the database role
 passwords (`DATABASE_PASSWORD_<DB>`, read with `doctl databases user get`), `IDENTITY_JWT_SECRET`, `CRYPTO_KEY`,
 `CRYPTO_SALT` (16 hex), `MEDIA_ENCRYPTION_KEY` (32 bytes, base64 — the asset keyring), `RABBITMQ_PASS`,
 `NEXTAUTH_SECRET_WEB`, `NEXTAUTH_SECRET_ADMIN` and `AI_INFERENCE_KEY` (a **model access key**, created in the control
@@ -235,6 +235,16 @@ on it dials **out** to `https://dev.orazaka.com/gpu-relay` (App Platform's TLS, 
 (sd-server), `gpu-relay:8188` (the video pipeline) and `gpu-relay:11434` (Ollama: `qwen2.5:7b` for the Studios'
 text steps, `llava` for their photo steps — sovereign, Apache-2.0 / open weights, while the GPU runs). The broker stays VPC-only. While no GPU is connected nothing
 listens on `gpu-relay:8086/8188`, which is exactly what greys the image and video capabilities out.
+
+**A model is offered as runnable only while something can run it** (2026-10-20). The video jobs (`job.video.generate`, and the
+sound ones) are drained by an external worker — the media worker, on a GPU or the Mac — and the job service lists in
+`model_category_queue` (data, `infra/deploy/dev-data.sql`) the categories that depend on one. A model of such a category is
+runnable when its engine answers **and** a `HEALTHY` worker of the registry is bound to that queue; otherwise it stays in the
+Studio's list, greyed out with a short reason in the page's language (« GPU offline » for a self-hosted model, « Engine offline »
+for the hosted Wan that the worker routes), is never the default, and a run that still names it — or leaves the model on automatic
+while none can run — is refused at start (« no video model is available right now »), before any credit is held, instead of
+waiting for a machine. The registry is advisory (ADR-038): a database without the table greys nothing out. Nothing starts a GPU on
+demand here: the pod or the Mac is started by hand (`gpu-dev.sh`), and the model comes back a minute after its worker registers.
 
 **Outputs.** The droplet keeps nothing: the worker hands each clip to the job service (`PUT
 /internal/v1/jobs/{id}/output/{file}`, a `SERVICE` token minted by `gpu-dev.sh` from the identity secret — which never

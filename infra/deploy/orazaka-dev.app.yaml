@@ -163,6 +163,8 @@ services:
       # The serverless-inference model access key (`orazaka-dev`). Routing reads it from ai_providers
       # (dev-data.sql); kept here as the deployment's copy of record.
       - { key: AI_INFERENCE_KEY, scope: RUN_TIME, type: SECRET, value: "__AI_INFERENCE_KEY__" }
+      # The all-models key (it lists the hosted Wan): read by the hosted-video worker of this container (run-services.sh).
+      - { key: AI_INFERENCE_KEY_ALL, scope: RUN_TIME, type: SECRET, value: "__AI_INFERENCE_KEY_ALL__" }
       # Spend guards (tokens must not burn): a daily budget for paid providers (chat, embeddings, video), clips per day, requests per service key per day.
       - { key: AI_SPEND_DAILY_BUDGET_USD, scope: RUN_TIME, value: "5" }
       - { key: AI_VIDEO_DAILY_RUNS, scope: RUN_TIME, value: "5" }

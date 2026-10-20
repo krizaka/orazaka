@@ -86,4 +86,26 @@ UPDATE orazaka_models SET is_default = (model_name = 'wan2-2-t2v-a14b') WHERE ca
 UPDATE orazaka_models SET typical_seconds = 15 WHERE model_name = 'ltx-video-0.9.8-13b-distilled' AND typical_seconds IS NULL;
 UPDATE orazaka_models SET typical_seconds = 1080 WHERE model_name = 'wan2.2-i2v-a14b-hq' AND typical_seconds IS NULL;
 
+-- Which model categories an EXTERNAL worker runs (the media worker, on a GPU or the Mac), and the queue their jobs wait in
+-- (krizaka/orazaka-job-service, ModelOptionsService): a model of such a category is offered as runnable only while a HEALTHY
+-- worker of worker_registry drains that queue, otherwise it is greyed out (« GPU offline ») and a run on it is refused by name
+-- instead of waiting for « a machine » for ever. Same table and rows as infra/initdb/30-jobs-config.sql of the job service.
+CREATE TABLE IF NOT EXISTS model_category_queue (
+    category    VARCHAR(50)  NOT NULL,
+    hosted      BOOLEAN      NOT NULL DEFAULT FALSE,
+    routing_key VARCHAR(120) NOT NULL CHECK (routing_key LIKE 'job.%')
+);
+-- The first version of this table had no `hosted` column and category alone as its key: migrated in place, idempotent.
+ALTER TABLE model_category_queue ADD COLUMN IF NOT EXISTS hosted BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE model_category_queue DROP CONSTRAINT IF EXISTS model_category_queue_pkey;
+ALTER TABLE model_category_queue ADD PRIMARY KEY (category, hosted);
+-- hosted = a model a provider serves: its jobs wait in their own queue, drained by the cheap CPU « hosted-video » worker of the core
+-- container (no GPU), so a GPU worker that is off never greys the hosted Wan out; self-hosted models wait for the GPU worker.
+INSERT INTO model_category_queue (category, hosted, routing_key) VALUES
+    ('video', FALSE, 'job.video.generate'),
+    ('video', TRUE,  'job.hostedvideo.generate'),
+    ('music', FALSE, 'job.sound.generate'),
+    ('foley', FALSE, 'job.sound.generate')
+ON CONFLICT (category, hosted) DO NOTHING;
+
 COMMIT;
