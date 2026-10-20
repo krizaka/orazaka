@@ -21,14 +21,14 @@ tauri-plugin-autostart = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 notify = "8"
-base64 = "0.22"
+base64 = "0.23"
 url = "2"
 # automations (ADR-079): schedule in local time, hash-chained audit, run ids, the model port, PDF text
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
-sha2 = "0.10"
+sha2 = "0.11"
 uuid = { version = "1", features = ["v4"] }
 ureq = { version = "2", default-features = false, features = ["json", "tls"] }
-pdf-extract = "0.9"
+pdf-extract = "0.12"
 
 [dev-dependencies]
 tempfile = "3"

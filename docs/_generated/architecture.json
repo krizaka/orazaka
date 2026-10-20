@@ -2740,6 +2740,7 @@
       "status": "PUBLISHED",
       "showcase": true,
       "category": "creativity-media",
+      "categorySortWeight": 80,
       "iconKey": "studio",
       "sortWeight": 100,
       "pricing": {
@@ -2845,6 +2846,7 @@
       "status": "PUBLISHED",
       "showcase": true,
       "category": "creativity-media",
+      "categorySortWeight": 80,
       "iconKey": "image",
       "sortWeight": 90,
       "pricing": {
@@ -3645,6 +3647,7 @@
       "status": "PUBLISHED",
       "showcase": true,
       "category": "business-compliance",
+      "categorySortWeight": 100,
       "iconKey": "target",
       "sortWeight": 90,
       "pricing": {
@@ -3844,6 +3847,7 @@
       "status": "PUBLISHED",
       "showcase": true,
       "category": "data-analytics",
+      "categorySortWeight": 70,
       "iconKey": "chart",
       "sortWeight": 40,
       "pricing": {
@@ -4044,6 +4048,7 @@
       "status": "PUBLISHED",
       "showcase": true,
       "category": "wellbeing",
+      "categorySortWeight": 60,
       "iconKey": "sparkles",
       "sortWeight": 30,
       "pricing": {
@@ -4252,6 +4257,7 @@
       "status": "PUBLISHED",
       "showcase": true,
       "category": "business-compliance",
+      "categorySortWeight": 100,
       "iconKey": "shield-check",
       "sortWeight": 20,
       "pricing": {
@@ -4440,6 +4446,7 @@
       "status": "DRAFT",
       "showcase": false,
       "category": "business-compliance",
+      "categorySortWeight": 100,
       "iconKey": "repeat",
       "sortWeight": 5,
       "pricing": {
@@ -4522,6 +4529,7 @@
       "status": "UNLISTED",
       "showcase": true,
       "category": null,
+      "categorySortWeight": null,
       "iconKey": null,
       "sortWeight": null,
       "pricing": null,
@@ -4613,6 +4621,7 @@
       "status": "UNLISTED",
       "showcase": true,
       "category": null,
+      "categorySortWeight": null,
       "iconKey": null,
       "sortWeight": null,
       "pricing": null,
@@ -4696,6 +4705,7 @@
       "status": "UNLISTED",
       "showcase": true,
       "category": null,
+      "categorySortWeight": null,
       "iconKey": null,
       "sortWeight": null,
       "pricing": null,
@@ -4800,6 +4810,7 @@
       "status": "UNLISTED",
       "showcase": true,
       "category": null,
+      "categorySortWeight": null,
       "iconKey": null,
       "sortWeight": null,
       "pricing": null,
