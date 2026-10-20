@@ -9,6 +9,7 @@
  *   node scripts/dev-deploy.mjs analytics        # the analytics tables, kinds and settings v1 (ADR-081)
  *   node scripts/dev-deploy.mjs service-tier     # the `service` rate-limit tier, svc_* users moved onto it (ADR-083)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
+ *   node scripts/dev-deploy.mjs persona     # Eric, the demo persona (a plain user, free tier) → @dev APP_QA_ORAZAKA_PERSONA_*, never printed; sign-up stays closed
  *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
  *   node scripts/dev-deploy.mjs broker      # the TLS RabbitMQ Droplet in the tor1 VPC (once; idempotent)
@@ -221,6 +222,15 @@ const ACCOUNTS = [
   { key: "admin", username: "qa_admin", email: "qa+admin@orazaka.com", tier: "admin", roles: ["ROLE_USER", "ROLE_ADMIN"] },
 ];
 
+/**
+ * The demo persona of the dev environment: who signs in for a recording (rule « videos of real use cases »: a named
+ * persona, never the QA account on screen). A plain ROLE_USER on the free tier, an e-mail on a reserved domain
+ * (RFC 2606, never delivered). Sign-up stays closed: the account is put through the same seed as the QA ones.
+ */
+export function personaAccount() {
+  return { key: "persona", username: "Eric", email: "eric.morel@example.com", tier: "free", roles: ["ROLE_USER"] };
+}
+
 export function seedSql(accounts) {
   const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
   const rows = accounts.map(
@@ -273,6 +283,17 @@ _Injectés dans \`krizaka_users_db\` (cluster \`krizaka-dev-pg\`) par \`node scr
   }
   writeFileSync(QA_FILE, qa);
   console.log(`seeded ${accounts.map((a) => a.email).join(", ")} — passwords written to ${QA_FILE} only`);
+}
+
+/** Eric on dev: created or refreshed (a re-run gives him a new password), the credentials stored in @dev only. */
+function seedPersona() {
+  const env = secrets();
+  const persona = personaAccount();
+  const pw = password();
+  psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], seedSql([{ ...persona, hash: bcrypt(pw) }]));
+  storeSecret("APP_QA_ORAZAKA_PERSONA_EMAIL", persona.email);
+  storeSecret("APP_QA_ORAZAKA_PERSONA_PASSWORD", pw);
+  console.log(`seeded the persona ${persona.username} (${persona.email}) — credentials stored in @dev (APP_QA_ORAZAKA_PERSONA_*), never printed`);
 }
 
 // ── Service accounts: a Krizaka product calling Orazaka (products consume AI only through Orazaka) ──
@@ -530,11 +551,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "webhooks") webhooks();
     else if (command === "automations") automations();
     else if (command === "seed") seed();
+    else if (command === "persona") seedPersona();
     else if (command === "service-account") await createServiceAccount(rest[0], rest.slice(1));
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | service-tier | webhooks | automations | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {
