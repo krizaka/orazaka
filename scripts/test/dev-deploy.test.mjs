@@ -1,8 +1,10 @@
 // node --test scripts/test — the dev deployment tool: specs are filled, never leaked, accounts are sound.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
-import { connectionVars, grantSql, parseScopes, password, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
+import { connectionVars, grantSql, parseScopes, password, readEnvFile, render, seedSql, serviceAccount, setQaEnv, upsertEnv } from "../dev-deploy.mjs";
 
 const spec = (name) => readFileSync(new URL(`../../infra/deploy/${name}.app.yaml`, import.meta.url), "utf8");
 
@@ -163,6 +165,18 @@ test("parseScopes: area:action only, none = unscoped", () => {
   assert.throws(() => parseScopes("embed"), /not a scope/);
   assert.throws(() => parseScopes("AI:embed"), /not a scope/);
   assert.throws(() => parseScopes("*:*"), /not a scope/);
+});
+
+test("setQaEnv replaces only its own keys, keeps the rest, and writes mode 0600", () => {
+  const file = join(mkdtempSync(join(tmpdir(), "qa-env-")), "store.env");
+  setQaEnv(file, { OTHER_KEY: "keep-me", ORAZAKA_USER_PASSWORD: "old" });
+  setQaEnv(file, { ORAZAKA_USER_PASSWORD: "new", ORAZAKA_USER_EMAIL: "qa+user@orazaka.com" });
+  assert.deepEqual(readEnvFile(readFileSync(file, "utf8")), {
+    OTHER_KEY: "keep-me",
+    ORAZAKA_USER_PASSWORD: "new",
+    ORAZAKA_USER_EMAIL: "qa+user@orazaka.com",
+  });
+  assert.equal(statSync(file).mode & 0o777, 0o600);
 });
 
 test("the core image build cache is busted at every apply: CORE_REBUILD is filled, and the Dockerfile reads it", () => {

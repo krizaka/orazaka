@@ -7,7 +7,7 @@
  *   node scripts/dev-deploy.mjs policy      # infra/deploy/dev-content-policy.sql into orazaka_studio_db (docs/CONTENT_POLICY.md)
  *   node scripts/dev-deploy.mjs recommendations  # the recommender's tables on orazaka_knowledge_db (ADR-078)
  *   node scripts/dev-deploy.mjs analytics        # the analytics tables, kinds and settings v1 (ADR-081)
- *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
+ *   node scripts/dev-deploy.mjs seed        # the two test accounts → the local QA store (0600), never printed
  *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
  *   node scripts/dev-deploy.mjs broker      # the TLS RabbitMQ Droplet in the tor1 VPC (once; idempotent)
@@ -19,7 +19,7 @@
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -28,7 +28,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DEPLOY = join(ROOT, "infra/deploy");
 const PROJECT = "orazaka";
 const ENV_FILE = process.env.ORAZAKA_DEV_ENV_FILE ?? join(homedir(), "Documents/krizaka/orazaka-dev.env");
-const QA_FILE = process.env.ORAZAKA_QA_FILE ?? join(homedir(), "krizaka-com/company/QA.md");
+const QA_ENV_FILE = process.env.ORAZAKA_QA_ENV_FILE ?? join(homedir(), "Documents/krizaka/qa.env");
 /** Placeholders that are settings, not secrets, and their defaults. */
 /** CORE_REBUILD busts the image build cache of the core component at every apply (see infra/deploy/Dockerfile). */
 const DEFAULTS = { CORE_REBUILD: new Date().toISOString().replace(/[:.]/g, "-") };
@@ -225,32 +225,29 @@ function seed() {
   });
   psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], seedSql(accounts));
   const [user, admin] = accounts;
-  const today = new Date().toISOString().slice(0, 10);
-  const block = `### Orazaka (ORA-DEPLOY, ${today})
+  setQaEnv(QA_ENV_FILE, {
+    ORAZAKA_USER_EMAIL: user.email,
+    ORAZAKA_USER_PASSWORD: user.password,
+    ORAZAKA_ADMIN_EMAIL: admin.email,
+    ORAZAKA_ADMIN_PASSWORD: admin.password,
+  });
+  console.log(`seeded ${accounts.map((a) => a.email).join(", ")} — passwords written to the QA store only (${QA_ENV_FILE})`);
+}
 
-_Injectés dans \`krizaka_users_db\` (cluster \`krizaka-dev-pg\`) par \`node scripts/dev-deploy.mjs seed\` (krizaka/orazaka) ; relancer la commande = nouveaux mots de passe. Inscription fermée (\`AUTH_SIGNUP_ENABLED=false\`, le backend répond 403)._
-
-**Orazaka web — utilisateur** (ROLE_USER)
-- URL : https://dev.orazaka.com/login
-- E-mail : \`${user.email}\`
-- Mot de passe : \`${user.password}\`
-
-**Orazaka admin** (ROLE_ADMIN)
-- URL : https://admin.orazaka.com/login
-- E-mail : \`${admin.email}\`
-- Mot de passe : \`${admin.password}\`
-`;
-  let qa = readFileSync(QA_FILE, "utf8");
-  const start = qa.indexOf("### Orazaka (ORA-DEPLOY");
-  if (start >= 0) {
-    const next = qa.slice(start + 1).search(/\n## |\n### /);
-    qa = qa.slice(0, start) + block + (next >= 0 ? qa.slice(start + 1 + next) : "");
-  } else {
-    const anchor = qa.indexOf("\n## ", qa.indexOf("## Comptes de test") + 1);
-    qa = anchor >= 0 ? `${qa.slice(0, anchor)}\n${block}${qa.slice(anchor)}` : `${qa}\n${block}`;
-  }
-  writeFileSync(QA_FILE, qa);
-  console.log(`seeded ${accounts.map((a) => a.email).join(", ")} — passwords written to ${QA_FILE} only`);
+/**
+ * Sets KEY=value lines in the local QA store (mode 0600): the given keys are replaced, every other line is kept.
+ * Values are written, never returned or printed.
+ */
+export function setQaEnv(file, pairs) {
+  const kept = existsSync(file)
+    ? readFileSync(file, "utf8")
+        .split("\n")
+        .filter((line) => line && !Object.hasOwn(pairs, line.split("=", 1)[0]))
+    : [];
+  const lines = [...kept, ...Object.entries(pairs).map(([k, v]) => `${k}=${v}`)];
+  mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
+  writeFileSync(file, `${lines.join("\n")}\n`, { mode: 0o600 });
+  chmodSync(file, 0o600);
 }
 
 // ── Service accounts: a Krizaka product calling Orazaka (products consume AI only through Orazaka) ──
