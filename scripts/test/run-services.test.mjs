@@ -62,3 +62,44 @@ test("the container stops its supervised workers when it stops (stop_all signals
   assert.match(text, /workers\+=\("\$!"\)/);
   assert.match(text, /for pid in "\$\{pids\[@\]\}" "\$\{workers\[@\]\}"; do kill -TERM/);
 });
+
+// ── The hosted-video worker: dev's cheap, always-on consumer for the models a provider serves (no GPU) ──
+const root = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+
+test("the supervisor starts the hosted-video worker by default, beside the validation worker", () => {
+  const sh = root("infra/deploy/run-services.sh");
+  assert.match(sh, /ORAZAKA_WORKERS-validation hosted-video/);
+  assert.match(sh, /hosted-video\)\s*\n\s*echo "\[run-services\] starting the hosted-video worker \(supervised\)"/);
+});
+
+test("the hosted-video worker is the media worker in hosted-only mode, on the lean venv, handing its output to the job service", () => {
+  const sh = root("infra/deploy/run-services.sh");
+  const fn = sh.slice(sh.indexOf("run_hosted_video_worker()"), sh.indexOf("# The Python workers of the packs"));
+  assert.match(fn, /MEDIA_WORKER_HOSTED_ONLY=true/);
+  assert.match(fn, /orazaka-worker-media/);
+  assert.match(fn, /MEDIA_ASSET_SINK_URL=http:\/\/localhost:8090/);
+  assert.match(fn, /JOB_SERVICE_INTERNAL_URL=http:\/\/localhost:8090/);
+  assert.match(fn, /AI_INFERENCE_KEY="\$\{AI_INFERENCE_KEY_ALL:-\$\{AI_INFERENCE_KEY:-\}\}"/, "the all-models key lists the hosted Wan");
+  assert.match(fn, /exec .*-m app\.consumer/);
+});
+
+test("the image carries the worker and only its lean dependencies: no torch, no GPU library", () => {
+  const docker = root("infra/deploy/Dockerfile");
+  assert.match(docker, /cp -r orazaka-apps\/workers\/orazaka-worker-media \/out\/orazaka-worker-media/);
+  const pip = docker.match(/pip install --no-cache-dir ([^\n]*)/)?.[1] ?? "";
+  for (const needed of ["pika==", "pyyaml==", "cryptography==", "pillow=="]) assert.ok(pip.toLowerCase().includes(needed), `${needed} in ${pip}`);
+  for (const heavy of ["torch", "diffusers", "mlx", "transformers"]) assert.ok(!pip.includes(heavy), heavy);
+});
+
+test("the app spec gives the core container the all-models inference key as a SECRET placeholder", () => {
+  const spec = root("infra/deploy/orazaka-dev.app.yaml");
+  assert.match(spec, /key: AI_INFERENCE_KEY_ALL, scope: RUN_TIME, type: SECRET, value: "__AI_INFERENCE_KEY_ALL__"/);
+});
+
+test("dev data gives hosted video its own queue, and migrates the table of the first version in place", () => {
+  const sql = root("infra/deploy/dev-data.sql");
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS hosted BOOLEAN NOT NULL DEFAULT FALSE/);
+  assert.match(sql, /\('video', TRUE,\s+'job\.hostedvideo\.generate'\)/);
+  assert.match(sql, /\('video', FALSE,\s+'job\.video\.generate'\)/);
+  assert.match(sql, /ON CONFLICT \(category, hosted\) DO NOTHING/);
+});

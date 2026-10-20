@@ -23,7 +23,7 @@
 # the droplet destroys it after 30 min without a job (and after GPU_MAX_HOURS whatever it does).
 #
 # Requires doctl (authenticated), python3, curl, ssh-keygen. Secrets come from ORAZAKA_DEV_ENV_FILE (default
-# ~/Documents/krizaka/orazaka-dev.env) and are never printed. Each session is appended to the ledger
+# ~/Documents/krizaka/env/dev.env) and are never printed. Each session is appended to the ledger
 # (GPU_LEDGER, default ~/Documents/krizaka/orazaka-gpu-ledger.tsv) for `cost`.
 # A deployment exception to [ERR-125]: it drives a cloud resource, not the local workspace.
 # ==============================================================================

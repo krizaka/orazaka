@@ -90,14 +90,32 @@ run_validation_worker() {
     exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py
 }
 
+# The hosted-video worker: the media worker in hosted-only mode — a CPU consumer that calls the provider's API for the models a
+# provider serves (the hosted Wan 2.2), on a queue of its own (job.hostedvideo.*, which the GPU worker never matches). It needs
+# no GPU and no torch (the validation venv carries its lean dependencies), so hosted video runs on dev while the GPU pod or the Mac
+# is off. Its output goes to the job service next door, which seals it with the platform's key, like a GPU worker's.
+run_hosted_video_worker() {
+  cd "${ORAZAKA_APP_DIR:-/app}/orazaka-worker-media" || return 1
+  MEDIA_WORKER_HOSTED_ONLY=true MEDIA_WORKER_PORT="${ORAZAKA_HOSTED_VIDEO_PORT:-8189}" \
+  MEDIA_ASSET_SINK_URL=http://localhost:8090 JOB_SERVICE_INTERNAL_URL=http://localhost:8090 \
+  AI_INFERENCE_KEY="${AI_INFERENCE_KEY_ALL:-${AI_INFERENCE_KEY:-}}" \
+  SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
+    exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u -m app.consumer
+}
+
 # The Python workers of the packs, after the JVMs (the job service declares the topology they bind to). The dev broker
 # is TLS only: the worker reads the same RABBITMQ_* and SPRING_RABBITMQ_SSL_ENABLED as the services, and the CA file
 # written above (orazaka-packs document-validation/worker/broker.py).
-for worker in ${ORAZAKA_WORKERS-validation}; do
+for worker in ${ORAZAKA_WORKERS-validation hosted-video}; do
   case "$worker" in
     validation)
       echo "[run-services] starting the document-validation worker (supervised)"
       supervise validation run_validation_worker > >(sed -u "s/^/[validation] /") 2>&1 &
+      workers+=("$!")
+      ;;
+    hosted-video)
+      echo "[run-services] starting the hosted-video worker (supervised)"
+      supervise hosted-video run_hosted_video_worker > >(sed -u "s/^/[hosted-video] /") 2>&1 &
       workers+=("$!")
       ;;
     *) echo "[run-services] unknown worker: $worker" >&2 ;;

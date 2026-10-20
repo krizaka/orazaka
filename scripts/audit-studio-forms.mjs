@@ -4,10 +4,10 @@
  *
  *   node scripts/audit-studio-forms.mjs            # dev: orazaka_studio_db blueprints × orazaka_db models (read only)
  *
- * For the latest PUBLISHED blueprint of every Studio, each field that should be a list (an `enum`, or `x-options`
- * fed by the model catalogue) is checked: it has at least one choice (a catalogue category with at least one
- * `available` model), its words exist in English and French (`x-i18n`), and its helper is one line (≤ 140
- * characters). Exits 1 on a finding. Secrets come from secret.sh @dev (or --env-file, as dev-deploy),
+ * For the latest PUBLISHED blueprint of every Studio, each field is checked: its words exist in English and French
+ * (`x-i18n`: title and helper, and the placeholder of a free-text field) and its helper is one line (≤ 140
+ * characters); a field that should be a list (an `enum`, or `x-options` fed by the model catalogue) also has at least
+ * one choice (a catalogue category with at least one `available` model). Exits 1 on a finding. Secrets come from secret.sh @dev (or --env-file, as dev-deploy),
  * never printed.
  */
 import { spawnSync } from "node:child_process";
@@ -30,13 +30,16 @@ export function auditForms(blueprints, models) {
       const where = `${studioKey}@${version}#${key}`;
       const options = def["x-options"];
       const isList = Array.isArray(def.enum) || options?.source === "models";
-      if (!isList) continue;
-      if (Array.isArray(def.enum) && def.enum.length === 0) findings.push(`${where}: an empty enum draws an empty select`);
-      if (options) {
-        const category = String(options.category);
-        if (category !== category.toLowerCase()) findings.push(`${where}: category « ${category} » is not lowercase`);
-        if (offered(category.toLowerCase()).length === 0) findings.push(`${where}: no available model in the « ${category} » category`);
+      if (isList) {
+        if (Array.isArray(def.enum) && def.enum.length === 0) findings.push(`${where}: an empty enum draws an empty select`);
+        if (options) {
+          const category = String(options.category);
+          if (category !== category.toLowerCase()) findings.push(`${where}: category « ${category} » is not lowercase`);
+          if (offered(category.toLowerCase()).length === 0) findings.push(`${where}: no available model in the « ${category} » category`);
+        }
       }
+      // Every field speaks both languages, a list or not (« Vos données » showed on the English page): title and helper,
+      // and the example of a free-text field.
       for (const lang of ["en", "fr"]) {
         const words = def["x-i18n"]?.[lang];
         if (!words?.title || !words?.description) {
@@ -44,11 +47,26 @@ export function auditForms(blueprints, models) {
           continue;
         }
         if (words.description.length > HELPER_MAX) findings.push(`${where}: ${lang} helper is ${words.description.length} characters (max ${HELPER_MAX})`);
+        if (isFreeText(def) && !words.placeholder?.trim()) findings.push(`${where}: no ${lang} placeholder (x-i18n.${lang}.placeholder)`);
         for (const value of def.enum ?? []) if (!words.options?.[value]) findings.push(`${where}: no ${lang} label for « ${value} »`);
       }
     }
   }
   return findings;
+}
+
+const isUpload = (def) => typeof def?.format === "string" && def.format.startsWith("asset");
+
+/** A field a person types into: text or a list of typed values — not a choice, a seed, or a file picker. */
+function isFreeText(def) {
+  return (
+    (def.type === "string" || def.type === "array") &&
+    !Array.isArray(def.enum) &&
+    !def["x-options"] &&
+    !def["x-control"] &&
+    !isUpload(def) &&
+    !(def.type === "array" && isUpload(def.items))
+  );
 }
 
 function query(env, db, passwordKey, sql) {

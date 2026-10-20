@@ -43,7 +43,10 @@ test("orazaka-dev: only the edge, the web and the GPU relay are routed; the brok
 test("orazaka-dev serves the operator console on admin.orazaka.com: alias domain, its own session and flag, IP allow-list", () => {
   const text = spec("orazaka-dev");
   assert.match(text, /- domain: dev\.orazaka\.com\n    type: PRIMARY/);
-  assert.match(text, /- domain: admin\.orazaka\.com\n    type: ALIAS/);
+  // The alias is NOT in the spec for now: admin.orazaka.com still belongs to the app `orazaka-admin-dev`, and a domain belongs to
+  // one app (a spec naming it fails with « 409 App domain already exists »). It comes back — this assertion then flips — when the old
+  // app is deleted (48 h rule; orchestration.md « COST follow-up »: detach the domain from orazaka-admin-dev FIRST).
+  assert.doesNotMatch(text, /- domain: admin\.orazaka\.com/);
   // Same `web` component: no component of its own, no extra route, nothing paid.
   assert.deepEqual([...text.matchAll(/^  - name: (\S+)/gm)].map((m) => m[1]).sort(), ["core", "gpu-relay", "web"]);
   // The console's own flag, key and allow-list; the public site's NEXTAUTH_SECRET stays a different placeholder.
