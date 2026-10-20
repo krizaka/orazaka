@@ -55,9 +55,7 @@ jobs:
       - name: Derive the UI workspace lock from the cloned members
         # The members are cloned from their repositories' main: their dependency bumps must not break this build.
         working-directory: orazaka-apps/ui
-        # TRANSITION (remove once orazaka-web-client/-admin/-mobile-client declare ^3.27): @krizaka/ui 3.27 needs tokens ^3.27,
-        # while the members still declare ^3.26 on main. Resolve as of the day before 3.27 was published.
-        run: npm install --package-lock-only --legacy-peer-deps --no-audit --no-fund --before=2026-10-20T00:00:00Z
+        run: npm install --package-lock-only --legacy-peer-deps --no-audit --no-fund
 
       - name: Build and test the platform
         run: >
