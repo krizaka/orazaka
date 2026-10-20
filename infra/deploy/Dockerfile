@@ -67,7 +67,11 @@ RUN echo "core build ${CORE_REBUILD}" \
  && cp orazaka-apps/services/orazaka-knowledge-service/target/orazaka-knowledge-service-*[0-9T].jar /out/knowledge.jar \
  && cp orazaka-apps/services/orazaka-automation-service/target/orazaka-automation-service-*[0-9T].jar /out/automation.jar \
  && cp -r orazaka-packs /out/orazaka-packs \
- && cp -r orazaka-apps/workers/orazaka-worker-media /out/orazaka-worker-media
+ && cp -r orazaka-apps/workers/orazaka-worker-media /out/orazaka-worker-media \
+ && find /workspace -type d -name target -prune -exec rm -rf {} + \
+ && rm -rf /root/.m2/repository
+# ^ the jars are in /out: the builder snapshots this layer, and with the eighth service its size (every target/ and the
+#   local Maven repository) made the snapshot run out of memory (build exit -1). Nothing after this stage reads them.
 
 # ── 3. Runtime: a JRE, the jars, one supervisor ──────────────────────────────
 FROM eclipse-temurin:21-jre@sha256:ccbad9e7cb84c27092b12c40a4143e5733e050db9c3784d84f632dcf423fb2ef

@@ -25,3 +25,12 @@ test("no ADD line names a repository the workspace no longer lists", () => {
     assert.ok(names.has(m[1]), `${m[1]} is in orazaka.workspace.json`);
   }
 });
+
+test("the core build leaves nothing for the layer snapshot (jars copied out, target/ and the Maven repository removed): the eighth service made the snapshot run out of memory", () => {
+  const dockerfile = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
+  const build = dockerfile.slice(dockerfile.indexOf('RUN echo "core build'), dockerfile.indexOf("# ── 3. Runtime"));
+  assert.match(build, /\/out\/automation\.jar/);
+  assert.match(build, /find \/workspace -type d -name target -prune -exec rm -rf/);
+  assert.match(build, /rm -rf \/root\/\.m2\/repository/);
+  assert.ok(build.lastIndexOf("/out/orazaka-worker-media") < build.indexOf("rm -rf /root/.m2/repository"), "clean up after the last copy");
+});
