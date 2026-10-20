@@ -34,6 +34,17 @@ supervise() {
   done
 }
 
+# Waits until something listens on host:port (bash's /dev/tcp, no curl in the image), at most `timeout` seconds: 0 when it does, 1 when not.
+wait_port() {
+  local host="$1" port="$2" timeout="${3:-60}" waited=0
+  while (( waited < timeout )); do
+    if (exec 3<>"/dev/tcp/${host}/${port}") 2>/dev/null; then return 0; fi
+    sleep 1
+    waited=$(( waited + 1 ))
+  done
+  return 1
+}
+
 # The library mode of the tests (scripts/test/run-services.test.mjs): define, start nothing.
 if [[ "${RUN_SERVICES_LIB:-}" == "1" ]]; then return 0 2>/dev/null || exit 0; fi
 
@@ -81,6 +92,12 @@ for entry in $SERVICES; do
     > >(sed -u "s/^/[$name] /") 2>&1 &
   pids+=("$!")
   sleep "${ORAZAKA_START_STAGGER_SECONDS:-5}"
+  # Studio installs its packs at startup and asks the job service which routes exist: started while the job service was still
+  # booting (eight JVMs and the workers on 2 GB share the CPU), it refused the bundle and the container exited. So the next
+  # services wait for the job service's port (bounded: a job service that never comes up fails the container as before).
+  case "$name" in
+    job) wait_port localhost 8090 "${ORAZAKA_JOB_READY_TIMEOUT:-240}" || echo "[run-services] the job service did not answer in time; continuing" ;;
+  esac
 done
 
 # Runs in the supervisor's own background process (`"$@" &`), so `cd` stays local and `exec` makes the worker that very
