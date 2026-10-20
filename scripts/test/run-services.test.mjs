@@ -40,18 +40,19 @@ test("a failing worker is restarted with a doubling, capped backoff while the pl
 });
 
 test("a stopped container takes its worker down: SIGTERM ends the supervisor and the worker it supervises (no stray consumer)", () => {
+  // (pgrep -f would match this very script on Linux, so the pattern is written so that it cannot match its own text.)
   // Before: the supervisor had no TERM handler, so the container's `wait` hung on it until the platform's SIGKILL, and the
   // worker kept consuming the broker's queue next to the new deployment's worker (orazaka validation queue, 2026-10-20).
   const r = bash(`
-    supervise w sleep 31337 > /dev/null 2>&1 &
+    n=31337; supervise w sleep $n > /dev/null 2>&1 &
     sup=$!
     sleep 1
     kill -TERM $sup
     for i in 1 2 3 4 5 6 7 8 9 10; do kill -0 $sup 2>/dev/null || break; sleep 0.5; done
     kill -0 $sup 2>/dev/null && echo "supervisor-alive" || echo "supervisor-gone"
-    for i in 1 2 3 4 5 6 7 8 9 10; do pgrep -f "sleep 31337" >/dev/null || break; sleep 0.2; done
-    pgrep -f "sleep 31337" >/dev/null && echo "worker-alive" || echo "worker-gone"
-    pkill -f "sleep 31337" 2>/dev/null; true`);
+    for i in 1 2 3 4 5 6 7 8 9 10; do pgrep -f "sleep 3133[7]" >/dev/null || break; sleep 0.2; done
+    pgrep -f "sleep 3133[7]" >/dev/null && echo "worker-alive" || echo "worker-gone"
+    pkill -f "sleep 3133[7]" 2>/dev/null; true`);
   assert.match(r.stdout, /supervisor-gone/, r.stdout + r.stderr);
   assert.match(r.stdout, /worker-gone/, r.stdout + r.stderr);
 });
