@@ -98,7 +98,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 ## Commands
 
 ```cli-commands
-33 commands, 35 subcommands — every one in the table below.
+33 commands, 38 subcommands — every one in the table below.
 ```
 
 | Command | Description |
@@ -118,6 +118,9 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka cinema jobs <dir>` | The pending shots as jobs for a GPU host that runs the worker's own generator |
 | `orazaka cinema take <dir> <shot> <file>` | Record a take a GPU host made for a shot |
 | `orazaka cinema review <dir> <shot> <file>` | A take's review sheet: a frame every 8 under the cast's reference sheet |
+| `orazaka cinema treat <dir>` | Write the story of a brief (arc, intentions, purposeful shots, directed lines, music cues, sound list) and judge it |
+| `orazaka cinema critique <treatment>` | Judge a treatment against the rubric (arc, purpose, alive, on-topic, continuity, voice, music, sound) |
+| `orazaka cinema timeline <treatment>` | Place every line, music cue and sound of a treatment on the cut, and say which lines do not fit their shots |
 | `orazaka config` | Interactive configuration wizard — review and update .env variables |
 | `orazaka db` | Database maintenance operations |
 | `orazaka db reseed` | Drop & re-apply infra/initdb/*.sql (schema + seed). Destroys all local dev data. |
@@ -300,6 +303,43 @@ A take's review sheet: a frame every 8 under the cast's reference sheet
 | `<dir>` | The production's folder |
 | `<shot>` | The shot's number |
 | `<file>` | The take (mp4) |
+
+### `orazaka cinema treat <dir>`
+
+Write the story of a brief (arc, intentions, purposeful shots, directed lines, music cues, sound list) and judge it
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | Where the treatment and its critique are written |
+| `-l, --language <lang>` | en or fr (default: `en`) |
+| `-d, --duration <s>` | Seconds of film (default: `60`) |
+| `-a, --aspect <aspect>` | 16:9 or 9:16 (default: `16:9`) |
+| `--revisions <n>` | How many times a rejected draft goes back to the writer (default: `2`) |
+| `--no-judge` | The rubric alone decides (no language-model judge) |
+| `--model <name>` | The chat model of the writer and the judge |
+
+### `orazaka cinema critique <treatment>`
+
+Judge a treatment against the rubric (arc, purpose, alive, on-topic, continuity, voice, music, sound)
+
+| Argument / option | Description |
+|:---|:---|
+| `<treatment>` | The treatment (JSON) |
+| `-l, --language <lang>` | en or fr (default: `en`) |
+| `--judge` | Also ask the language-model judge (a cinematic-critique run) |
+| `--model <name>` | The judge's chat model |
+| `-o, --out <file>` | Write the critique (JSON) there |
+
+### `orazaka cinema timeline <treatment>`
+
+Place every line, music cue and sound of a treatment on the cut, and say which lines do not fit their shots
+
+| Argument / option | Description |
+|:---|:---|
+| `<treatment>` | The treatment (JSON) |
+| `-l, --language <lang>` | en or fr (default: `en`) |
+| `--voice <report>` | The voice step's report: [{id, seconds}] measured per line |
+| `--spans <file>` | The cut's own shot spans ([[start, end], …], e.g. the worker's cut.timeline) instead of back to back |
 
 ### `orazaka config`
 
