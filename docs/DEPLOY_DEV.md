@@ -161,6 +161,7 @@ node scripts/dev-deploy.mjs apply orazaka-dev --dry-run   # render + validate, n
 node scripts/dev-deploy.mjs apply orazaka-dev             # SECRET values are stored encrypted by App Platform
 node scripts/dev-deploy.mjs data                          # infra/deploy/dev-data.sql: providers + chat default
 node scripts/dev-deploy.mjs seed                          # test accounts → company/QA.md only
+node scripts/dev-deploy.mjs persona                       # Eric, the demo persona for recordings → @dev APP_QA_ORAZAKA_PERSONA_*, never printed
 node scripts/dev-deploy.mjs status
 ```
 

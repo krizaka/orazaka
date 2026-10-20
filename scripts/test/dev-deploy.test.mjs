@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
-import { connectionVars, grantSql, parseScopes, password, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
+import { connectionVars, grantSql, parseScopes, password, personaAccount, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
 
 const spec = (name) => readFileSync(new URL(`../../infra/deploy/${name}.app.yaml`, import.meta.url), "utf8");
 
@@ -102,6 +102,17 @@ test("seedSql gives the admin ROLE_ADMIN, the user only ROLE_USER, and quotes va
   assert.match(sql, /ON CONFLICT \(username\) DO UPDATE/);
 });
 
+
+test("the demo persona on dev is a first name on a reserved e-mail domain, a plain user, never a QA account", () => {
+  const p = personaAccount();
+  assert.equal(p.username, "Eric");
+  assert.match(p.email, /@example\.com$/);
+  assert.deepEqual(p.roles, ["ROLE_USER"]);
+  assert.equal(p.tier, "free");
+  assert.doesNotMatch(`${p.username} ${p.email}`, /qa|admin|svc/i);
+  const sql = seedSql([{ ...p, hash: "$2y$10$h" }]);
+  assert.equal((sql.match(/'ROLE_ADMIN'/g) ?? []).length, 0);
+});
 
 test("brokerUsersScript: two users, the GPU worker confined to orazaka.* names, guest removed, quoting safe", async () => {
   const { brokerUsersScript, BROKER_PERMISSIONS } = await import("../dev-deploy.mjs");
