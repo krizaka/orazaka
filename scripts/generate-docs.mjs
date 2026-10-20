@@ -29,6 +29,7 @@
  *   node scripts/generate-docs.mjs           regenerate docs/_generated/
  *   node scripts/generate-docs.mjs --check   fail (exit 1) if any output is stale
  */
+import { screenRoute } from "./lib/screen-route.mjs";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, basename, relative } from "node:path";
 import { buildModels, catalogue, manifestLicences, readmeLicences } from "./lib/model-registry.mjs";
@@ -2528,6 +2529,7 @@ function extractPackCatalog() {
         status,
         showcase: status !== "DRAFT",
         category: m.catalog?.categoryKey ?? null,
+        categorySortWeight: m.catalog?.category?.sortWeight ?? null,
         iconKey: m.catalog?.iconKey ?? null,
         sortWeight: m.catalog?.sortWeight ?? null,
         pricing: m.pricing ? { priceCents: m.pricing.priceCents ?? 0, includedCredits: m.pricing.includedCredits ?? 0 } : null,
@@ -2656,10 +2658,10 @@ function extractAdmin(api) {
   if (dir && existsSync(dir)) {
     for (const f of walk(join(dir, "app"), (p) => basename(p) === "page.tsx").sort()) {
       const s = read(f);
-      const route = "/" + relative(join(dir, "app"), join(f, "..")).split(/[/\\]/).join("/");
+      const route = screenRoute(relative(join(dir, "app"), join(f, "..")));
       const at = s.search(/export default function/);
       const tabs = [...s.matchAll(/\{\s*id:\s*"(\w+)",\s*label:\s*"([^"]+)"\s*\}/g)].map((m) => m[2]);
-      screens.push({ route: route === "/." || route === "/" ? "/" : route.replace(/\/\.$/, ""), summary: firstSentence(javadocAbove(s, at)), tabs });
+      screens.push({ route, summary: firstSentence(javadocAbove(s, at)), tabs });
     }
     for (const f of walk(join(dir, "services"), (p) => p.endsWith(".ts"))) {
       for (const m of read(f).matchAll(/["`](\/api\/v1\/[^"`?]+)/g)) called.add(m[1].replace(/\$\{[^}]+\}/g, "{}"));

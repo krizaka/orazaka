@@ -40,6 +40,22 @@ test("orazaka-dev: only the edge, the web and the GPU relay are routed; the brok
   assert.match(text, /SPRING_RABBITMQ_SSL_ENABLED, scope: RUN_TIME, value: "true"/);
 });
 
+test("orazaka-dev serves the operator console on admin.orazaka.com: alias domain, its own session and flag, IP allow-list", () => {
+  const text = spec("orazaka-dev");
+  assert.match(text, /- domain: dev\.orazaka\.com\n    type: PRIMARY/);
+  assert.match(text, /- domain: admin\.orazaka\.com\n    type: ALIAS/);
+  // Same `web` component: no component of its own, no extra route, nothing paid.
+  assert.deepEqual([...text.matchAll(/^  - name: (\S+)/gm)].map((m) => m[1]).sort(), ["core", "gpu-relay", "web"]);
+  // The console's own flag, key and allow-list; the public site's NEXTAUTH_SECRET stays a different placeholder.
+  assert.match(text, /AUTH_CONSOLE_LOGIN_ENABLED, scope: RUN_TIME, value: "true"/);
+  assert.match(text, /AUTH_CONSOLE_SECRET, scope: RUN_TIME, type: SECRET, value: "__NEXTAUTH_SECRET_ADMIN__"/);
+  assert.match(text, /NEXTAUTH_SECRET, scope: RUN_TIME, type: SECRET, value: "__NEXTAUTH_SECRET_WEB__"/);
+  assert.match(text, /AUTH_ALLOWED_IPS, scope: RUN_TIME, value: "[0-9., ]+"/);
+  assert.match(text, /AUTH_TRUST_HOST, scope: RUN_TIME, value: "true"/);
+  // The console's BFF reaches the edge inside the app, not through the public address.
+  assert.match(text, /ROUTER_URL, scope: RUN_TIME, value: "http:\/\/core:8088"/);
+});
+
 test("broker cloud-init: TLS only, bound to the private address, secrets as placeholders", () => {
   const text = readFileSync(new URL("../../infra/deploy/broker/cloud-init.yaml", import.meta.url), "utf8");
   // cloud-init drops the whole file on a non-ASCII byte ("unacceptable character #x0080").
@@ -200,4 +216,19 @@ test("connection budget: every JVM of the core goes through its PgBouncer pool (
     assert.match(url, /:25061\/pool-[a-z]+\?sslmode=require&prepareThreshold=0$/, `${key} must use its pool`);
   }
   assert.doesNotMatch(dev, /__DATABASE_PORT__/, "no direct (25060) datasource left in the core");
+});
+
+test("orazaka-dev: the universal-links settings are declared and empty by default (the web app then serves no AASA / assetlinks)", () => {
+  const text = spec("orazaka-dev");
+  assert.match(text, /key: APP_IOS_TEAM_ID, scope: RUN_TIME, value: "__APP_IOS_TEAM_ID__"/);
+  assert.match(text, /key: APP_ANDROID_CERT_SHA256, scope: RUN_TIME, value: "__APP_ANDROID_CERT_SHA256__"/);
+  assert.equal(render('X: "__APP_IOS_TEAM_ID__"', {}), 'X: ""');
+});
+
+test("the webhook migration is idempotent, seeds its limits as rows, and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-studio-webhooks.sql", import.meta.url), "utf8");
+  for (const statement of sql.match(/CREATE (TABLE|INDEX) [^\n]*/g)) assert.match(statement, /IF NOT EXISTS/, statement);
+  assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING/);
+  for (const key of ["max-attempts", "backoff-seconds", "backoff-cap-seconds", "timeout-seconds", "batch-size"]) assert.match(sql, new RegExp(`webhook\\.${key}`));
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "webhooks"\) webhooks\(\)/);
 });

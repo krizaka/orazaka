@@ -11,7 +11,8 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | `orazaka-dev` | `web` | `krizaka/orazaka-web-client` (Next.js + BFF), `dev.orazaka.com/` | `apps-s-1vcpu-0.5gb` | 5 |
 | `orazaka-dev` | `core` | one image, seven JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
 | Droplet | `orazaka-broker-dev` | RabbitMQ 4.2, **TLS only** (5671), bound to its private IP, cloud firewall: VPC `10.118.0.0/20` only | `s-1vcpu-512mb-10gb` | 4 |
-| `orazaka-admin-dev` | `web` | `krizaka/orazaka-web-admin`, `admin.orazaka.com`, BFF → `https://dev.orazaka.com/edge` | `apps-s-1vcpu-0.5gb` | 5 |
+| `orazaka-dev` | `web` (same component) | the operator console, `admin.orazaka.com` = an alias of `dev.orazaka.com`, served by host routing (§ Admin console), BFF → `http://core:8088` | — | 0 |
+| `orazaka-admin-dev` | `web` | **retiring** (kept 48 h as the rollback): `krizaka/orazaka-web-admin` | `apps-s-1vcpu-0.5gb` | 5 → 0 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
 | — | chat | DigitalOcean serverless inference, `mistral-3-14B`, per token | — | ≈ 0 at test volume |
 | `orazaka-dev` | `gpu-relay` | chisel server, `dev.orazaka.com/gpu-relay` — the GPU host dials out to it (§ GPU) | `apps-s-1vcpu-0.5gb` | 5 |
@@ -100,6 +101,33 @@ node scripts/dev-deploy.mjs service-account orochia-explorer --scopes ai:embed,r
   --out ~/Documents/krizaka/orochia-dev.env   # rotates the product's key: update its App Platform secret
 ```
 
+## Admin console (host routing)
+
+`admin.orazaka.com` is not an app of its own any more: it is a domain **alias** of `orazaka-dev` and the `web` component
+answers it (krizaka/orazaka-web-admin#31, -5 $/month). The console's code lives in `orazaka-web-client`
+(`src/console/`, routes `src/app/console/`); `src/proxy.ts` reads the `Host`: on `admin.*` it applies the network gate
+(`AUTH_ALLOWED_IPS`, 403 for any other address, sign-in page included), then the console's sign-in gate, and rewrites the
+request under the internal `/console` prefix; on any other host `/console/**` is a 404. Nothing is shared with the public
+site: the session cookie (`orazaka-admin.session-token`), its signing key (`AUTH_CONSOLE_SECRET`, filled from
+`NEXTAUTH_SECRET_ADMIN`) and the sign-in flag (`AUTH_CONSOLE_LOGIN_ENABLED`). `AUTH_TRUST_HOST=true` makes next-auth build
+the console's callback URLs from the Host it was asked on (`NEXTAUTH_URL` stays `https://dev.orazaka.com`).
+`/api/healthz` answers on both hosts, before any gate.
+
+Cut-over (the old app serves the live console until step 3):
+
+1. `node scripts/dev-deploy.mjs apply orazaka-dev --dry-run`, then check the new variables in the rendered spec
+   (`AUTH_TRUST_HOST`, `AUTH_CONSOLE_LOGIN_ENABLED`, `AUTH_CONSOLE_SECRET`, `AUTH_ALLOWED_IPS`). The `web` component must be
+   on the `main` of `orazaka-web-client` that holds the console.
+2. A domain belongs to one app: take `admin.orazaka.com` off `orazaka-admin-dev` (control panel → Settings → Domains), then
+   `node scripts/dev-deploy.mjs apply orazaka-dev`. Brief downtime of the console only.
+3. DNS: `admin.orazaka.com` CNAME → the `orazaka-dev` default ingress (`doctl apps get <id> --format DefaultIngress`),
+   unchanged if it already points there.
+4. Check from an allowed address: `/login` signs a `ROLE_ADMIN` in; from any other address `https://admin.orazaka.com/`
+   answers 403; `https://dev.orazaka.com/console` answers 404; `https://dev.orazaka.com/api/healthz` 200.
+5. Rollback (for 48 h): remove the alias from `orazaka-dev`, give the domain back to `orazaka-admin-dev`
+   (`node scripts/dev-deploy.mjs apply orazaka-admin-dev`, `infra/deploy/orazaka-admin-dev.app.yaml` is kept for that).
+   Then, only with Oussama's go, delete `orazaka-admin-dev` and its spec.
+
 ## Deploy
 
 Secrets never enter the repository: `~/Documents/krizaka/orazaka-dev.env` (mode 600) holds the database role
@@ -111,7 +139,6 @@ panel: Agent Platform → Serverless Inference → Model Access Keys — the API
 ```bash
 node scripts/dev-deploy.mjs apply orazaka-dev --dry-run   # render + validate, nothing sent
 node scripts/dev-deploy.mjs apply orazaka-dev             # SECRET values are stored encrypted by App Platform
-node scripts/dev-deploy.mjs apply orazaka-admin-dev
 node scripts/dev-deploy.mjs data                          # infra/deploy/dev-data.sql: providers + chat default
 node scripts/dev-deploy.mjs seed                          # test accounts → company/QA.md only
 node scripts/dev-deploy.mjs status
@@ -262,7 +289,9 @@ scripts/gpu-dev.sh mac                   # writes ~/.orazaka/gpu-dev/mac-worker.
 
 The tunnel also carries the Mac's own engines back into the app — sd-server (`:8086`, FLUX.2 [klein] on Metal), the
 worker's pipeline (`:8188`) and Ollama (`:11434`, with `qwen2.5:7b` and `llava` pulled) — so dev's image, video, chat and
-vision steps run on the Mac while it is connected. The worker hands its outputs to the dev job service the same way. Run one host at a time: two workers on one queue
+vision steps run on the Mac while it is connected. The worker hands its outputs to the dev job service the same way. Speech (Piper through LocalAI on `:8085`) shares the image engine's relay port: start sd-server on `:8087`
+(`MEDIA_IMAGE_PORT=8087`) and `node scripts/mac-engines-router.mjs` on `:8086`, which answers `/v1/audio/*` from LocalAI and
+the rest from sd-server; the dev provider `localai` points at `gpu-relay:8086` (`infra/deploy/dev-data.sql`). Run one host at a time: two workers on one queue
 share the jobs, and a Wan job reaching the Mac runs on Metal (slowly) or fails by name.
 
 ### Wan 2.2 A14B — a provider's model, run by Orazaka
