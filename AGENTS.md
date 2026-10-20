@@ -12,7 +12,7 @@
 
 - The platform is **one GitHub repository per component** in the [`krizaka`](https://github.com/krizaka) organisation, assembled by this **workspace** (§2.1). The runtime cycle (run, e2e, docs) still runs **on the dev machine (macOS 64 GB)**.
 - **Allowed on GitHub**: GitHub Actions that **build and test** (every repository runs the shared `component.yml` of this workspace; the workspace runs the full reactor), and that **publish artifacts on a `v*` tag** — the Krizaka building blocks `com.krizaka:*` to **Maven Central** (signed, through the organisation pipeline `krizaka/.github/.github/workflows/maven.yml`, manual *Publish* in the Central Portal), the Orazaka artifacts `com.krizaka.orazaka:*` to GitHub Packages, npm `@krizaka/*` to the public npm registry with provenance. Nothing else (ADR-073).
-- **Allowed in the cloud (decision 2026-10-14)**: the **dev** environment only — `dev.orazaka.com` and `admin.orazaka.com` on DigitalOcean App Platform, images built by the platform from this repository, the shared dev cluster `krizaka-dev-pg`, an hourly GPU droplet started and stopped by hand. How: [`docs/DEPLOY_DEV.md`](docs/DEPLOY_DEV.md). Secrets live in the maintainer's local file and in App Platform (encrypted), never in a repository.
+- **Allowed in the cloud (decision 2026-10-14)**: the **dev** environment only — `dev.orazaka.com` and `admin.orazaka.com` (the same `orazaka-dev` app, told apart by the `Host`: host routing in `orazaka-web-client`'s proxy, no app of its own) on DigitalOcean App Platform, images built by the platform from this repository, the shared dev cluster `krizaka-dev-pg`, an hourly GPU droplet started and stopped by hand. How: [`docs/DEPLOY_DEV.md`](docs/DEPLOY_DEV.md). Secrets live in the maintainer's local file and in App Platform (encrypted), never in a repository.
 - **Forbidden for now**: any other cloud deployment (staging, production), images pushed to a registry, cloud provisioning, remote Terraform `apply`, remote secrets beyond `GITHUB_TOKEN` — **except** the four organisation secrets of the Maven Central release (`MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `MAVEN_GPG_KEY`, `MAVEN_GPG_PASSPHRASE`), held by the organisation, never by a repository.
 - **Allowed locally**: `docker-compose` (stateful infra), **native macOS** AI runtimes (Metal), running apps via the `orazaka` CLI, **hermetic** tests (Testcontainers), docs generation.
 - The code stays **ready** for staging/prod (hexagonal + config-per-profile), but those environments are **deferred**: do not implement them until explicitly requested.
@@ -332,6 +332,29 @@ removing the one that skipped the pipeline for a prompt carrying an image ran th
 router on images for the first time, and they were what had to change (ADR-063).
 
 ---
+
+## 12.1 Static rules & codemods (OpenRewrite, ArchUnit)
+
+The org code rules (addendum 2026-10-15) are checked by tools, not by review.
+
+- **OpenRewrite** (`rewrite-maven-plugin`, configured once in `krizaka-parent`, inherited by every JVM repository):
+  common static analysis, test best practices, Java 21 idioms, Spring idioms (no `@Autowired` on a constructor; `@Bean` methods stay public), no duplicate POM dependency. `./mvnw rewrite:dryRun` lists what would change and **fails** if
+  anything would (CI runs it: `rewrite: true` in the component's `.github/workflows/ci.yml`, input of `component.yml`); `./mvnw rewrite:run` applies it — behaviour
+  identical, run the tests, land it in a small pull request. A recipe that is wrong for this repository is excluded here
+  (`<exclusions>` / a `rewrite.yml`), with the reason; test fixtures (`**/fixture/**`) are excluded everywhere.
+- **ArchUnit** (shared rules in `krizaka-test-support`: `CodeRules`, `ConfigBindingRules`, `SourceRules`,
+  `ArchitectureRules`): the governance tests of a module call them. `ArchitectureRules` holds the structure — layers
+  (web → service → repository, none skipped, none calling up), no package cycle, `*Controller` / `*Service` /
+  `*Repository` names, `@Value` and the environment read only in configuration, `@Transactional` only on services. The
+  older `CodeRules` hold the rest (no field injection, no `System.out`, domain free of framework, one class per file…).
+- **Debt only shrinks — `FrozenRules`** (ArchUnit `FreezingArchRule`): a rule a module cannot satisfy yet is checked with
+  `FrozenRules.check(ArchitectureRules.xxxRule(...), CLASSES)`. The violations that exist are recorded in the module's
+  `archunit_store/` (committed); a **new** violation fails, a fixed one leaves the store (commit it). A rule with no store
+  fails: record a new rule's debt once with `-Darchunit.freeze.store.default.allowStoreCreation=true`, review the store,
+  commit it. Never add a violation to a store by hand to get a build green.
+- A rule is never weakened, skipped or deleted to get a PR green (AGENTS §5.3 of the org); fix the code or freeze the existing debt.
+
+- Orazaka's own governance (`orazaka-test-support`: `GovernanceRules`, hexagonal boundaries, pack coherence…) stays the contract; its structure rules (`StructureRules`) freeze what a service cannot satisfy yet.
 
 ## 13. Agent session protocol
 

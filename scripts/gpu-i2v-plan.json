@@ -1,0 +1,260 @@
+{
+ "_": "Plan of the image-to-video batch (docs/measurements, Measured runs). Each `image` is the gallery photo `source` cut to the aspect around `focus` (x,y in 0..1) at the model's native size (1280x704 / 704x1280) with the worker's crop_to_aspect (app/video_models.py) — never letterboxed; `continueFrom` = the second half of a 10 s clip (starts from the first one's last frame, same seed). Uploaded by scripts/gpu-i2v-run.mjs.",
+ "model": "wan2.2-ti2v-5b",
+ "clips": [
+  {
+   "id": "tea-pour-9x16",
+   "image": "tea-pour-9x16.png",
+   "source": "tea-pour.webp",
+   "aspect": "9:16",
+   "seed": 20261011,
+   "seconds": 5,
+   "prompt": "Cinematic vertical shot inside a Berber tent: the man slowly pours a long thin amber stream of mint tea from the silver teapot high above into the small glass, the glass slowly fills, steam rises, warm golden light, dust motes float. Subtle slow tilt down following the stream, photographic realism. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.45,
+    0.5
+   ]
+  },
+  {
+   "id": "mini-bagels-9x16",
+   "image": "mini-bagels-9x16.png",
+   "source": "mini-bagels.webp",
+   "aspect": "9:16",
+   "seed": 2718,
+   "seconds": 5,
+   "prompt": "A tiny Montreal bagel bakery in miniature, framed vertically. The oven fire flickers and glows, flour dust floats slowly downward, the baker figurine moves a bagel on his wooden peel with a small slow gesture. Very slow gentle tilt up from the counter to the oven. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "id": "mini-souk-9x16",
+   "image": "mini-souk-9x16.png",
+   "source": "mini-souk.webp",
+   "aspect": "9:16",
+   "seed": 1212,
+   "seconds": 5,
+   "prompt": "A tiny Moroccan spice alley in miniature, framed vertically. The hanging brass lanterns sway gently and their light flickers on the saffron and paprika pyramids, the cat on the blue doorstep breathes and twitches an ear. Very slow gentle tilt down from the lanterns to the cat. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.45,
+    0.5
+   ]
+  },
+  {
+   "id": "mini-ironing-9x16",
+   "image": "mini-ironing-9x16.png",
+   "source": "mini-ironing.webp",
+   "aspect": "9:16",
+   "seed": 21,
+   "seconds": 5,
+   "prompt": "Two grandmother figurines on a patterned Berber rug, framed vertically. One slowly presses a small brass iron over the white linen, the other raises a tiny tea glass to her lips, soft window light drifts across the embroidery. Very slow gentle tilt down. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.55,
+    0.5
+   ]
+  },
+  {
+   "id": "mini-picnic-9x16",
+   "image": "mini-picnic-9x16.png",
+   "source": "mini-picnic.webp",
+   "aspect": "9:16",
+   "seed": 808,
+   "seconds": 5,
+   "prompt": "A family picnic in a tiny olive grove in miniature, framed vertically: the grandfather figurine gestures gently as he tells a story, the children lean in, olive leaves flutter in a light breeze. Very slow gentle push-in. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.6,
+    0.5
+   ]
+  },
+  {
+   "id": "mini-skating-9x16",
+   "image": "mini-skating-9x16.png",
+   "source": "mini-skating.webp",
+   "aspect": "9:16",
+   "seed": 1643,
+   "seconds": 5,
+   "prompt": "A tiny winter park in miniature, framed vertically: skater figurines glide slowly over the frozen pond, snow flakes drift down, the cabin window glows and the string lights twinkle. Very slow gentle tilt. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.66,
+    0.5
+   ]
+  },
+  {
+   "id": "tea-pour-9x16-b",
+   "image": "",
+   "source": "tea-pour.webp",
+   "aspect": "9:16",
+   "seed": 20261011,
+   "seconds": 5,
+   "prompt": "Cinematic vertical shot inside a Berber tent: the man slowly pours a long thin amber stream of mint tea from the silver teapot high above into the small glass, the glass slowly fills, steam rises, warm golden light, dust motes float. Subtle slow tilt down following the stream, photographic realism. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape. Continuing the same shot without a cut.",
+   "focus": [
+    0.45,
+    0.5
+   ],
+   "continueFrom": "tea-pour-9x16"
+  },
+  {
+   "id": "mini-bagels-9x16-b",
+   "image": "",
+   "source": "mini-bagels.webp",
+   "aspect": "9:16",
+   "seed": 2718,
+   "seconds": 5,
+   "prompt": "A tiny Montreal bagel bakery in miniature, framed vertically. The oven fire flickers and glows, flour dust floats slowly downward, the baker figurine moves a bagel on his wooden peel with a small slow gesture. Very slow gentle tilt up from the counter to the oven. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape. Continuing the same shot without a cut.",
+   "focus": [
+    0.5,
+    0.5
+   ],
+   "continueFrom": "mini-bagels-9x16"
+  },
+  {
+   "id": "mini-souk-16x9",
+   "image": "mini-souk-16x9.png",
+   "source": "mini-souk.webp",
+   "aspect": "16:9",
+   "seed": 1212,
+   "seconds": 5,
+   "prompt": "A tiny Moroccan spice alley in miniature. Pierced-brass lanterns sway very slightly and cast moving golden light across the spice pyramids, a figurine merchant makes a small gesture, dust motes drift. Very slow gentle sideways glide along the alley. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.5,
+    0.55
+   ]
+  },
+  {
+   "id": "mini-ironing-16x9",
+   "image": "mini-ironing-16x9.png",
+   "source": "mini-ironing.webp",
+   "aspect": "16:9",
+   "seed": 21,
+   "seconds": 5,
+   "prompt": "Two grandmother figurines on a patterned Berber rug. One slowly slides a small brass iron across the white linen tablecloth, the other lifts a tiny glass of mint tea and sips with a gentle movement, soft window light shifts slightly. Very slow gentle push-in. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.5,
+    0.42
+   ]
+  },
+  {
+   "id": "tea-pour-16x9",
+   "image": "tea-pour-16x9.png",
+   "source": "tea-pour.webp",
+   "aspect": "16:9",
+   "seed": 20261011,
+   "seconds": 5,
+   "prompt": "Cinematic close shot inside a Berber tent: the man slowly pours a thin amber stream of mint tea from the silver teapot into the small engraved glass, steam rises softly, warm golden light, dust motes float in the air. Subtle slow push-in, natural motion, photographic realism. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.45,
+    0.58
+   ]
+  },
+  {
+   "id": "mini-picnic-16x9",
+   "image": "mini-picnic-16x9.png",
+   "source": "mini-picnic.webp",
+   "aspect": "16:9",
+   "seed": 808,
+   "seconds": 5,
+   "prompt": "A family picnic in a tiny olive grove in miniature: the grandfather figurine turns a page and gestures gently while telling a story, the children lean in slightly, olive leaves flutter in a light breeze, soft sun light shifts. Very slow gentle push-in. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "id": "mini-skating-16x9",
+   "image": "mini-skating-16x9.png",
+   "source": "mini-skating.webp",
+   "aspect": "16:9",
+   "seed": 1643,
+   "seconds": 5,
+   "prompt": "A tiny winter park in miniature: the skater figurines glide slowly over the frozen pond, snow flakes drift down softly, the cabin window glows warmly and the string lights twinkle. Very slow gentle sideways glide. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "id": "mini-picnic-9x16-v2",
+   "image": "mini-picnic-9x16-v2.png",
+   "source": "mini-picnic.webp",
+   "aspect": "9:16",
+   "seed": 808,
+   "seconds": 5,
+   "prompt": "A family picnic in a tiny olive grove in miniature, framed vertically: the grandfather figurine gestures gently as he tells a story, the children lean in, olive leaves flutter in a light breeze. Very slow gentle push-in. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape.",
+   "focus": [
+    0.43,
+    0.5
+   ]
+  },
+  {
+   "id": "mini-souk-9x16-b",
+   "image": "",
+   "source": "mini-souk.webp",
+   "aspect": "9:16",
+   "seed": 1212,
+   "seconds": 5,
+   "prompt": "A tiny Moroccan spice alley in miniature, framed vertically. The hanging brass lanterns sway gently and their light flickers on the saffron and paprika pyramids, the cat on the blue doorstep breathes and twitches an ear. Very slow gentle tilt down from the lanterns to the cat. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape. Continuing the same shot without a cut.",
+   "focus": [
+    0.45,
+    0.5
+   ],
+   "continueFrom": "mini-souk-9x16"
+  },
+  {
+   "id": "mini-ironing-9x16-b",
+   "image": "",
+   "source": "mini-ironing.webp",
+   "aspect": "9:16",
+   "seed": 21,
+   "seconds": 5,
+   "prompt": "Two grandmother figurines on a patterned Berber rug, framed vertically. One slowly presses a small brass iron over the white linen, the other raises a tiny tea glass to her lips, soft window light drifts across the embroidery. Very slow gentle tilt down. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape. Continuing the same shot without a cut.",
+   "focus": [
+    0.55,
+    0.5
+   ],
+   "continueFrom": "mini-ironing-9x16"
+  },
+  {
+   "id": "tea-pour-16x9-b",
+   "image": "",
+   "source": "tea-pour.webp",
+   "aspect": "16:9",
+   "seed": 20261011,
+   "seconds": 5,
+   "prompt": "Cinematic close shot inside a Berber tent: the man slowly pours a thin amber stream of mint tea from the silver teapot into the small engraved glass, steam rises softly, warm golden light, dust motes float in the air. Subtle slow push-in, natural motion, photographic realism. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape. Continuing the same shot without a cut.",
+   "focus": [
+    0.45,
+    0.58
+   ],
+   "continueFrom": "tea-pour-16x9"
+  },
+  {
+   "id": "mini-souk-16x9-b",
+   "image": "",
+   "source": "mini-souk.webp",
+   "aspect": "16:9",
+   "seed": 1212,
+   "seconds": 5,
+   "prompt": "A tiny Moroccan spice alley in miniature. Pierced-brass lanterns sway very slightly and cast moving golden light across the spice pyramids, a figurine merchant makes a small gesture, dust motes drift. Very slow gentle sideways glide along the alley. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape. Continuing the same shot without a cut.",
+   "focus": [
+    0.5,
+    0.55
+   ],
+   "continueFrom": "mini-souk-16x9"
+  },
+  {
+   "id": "mini-ironing-16x9-b",
+   "image": "",
+   "source": "mini-ironing.webp",
+   "aspect": "16:9",
+   "seed": 21,
+   "seconds": 5,
+   "prompt": "Two grandmother figurines on a patterned Berber rug. One slowly slides a small brass iron across the white linen tablecloth, the other lifts a tiny glass of mint tea and sips with a gentle movement, soft window light shifts slightly. Very slow gentle push-in. Handcrafted tilt-shift miniature diorama, extremely shallow depth of field, warm soft light, stable composition, figurines keep their shape, subtle natural motion, one continuous shot, no cut. Motion stays small and subtle, figures keep facing the same direction and keep their shape. Continuing the same shot without a cut.",
+   "focus": [
+    0.5,
+    0.42
+   ],
+   "continueFrom": "mini-ironing-16x9"
+  }
+ ]
+}

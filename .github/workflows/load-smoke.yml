@@ -1,0 +1,138 @@
+# The smoke-level load test of the edge (ADR-083): builds the edge from the workspace, puts
+# tests/load/stub-stack.mjs behind it, and runs the k6 suite with thresholds tied to the SLO table.
+#
+# It measures the edge and its contract (rate limit, Idempotency-Key, stream relay, key exchange path)
+# at a few hundred requests a minute: seconds, no database, no Docker. The heavier, real-stack run is
+# local (docs/adr/ADR-083, "Proof by load tests"). Called by orazaka-edge on a pull request that
+# touches the edge; also weekly here, on the workspace's main, to catch drift in an upstream.
+name: load-smoke
+
+on:
+  workflow_call:
+    inputs:
+      component:
+        description: "Repository under test (the edge); checked out at the commit being tested"
+        required: false
+        default: orazaka-edge
+        type: string
+  # This repository's own changes to the suite or to this workflow are proven by running it.
+  pull_request:
+    paths:
+      - "tests/load/**"
+      - ".github/workflows/load-smoke.yml"
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  K6_VERSION: "2.3.0"
+  # sha256 of k6-v2.3.0-linux-amd64.tar.gz, from the release's checksums file
+  K6_SHA256: "39c3117b6af817592dcd0ce4242105c0a7af10948c2a425306f0be8f7a8a8ab1"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the Orazaka workspace
+        uses: actions/checkout@v7
+        with:
+          repository: krizaka/orazaka
+          path: workspace
+
+      - name: Check out ${{ inputs.component }} at the commit under test
+        if: github.repository != 'krizaka/orazaka'
+        uses: actions/checkout@v7
+        with:
+          path: incoming
+
+      - name: Place the edge at its workspace path
+        if: github.repository != 'krizaka/orazaka'
+        working-directory: workspace
+        run: |
+          target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='orazaka-edge').path)")
+          rm -rf "$target"
+          mkdir -p "$(dirname "$target")"
+          mv ../incoming "$target"
+
+      - name: Clone every other repository
+        working-directory: workspace
+        run: node scripts/workspace.mjs clone --depth 1
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Build the edge, upstreams from source, without tests (the component pipeline runs them)
+        working-directory: workspace
+        run: |
+          for r in $(node scripts/workspace.mjs deps orazaka-edge); do
+            path=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='$r').path)")
+            ./mvnw -B -ntp -f "$path/pom.xml" install -DskipTests
+          done
+          path=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='orazaka-edge').path)")
+          ./mvnw -B -ntp -f "$path/pom.xml" package -DskipTests
+          echo "EDGE_JAR=$(find "$PWD/$path/target" -maxdepth 1 -name 'orazaka-edge-*.jar' ! -name '*.original' | head -1)" >> "$GITHUB_ENV"
+
+      - name: Install k6 (pinned, checksum verified)
+        run: |
+          curl -fsSL -o k6.tgz "https://github.com/grafana/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux-amd64.tar.gz"
+          echo "${K6_SHA256}  k6.tgz" | sha256sum -c -
+          tar -xzf k6.tgz --strip-components=1 "k6-v${K6_VERSION}-linux-amd64/k6"
+          sudo install k6 /usr/local/bin/k6
+          k6 version
+
+      - name: Start the stand-in services and the edge
+        working-directory: workspace
+        run: |
+          node tests/load/stub-stack.mjs 9000 > stub.log 2>&1 &
+          IDENTITY_INTERNAL_URL=http://127.0.0.1:9000 \
+          ROUTER_INTERNAL_URL=http://127.0.0.1:9000 \
+          STUDIO_INTERNAL_URL=http://127.0.0.1:9000 \
+          BILLING_INTERNAL_URL=http://127.0.0.1:9000 \
+          EDGE_PORT=8088 EDGE_MGMT_PORT=8089 \
+          ABUSE_RATE_LIMIT_MODE=enforce ABUSE_RATE_LIMIT_DEFAULT_RPM=6000 \
+          TRACING_SAMPLING_PROBABILITY=0 EDGE_LOG=edge.log \
+          java -Xmx256m -XX:+UseSerialGC -jar "$EDGE_JAR" > edge.out 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fs http://127.0.0.1:8089/actuator/health > /dev/null && exit 0
+            sleep 2
+          done
+          echo "the edge did not start"; tail -50 edge.out; exit 1
+
+      - name: Edge contract (rate limit, Idempotency-Key, stream relay)
+        working-directory: workspace
+        run: k6 run --no-color -e BASE_URL=http://127.0.0.1:8088 tests/load/edge-contract.js
+
+      - name: Smoke load (thresholds are the SLO table)
+        working-directory: workspace
+        env:
+          BASE_URL: http://127.0.0.1:8088
+          ORAZAKA_USER_EMAIL: load@example.test
+          ORAZAKA_USER_PASSWORD: stub
+          USE_API_KEY: "1"
+          SCENARIOS: sync,run,login
+        run: k6 run --no-color -e PROFILE=smoke --summary-export=k6-summary.json tests/load/orazaka.js
+
+      - name: Keep the numbers
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: load-smoke
+          path: |
+            workspace/k6-summary.json
+            workspace/edge.out
+            workspace/stub.log
+          if-no-files-found: ignore
