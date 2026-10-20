@@ -98,7 +98,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 ## Commands
 
 ```cli-commands
-33 commands, 30 subcommands — every one in the table below.
+33 commands, 35 subcommands — every one in the table below.
 ```
 
 | Command | Description |
@@ -113,6 +113,11 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka cinema fetch <dir>` | Download the references, keyframes, shots and the film into the production's folder |
 | `orazaka cinema reshoot <dir> <shots>` | Make shots again (a new seed): their video, then the cut and the sound |
 | `orazaka cinema status <dir>` | Where the production is |
+| `orazaka cinema plan <dir>` | Start a production from a treatment (a directed shot list): no language model, every shot as written |
+| `orazaka cinema sheet <dir>` | Make the reference sheet of each character that has a reference render (kept as drawn, never redrawn) |
+| `orazaka cinema jobs <dir>` | The pending shots as jobs for a GPU host that runs the worker's own generator |
+| `orazaka cinema take <dir> <shot> <file>` | Record a take a GPU host made for a shot |
+| `orazaka cinema review <dir> <shot> <file>` | A take's review sheet: a frame every 8 under the cast's reference sheet |
 | `orazaka config` | Interactive configuration wizard — review and update .env variables |
 | `orazaka db` | Database maintenance operations |
 | `orazaka db reseed` | Drop & re-apply infra/initdb/*.sql (schema + seed). Destroys all local dev data. |
@@ -245,6 +250,56 @@ Where the production is
 | Argument / option | Description |
 |:---|:---|
 | `<dir>` | The production's folder |
+
+### `orazaka cinema plan <dir>`
+
+Start a production from a treatment (a directed shot list): no language model, every shot as written
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `-r, --references <dir>` | Where the characters' reference renders are (<name>-alpha.png) |
+| `-l, --language <lang>` | en or fr (the captions) (default: `en`) |
+| `--seed <seed>` | Overrides the treatment's seedBase |
+| `--update` | The treatment changed: keep every shot already made, add the new ones |
+
+### `orazaka cinema sheet <dir>`
+
+Make the reference sheet of each character that has a reference render (kept as drawn, never redrawn)
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+
+### `orazaka cinema jobs <dir>`
+
+The pending shots as jobs for a GPU host that runs the worker's own generator
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `-o, --out <file>` | Write them to a file instead of printing them |
+
+### `orazaka cinema take <dir> <shot> <file>`
+
+Record a take a GPU host made for a shot
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `<shot>` | The shot's number |
+| `<file>` | The take (mp4) |
+| `--seconds <s>` | How long the host took to make it |
+
+### `orazaka cinema review <dir> <shot> <file>`
+
+A take's review sheet: a frame every 8 under the cast's reference sheet
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `<shot>` | The shot's number |
+| `<file>` | The take (mp4) |
 
 ### `orazaka config`
 

@@ -1346,14 +1346,6 @@
       "routingKey": "evt.capability.changed"
     },
     {
-      "from": "orazaka-conversation-service",
-      "to": "orazaka-worker-media",
-      "kind": "amqp",
-      "via": "orazaka.jobs.video",
-      "exchange": "orazaka.jobs",
-      "routingKey": "job.video.*, job.compose.*, job.sound.*"
-    },
-    {
       "from": "orazaka-job-service",
       "to": "krizaka-billing-service",
       "kind": "amqp",
@@ -1456,14 +1448,6 @@
       "via": "orazaka.jobs.interactive",
       "exchange": "orazaka.jobs",
       "routingKey": "job.text.*, job.media.analyze"
-    },
-    {
-      "from": "orazaka-studio-service",
-      "to": "orazaka-worker-media",
-      "kind": "amqp",
-      "via": "orazaka.jobs.video",
-      "exchange": "orazaka.jobs",
-      "routingKey": "job.video.*, job.compose.*, job.sound.*"
     },
     {
       "from": "orazaka-automation-service",
@@ -1873,7 +1857,7 @@
       {
         "name": "orazaka.jobs.video",
         "exchange": "orazaka.jobs",
-        "binding": "job.video.*, job.compose.*, job.sound.*",
+        "binding": "job.video.*",
         "dlq": "orazaka.jobs.video.dlq",
         "declaredBy": "orazaka-persistence-app"
       }
@@ -2084,11 +2068,6 @@
       {
         "module": "orazaka-worker-media",
         "queue": "orazaka.jobs.sound",
-        "retry": "module"
-      },
-      {
-        "module": "orazaka-worker-media",
-        "queue": "orazaka.jobs.video",
         "retry": "module"
       }
     ],
@@ -5938,6 +5917,125 @@
           {
             "name": "<dir>",
             "desc": "The production's folder"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "cinema plan",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Start a production from a treatment (a directed shot list): no language model, every shot as written",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-r, --references <dir>",
+            "desc": "Where the characters' reference renders are (<name>-alpha.png)",
+            "default": null
+          },
+          {
+            "flag": "-l, --language <lang>",
+            "desc": "en or fr (the captions)",
+            "default": "en"
+          },
+          {
+            "flag": "--seed <seed>",
+            "desc": "Overrides the treatment's seedBase",
+            "default": null
+          },
+          {
+            "flag": "--update",
+            "desc": "The treatment changed: keep every shot already made, add the new ones",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "cinema sheet",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Make the reference sheet of each character that has a reference render (kept as drawn, never redrawn)",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          }
+        ],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "cinema jobs",
+        "top": "cinema",
+        "isTop": false,
+        "description": "The pending shots as jobs for a GPU host that runs the worker's own generator",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-o, --out <file>",
+            "desc": "Write them to a file instead of printing them",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "cinema take",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Record a take a GPU host made for a shot",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          },
+          {
+            "name": "<shot>",
+            "desc": "The shot's number"
+          },
+          {
+            "name": "<file>",
+            "desc": "The take (mp4)"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--seconds <s>",
+            "desc": "How long the host took to make it",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "cinema review",
+        "top": "cinema",
+        "isTop": false,
+        "description": "A take's review sheet: a frame every 8 under the cast's reference sheet",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "The production's folder"
+          },
+          {
+            "name": "<shot>",
+            "desc": "The shot's number"
+          },
+          {
+            "name": "<file>",
+            "desc": "The take (mp4)"
           }
         ],
         "aliases": [],
