@@ -32,6 +32,8 @@ const QA_ENV_FILE = process.env.ORAZAKA_QA_ENV_FILE ?? join(homedir(), "Document
 /** Placeholders that are settings, not secrets, and their defaults. */
 /** CORE_REBUILD busts the image build cache of the core component at every apply (see infra/deploy/Dockerfile). */
 const DEFAULTS = { CORE_REBUILD: new Date().toISOString().replace(/[:.]/g, "-") };
+/** Settings that may be empty: the feature they switch on is then simply off (universal links: no AASA / assetlinks served). */
+const OPTIONAL = new Set(["APP_IOS_TEAM_ID", "APP_ANDROID_CERT_SHA256"]);
 
 export function readEnvFile(text) {
   const env = {};
@@ -49,6 +51,7 @@ export function render(template, env) {
   const missing = new Set();
   const out = template.replace(/__([A-Z0-9_]+)__/g, (_, name) => {
     const value = env[name] ?? DEFAULTS[name];
+    if ((value === undefined || value === "") && OPTIONAL.has(name)) return "";
     if (value === undefined || value === "") {
       missing.add(name);
       return "";
@@ -163,6 +166,14 @@ function runIdempotency() {
   const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-18-studio-run-idempotency.sql"), "utf8");
   psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
   console.log("orazaka_studio_db: studio_run idempotency columns and index in place");
+}
+
+/** The signed-webhook tables and limits of the Studio service (orazaka#189 slice B) — idempotent, additive. */
+function webhooks() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-20-studio-webhooks.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: webhook endpoints, deliveries and limits in place");
 }
 
 function policy() {
@@ -487,12 +498,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "recommendations") recommendations();
     else if (command === "analytics") analytics();
     else if (command === "run-idempotency") runIdempotency();
+    else if (command === "webhooks") webhooks();
     else if (command === "seed") seed();
     else if (command === "service-account") await createServiceAccount(rest[0], rest.slice(1));
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | webhooks | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {

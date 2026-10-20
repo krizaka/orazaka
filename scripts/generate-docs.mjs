@@ -2529,6 +2529,7 @@ function extractPackCatalog() {
         status,
         showcase: status !== "DRAFT",
         category: m.catalog?.categoryKey ?? null,
+        categorySortWeight: m.catalog?.category?.sortWeight ?? null,
         iconKey: m.catalog?.iconKey ?? null,
         sortWeight: m.catalog?.sortWeight ?? null,
         pricing: m.pricing ? { priceCents: m.pricing.priceCents ?? 0, includedCredits: m.pricing.includedCredits ?? 0 } : null,
