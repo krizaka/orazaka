@@ -78,4 +78,12 @@ VALUES ('stable-diffusion-3.5-large', 'Stable Diffusion 3.5 Large (DigitalOcean)
 ON CONFLICT (model_name) DO UPDATE SET provider_name = EXCLUDED.provider_name;
 UPDATE orazaka_models SET vendor = 'Stability AI', family = 'Stable Diffusion 3.5', capabilities = 'image', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'Stability AI Community Licence', licence_url = 'https://stability.ai/license', commercial_use = 'conditions', context_window = NULL, status = 'available' WHERE model_name = 'stable-diffusion-3.5-large';
 
+-- Studio form pickers (the Model select of the video Studio, 2026-10-20): the default video model is the one that answers on
+-- dev without a GPU droplet (the hosted Wan 2.2), not the Mac-only AnimateDiff the picker offered first while it was off; the
+-- two GPU models whose time is documented say so (LTX-Video: « about fifteen seconds », Wan 2.2 I2V at 40 steps: « about 18
+-- minutes »). A time is a measured fact: nothing is set for a model nobody has timed.
+UPDATE orazaka_models SET is_default = (model_name = 'wan2-2-t2v-a14b') WHERE category = 'video';
+UPDATE orazaka_models SET typical_seconds = 15 WHERE model_name = 'ltx-video-0.9.8-13b-distilled' AND typical_seconds IS NULL;
+UPDATE orazaka_models SET typical_seconds = 1080 WHERE model_name = 'wan2.2-i2v-a14b-hq' AND typical_seconds IS NULL;
+
 COMMIT;
