@@ -182,6 +182,14 @@ function webhooks() {
   console.log("orazaka_studio_db: webhook endpoints, deliveries and limits in place");
 }
 
+/** The numbering of run events (orazaka#241): column, log table and triggers on the Studio database — idempotent. */
+function runEvents() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-20-run-events.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: run event numbering (event_seq, studio_run_event, triggers) in place");
+}
+
 function policy() {
   const env = secrets();
   const sql = readFileSync(join(DEPLOY, "dev-content-policy.sql"), "utf8");
@@ -509,6 +517,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "recommendations") recommendations();
     else if (command === "analytics") analytics();
     else if (command === "run-idempotency") runIdempotency();
+    else if (command === "run-events") runEvents();
     else if (command === "service-tier") serviceTier();
     else if (command === "webhooks") webhooks();
     else if (command === "seed") seed();
@@ -516,7 +525,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | service-tier | webhooks | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | service-tier | webhooks | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {

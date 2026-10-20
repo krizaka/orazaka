@@ -125,6 +125,8 @@ services:
       - { key: SPRING_RABBITMQ_SSL_BUNDLE, scope: RUN_TIME, value: broker }
       - { key: SPRING_SSL_BUNDLE_PEM_BROKER_TRUSTSTORE_CERTIFICATE, scope: RUN_TIME, value: "file:/app/var/broker-ca.pem" }
       # Identity: one HS256 secret every service validates with; users' column encryption.
+      # ADR-083 slice 2: the products' service accounts are on the `service` tier (infra/migrations/2026-10-20-service-rate-tier.sql), so the per-key limit leaves observe.
+      - { key: ABUSE_RATE_LIMIT_MODE, scope: RUN_TIME, value: enforce }
       - { key: IDENTITY_JWT_SECRET, scope: RUN_TIME, type: SECRET, value: "__IDENTITY_JWT_SECRET__" }
       - { key: CRYPTO_KEY, scope: RUN_TIME, type: SECRET, value: "__CRYPTO_KEY__" }
       - { key: CRYPTO_SALT, scope: RUN_TIME, type: SECRET, value: "__CRYPTO_SALT__" }
