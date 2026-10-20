@@ -130,7 +130,7 @@ Cut-over (the old app serves the live console until step 3):
 
 ## Deploy
 
-Secrets never enter the repository: `~/Documents/krizaka/orazaka-dev.env` (mode 600) holds the database role
+Secrets never enter the repository: `~/Documents/krizaka/env/dev.env` (mode 600; read through `~/.krizaka-worktrees/tools/secret.sh @dev KEY`, or give it with `--env-file`) holds the database role
 passwords (`DATABASE_PASSWORD_<DB>`, read with `doctl databases user get`), `IDENTITY_JWT_SECRET`, `CRYPTO_KEY`,
 `CRYPTO_SALT` (16 hex), `MEDIA_ENCRYPTION_KEY` (32 bytes, base64 — the asset keyring), `RABBITMQ_PASS`,
 `NEXTAUTH_SECRET_WEB`, `NEXTAUTH_SECRET_ADMIN` and `AI_INFERENCE_KEY` (a **model access key**, created in the control
