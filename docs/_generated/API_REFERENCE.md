@@ -226,6 +226,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/studios/runs/{runId}/approve` | authenticated | StudioRunController | Resolves an approval step, resuming the run. |
 | POST | `/api/v1/studios/runs/{runId}/cancel` | authenticated | StudioRunController | Cancels a run and releases its hold. |
 | GET | `/api/v1/studios/runs/{runId}/events` | authenticated | StudioRunController | Follows a run as Server-Sent Events instead of polling it (orazaka#189, ADR-083). |
+| GET | `/api/v1/studios/runs/events` | authenticated | StudioRunController | Follows every run of the caller on one connection (the per-key stream of orazaka#189): event: run whenever a run in flight changes, event: done when one ends, each carrying the run as GET /runs/runId would. |
 | GET | `/api/v1/studios/webhooks` | authenticated | WebhookEndpointController | The caller's endpoints (no secrets). |
 | POST | `/api/v1/studios/webhooks` | authenticated | WebhookEndpointController | Creates an endpoint. |
 | DELETE | `/api/v1/studios/webhooks/{id}` | authenticated | WebhookEndpointController | Removes an endpoint and its log. |
