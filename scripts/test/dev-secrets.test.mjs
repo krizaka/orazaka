@@ -1,10 +1,10 @@
 // node --test scripts/test — where the dev tools read their secrets: an explicit file, or secret.sh @dev (never a hard-coded path).
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { devSecrets, envFileFromArgs } from "../lib/dev-secrets.mjs";
+import { SECRET_TOOL, devSecrets, envFileFromArgs } from "../lib/dev-secrets.mjs";
 
 test("--env-file is taken out of the arguments and wins over ORAZAKA_DEV_ENV_FILE", () => {
   assert.deepEqual(envFileFromArgs(["apply", "orazaka-dev", "--env-file", "/x/dev.env", "--dry-run"], { ORAZAKA_DEV_ENV_FILE: "/y" }), {
@@ -46,7 +46,7 @@ test("the settings overrides (CORE_REBUILD) come from the process environment fi
   assert.equal(env.OTHER, "from-tool");
 });
 
-test("the real secret.sh resolves @orazaka through its chain: the product's own file first, then dev.env, then org.env", () => {
+test("the real secret.sh resolves @orazaka through its chain: the product's own file first, then dev.env, then org.env", { skip: !existsSync(SECRET_TOOL) && "secret.sh is the operator's tool, absent on CI" }, () => {
   const dir = mkdtempSync(join(tmpdir(), "chain-"));
   writeFileSync(join(dir, "orazaka.env"), "MEDIA_STORAGE_ZONE=orazaka-media-dev\n");
   writeFileSync(join(dir, "dev.env"), "MEDIA_STORAGE_ZONE=krizaka-assets\nDATABASE_HOST=db.example\n");
