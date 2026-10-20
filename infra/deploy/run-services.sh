@@ -13,13 +13,23 @@ set -euo pipefail
 # Only the JVMs are fatal (below): they are the platform; a worker is one capability.
 supervise() {
   local name="$1"; shift
-  local delay="${ORAZAKA_WORKER_BACKOFF_START:-2}" max="${ORAZAKA_WORKER_BACKOFF_MAX:-300}" started rc
+  local delay="${ORAZAKA_WORKER_BACKOFF_START:-2}" max="${ORAZAKA_WORKER_BACKOFF_MAX:-300}" started rc child="" nap=""
+  # When the container is stopped the supervisor goes with its worker. Without this the container's `wait` hung on the
+  # supervisor until the platform's SIGKILL and the old deployment's worker kept consuming the broker's queue next to the
+  # new deployment's: a stray consumer running old pack code took half the validation jobs of a rolling deploy.
+  trap '[[ -n "$child" ]] && kill -TERM "$child" 2>/dev/null; [[ -n "$nap" ]] && kill "$nap" 2>/dev/null; exit 0' TERM INT
   while true; do
     started=$(date +%s)
-    "$@" && rc=0 || rc=$?
+    "$@" &
+    child=$!
+    wait "$child" && rc=0 || rc=$?
+    child=""
     if (( $(date +%s) - started > max )); then delay="${ORAZAKA_WORKER_BACKOFF_START:-2}"; fi
     echo "[run-services] worker $name exited (status $rc) — restarting in ${delay}s"
-    sleep "$delay"
+    sleep "$delay" &
+    nap=$!
+    wait "$nap" || true
+    nap=""
     delay=$(( delay * 2 > max ? max : delay * 2 ))
   done
 }
@@ -53,8 +63,9 @@ COMMON_OPTS="${ORAZAKA_JAVA_OPTS:--XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:R
 SERVICES="${ORAZAKA_SERVICES:-users:users.jar:160 billing:billing.jar:160 job:job.jar:256 conversation:conversation.jar:320 studio:studio.jar:160 knowledge:knowledge.jar:128 edge:edge.jar:96}"
 
 pids=()
+workers=()
 stop_all() {
-  for pid in "${pids[@]}"; do kill -TERM "$pid" 2>/dev/null || true; done
+  for pid in "${pids[@]}" "${workers[@]}"; do kill -TERM "$pid" 2>/dev/null || true; done
   wait || true
 }
 trap 'stop_all; exit 143' TERM INT
@@ -71,10 +82,12 @@ for entry in $SERVICES; do
   sleep "${ORAZAKA_START_STAGGER_SECONDS:-5}"
 done
 
+# Runs in the supervisor's own background process (`"$@" &`), so `cd` stays local and `exec` makes the worker that very
+# process: the supervisor's TERM reaches the Python process itself, not a shell around it.
 run_validation_worker() {
-  (cd "${ORAZAKA_APP_DIR:-/app}/orazaka-packs/document-validation/worker" \
-    && SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
-       exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py)
+  cd "${ORAZAKA_APP_DIR:-/app}/orazaka-packs/document-validation/worker" || return 1
+  SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
+    exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py
 }
 
 # The Python workers of the packs, after the JVMs (the job service declares the topology they bind to). The dev broker
@@ -85,6 +98,7 @@ for worker in ${ORAZAKA_WORKERS-validation}; do
     validation)
       echo "[run-services] starting the document-validation worker (supervised)"
       supervise validation run_validation_worker > >(sed -u "s/^/[validation] /") 2>&1 &
+      workers+=("$!")
       ;;
     *) echo "[run-services] unknown worker: $worker" >&2 ;;
   esac
