@@ -29,12 +29,15 @@
  *   node scripts/generate-docs.mjs           regenerate docs/_generated/
  *   node scripts/generate-docs.mjs --check   fail (exit 1) if any output is stale
  */
+import { screenRoute } from "./lib/screen-route.mjs";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, basename, relative } from "node:path";
 import { buildModels, catalogue, manifestLicences, readmeLicences } from "./lib/model-registry.mjs";
 import { walk } from "./lib/walk.mjs";
+import { mdCell, stripTags, xmlDecode } from "./lib/doc-text.mjs";
 import { packsSection } from "./lib/pack-blocks.mjs";
 import { mdMeasuredRuns } from "./lib/measured-runs.mjs";
+import { mdCinema } from "./lib/cinema-measure.mjs";
 
 const ROOT = process.cwd();
 const GEN_DIR = join(ROOT, "docs", "_generated");
@@ -153,7 +156,7 @@ function sourceDir(relDir, tail) {
   return found[0];
 }
 
-const xmlText = (s) => s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
+const xmlText = (s) => xmlDecode(s).replace(/\s+/g, " ").trim();
 /** A pom without its <parent>, <build> and <dependencyManagement>: what the module itself declares. */
 const ownPom = (pom) =>
   pom
@@ -805,12 +808,11 @@ function classSummary(src, name) {
   if (at < 0) return null;
   const doc = src.slice(0, at).match(/\/\*\*([\s\S]*?)\*\/[^/]*$/)?.[1];
   if (!doc) return null;
-  const text = doc
+  const text = stripTags(doc
     .split("\n")
     .map((l) => l.replace(/^\s*\*\s?/, ""))
     .filter((l) => !l.startsWith("@"))
-    .join(" ")
-    .replace(/<[^>]+>/g, "")
+    .join(" "))
     .replace(/\{@\w+\s+([^}]*)\}/g, "`$1`")
     .replace(/[{}]/g, "")
     .replace(/\s+/g, " ")
@@ -993,7 +995,7 @@ function summaryAbove(src, index) {
     .filter((l) => l && !l.startsWith("@"))
     .join(" ");
   const sentence = text.split(/(?<=\.)\s/)[0] ?? "";
-  return sentence.replace(/\{@\w+\s+([^}]*)\}/g, "$1").replace(/[{}]/g, "").replace(/\|/g, "\\|").trim();
+  return sentence.replace(/\{@\w+\s+([^}]*)\}/g, "$1").replace(/[{}]/g, "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|").trim();
 }
 
 /**
@@ -1547,7 +1549,7 @@ const mdCli = (rows) => {
   const alias = { name: model.alias };
   const bin = model.bin;
   const runner = alias.name ? `npx ${alias.name}` : `npx ${pkg.name}`;
-  const cell = (s) => (s || "—").replace(/\|/g, "\\|");
+  const cell = (s) => mdCell(s || "—");
   const usage = (c) => [`${bin} ${c.name}`, ...c.args.map((a) => a.name)].join(" ");
 
   // Quick start and dev loop (authored here, single-sourced in the generator — see AGENTS.md §1).
@@ -1679,7 +1681,7 @@ const mdGovernance = (rows) => {
   return lines.join("\n") + "\n";
 };
 
-const CAP_LABEL = { chat: "Chat", reasoning: "Reasoning", vision: "Vision", code: "Code", embeddings: "Embeddings", image: "Image", video: "Video", "speech-to-text": "Speech to text", "text-to-speech": "Text to speech", music: "Music", "video-to-audio": "Video to audio (foley)" };
+const CAP_LABEL = { chat: "Chat", reasoning: "Reasoning", vision: "Vision", code: "Code", embeddings: "Embeddings", image: "Image", video: "Video", "speech-to-text": "Speech to text", "text-to-speech": "Text to speech", music: "Music", "video-to-audio": "Video to audio (foley)", "video-upscale": "Video upscale" };
 const mdModels = (models, rows) => {
   const lines = [frontmatter("Supported Models", "Every model Orazaka supports: where it runs, its licence, its context window — read from the registry the routing reads.", "Models", 8)];
   const local = models.filter((m) => m.runsOn === "local");
@@ -1745,14 +1747,14 @@ function javadocAbove(src, index) {
 
 /** Javadoc text as Markdown-safe prose: inline tags as code, HTML and braces dropped. */
 function docText(doc) {
-  return doc
+  return stripTags(doc
     .split("\n")
     .map((l) => l.replace(/^\s*\*\s?/, ""))
     .filter((l) => !l.trim().startsWith("@"))
-    .join(" ")
-    .replace(/<[^>]+>/g, "")
+    .join(" "))
     .replace(/\{@\w+\s+([^}]*)\}/g, "`$1`")
     .replace(/[{}]/g, "")
+    .replace(/\\/g, "\\\\")
     .replace(/\|/g, "\\|")
     .replace(/\s+/g, " ")
     .trim();
@@ -2085,7 +2087,7 @@ const mdTools = (t, api, cli) => {
     "|:---|:---|:---|:---|",
   );
   for (const x of t.tools) {
-    lines.push(`| ${code(x.name)} | ${x.description.replace(/\|/g, "\\|")} | ${code(x.input)} | ${x.fields.map((f) => code(f.name)).join(", ") || "—"} |`);
+    lines.push(`| ${code(x.name)} | ${mdCell(x.description)} | ${code(x.input)} | ${x.fields.map((f) => code(f.name)).join(", ") || "—"} |`);
   }
   lines.push(
     "",
@@ -2630,7 +2632,7 @@ const mdPacks = (p, cli, catalog) => {
     for (const c of packCli) lines.push(`| ${code(["orazaka", c.name, ...c.args.map((a) => a.name)].join(" "))} | ${c.description} |`);
   }
   lines.push("", "## Manifest fields", "", "From `pack.schema.json` — the schema `orazaka pack validate` checks against.", "", "| Field | Required | Values | Meaning |", "|:---|:---|:---|:---|");
-  for (const f of p.fields) lines.push(`| ${code(f.name)} | ${f.required ? "yes" : "—"} | ${f.values ? f.values.map(code).join(" · ") : "—"} | ${f.description.replace(/\|/g, "\\|") || "—"} |`);
+  for (const f of p.fields) lines.push(`| ${code(f.name)} | ${f.required ? "yes" : "—"} | ${f.values ? f.values.map(code).join(" · ") : "—"} | ${mdCell(f.description) || "—"} |`);
   if (p.guide) {
     // The pack authors' guide, as written in orazaka-packs — one heading level down, under this page.
     const body = p.guide
@@ -2655,10 +2657,10 @@ function extractAdmin(api) {
   if (dir && existsSync(dir)) {
     for (const f of walk(join(dir, "app"), (p) => basename(p) === "page.tsx").sort()) {
       const s = read(f);
-      const route = "/" + relative(join(dir, "app"), join(f, "..")).split(/[/\\]/).join("/");
+      const route = screenRoute(relative(join(dir, "app"), join(f, "..")));
       const at = s.search(/export default function/);
       const tabs = [...s.matchAll(/\{\s*id:\s*"(\w+)",\s*label:\s*"([^"]+)"\s*\}/g)].map((m) => m[2]);
-      screens.push({ route: route === "/." || route === "/" ? "/" : route.replace(/\/\.$/, ""), summary: firstSentence(javadocAbove(s, at)), tabs });
+      screens.push({ route, summary: firstSentence(javadocAbove(s, at)), tabs });
     }
     for (const f of walk(join(dir, "services"), (p) => p.endsWith(".ts"))) {
       for (const m of read(f).matchAll(/["`](\/api\/v1\/[^"`?]+)/g)) called.add(m[1].replace(/\$\{[^}]+\}/g, "{}"));
@@ -2770,7 +2772,8 @@ const outputs = {
   "ADMIN.md": mdAdmin(extractAdmin(api)),
   "GOVERNANCE.md": mdGovernance(extractGovernance()),
   "MODELS.md": mdModels(registry, extractModels()),
-  "MEASURED_RUNS.md": frontmatter("Measured runs", "Time, cost and every parameter of the video and image runs Orazaka made, per model and provider — generated from the run records.", "Models", 9) + mdMeasuredRuns(JSON.parse(read(join(ROOT, "docs/measurements/runs.json")))),
+  "MEASURED_RUNS.md": frontmatter("Measured runs", "Time, cost and every parameter of the video and image runs Orazaka made, per model and provider — generated from the run records.", "Models", 9) + mdMeasuredRuns(JSON.parse(read(join(ROOT, "docs/measurements/runs.json")))) +
+    (existsSync(join(ROOT, "docs/measurements/cinema.json")) ? `\n${mdCinema(JSON.parse(read(join(ROOT, "docs/measurements/cinema.json")))).join("\n")}` : ""),
   "ADRS.md": mdAdrs(extractAdrs()),
 };
 

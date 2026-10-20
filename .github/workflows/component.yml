@@ -18,25 +18,37 @@ on:
         description: "Repository name, as listed in orazaka.workspace.json"
         required: true
         type: string
+      rewrite:
+        description: "Fail when an OpenRewrite recipe of krizaka-parent would change code (rewrite:dryRun). A repository turns it on in the pull request that applies rewrite:run."
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
-  packages: write
-  id-token: write
 
 jobs:
   verify:
+    # Write scopes live on the job, not at the top level (Scorecard TokenPermissions).
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     timeout-minutes: 60
     steps:
       - name: Check out the Orazaka workspace
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: krizaka/orazaka
           path: workspace
 
       - name: Check out ${{ inputs.component }} at the commit under test
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: incoming
 
@@ -51,7 +63,7 @@ jobs:
         working-directory: workspace
         run: node scripts/workspace.mjs clone --depth 1
 
-      - uses: actions/setup-java@v6
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin
           java-version: "21"
@@ -60,19 +72,28 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "22"
           registry-url: https://registry.npmjs.org
           scope: "@krizaka"
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
 
       - name: Verify ${{ inputs.component }} against its upstreams
         working-directory: workspace
         run: node scripts/workspace.mjs ci "${{ inputs.component }}"
+
+      # The recipes live in krizaka-parent (every repository inherits them). A change a recipe would make is
+      # debt: `./mvnw rewrite:run` then `./mvnw spotless:apply` (twice until clean), run the tests, commit.
+      - name: OpenRewrite — no change pending
+        if: inputs.rewrite
+        working-directory: workspace
+        run: |
+          target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='${{ inputs.component }}').path)")
+          cd "$target" && ./mvnw -B -ntp rewrite:dryRun
 
       - name: npm with trusted publishing
         if: startsWith(github.ref, 'refs/tags/v')

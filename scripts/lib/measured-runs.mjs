@@ -26,15 +26,21 @@ export function summarise(dataset) {
       excluded: succeeded.filter((run) => run.excludedFromStats).length,
       seconds: timed.length ? { n: timed.length, min: Math.min(...timed), median: median(timed), max: Math.max(...timed) } : null,
       engine: engine.length ? { n: engine.length, min: Math.min(...engine), median: median(engine), max: Math.max(...engine) } : null,
-      costUsd: model.costUsd == null ? null : Math.round(succeeded.length * model.costUsd * 100) / 100,
+      // A provider's price is per output; a GPU droplet is billed by the hour, so a run's cost is its own GPU time (`costUsd` on the run).
+      costUsd: model.gpuUsdPerHour
+        ? Math.round(succeeded.reduce((sum, run) => sum + (run.costUsd ?? 0), 0) * 100) / 100
+        : model.costUsd == null
+          ? null
+          : Math.round(succeeded.length * model.costUsd * 100) / 100,
     };
   }
   return out;
 }
 
-const where = { mac: "One Mac (Metal), local", digitalocean: "DigitalOcean serverless inference" };
+const where = { mac: "One Mac (Metal), local", digitalocean: "DigitalOcean serverless inference", gpu: "A DigitalOcean GPU droplet, by the hour (through the relay)" };
 const fmt = (stats, digits = 0) => (stats ? `${stats.median.toFixed(digits)} s (${stats.min.toFixed(digits)}–${stats.max.toFixed(digits)}, n=${stats.n})` : "—");
-const price = (model) => (model.costUsd == null ? "none (your own machine)" : `$${model.costUsd.toFixed(2)} ${model.priceUnit ?? "per output"}`);
+const price = (model) =>
+  model.gpuUsdPerHour ? `$${model.gpuUsdPerHour.toFixed(2)} per GPU hour` : model.costUsd == null ? "none (your own machine)" : `$${model.costUsd.toFixed(2)} ${model.priceUnit ?? "per output"}`;
 const row = (cells) => `| ${cells.join(" | ")} |`;
 
 export function mdMeasuredRuns(dataset) {
@@ -67,6 +73,34 @@ export function mdMeasuredRuns(dataset) {
     lines.push("");
   }
 
+  if (dataset.upscaleTests?.length) {
+    lines.push("## Video upscaling", "");
+    lines.push("The same clips, taken from 720p (or 480p) to 1080p or 4K by each candidate, on one NVIDIA H100 80 GB. The verdict is a person's, after looking at the same frames side by side with a plain Lanczos upscale; the cost is the run's own time at the GPU's hourly rate.", "");
+    lines.push("| Model | Licence | Commercial use | Size | Time (5 s clip) | Cost per clip | Verdict |", "| --- | --- | --- | --- | --- | --- | --- |");
+    for (const t of dataset.upscaleTests) {
+      const ran = typeof t.seconds === "number";
+      lines.push(row([t.model, t.licence, t.commercial, ran ? `${t.from} → ${t.to}` : "—", ran ? `${t.seconds} s` : "not run", ran ? `$${((t.seconds / 3600) * t.gpuUsdPerHour).toFixed(2)}` : "—", t.verdict]));
+    }
+    lines.push("");
+  }
+
+  if (dataset.bakeOff?.rows?.length) {
+    const b = dataset.bakeOff;
+    lines.push("## Image-to-video bake-off", "");
+    lines.push(`${b.note}. One NVIDIA H100 80 GB; the cost is the run's own time at the GPU's hourly rate. The verdict is a person's, after looking at the frame grid (first, quarter, middle, three quarters, last) of both shots.`, "");
+    lines.push("| Model | Licence | Commercial use | Shot | Size | Time | Cost | VRAM | Verdict |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+    for (const r of b.rows) {
+      const ran = typeof r.seconds === "number";
+      lines.push(row([r.model, r.licence, r.commercial, r.shot, r.size, ran ? `${r.seconds} s` : "not finished", ran ? `$${((r.seconds / 3600) * b.gpuUsdPerHour).toFixed(2)}` : "—", r.vramGb ? `${r.vramGb} GB` : "—", r.verdict]));
+    }
+    lines.push("");
+    if (b.winners?.length) {
+      lines.push("**Winners:**", "");
+      for (const w of b.winners) lines.push(`- **${w.use}**: ${w.model} — ${w.why}`);
+      lines.push("");
+    }
+  }
+
   lines.push("## Failures, timeouts and limits", "");
   lines.push("| Kind | What happened | Cause |", "| --- | --- | --- |");
   for (const event of dataset.events) lines.push(row([event.kind, event.what, event.cause]));
@@ -78,6 +112,14 @@ export function mdMeasuredRuns(dataset) {
   lines.push("| Provider | Output | Price | Runs | Spent |", "| --- | --- | --- | --- | --- |");
   for (const s of spent) lines.push(row([where[s.model.where], s.model.label, price(s.model), s.succeeded, `$${s.costUsd.toFixed(2)}`]));
   lines.push(row(["**Total of the runs above**", "", "", "", `**$${total.toFixed(2)}**`]), "");
+  if (dataset.gpuSessions?.length) {
+    const billed = Math.round(dataset.gpuSessions.reduce((sum, g) => sum + g.hours * g.usdPerHour, 0) * 100) / 100;
+    lines.push("### GPU droplet sessions (what was billed)", "");
+    lines.push("| Session | GPU | Hours | Rate | Billed |", "| --- | --- | --- | --- | --- |");
+    for (const g of dataset.gpuSessions) lines.push(row([g.what, g.gpu, g.hours.toFixed(2), `$${g.usdPerHour.toFixed(2)}/h`, `$${(g.hours * g.usdPerHour).toFixed(2)}`]));
+    lines.push(row(["**Total billed**", "", "", "", `**$${billed.toFixed(2)}**`]), "");
+    lines.push("A droplet is billed from its creation to its destruction: the sessions include the setup (image build, weights), the load of the model and the attempts that failed, which the runs above do not. The cost of a run is its own start-to-finish time at the hourly rate.", "");
+  }
   lines.push("The local models cost nothing per output; the energy of the Mac was **not measured**, so none is claimed. Probes and refused calls (a 403, a size test) are not runs and are not in this table.", "");
   lines.push("See also: [Supported models](MODELS.md) for the registry, and the comparison images on the gallery (`/gallery?kind=compare`).", "");
   return lines.join("\n");
