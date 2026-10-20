@@ -7,10 +7,10 @@ region: tor
 domains:
   - domain: dev.orazaka.com
     type: PRIMARY
-  # The operator console, same `web` component (krizaka/orazaka-web-admin#31): the proxy of orazaka-web-client reads the
-  # Host and serves the console on this one. Replaces the app `orazaka-admin-dev` (docs/DEPLOY_DEV.md § Admin console).
-  - domain: admin.orazaka.com
-    type: ALIAS
+  # The operator console will be served by this same `web` component on `admin.orazaka.com` (krizaka/orazaka-web-admin#31: the
+  # proxy of orazaka-web-client reads the Host) as a second domain of this app (an ALIAS entry in `domains:`).
+  # NOT YET: the domain still belongs to the app `orazaka-admin-dev`, and a domain belongs to one app (409 « App domain already
+  # exists »). When that app is deleted, detach the domain from it FIRST, then add the alias back here (docs/DEPLOY_DEV.md § Admin console).
 features:
   - buildpack-stack=ubuntu-22
 # The tor1 VPC: core reaches the broker Droplet (broker-dev.orazaka.com → its private IP) over it.
