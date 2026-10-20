@@ -2,7 +2,7 @@
 /**
  * Orazaka dev deployment (App Platform, project `orazaka`) — docs/DEPLOY_DEV.md.
  *
- *   node scripts/dev-deploy.mjs apply <orazaka-dev|orazaka-admin-dev> [--dry-run] [--drop-attached-db]
+ *   node scripts/dev-deploy.mjs apply <orazaka-dev|orazaka-admin-dev> [--dry-run] [--drop-attached-db] [--env-file <file>]
  *   node scripts/dev-deploy.mjs data        # infra/deploy/dev-data.sql into orazaka_db (routing is data)
  *   node scripts/dev-deploy.mjs policy      # infra/deploy/dev-content-policy.sql into orazaka_studio_db (docs/CONTENT_POLICY.md)
  *   node scripts/dev-deploy.mjs recommendations  # the recommender's tables on orazaka_knowledge_db (ADR-078)
@@ -14,9 +14,10 @@
  *   node scripts/dev-deploy.mjs broker      # the TLS RabbitMQ Droplet in the tor1 VPC (once; idempotent)
  *   node scripts/dev-deploy.mjs status
  *
- * Secrets come from a local file (default ~/Documents/krizaka/orazaka-dev.env, or ORAZAKA_DEV_ENV_FILE),
- * never from the repository, and are never printed: each `__NAME__` of infra/deploy/<app>.app.yaml is
- * filled from it and App Platform stores the SECRET ones encrypted.
+ * Secrets are read through `~/.krizaka-worktrees/tools/secret.sh @dev KEY` (the company folder's `env/dev.env`, then
+ * `env/org.env`), or from one file given with `--env-file ~/Documents/krizaka/env/dev.env` (or ORAZAKA_DEV_ENV_FILE);
+ * never from the repository, and never printed: each `__NAME__` of infra/deploy/<app>.app.yaml is filled from them and
+ * App Platform stores the SECRET ones encrypted. `--env-file` may sit anywhere on the command line.
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -24,28 +25,22 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, write
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { devSecrets, envFileFromArgs, readEnvFile } from "./lib/dev-secrets.mjs";
+
+export { readEnvFile };
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DEPLOY = join(ROOT, "infra/deploy");
 const PROJECT = "orazaka";
-const ENV_FILE = process.env.ORAZAKA_DEV_ENV_FILE ?? join(homedir(), "Documents/krizaka/orazaka-dev.env");
+const COMPANY_DIR = join(homedir(), "Documents/krizaka");
+/** The one secrets file of this run (`--env-file`, ORAZAKA_DEV_ENV_FILE), or null: then every key goes through secret.sh @dev. */
+let ENV_FILE = process.env.ORAZAKA_DEV_ENV_FILE || null;
 const QA_FILE = process.env.ORAZAKA_QA_FILE ?? join(homedir(), "krizaka-com/company/QA.md");
 /** Placeholders that are settings, not secrets, and their defaults. */
 /** CORE_REBUILD busts the image build cache of the core component at every apply (see infra/deploy/Dockerfile). */
 const DEFAULTS = { CORE_REBUILD: new Date().toISOString().replace(/[:.]/g, "-") };
 /** Settings that may be empty: the feature they switch on is then simply off (universal links: no AASA / assetlinks served). */
 const OPTIONAL = new Set(["APP_IOS_TEAM_ID", "APP_ANDROID_CERT_SHA256"]);
-
-export function readEnvFile(text) {
-  const env = {};
-  for (const raw of text.split("\n")) {
-    const line = raw.trim();
-    if (!line || line.startsWith("#")) continue;
-    const eq = line.indexOf("=");
-    if (eq > 0) env[line.slice(0, eq).trim()] = line.slice(eq + 1).trim();
-  }
-  return env;
-}
 
 /** Fills every __NAME__; throws on one the env does not hold (the error names it, never a value). */
 export function render(template, env) {
@@ -65,12 +60,14 @@ export function render(template, env) {
 }
 
 function secrets() {
-  if (!existsSync(ENV_FILE)) throw new Error(`no secrets file at ${ENV_FILE}`);
-  return { ...readEnvFile(readFileSync(ENV_FILE, "utf8")), ...pick(process.env, Object.keys(DEFAULTS)) };
+  return devSecrets({ envFile: ENV_FILE, overridable: Object.keys(DEFAULTS) });
 }
 
-function pick(obj, keys) {
-  return Object.fromEntries(keys.filter((k) => obj[k]).map((k) => [k, obj[k]]));
+/** Stores a generated secret: appended to the explicit file, else set in `@dev` by env-set.sh (value on the environment, never an argument). */
+function storeSecret(key, value) {
+  if (ENV_FILE) return appendFileSync(ENV_FILE, `${key}=${value}\n`);
+  const r = spawnSync(join(homedir(), ".krizaka-worktrees/tools/env-set.sh"), ["@dev", key], { env: { ...process.env, VALUE: value }, stdio: "ignore" });
+  if (r.status !== 0) throw new Error(`could not store ${key} in @dev`);
 }
 
 function doctl(args, input) {
@@ -365,7 +362,7 @@ const BROKER = {
   host: "broker-dev.orazaka.com",
   adminIp: process.env.BROKER_ADMIN_IP ?? "142.122.41.109",
 };
-const BROKER_DIR = join(dirname(ENV_FILE), "orazaka-broker");
+const BROKER_DIR = join(COMPANY_DIR, "orazaka-broker");
 
 /** The platform user has everything on `/`; the GPU worker only touches `orazaka.*` names. */
 export const BROKER_PERMISSIONS = { orazaka: ".*", "gpu-worker": "^orazaka\\..*" };
@@ -427,7 +424,7 @@ function ensureTls() {
 function ensureEnv(env, key, make) {
   if (env[key]) return env[key];
   const value = make();
-  appendFileSync(ENV_FILE, `${key}=${value}\n`);
+  storeSecret(key, value);
   env[key] = value;
   return value;
 }
@@ -501,7 +498,9 @@ function status() {
   }
 }
 
-const [command, ...rest] = process.argv.slice(2);
+const { envFile, args: argv } = envFileFromArgs(process.argv.slice(2));
+ENV_FILE = envFile;
+const [command, ...rest] = argv;
 if (import.meta.url === `file://${process.argv[1]}`) {
   try {
     if (command === "apply") apply(rest[0], rest.slice(1));

@@ -240,3 +240,12 @@ test("the webhook migration is idempotent, seeds its limits as rows, and has its
   for (const key of ["max-attempts", "backoff-seconds", "backoff-cap-seconds", "timeout-seconds", "batch-size"]) assert.match(sql, new RegExp(`webhook\\.${key}`));
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "webhooks"\) webhooks\(\)/);
 });
+
+test("dev-deploy reads its secrets through secret.sh @dev or --env-file, never a hard-coded file of the old layout", () => {
+  const source = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(source, new RegExp(["orazaka", "dev\\.env"].join("-")), "the company folder was restructured on 2026-10-18 (env/dev.env, env/org.env)");
+  assert.match(source, /envFileFromArgs\(process\.argv/);
+  assert.match(source, /devSecrets\(/);
+  const audit = readFileSync(new URL("../audit-studio-forms.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(audit, new RegExp(["orazaka", "dev\\.env"].join("-")));
+});
