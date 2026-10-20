@@ -108,3 +108,14 @@ test("dev data gives hosted video its own queue, and migrates the table of the f
   assert.match(sql, /\('video', FALSE,\s+'job\.video\.generate'\)/);
   assert.match(sql, /ON CONFLICT \(category, hosted\) DO NOTHING/);
 });
+
+test("the core build leaves nothing behind in its layer: the Maven repository and the target folders are removed in the same RUN (kaniko OOM at the snapshot, 2026-10-20)", () => {
+  const docker = root("infra/deploy/Dockerfile");
+  const run = docker.slice(docker.indexOf('RUN echo "core build'), docker.indexOf("# ── 3. Runtime"));
+  assert.match(run, /cp -r orazaka-apps\/workers\/orazaka-worker-media \/out\/orazaka-worker-media/);
+  // Files created then deleted inside one RUN never reach the snapshot: the builder's memory follows the layer's size, and eight
+  // services plus the whole Maven repository made the build fail with BuildJobOutOfMemory.
+  assert.match(run, /rm -rf \/root\/\.m2/);
+  assert.match(run, /find \/workspace -name target -type d -prune -exec rm -rf \{\} \+/);
+  assert.ok(run.indexOf("rm -rf /root/.m2") > run.indexOf("cp -r orazaka-packs"), "cleaned after the jars were copied out");
+});

@@ -67,7 +67,9 @@ RUN echo "core build ${CORE_REBUILD}" \
  && cp orazaka-apps/services/orazaka-knowledge-service/target/orazaka-knowledge-service-*[0-9T].jar /out/knowledge.jar \
  && cp orazaka-apps/services/orazaka-automation-service/target/orazaka-automation-service-*[0-9T].jar /out/automation.jar \
  && cp -r orazaka-packs /out/orazaka-packs \
- && cp -r orazaka-apps/workers/orazaka-worker-media /out/orazaka-worker-media
+ && cp -r orazaka-apps/workers/orazaka-worker-media /out/orazaka-worker-media \
+ && rm -rf /root/.m2 \
+ && find /workspace -name target -type d -prune -exec rm -rf {} +
 
 # ── 3. Runtime: a JRE, the jars, one supervisor ──────────────────────────────
 FROM eclipse-temurin:21-jre@sha256:ccbad9e7cb84c27092b12c40a4143e5733e050db9c3784d84f632dcf423fb2ef
