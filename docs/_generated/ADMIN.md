@@ -21,14 +21,14 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 
 | Screen | What it is for | Tabs |
 |:---|:---|:---|
-| `/(console)` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
-| `/(console)/audit` | `/audit` — the audit trail of account administration. | — |
-| `/(console)/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
-| `/(console)/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
-| `/(console)/operations` | `/operations` — dependencies, queue depth, recent errors, runs and the deployed version. | — |
-| `/(console)/studios` | The Studio Builder console (ADR-034 §12.4). | — |
-| `/(console)/users` | `/users` — the platform's accounts: state, role, Law 25 export and erasure. | — |
+| `/` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
+| `/audit` | `/audit` — the audit trail of account administration. | — |
+| `/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
 | `/login` | — | — |
+| `/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
+| `/operations` | `/operations` — dependencies, queue depth, recent errors, runs and the deployed version. | — |
+| `/studios` | The Studio Builder console (ADR-034 §12.4). | — |
+| `/users` | `/users` — the platform's accounts: state, role, Law 25 export and erasure. | — |
 
 ![Billing — consumption per capability and model, refusals included](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/02-billing-usage.png)
 
