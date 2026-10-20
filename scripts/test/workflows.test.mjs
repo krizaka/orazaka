@@ -53,3 +53,29 @@ test("CI holds a pull request to the docs gate only when it touches what the doc
   assert.match(text, /::warning::docs\/_generated drifted/);
   assert.match(text, /docs\/\|scripts\/\|infra\//);
 });
+
+/** Duplicate keys inside one job (two `permissions:` after a merge) make GitHub refuse the whole file at startup. */
+export function duplicateJobKeys(name, text) {
+  const out = [];
+  let job = null;
+  let seen = new Set();
+  text.split("\n").forEach((line, i) => {
+    if (/^ {2}[\w-]+:\s*$/.test(line) && text.split("\n").slice(0, i).some((l) => /^jobs:\s*$/.test(l))) {
+      job = line.trim();
+      seen = new Set();
+    } else if (job) {
+      const m = /^ {4}([\w-]+):/.exec(line);
+      if (m) {
+        if (seen.has(m[1])) out.push(`${name}:${i + 1}: duplicate key "${m[1]}" in job ${job}`);
+        seen.add(m[1]);
+      }
+    }
+  });
+  return out;
+}
+
+test("no workflow repeats a key inside a job (a merge once left two `permissions:` in component.yml and broke every repository's CI)", () => {
+  const bad = readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).flatMap((f) => duplicateJobKeys(f, readFileSync(new URL(f, dir), "utf8")));
+  assert.deepEqual(bad, []);
+  assert.equal(duplicateJobKeys("t.yml", "jobs:\n  a:\n    permissions:\n      contents: read\n    runs-on: x\n    permissions:\n      contents: write\n").length, 1);
+});
