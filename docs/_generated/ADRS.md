@@ -78,3 +78,4 @@ generated: true
 | ADR-081 | _(cited in code, no dedicated file)_ | — |
 | ADR-082 | _(cited in code, no dedicated file)_ | — |
 | ADR-083 | ADR-083 — Client connectivity and capacity | `adr/ADR-083-client-connectivity-and-capacity.md` |
+| ADR-084 | ADR-084 — Automation triggers | `adr/ADR-084-automation-triggers.md` |
