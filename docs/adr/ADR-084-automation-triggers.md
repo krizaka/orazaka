@@ -58,16 +58,17 @@ the epoch) and `webhook-signature` (`v1,<base64 HMAC-SHA256>`, a space-separated
 
 | # | Check | Refusal |
 |:--|:---|:---|
-| 1 | `Content-Length` over the **body cap** (row, default 64 KiB); the body is then read with a hard bound, never trusted to its header | `413` |
-| 2 | the trigger's **pre-verification bucket** (row, default 600/min per trigger): protects CPU and the database from a flood of bad signatures | `429` + `Retry-After` |
-| 3 | headers present and well formed, **timestamp within ±5 min** (row) | `401` |
-| 4 | the trigger exists and is enabled, **HMAC verified in constant time** against the current secret and, during a grace, the previous one. An unknown or disabled trigger runs the same work against a dummy key and answers the same | `401`, one generic body for every cause |
-| 5 | **replay**: `INSERT (trigger_id, webhook_id)` into `webhook_delivery` (primary key). A second use of the same id is refused *after* the signature checked, so an anonymous caller cannot probe ids | `409` `webhook_replayed`, with the first run's id |
-| 6 | the trigger's **run bucket** (row, default 60/min) and the automation's daily run budget | `429` + `Retry-After` |
-| 7 | the run row is written and the Studio run is started (below) | `202` with `{runId, deliveryId}` |
+| 1 | `Content-Length` over the **body cap** (row, default 64 KiB); a body without a length is read with a hard bound | `413` |
+| 2 | the **global** bucket of webhook calls (row, default 3 000/min), before anything is looked up | `429` + `Retry-After` |
+| 3 | the trigger's id is read and its credentials looked up; the trigger's **pre-verification bucket** (row, default 600/min per trigger) protects CPU and the database from a flood of bad signatures | `429` + `Retry-After` |
+| 4 | the body is read (bounded); headers present and well formed (`webhook-id` of 1–128 safe characters), **timestamp within ±5 min** (row) | `401` |
+| 5 | the trigger exists and is enabled (and so is its automation), **HMAC verified in constant time** against the current secret and, during a grace, the previous one — both are always checked. An unknown, malformed or disabled trigger runs the same work against a decoy key, and a secret that cannot be opened (a retired master key) verifies nothing | `401`, one generic body for every cause |
+| 6 | **replay**: the ledger already holds `(trigger_id, webhook_id)`. Refused *after* the signature checked, so an anonymous caller cannot probe ids | `409` `webhook_replayed`, with the first run's id |
+| 7 | the trigger's **run bucket** (row, default 60/min) and the automation's **daily budget** of runs (row, default 20) — both before the id is claimed, so a refused call does not burn its `webhook-id` and can be retried | `429` + `Retry-After` |
+| 8 | **one atomic statement** claims the `webhook-id` (primary key of `webhook_delivery`) and records the run; of two parallel deliveries of one id, one wins and the other is a `409` | `202` with `{runId, status}` |
 
-A `webhook-id` is remembered for twice the tolerance window plus a margin (row, default 24 h); older ids cannot be
-replayed anyway because their timestamp is refused at step 3. All thresholds are **rows** of `automation_settings`
+A `webhook-id` is remembered for the replay retention (row, default 24 h — far over twice the tolerance window); older ids
+cannot be replayed anyway because their timestamp is refused at step 4. All thresholds are **rows** of `automation_settings`
 (a versioned rule set, bounded in code), never constants (ADR-027, organisation rule of 2026-10-15). The webhook body is
 **data, not instructions**: v1 stores it (capped, as JSON) on the run for the history and forwards **nothing** of it to
 the recipe — the Studio run gets the automation's fixed inputs. Mapping a payload field to an input is a later slice with
@@ -144,9 +145,12 @@ second instance exists.
 
 | # | Slice | Issue |
 |:--|:---|:---|
-| 1 | HTTP surface + security configuration of the automation service (CRUD of automations, ownership, `SecurityConfig`, governance test of the `permitAll`) | #195 |
-| 2 | Edge route `/api/v1/automations`, `/hooks` | #195 |
-| 3 | Trigger CRUD, sealed secrets, rotation, and the UI in `/automation` | #195, #196 |
-| 4 | Signed inbound webhook → run, replay, rate limit, body cap | #196 |
-| 5 | Schedule triggers | #196 |
-| 6 | Run history (API + UI) | #195 |
+| 1 | HTTP surface + security configuration of the automation service (CRUD of automations, ownership, `SecurityConfig`, governance test of the `permitAll`) — [orazaka-automation-service#18](https://github.com/krizaka/orazaka-automation-service/pull/18) | #195 |
+| 2 | Edge routes `/api/v1/automations` and `/hooks/` — [orazaka-edge#28](https://github.com/krizaka/orazaka-edge/pull/28) | #195 |
+| 3 | Trigger CRUD, sealed secrets, rotation (service #19); the UI in `/automation` ([orazaka-web-client#183](https://github.com/krizaka/orazaka-web-client/pull/183), contracts in `@krizaka/orazaka-shared` 1.4.0) | #195, #196 |
+| 4 | Signed inbound webhook → run, replay, rate limit, body cap — service #20 | #196 |
+| 5 | Schedule triggers fire — service #21 | #196 |
+| 6 | Run history (API: service #22; UI: web-client #183) | #195 |
+
+The dev deployment (an eighth JVM of the core, `pool-automation` of one connection, the migration) is `docs/DEPLOY_DEV.md`
+§ Automations; the live proof of each slice (run ids, transcripts, a clip of the UI) is linked from the pull requests.

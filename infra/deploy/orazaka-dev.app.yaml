@@ -73,7 +73,7 @@ services:
 
   # The JVM services in one container (infra/deploy/Dockerfile + run-services.sh): edge :8088 (the
   # only port App Platform routes), users :8083, billing :8095, conversation :8080, studio :8096, job :8090,
-  # knowledge :8084 (the recommender, ADR-078).
+  # knowledge :8084 (the recommender, ADR-078), automation :8091 (webhooks and schedules, ADR-084).
   - name: core
     github:
       repo: krizaka/orazaka
@@ -114,6 +114,18 @@ services:
       - { key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-knowledge?sslmode=require&prepareThreshold=0" }
       - { key: KNOWLEDGE_DB_USERNAME, scope: RUN_TIME, value: orazaka_knowledge_db }
       - { key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__" }
+      # The automation service (ADR-084), the eighth JVM: signed webhooks and schedules that start Studio runs. Its own
+      # database through a pool of ONE connection (budget 22 of 22, docs/DEV_DATABASE.md): the code holds no connection while
+      # it calls another service. Routed by the edge at /api/v1/automations and /hooks/ (AUTOMATION_INTERNAL_URL).
+      - { key: AUTOMATION_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-automation?sslmode=require&prepareThreshold=0" }
+      - { key: AUTOMATION_DB_USERNAME, scope: RUN_TIME, value: orazaka_automation_db }
+      - { key: AUTOMATION_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_AUTOMATION_DB__" }
+      - { key: AUTOMATION_DB_MAX_POOL_SIZE, scope: RUN_TIME, value: "1" }
+      - { key: AUTOMATION_PORT, scope: RUN_TIME, value: "8091" }
+      - { key: AUTOMATION_INTERNAL_URL, scope: RUN_TIME, value: "http://localhost:8091" }
+      - { key: STUDIO_INTERNAL_URL, scope: RUN_TIME, value: "http://localhost:8096" }
+      # The address a sender is shown for a webhook trigger: the edge as the Internet reaches it.
+      - { key: APP_PUBLIC_EDGE_URL, scope: RUN_TIME, value: "https://dev.orazaka.com/edge" }
       # Broker: RabbitMQ on the orazaka-broker-dev Droplet, TLS only, VPC only (`dev-deploy.mjs broker`).
       # The GPU workers reach the same broker over the VPC with their own, narrower user.
       - { key: RABBITMQ_HOST, scope: RUN_TIME, value: broker-dev.orazaka.com }

@@ -36,18 +36,38 @@ down so App Platform restarts the set.
 | `orazaka-conversation-service` | 8080 | 320 MiB | `orazaka_db` | chat (SSE), models, bootstrap features |
 | `orazaka-studio-service` | 8096 | 160 MiB | `orazaka_studio_db` | Studios, packs (installed at boot), runs |
 | `orazaka-knowledge-service` | 8084 | 128 MiB | `orazaka_knowledge_db` | the products' recommender (ADR-078, pgvector) |
-| `orazaka-edge` | **8088** | 96 MiB | — | the only routed port: `/` → conversation, `/api/v1/auth…` → users, `/api/v1/studios` → studio, `/api/v1/recommendations` → knowledge |
+| `orazaka-automation-service` | 8091 | 128 MiB | `orazaka_automation_db` | cloud automations: signed webhooks and schedules that start Studio runs (ADR-084), run history |
+| `orazaka-edge` | **8088** | 96 MiB | — | the only routed port: `/` → conversation, `/api/v1/auth…` → users, `/api/v1/studios` → studio, `/api/v1/recommendations` → knowledge, `/api/v1/automations` and `/hooks/` → automation |
 
 Measured on 2026-10-14 against the cluster (five JVMs, serial GC, C1 only, virtual threads): **1.3 GB resident**
 idle and after a round of sign-ins and Studio listings — the reason for a 2 GB container.
 
-**Not deployed** (and why): automation (connectors), notifications (no e-mail in dev: no password reset),
+**Not deployed** (and why): the automation service's connector stubs (Jira, Slack… log only; the service runs for ADR-084), notifications (no e-mail in dev: no password reset),
 worker-media (Metal/MLX — Mac only), Redis (only for `orazaka.identity.rate-limit.enabled`, off).
 
 The **document-validation worker** (orazaka-packs, Python, `job.validation.*`) runs in the same container: the image
 builds its venv (`pika`, `pyyaml`, `pypdf`, pinned), `run-services.sh` starts it after the JVMs (`ORAZAKA_WORKERS`,
 default `validation`; empty to skip) with the broker's TLS settings and CA file, its lines prefixed `[validation]`. It
 takes ~40 MB; like a JVM, if it exits the container restarts.
+
+## Automations — webhooks and schedules (ADR-084)
+
+The automation service starts a Studio run **as its owner** from a signed call or a schedule. Set it up once:
+
+```bash
+doctl databases pool create <cluster-id> pool-automation --db orazaka_automation_db --user orazaka_automation_db --size 1 --mode transaction
+node scripts/dev-deploy.mjs automations     # the model, triggers, webhook ledger, runs and rule set v2 (idempotent)
+```
+
+- **A webhook trigger** has its own secret (32 random bytes, `whsec_…`), sealed under the asset keyring
+  (`MEDIA_ENCRYPTION_KEY`), shown once, rotatable with a 24 h grace. `POST /edge/hooks/<triggerId>` with the Standard
+  Webhooks headers (`webhook-id`, `webhook-timestamp`, `webhook-signature: v1,<base64 HMAC-SHA256>`) answers `202` with the
+  run; a bad or stale signature `401`; a reused `webhook-id` `409`; a flood `429` with `Retry-After`; a body over 64 KiB `413`.
+  It is the only anonymous route of the platform (ADR-035 amendment).
+- **A schedule trigger** is « daily at HH:mm in a time zone on these weekdays »; one sweep every 15 s fires the slots that
+  have come. The limits (body cap, tolerance, rates, budgets) are the rule set v2 (`automation_settings`), not configuration.
+- **The pool is one connection**: no transaction is held across the call to the Studio service. The connection budget is
+  22 of 22 with it (docs/DEV_DATABASE.md); the next service needs the plan upgrade or a smaller pool elsewhere.
 
 ## Service accounts — a Krizaka product calling Orazaka
 

@@ -59,8 +59,9 @@ fi
 COMMON_OPTS="${ORAZAKA_JAVA_OPTS:--XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=64m -Xss512k -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom}"
 
 # name:jar:default-heap-MiB, in start order (edge last: it is the public port). knowledge serves the
-# recommender (ADR-078) on :8084, reached through the edge's /api/v1/recommendations route.
-SERVICES="${ORAZAKA_SERVICES:-users:users.jar:160 billing:billing.jar:160 job:job.jar:256 conversation:conversation.jar:320 studio:studio.jar:160 knowledge:knowledge.jar:128 edge:edge.jar:96}"
+# recommender (ADR-078) on :8084, reached through the edge's /api/v1/recommendations route; automation serves the
+# signed webhooks and schedules (ADR-084) on :8091, reached through /api/v1/automations and /hooks/.
+SERVICES="${ORAZAKA_SERVICES:-users:users.jar:160 billing:billing.jar:160 job:job.jar:256 conversation:conversation.jar:320 studio:studio.jar:160 knowledge:knowledge.jar:128 automation:automation.jar:128 edge:edge.jar:96}"
 
 pids=()
 workers=()

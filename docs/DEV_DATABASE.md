@@ -52,6 +52,7 @@ a ceiling per service (what it may hold at once), kept under 22 with room for a 
 | core: users (`krizaka_users_db`) | `pool-users` | 2 | |
 | core: studio | `pool-studio` | 2 | |
 | core: knowledge | `pool-knowledge` | 2 | |
+| core: automation | `pool-automation` | 1 | no transaction is held across a remote call (ADR-084 §6) |
 | core: billing | `pool-billing` | 3 | outbox relay + requests: 1 starved it (`query_wait_timeout`, 2026-10-17) |
 | orochia-dev web | direct | 3 | pool 2 + 1 LISTEN (session by nature) |
 | orochia-admin-dev | direct | 1 | |
@@ -59,7 +60,7 @@ a ceiling per service (what it may hold at once), kept under 22 with room for a 
 | kachizaka-dev, akinaza-dev | `pool-kachizaka`, `pool-akinaza` | 1 + 1 | `DATABASE_MAX_CONNECTIONS=1` |
 | accounts, newsletter (next services) | `pool-accounts`, `pool-newsletter` | 1 + 1 | reserved |
 | maintainer / `doadmin` | direct | 1 | |
-| **Ceiling** | | **21 of 22** | 1 left for a migrate job (accounts/newsletter pools are not counted until they deploy) during a deploy |
+| **Ceiling** | | **22 of 22** | none left: the maintainer's `doadmin` connection is the one a migration uses (accounts/newsletter pools are not counted until they deploy, and cannot until the plan or a pool changes — ADR-083 slice 9) |
 
 Rules: a transaction pool must be at least as large as the service's real concurrent transactions (Hikari holds a connection for a whole transaction, including calls to other services): size 1 starves. JVM services go through a **transaction** pool on port 25061 with `prepareThreshold=0` (Flyway is off, so no
 session lock sits behind the pooler); a service that needs `LISTEN`/`NOTIFY` or session state keeps one direct connection,

@@ -1,6 +1,6 @@
 // node --test scripts/test — the dev deployment tool: specs are filled, never leaked, accounts are sound.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { connectionVars, grantSql, parseScopes, password, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
 
@@ -181,10 +181,10 @@ test("the recommender (ADR-078): knowledge runs in core with its own database, i
   assert.match(dev, /key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql:\/\/__DATABASE_HOST__:25061\/pool-knowledge\?sslmode=require&prepareThreshold=0"/);
   assert.match(dev, /key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__"/);
   const docker = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
-  assert.match(docker, /orazaka-apps\/services\/orazaka-knowledge-service \\/);
+  assert.match(docker, /orazaka-apps\/services\/orazaka-knowledge-service[ ,]/);
   assert.match(docker, /\/out\/knowledge\.jar/);
   const runner = readFileSync(new URL("../../infra/deploy/run-services.sh", import.meta.url), "utf8");
-  assert.match(runner, /knowledge:knowledge\.jar:\d+ edge:edge\.jar/, "knowledge starts before the edge");
+  assert.match(runner, /knowledge:knowledge\.jar:\d+ [\w:. ]*edge:edge\.jar/, "knowledge starts before the edge");
   const sql = readFileSync(new URL("../../infra/migrations/2026-10-15-recommendations.sql", import.meta.url), "utf8");
   for (const statement of sql.match(/CREATE (TABLE|INDEX) [^\n]*/g)) assert.match(statement, /IF NOT EXISTS/, statement);
   assert.match(sql, /EXCEPTION WHEN duplicate_object THEN NULL/);
@@ -214,7 +214,7 @@ test("orazaka-dev: outputs go to the private Bunny zone, the key is a SECRET, de
 test("connection budget: every JVM of the core goes through its PgBouncer pool (25061, prepareThreshold=0), none direct", () => {
   const dev = spec("orazaka-dev");
   const urls = [...dev.matchAll(/key: (\w+_URL|SPRING_DATASOURCE_URL), scope: RUN_TIME, value: "(jdbc:postgresql:[^"]+)"/g)];
-  assert.equal(urls.length, 5, "orazaka_db, users, studio, knowledge, billing");
+  assert.equal(urls.length, 6, "orazaka_db, users, studio, knowledge, billing, automation");
   for (const [, key, url] of urls) {
     assert.match(url, /:25061\/pool-[a-z]+\?sslmode=require&prepareThreshold=0$/, `${key} must use its pool`);
   }
@@ -271,4 +271,43 @@ test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4;
 
 test("orazaka-dev enforces the per-key rate limit (ADR-083 slice 2: service accounts are on the `service` tier, 1000 a minute)", () => {
   assert.match(spec("orazaka-dev"), /key: ABUSE_RATE_LIMIT_MODE, scope: RUN_TIME, value: enforce/);
+});
+
+test("automations (ADR-084): the service is the eighth JVM of the core, with its own database through a pool of ONE", () => {
+  const dev = spec("orazaka-dev");
+  assert.match(dev, /key: AUTOMATION_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql:\/\/__DATABASE_HOST__:25061\/pool-automation\?sslmode=require&prepareThreshold=0"/);
+  assert.match(dev, /key: AUTOMATION_DB_USERNAME, scope: RUN_TIME, value: orazaka_automation_db/);
+  assert.match(dev, /key: AUTOMATION_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_AUTOMATION_DB__"/);
+  assert.match(dev, /key: AUTOMATION_DB_MAX_POOL_SIZE, scope: RUN_TIME, value: "1"/, "the pool is one connection: the code holds none across a remote call");
+  assert.match(dev, /key: AUTOMATION_PORT, scope: RUN_TIME, value: "8091"/);
+  assert.match(dev, /key: AUTOMATION_INTERNAL_URL, scope: RUN_TIME, value: "http:\/\/localhost:8091"/, "the edge routes /api/v1/automations and /hooks/ to it");
+  assert.match(dev, /key: STUDIO_INTERNAL_URL, scope: RUN_TIME, value: "http:\/\/localhost:8096"/, "it starts Studio runs over the Studio service's REST surface");
+  assert.match(dev, /key: APP_PUBLIC_EDGE_URL, scope: RUN_TIME, value: "https:\/\/dev\.orazaka\.com\/edge"/, "the address a sender is shown");
+  const docker = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
+  assert.match(docker, /orazaka-apps\/services\/orazaka-automation-service \\/);
+  assert.match(docker, /\/out\/automation\.jar/);
+  const runner = readFileSync(new URL("../../infra/deploy/run-services.sh", import.meta.url), "utf8");
+  assert.match(runner, /automation:automation\.jar:\d+ edge:edge\.jar/, "automation starts before the edge");
+});
+
+test("the automation migration is idempotent, extends the rule set without replacing it, and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-automations.sql", import.meta.url), "utf8");
+  for (const statement of sql.match(/CREATE (TABLE|INDEX|UNIQUE INDEX) [^\n]*/g)) assert.match(statement, /IF NOT EXISTS/, statement);
+  for (const statement of sql.match(/ALTER TABLE [^\n]*ADD COLUMN [^\n]*/g)) assert.match(statement, /ADD COLUMN IF NOT EXISTS/, statement);
+  assert.match(sql, /ON CONFLICT \(version\) DO NOTHING/);
+  assert.match(sql, /secret_sealed/, "a webhook secret is stored sealed");
+  assert.doesNotMatch(sql, /\bsecret\s+(VARCHAR|TEXT)/i, "never a clear secret column");
+  assert.match(sql, /PRIMARY KEY \(trigger_id, webhook_id\)/, "the replay guard is the primary key");
+  const script = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
+  assert.match(script, /command === "automations"\) automations\(\)/);
+});
+
+test("the automations migration is the model part of the service's own bootstrap (no drift) — judged when the service is cloned", (t) => {
+  const initdb = new URL("../../orazaka-apps/services/orazaka-automation-service/infra/initdb/50-automation.sql", import.meta.url);
+  if (!existsSync(initdb)) return t.skip("orazaka-automation-service is not cloned here");
+  const marker = "-- ─────────────────────────────────────────────────────────────────────────────\n-- THE AUTOMATION MODEL";
+  const bootstrap = readFileSync(initdb, "utf8");
+  const migration = readFileSync(new URL("../../infra/migrations/2026-10-20-automations.sql", import.meta.url), "utf8");
+  assert.ok(bootstrap.includes(marker), "the model marker moved");
+  assert.equal(migration.slice(migration.indexOf(marker)), bootstrap.slice(bootstrap.indexOf(marker)));
 });
