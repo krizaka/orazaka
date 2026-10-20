@@ -19,7 +19,24 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # What a change in THIS repository can break. The Java and Python sources live in the other repositories (cloned at their
+  # main and tested by their own CI); here, a docs / scripts / deploy-infra / ADR / .agent change cannot change the outcome
+  # of the 12-minute reactor build or of the UI workspace build. They run when the reactor, the end-to-end module, the SQL the
+  # tests replay, the workspace manifest or this workflow change — and always on the nightly, dispatch and on every
+  # other event (krizaka/.github changes.yml fails open). The docs freshness gate and the workspace script tests always run.
+  maven-changes:
+    uses: krizaka/.github/.github/workflows/changes.yml@ccd224612f5bb9db815335654f359a595a597fbb # main
+    with:
+      relevant: '^(pom\.xml|\.mvn/|mvnw(\.cmd)?$|orazaka-end2end/|infra/(initdb|migrations|users|brokers-infra|docker-compose)|orazaka\.workspace\.json|scripts/workspace\.mjs|\.github/workflows/ci\.yml$)'
+  ui-changes:
+    uses: krizaka/.github/.github/workflows/changes.yml@ccd224612f5bb9db815335654f359a595a597fbb # main
+    with:
+      relevant: '^(orazaka-apps/ui/|orazaka\.workspace\.json|scripts/workspace\.mjs|\.github/workflows/ci\.yml$)'
+
   workspace:
+    # The required check keeps its name; `!cancelled()` so that a failed gate job runs everything (fail open).
+    needs: [maven-changes, ui-changes]
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -29,6 +46,7 @@ jobs:
         run: node scripts/workspace.mjs clone --depth 1
 
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        if: ${{ needs.maven-changes.outputs.code != 'false' }}
         with:
           distribution: temurin
           java-version: "21"
@@ -53,11 +71,13 @@ jobs:
         run: python -m pytest -q test_capability_contract.py
 
       - name: Derive the UI workspace lock from the cloned members
+        if: ${{ needs.ui-changes.outputs.code != 'false' }}
         # The members are cloned from their repositories' main: their dependency bumps must not break this build.
         working-directory: orazaka-apps/ui
         run: npm install --package-lock-only --legacy-peer-deps --no-audit --no-fund
 
       - name: Build and test the platform
+        if: ${{ needs.maven-changes.outputs.code != 'false' }}
         run: >
           ./mvnw -B -ntp install
           -Dpython.executable=python
@@ -66,6 +86,7 @@ jobs:
           -Dskip.installnodenpm=true
 
       - name: UI workspace
+        if: ${{ needs.ui-changes.outputs.code != 'false' }}
         working-directory: orazaka-apps/ui
         run: |
           npm ci --no-audit --no-fund
