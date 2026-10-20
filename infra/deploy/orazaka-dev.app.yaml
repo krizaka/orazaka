@@ -50,8 +50,8 @@ services:
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
     envs:
-      # Dev is closed to search engines: noindex on every response, robots Disallow /, no sitemap, the dev line in the footer.
-      - { key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "off" }
+      # Dev is indexed (krizaka-com AGENTS 2.4): robots allows, sitemap, no noindex. The live spec drifted to "off" because this file said so.
+      - { key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on" }
       - { key: AUTH_LOGIN_ENABLED, scope: RUN_AND_BUILD_TIME, value: "true" }
       - { key: AUTH_SIGNUP_ENABLED, scope: RUN_AND_BUILD_TIME, value: "false" }
       - { key: APP_COMMIT, scope: BUILD_TIME, value: "${_self.COMMIT_HASH}" }

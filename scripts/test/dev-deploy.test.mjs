@@ -241,3 +241,7 @@ test("dev-deploy reads its secrets through secret.sh @dev or --env-file, never a
   const audit = readFileSync(new URL("../audit-studio-forms.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(audit, new RegExp(["orazaka", "dev\\.env"].join("-")));
 });
+
+test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
+  assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
+});
