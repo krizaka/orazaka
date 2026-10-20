@@ -73,6 +73,34 @@ export function mdMeasuredRuns(dataset) {
     lines.push("");
   }
 
+  if (dataset.upscaleTests?.length) {
+    lines.push("## Video upscaling", "");
+    lines.push("The same clips, taken from 720p (or 480p) to 1080p or 4K by each candidate, on one NVIDIA H100 80 GB. The verdict is a person's, after looking at the same frames side by side with a plain Lanczos upscale; the cost is the run's own time at the GPU's hourly rate.", "");
+    lines.push("| Model | Licence | Commercial use | Size | Time (5 s clip) | Cost per clip | Verdict |", "| --- | --- | --- | --- | --- | --- | --- |");
+    for (const t of dataset.upscaleTests) {
+      const ran = typeof t.seconds === "number";
+      lines.push(row([t.model, t.licence, t.commercial, ran ? `${t.from} → ${t.to}` : "—", ran ? `${t.seconds} s` : "not run", ran ? `$${((t.seconds / 3600) * t.gpuUsdPerHour).toFixed(2)}` : "—", t.verdict]));
+    }
+    lines.push("");
+  }
+
+  if (dataset.bakeOff?.rows?.length) {
+    const b = dataset.bakeOff;
+    lines.push("## Image-to-video bake-off", "");
+    lines.push(`${b.note}. One NVIDIA H100 80 GB; the cost is the run's own time at the GPU's hourly rate. The verdict is a person's, after looking at the frame grid (first, quarter, middle, three quarters, last) of both shots.`, "");
+    lines.push("| Model | Licence | Commercial use | Shot | Size | Time | Cost | VRAM | Verdict |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+    for (const r of b.rows) {
+      const ran = typeof r.seconds === "number";
+      lines.push(row([r.model, r.licence, r.commercial, r.shot, r.size, ran ? `${r.seconds} s` : "not finished", ran ? `$${((r.seconds / 3600) * b.gpuUsdPerHour).toFixed(2)}` : "—", r.vramGb ? `${r.vramGb} GB` : "—", r.verdict]));
+    }
+    lines.push("");
+    if (b.winners?.length) {
+      lines.push("**Winners:**", "");
+      for (const w of b.winners) lines.push(`- **${w.use}**: ${w.model} — ${w.why}`);
+      lines.push("");
+    }
+  }
+
   lines.push("## Failures, timeouts and limits", "");
   lines.push("| Kind | What happened | Cause |", "| --- | --- | --- |");
   for (const event of dataset.events) lines.push(row([event.kind, event.what, event.cause]));

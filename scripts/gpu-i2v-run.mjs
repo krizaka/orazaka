@@ -59,12 +59,25 @@ export function factsOf(jobs) {
   for (const job of jobs) {
     const result = job?.result ?? {};
     const metrics = result.metrics ?? {};
-    for (const k of ["model", "seed", "width", "height", "frames", "fps", "durationSeconds", "aspect", "steps", "generationMs", "gpu", "provider", "gpuSeconds", "inference_time_sec", "peak_memory_rss_mb", "gpu_allocated_mb"]) {
+    for (const k of ["model", "seed", "width", "height", "frames", "fps", "durationSeconds", "aspect", "steps", "generationMs", "gpu", "provider", "gpuSeconds", "inference_time_sec", "peak_memory_rss_mb", "gpu_allocated_mb", "imageKept", "upscaleModel", "upscaleFrom", "upscaleTo", "upscaleSeconds"]) {
       const v = metrics[k] ?? result[k];
       if (v !== undefined && v !== null) facts[k] = v;
     }
   }
   return facts;
+}
+
+/** The Studio inputs of one clip: the plan's model unless the clip names its own (LTX or Wan HQ per shot), and the optional `upscale`. */
+export function clipInputs(plan, clip, assetId) {
+  return {
+    prompt: clip.prompt,
+    durationSeconds: clip.seconds ?? 5,
+    aspect: clip.aspect,
+    seed: String(clip.seed),
+    model: clip.model ?? plan.model,
+    ...(assetId ? { image: assetId } : {}),
+    ...(clip.upscale ? { upscale: clip.upscale } : {}),
+  };
 }
 
 /** Seconds a run took by the platform's own clock (its start and finish), not by when this script noticed. */
@@ -99,7 +112,7 @@ async function runClip(plan, clip, imagesDir, out, rate) {
       assetId = uploaded.assetId ?? uploaded.id;
       if (!assetId) throw new Error("the upload answered no asset id");
     }
-    const inputs = { prompt: clip.prompt, durationSeconds: clip.seconds ?? 5, aspect: clip.aspect, seed: String(clip.seed), model: plan.model, ...(assetId ? { image: assetId } : {}) };
+    const inputs = clipInputs(plan, clip, assetId);
     runId = (await call("POST", "/api/v1/studios/video-generation/runs", { inputs })).id;
     writeFileSync(ticket, JSON.stringify({ runId, started }));
   }
@@ -119,7 +132,7 @@ async function runClip(plan, clip, imagesDir, out, rate) {
   for (const step of run.steps ?? []) if (step.jobId) jobs.push(await call("GET", `/api/v1/jobs/${step.jobId}`).catch(() => null));
   const record = {
     id: clip.id,
-    model: plan.model,
+    model: clip.model ?? plan.model,
     sourceImage: clip.continueFrom ? `last frame of ${clip.continueFrom}` : (clip.image || null),
     aspect: clip.aspect,
     prompt: clip.prompt,

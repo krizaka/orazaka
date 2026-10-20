@@ -7,6 +7,10 @@ region: tor
 domains:
   - domain: dev.orazaka.com
     type: PRIMARY
+  # The operator console, same `web` component (krizaka/orazaka-web-admin#31): the proxy of orazaka-web-client reads the
+  # Host and serves the console on this one. Replaces the app `orazaka-admin-dev` (docs/DEPLOY_DEV.md § Admin console).
+  - domain: admin.orazaka.com
+    type: ALIAS
 features:
   - buildpack-stack=ubuntu-22
 # The tor1 VPC: core reaches the broker Droplet (broker-dev.orazaka.com → its private IP) over it.
@@ -56,6 +60,14 @@ services:
       - { key: ROUTER_URL, scope: RUN_TIME, value: "http://core:8088" }
       - { key: NEXTAUTH_URL, scope: RUN_TIME, value: "https://dev.orazaka.com" }
       - { key: NEXTAUTH_SECRET, scope: RUN_TIME, type: SECRET, value: "__NEXTAUTH_SECRET_WEB__" }
+      # The operator console on Host admin.orazaka.com (src/console of orazaka-web-client). Its own session, its own flag:
+      # nothing of the public site's (cookie, signing key, sign-in flag) is shared. NEXTAUTH_URL stays the public site's;
+      # AUTH_TRUST_HOST lets next-auth build the console's callbacks from the Host it was asked on.
+      - { key: AUTH_TRUST_HOST, scope: RUN_TIME, value: "true" }
+      - { key: AUTH_CONSOLE_LOGIN_ENABLED, scope: RUN_TIME, value: "true" }
+      - { key: AUTH_CONSOLE_SECRET, scope: RUN_TIME, type: SECRET, value: "__NEXTAUTH_SECRET_ADMIN__" }
+      # Only these client addresses (do-connecting-ip) reach admin.orazaka.com, sign-in page included; empty = nobody.
+      - { key: AUTH_ALLOWED_IPS, scope: RUN_TIME, value: "142.122.41.109" }
 
   # The JVM services in one container (infra/deploy/Dockerfile + run-services.sh): edge :8088 (the
   # only port App Platform routes), users :8083, billing :8095, conversation :8080, studio :8096, job :8090,
@@ -81,23 +93,23 @@ services:
     envs:
       # Databases (krizaka-dev-pg). orazaka_db holds conversation, jobs and governance.
       - { key: CORE_REBUILD, scope: BUILD_TIME, value: "__CORE_REBUILD__" }
-      - { key: SPRING_DATASOURCE_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/orazaka_db?sslmode=require" }
-      # Connection budget (krizaka/.github#60): the cluster allows 22 usable connections for every dev service.
-      # conversation + job share this datasource, capped here; the studio goes through the PgBouncer pool
-      # `pool-studio` (transaction mode: pgjdbc needs prepareThreshold=0). users and orazaka_db stay direct while
-      # Flyway's session advisory lock is not proven safe behind a transaction pooler.
+      - { key: SPRING_DATASOURCE_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-orazaka?sslmode=require&prepareThreshold=0" }
+      # Connection budget (docs/DEV_DATABASE.md, "Connection budget"): the cluster allows 22 usable connections for
+      # every dev service. Every JVM of this container goes through its PgBouncer pool (port 25061, transaction mode:
+      # pgjdbc needs prepareThreshold=0) — the pool size is the cap on the server, whatever the services' Hikari size.
+      # Flyway is off in every service (DDL = infra/initdb), so no session advisory lock sits behind the pooler.
       - { key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE, scope: RUN_TIME, value: "3" }
       - { key: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE, scope: RUN_TIME, value: "0" }
       - { key: SPRING_DATASOURCE_USERNAME, scope: RUN_TIME, value: orazaka_db }
       - { key: SPRING_DATASOURCE_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_DB__" }
-      - { key: IDENTITY_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/krizaka_users_db?sslmode=require" }
+      - { key: IDENTITY_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-users?sslmode=require&prepareThreshold=0" }
       - { key: IDENTITY_DB_USERNAME, scope: RUN_TIME, value: krizaka_users_db }
       - { key: IDENTITY_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_KRIZAKA_USERS_DB__" }
       - { key: STUDIO_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-studio?sslmode=require&prepareThreshold=0" }
       - { key: STUDIO_DB_USER, scope: RUN_TIME, value: orazaka_studio_db }
       - { key: STUDIO_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_STUDIO_DB__" }
       # The knowledge service: the recommender's store (ADR-078, pgvector).
-      - { key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/orazaka_knowledge_db?sslmode=require" }
+      - { key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-knowledge?sslmode=require&prepareThreshold=0" }
       - { key: KNOWLEDGE_DB_USERNAME, scope: RUN_TIME, value: orazaka_knowledge_db }
       - { key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__" }
       # Broker: RabbitMQ on the orazaka-broker-dev Droplet, TLS only, VPC only (`dev-deploy.mjs broker`).
@@ -116,10 +128,15 @@ services:
       - { key: CRYPTO_SALT, scope: RUN_TIME, type: SECRET, value: "__CRYPTO_SALT__" }
       - { key: MEDIA_ENCRYPTION_KEY, scope: RUN_TIME, type: SECRET, value: "__MEDIA_ENCRYPTION_KEY__" }
       # Generated media. The container disk is wiped by every deploy, so the sealed envelopes are also kept in a
-      # private Bunny Storage zone (docs/DEPLOY_DEV.md § Media). `local` = disk only; switching to `bunny` adds
-      # MEDIA_STORAGE_ZONE / MEDIA_STORAGE_API_KEY (SECRET, from the local secrets file) — see the doc.
-      - { key: MEDIA_STORAGE_PROVIDER, scope: RUN_TIME, value: local }
+      # private Bunny Storage zone (no pull zone; docs/DEPLOY_DEV.md § Media). Ordinary jobs and their files are
+      # purged after MEDIA_RETENTION_DAYS (0 = keep).
+      - { key: MEDIA_STORAGE_PROVIDER, scope: RUN_TIME, value: bunny }
+      - { key: MEDIA_STORAGE_ZONE, scope: RUN_TIME, value: orazaka-media-dev }
+      - { key: MEDIA_STORAGE_API_KEY, scope: RUN_TIME, type: SECRET, value: "__MEDIA_STORAGE_API_KEY__" }
+      # The zone is in New York: a regional zone answers 401 on the default (Falkenstein) host.
+      - { key: MEDIA_STORAGE_ENDPOINT, scope: RUN_TIME, value: ny.storage.bunnycdn.com }
       - { key: MEDIA_STORAGE_TENANT, scope: RUN_TIME, value: orazaka }
+      - { key: MEDIA_RETENTION_DAYS, scope: RUN_TIME, value: "30" }
       # Sign-in open, sign-up closed — the backend refuses a registration too (403).
       - { key: AUTH_SIGNUP_ENABLED, scope: RUN_TIME, value: "false" }
       - { key: EMAIL_VERIFICATION_ENABLED, scope: RUN_TIME, value: "false" }
@@ -129,7 +146,7 @@ services:
       # Enforcement stays DRY_RUN (a billing_runtime_config row): it meters, it never blocks chat.
       - { key: BILLING_ENABLED, scope: RUN_TIME, value: "true" }
       - { key: BILLING_INTERNAL_URL, scope: RUN_TIME, value: "http://localhost:8095" }
-      - { key: BILLING_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:__DATABASE_PORT__/krizaka_billing_db?sslmode=require" }
+      - { key: BILLING_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-billing?sslmode=require&prepareThreshold=0" }
       - { key: BILLING_DB_USERNAME, scope: RUN_TIME, value: krizaka_billing_db }
       - { key: BILLING_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_KRIZAKA_BILLING_DB__" }
       # Identity events on the Orazaka exchanges (as locally), Orazaka's reserved preference prefix.
@@ -170,7 +187,7 @@ services:
     dockerfile_path: infra/deploy/gpu-relay/Dockerfile
     source_dir: infra/deploy/gpu-relay
     http_port: 8080
-    internal_ports: [8086, 8188, 11434]
+    internal_ports: [8085, 8086, 8188, 11434]
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
     health_check:
