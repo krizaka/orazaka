@@ -164,11 +164,14 @@ function ci(name) {
 
   if (target.kind === "python") {
     const dir = join(ROOT, target.path);
-    run("python3", ["-m", "pip", "install", "--quiet", "pytest", "pyyaml", "pika", "Pillow", "psutil", "cryptography"], { cwd: dir });
+    run("python3", ["-m", "pip", "install", "--quiet", "pytest", "pyyaml", "pika", "Pillow", "psutil", "cryptography", "numpy"], { cwd: dir });
     run("python3", ["-m", "pytest", "-q", "test_capability_contract.py"], { cwd: dir });
     // The CUDA host's own suites (ADR-077, ADR-080) — each run once the worker carries it: the GPU runtime, image to
     // video (the I2V A14B of a cinematic short) and the cut. The cut's ffmpeg test skips itself where ffmpeg lacks drawtext.
-    for (const suite of ["test_gpu_runtime.py", "test_image_to_video.py", "test_cut.py"]) {
+    // A film's sound and text (orazaka#289): the foley, the mix and its loudness contract, the titles, the voice direction,
+    // the deliverables.
+    for (const suite of ["test_gpu_runtime.py", "test_image_to_video.py", "test_cut.py", "test_deliver.py", "test_foley.py",
+      "test_mixer.py", "test_titles.py", "test_voice_direction.py"]) {
       if (existsSync(join(dir, suite))) run("python3", ["-m", "pytest", "-q", suite], { cwd: dir });
     }
     return;
