@@ -91,6 +91,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/internal/v1/jobs/{jobId}/input/image` | SERVICE | JobOutputController | The starting image of a job, for a worker that does not share the platform's disk. |
 | GET | `/internal/v1/jobs/{jobId}/output/{filename}` | SERVICE | JobOutputController | Reads one of the actor's own outputs back (a step whose input is an earlier step's clip). |
 | PUT | `/internal/v1/jobs/{jobId}/output/{filename}` | SERVICE | JobOutputController | Stores one output file of a job, sealed, and answers the URL it is served under. |
+| GET | `/internal/v1/models/options` | SERVICE | ModelOptionsController | The published models of one category, the ones that answer first, the default marked. |
 | POST | `/internal/v1/workers` | SERVICE | WorkerController | Registers a worker, or refreshes what is known about it. |
 | POST | `/internal/v1/workers/{workerName}/heartbeat` | SERVICE | WorkerController | Records a heartbeat from an already-registered worker. |
 
@@ -225,4 +226,9 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/studios/runs/{runId}/approve` | authenticated | StudioRunController | Resolves an approval step, resuming the run. |
 | POST | `/api/v1/studios/runs/{runId}/cancel` | authenticated | StudioRunController | Cancels a run and releases its hold. |
 | GET | `/api/v1/studios/runs/{runId}/events` | authenticated | StudioRunController | Follows a run as Server-Sent Events instead of polling it (orazaka#189, ADR-083). |
+| GET | `/api/v1/studios/webhooks` | authenticated | WebhookEndpointController | The caller's endpoints (no secrets). |
+| POST | `/api/v1/studios/webhooks` | authenticated | WebhookEndpointController | Creates an endpoint. |
+| DELETE | `/api/v1/studios/webhooks/{id}` | authenticated | WebhookEndpointController | Removes an endpoint and its log. |
+| GET | `/api/v1/studios/webhooks/{id}/deliveries` | authenticated | WebhookEndpointController | The delivery log of an endpoint, newest first. |
+| POST | `/api/v1/studios/webhooks/{id}/rotate` | authenticated | WebhookEndpointController | Issues a new secret. |
 | GET | `/internal/v1/installations/{installationId}/turn-declarations` | SERVICE | InstallationDeclarationController | What a turn taken under this installation must carry: the pack's guards, the reviewed crisis reply for the installation's region, and the pack's system prompt. |
