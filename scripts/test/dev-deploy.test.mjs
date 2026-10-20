@@ -218,6 +218,15 @@ test("connection budget: every JVM of the core goes through its PgBouncer pool (
   assert.doesNotMatch(dev, /__DATABASE_PORT__/, "no direct (25060) datasource left in the core");
 });
 
+test("service accounts sit on the `service` rate-limit tier, whose migration is idempotent and moves the existing svc_* users", () => {
+  assert.equal(serviceAccount("orochia").tier, "service");
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-service-rate-tier.sql", import.meta.url), "utf8");
+  assert.match(sql, /VALUES \('service', 1000, 20, FALSE\)\s*ON CONFLICT \(tier_key\) DO NOTHING/);
+  assert.match(sql, /INSERT INTO rate_limit_tiers \(id, capacity, refill_tokens, refill_seconds\)\s*VALUES \('service', 1000, 1000, 60\)/, "users.rate_limit_tier has a foreign key to rate_limit_tiers");
+  assert.match(sql, /UPDATE users SET rate_limit_tier = 'service'\s*WHERE username LIKE 'svc\\_%'/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "service-tier"\) serviceTier\(\)/);
+});
+
 test("orazaka-dev: the universal-links settings are declared and empty by default (the web app then serves no AASA / assetlinks)", () => {
   const text = spec("orazaka-dev");
   assert.match(text, /key: APP_IOS_TEAM_ID, scope: RUN_TIME, value: "__APP_IOS_TEAM_ID__"/);
@@ -240,4 +249,23 @@ test("dev-deploy reads its secrets through secret.sh @dev or --env-file, never a
   assert.match(source, /devSecrets\(/);
   const audit = readFileSync(new URL("../audit-studio-forms.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(audit, new RegExp(["orazaka", "dev\\.env"].join("-")));
+});
+
+test("the run-event migration is idempotent (triggers are dropped before they are created) and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-run-events.sql", import.meta.url), "utf8");
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS event_seq/);
+  assert.match(sql, /CREATE TABLE IF NOT EXISTS studio_run_event/);
+  for (const trigger of sql.match(/CREATE TRIGGER (\w+)/g)) {
+    const name = trigger.split(" ")[2];
+    assert.match(sql, new RegExp(`DROP TRIGGER IF EXISTS ${name} ON`), name);
+  }
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-events"\) runEvents\(\)/);
+});
+
+test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
+  assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
+});
+
+test("orazaka-dev enforces the per-key rate limit (ADR-083 slice 2: service accounts are on the `service` tier, 1000 a minute)", () => {
+  assert.match(spec("orazaka-dev"), /key: ABUSE_RATE_LIMIT_MODE, scope: RUN_TIME, value: enforce/);
 });
