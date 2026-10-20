@@ -27,7 +27,7 @@ test("with a file, the secrets are its lines; a missing file is named, never a v
   assert.throws(() => devSecrets({ envFile: join(dir, "absent.env") }), /no secrets file at .*absent\.env/);
 });
 
-test("without a file, each key is read through secret.sh @dev, once, and an empty answer is undefined", () => {
+test("without a file, each key is read through secret.sh @orazaka, once, and an empty answer is undefined", () => {
   const calls = [];
   const run = (tool, args) => {
     calls.push([tool, ...args]);
@@ -37,11 +37,25 @@ test("without a file, each key is read through secret.sh @dev, once, and an empt
   assert.equal(env.KNOWN, "v1");
   assert.equal(env.KNOWN, "v1");
   assert.equal(env.UNKNOWN, undefined);
-  assert.deepEqual(calls, [["/t/secret.sh", "@dev", "KNOWN"], ["/t/secret.sh", "@dev", "UNKNOWN"]]);
+  assert.deepEqual(calls, [["/t/secret.sh", "@orazaka", "KNOWN"], ["/t/secret.sh", "@orazaka", "UNKNOWN"]]);
 });
 
 test("the settings overrides (CORE_REBUILD) come from the process environment first", () => {
   const env = devSecrets({ envFile: null, run: () => "from-tool", environ: { CORE_REBUILD: "stamp" }, overridable: ["CORE_REBUILD"] });
   assert.equal(env.CORE_REBUILD, "stamp");
   assert.equal(env.OTHER, "from-tool");
+});
+
+test("the real secret.sh resolves @orazaka through its chain: the product's own file first, then dev.env, then org.env", () => {
+  const dir = mkdtempSync(join(tmpdir(), "chain-"));
+  writeFileSync(join(dir, "orazaka.env"), "MEDIA_STORAGE_ZONE=orazaka-media-dev\n");
+  writeFileSync(join(dir, "dev.env"), "MEDIA_STORAGE_ZONE=krizaka-assets\nDATABASE_HOST=db.example\n");
+  writeFileSync(join(dir, "org.env"), "DATABASE_HOST=never\nAPPLE_TEAM_ID=TEAM123456\n");
+  writeFileSync(join(dir, "secrets.map"), "orazaka orazaka.env dev.env org.env\ndev dev.env org.env\n");
+  const environ = { ...process.env, KRIZAKA_SECRETS_MAP: join(dir, "secrets.map") };
+  const own = devSecrets({ environ });
+  assert.equal(own.MEDIA_STORAGE_ZONE, "orazaka-media-dev", "the product's own file wins over dev.env");
+  assert.equal(own.DATABASE_HOST, "db.example", "dev.env next");
+  assert.equal(own.APPLE_TEAM_ID, "TEAM123456", "org.env last");
+  assert.equal(own.ABSENT, undefined);
 });
