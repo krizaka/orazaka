@@ -163,6 +163,27 @@ The same clips, taken from 720p (or 480p) to 1080p or 4K by each candidate, on o
 | SeedVR2 3B (video diffusion) | Apache-2.0 | yes | 1280×720 → 3840×2160 | 280.3 s | $0.31 | winner — 4K holds (tiled VAE, 31 GB): `upscale: 2160p`, for a hero |
 | LTX-2 19B (native high resolution) | LTX-2 Community License | conditions (free under $10M annual revenue) | — | not run | — | not run: weights larger than the pod's free disk; licence conditions to read first |
 
+## Image-to-video bake-off
+
+The same FLUX.2 [klein] still made at the video's own aspect through the image-generation Studio (1360×768 and 768×1360; Studio runs c3efac13-6c5b-4743-af3b-e856204f3d96 and 12cee392-9a0e-4a18-a496-44bf0d324c8a), the same motion-only prompt and negatives, the same seed. Direct diffusers runs on the pod, not Studio runs. Landscape: a cable car in the Alps at dawn (a dolly-in is asked); 9:16: a woman and a golden retriever walking in the snow (motion and anatomy). One NVIDIA H100 80 GB; the cost is the run's own time at the GPU's hourly rate. The verdict is a person's, after looking at the frame grid (first, quarter, middle, three quarters, last) of both shots.
+
+| Model | Licence | Commercial use | Shot | Size | Time | Cost | VRAM | Verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Wan 2.2 I2V A14B (40 steps, guidance 3.5) | Apache-2.0 | yes | 16:9 landscape | 1280×720 · 81 fr · 16 fps | 1085.8 s | $1.20 | 35.4 GB | clean and stable, but the camera barely obeys (the cabin recedes instead of the dolly-in); 18 minutes |
+| Wan 2.2 I2V A14B (40 steps, guidance 3.5) | Apache-2.0 | yes | 9:16 people | 720×1280 · 81 fr · 16 fps | 1084.8 s | $1.20 | 35.4 GB | the best anatomy: a natural gait, the dog's tail, the coat; no warped limb |
+| LTX-Video 0.9.8 13B distilled (8 steps) | LTX-Video Open Weights License 0.X | yes (no revenue clause) | 16:9 landscape | 1216×704 · 121 fr · 24 fps | 13.5 s | $0.01 | 38.7 GB | the winner: sharp, the dolly-in is obeyed, 80× faster than Wan |
+| LTX-Video 0.9.8 13B distilled (8 steps) | LTX-Video Open Weights License 0.X | yes (no revenue clause) | 9:16 people | 704×1216 · 121 fr · 24 fps | 14.5 s | $0.02 | 38.8 GB | a good preview: natural walk, but a dark boot-sole artefact on two frames |
+| CogVideoX1.5 5B I2V (50 steps) | CogVideoX License (commercial use: a free basic licence after registration, under 1M visits a month) | conditions | 16:9 landscape | 1360×768 · 81 fr · 16 fps | 406.4 s | $0.45 | 26.6 GB | clean but almost static: the requested camera move is ignored |
+| CogVideoX1.5 5B I2V (50 steps) | CogVideoX License (commercial use: a free basic licence after registration, under 1M visits a month) | conditions | 9:16 people | — | not finished | — | — | not finished: 768×1360 is refused (tensor size mismatch in the pipeline) |
+| HunyuanVideo 1.5 720p I2V (50 steps) | Tencent Hunyuan Community License | no for us: excludes the EU, UK and South Korea, outputs included | 16:9 landscape | — | not finished | — | — | not finished: 19 of 50 steps at 90 s a step (75 GB offloaded), about 75 minutes a clip — and the territory exclusion rules it out for a public site |
+| Mochi 1 (genmo) | Apache-2.0 | yes | — | — | not finished | — | — | not run: text-to-video only |
+| LongCat-Video (Meituan, 13.6B) | MIT | yes | — | — | not finished | — | — | not run: custom code outside diffusers; to try next |
+
+**Winners:**
+
+- **16:9 landscape and iteration**: LTX-Video 0.9.8 13B distilled — 14 s a 5 s clip at 1216×704, 39 GB, the camera move is obeyed, sharp — and commercial use is free of any revenue clause
+- **9:16 people and animals**: Wan 2.2 I2V A14B at 40 steps — the best anatomy and gait; 18 minutes, so the finish of a hero clip, with LTX as the 14 s preview
+
 ## Failures, timeouts and limits
 
 | Kind | What happened | Cause |
@@ -191,6 +212,8 @@ The same clips, taken from 720p (or 480p) to 1080p or 4K by each candidate, on o
 | quality | the image-to-video clip of the snowy Plateau street drifted in colour on two seeds (grey first frame, then a saturated copper wall); its first ten frames were cut | the model re-exposes the starting image within the first 0.6 s; the rest of the clip is consistent |
 | limit | LTX-2 (native high resolution) was not run | its checkpoint is 25 GB in fp8 but the repository publishes a 93 GB text encoder, more than the pod's free disk, and its licence is the LTX-2 Community License (free under $10M annual revenue, a paid agreement above) — a licence to read before it is a default |
 | limit | Wan 2.2 A14B image-to-video needs its own 106 GB checkpoint | text and image are two checkpoints of the family; the network volume has 35 GB free, so it is fetched to the pod's container disk each session (2 minutes) instead of a recurring volume |
+| process | the first Wan 2.2 bake-off run (18 minutes of GPU) finished but was lost | the bake script saved numpy frames as if they were PIL images (output_type); fixed (output_type=pil) and run again |
+| limit | HunyuanVideo 1.5 720p image-to-video was stopped after 19 of 50 steps | 90 s a step with model offload (75 GB resident), about 75 minutes a clip; its licence also excludes the EU, UK and South Korea |
 
 ## What it cost
 
@@ -215,7 +238,8 @@ The same clips, taken from 720p (or 480p) to 1080p or 4K by each candidate, on o
 | RunPod pod (image-to-video pairs, 10 s chains, 720p A14B heroes; it ran ~2 h past its last job because the in-pod watchdog had no key to destroy itself — the local guard loop ended it) | H100 80 GB (CA-MTL-1) | 5.01 | $3.99/h | $19.99 |
 | RunPod pod (the 5B image-to-video batch of the home page, the 720p heroes, the first upscaler tests; ended by the spend guard once idle) | H100 80 GB (CA-MTL-1) | 2.50 | $3.99/h | $9.98 |
 | RunPod pod (six directed image-to-video clips with Wan 2.2 A14B, one retried, the 1080p/4K passes, the Orochia hero; stopped by id when done) | H100 80 GB (CA-MTL-1) | 2.72 | $3.99/h | $10.85 |
-| **Total billed** |  |  |  | **$44.06** |
+| RunPod pod (the image-to-video bake-off: four models, two shots; a first Wan run finished but crashed in the bake script's save step and was run again) | H100 80 GB (CA-MTL-1) | 1.77 | $3.99/h | $7.06 |
+| **Total billed** |  |  |  | **$51.12** |
 
 A droplet is billed from its creation to its destruction: the sessions include the setup (image build, weights), the load of the model and the attempts that failed, which the runs above do not. The cost of a run is its own start-to-finish time at the hourly rate.
 

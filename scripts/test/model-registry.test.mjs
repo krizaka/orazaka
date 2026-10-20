@@ -156,3 +156,10 @@ test("the cinematic short's shot model (ADR-080) is in the catalogue as a local 
     assert.equal(String(row.max_steps), "4");
   }
 });
+
+test("the default speech model is never one on an optional GPU host (ADR-080: Kokoro is asked for by name)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-17-cinematic-short.sql", import.meta.url), "utf8");
+  assert.doesNotMatch(sql, /is_default = \(model_name = 'kokoro-82m'\)/);
+  assert.match(sql, /is_default = \(model_name = 'piper-en-medium-ljspeech'\) WHERE category = 'speech'/);
+});
