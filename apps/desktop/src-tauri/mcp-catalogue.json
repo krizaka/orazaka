@@ -1,0 +1,25 @@
+{
+  "$comment": "The MCP servers an automation may start, pinned, and the effect of each of their tools (ADR-079 §3): read runs inside the granted folder, write and external wait for an approval or a grant, exec is refused in v1. A tool not listed here is exec. Bumping a version means re-reading the server's tool list: the runner refuses a server that offers an undeclared tool.",
+  "servers": {
+    "filesystem": {
+      "package": "@modelcontextprotocol/server-filesystem",
+      "version": "2026.8.31",
+      "tools": {
+        "read_file": "read",
+        "read_text_file": "read",
+        "read_media_file": "read",
+        "read_multiple_files": "read",
+        "list_directory": "read",
+        "list_directory_with_sizes": "read",
+        "directory_tree": "read",
+        "search_files": "read",
+        "get_file_info": "read",
+        "list_allowed_directories": "read",
+        "write_file": "write",
+        "edit_file": "write",
+        "create_directory": "write",
+        "move_file": "write"
+      }
+    }
+  }
+}

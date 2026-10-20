@@ -99,3 +99,25 @@ test("video upscaling: every tested upscaler is a row with its licence, size, ti
   assert.match(md, /\| Up B \| BSD-3-Clause \| yes \| 1280×704 → 3840×2160 \| 168 s \| \$0\.19 \| grainy \|/);
   assert.match(md, /\| Native C \| Community \| conditions \| — \| not run \| — \| not run: weights too large \|/); // nothing is claimed for a test that did not run
 });
+
+test("image-to-video bake-off: every model is a row per shot with its licence, time, cost, VRAM and the person's verdict; a run that did not finish says why", () => {
+  const md = mdMeasuredRuns({
+    ...fake,
+    bakeOff: {
+      note: "same still, same motion prompt, same seed",
+      gpuUsdPerHour: 3.99,
+      rows: [
+        { model: "Model A", licence: "Apache-2.0", commercial: "yes", shot: "16:9 landscape", size: "1280×720 · 81 fr · 16 fps", seconds: 1200, vramGb: 62.1, verdict: "baseline" },
+        { model: "Model B", licence: "Open Weights", commercial: "yes", shot: "9:16 people", size: "704×1216 · 121 fr · 24 fps", seconds: 14.5, vramGb: 38.8, verdict: "fast and clean" },
+        { model: "Model C", licence: "Community", commercial: "no (EU)", shot: "16:9 landscape", size: "—", seconds: null, vramGb: null, verdict: "not finished: 75 min a clip" },
+      ],
+      winners: [{ use: "16:9 landscape", model: "Model B", why: "fast and clean" }],
+    },
+  });
+  assert.match(md, /## Image-to-video bake-off/);
+  assert.match(md, /same still, same motion prompt, same seed/);
+  assert.match(md, /\| Model A \| Apache-2\.0 \| yes \| 16:9 landscape \| 1280×720 · 81 fr · 16 fps \| 1200 s \| \$1\.33 \| 62\.1 GB \| baseline \|/); // 1200 s of a $3.99 hour
+  assert.match(md, /\| Model B \| Open Weights \| yes \| 9:16 people \| 704×1216 · 121 fr · 24 fps \| 14\.5 s \| \$0\.02 \| 38\.8 GB \| fast and clean \|/);
+  assert.match(md, /\| Model C \| Community \| no \(EU\) \| 16:9 landscape \| — \| not finished \| — \| — \| not finished: 75 min a clip \|/);
+  assert.match(md, /\*\*16:9 landscape\*\*: Model B — fast and clean/);
+});

@@ -40,6 +40,101 @@ export type FileAdded = { root: string; entry: Entry };
 export type Dropped = { files: Entry[]; folders: string[] };
 export type ServiceStatus = { name: string; port: number; status: "running" | "stopped" | "unknown"; pid: number | null; category: string };
 
+// ── Automations (ADR-079) ──
+export type RunStatus = "running" | "awaiting-approval" | "succeeded" | "failed" | "cancelled" | "halted" | "skipped-budget";
+export type StepKind = "tool" | "model" | "approval" | "note";
+export type StepStatus = "ok" | "error" | "skipped" | "dry-run" | "waiting";
+export type Decision = "once" | "always" | "deny";
+export type Policy = { maxFilesPerRun: number; maxTokensPerRun: number; maxRunsPerDay: number; maxCharsPerDocument: number };
+export type ModelTarget = { baseUrl: string; model: string };
+export type Usage = { model: string; promptTokens: number; completionTokens: number; durationMs: number; credits: number };
+export type Automation = {
+  id: string;
+  name: string;
+  recipe: "summarise-new-pdfs";
+  schedule: { time: string; days: number[]; catchUp: "once" | "skip" };
+  folder: string;
+  model: ModelTarget;
+  policy: Policy;
+  dryRun: boolean;
+  enabled: boolean;
+  createdAt: string;
+  lastSlot: string | null;
+};
+export type RunSummary = {
+  id: string;
+  jobId: string;
+  automationId: string;
+  automationName: string;
+  trigger: "schedule" | "manual";
+  status: RunStatus;
+  dryRun: boolean;
+  startedAt: string;
+  finishedAt: string | null;
+  written: number;
+  steps: number;
+  usage: Usage;
+};
+export type AutomationView = Automation & { nextRun: string | null; lastRun: RunSummary | null };
+export type Step = { seq: number; kind: StepKind; name: string; detail: string; status: StepStatus; at: string; durationMs: number };
+export type Run = Omit<RunSummary, "written" | "steps"> & { featureKey: string; steps: Step[]; written: string[]; error: string | null };
+export type Approval = {
+  id: string;
+  runId: string;
+  automationId: string;
+  automationName: string;
+  server: string;
+  tool: string;
+  scope: string;
+  writes: { path: string; preview: string }[];
+  createdAt: string;
+  expiresAt: string;
+  state: "pending" | "approved" | "denied" | "expired";
+};
+export type Grant = { id: string; automationId: string; server: string; tool: string; scope: string; createdAt: string };
+export type Defaults = { version: number; policy: Policy; model: ModelTarget; time: string; dryRun: boolean };
+export type Overview = {
+  automations: AutomationView[];
+  runs: RunSummary[];
+  approvals: Approval[];
+  grants: Grant[];
+  halted: boolean;
+  defaults: Defaults;
+  running: string[];
+};
+export type NewAutomation = { name: string; folder: string; time: string; days: number[]; model: string; baseUrl: string; dryRun: boolean };
+export type AuditEntry = { seq: number; at: string; event: string; data: Record<string, unknown>; prev: string; hash: string };
+export type AuditView = { entries: AuditEntry[]; verification: { ok: boolean; entries: number; brokenAt: number | null } };
+
+export const automationsApi = {
+  overview: () => invoke<Overview>("automations_overview"),
+  create: (input: NewAutomation) => invoke<Automation>("automation_create", { input }),
+  setEnabled: (id: string, enabled: boolean) => invoke<void>("automation_set_enabled", { id, enabled }),
+  setDryRun: (id: string, dryRun: boolean) => invoke<void>("automation_set_dry_run", { id, dryRun }),
+  remove: (id: string) => invoke<void>("automation_delete", { id }),
+  runNow: (id: string) => invoke<string>("automation_run_now", { id }),
+  run: (id: string) => invoke<Run>("automation_run", { id }),
+  decide: (id: string, decision: Decision) => invoke<RunSummary>("approval_decide", { id, decision }),
+  revokeGrant: (id: string) => invoke<void>("grant_revoke", { id }),
+  setHalted: (halted: boolean) => invoke<void>("kill_switch_set", { halted }),
+  audit: (limit = 200) => invoke<AuditView>("audit_log", { limit }),
+  models: (baseUrl: string) => invoke<string[]>("models_list", { baseUrl }),
+};
+
+/** The last segment of a path ("Inbox" for /Users/eric/Documents/Inbox). */
+export function baseName(path: string): string {
+  const parts = path.split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? path;
+}
+
+/** A local date-time stamp (`2026-10-17T08:00:00`) shown as "Fri 08:00" in the catalogue's date locale. */
+export function slotLabel(stamp: string | null, dateLocale: string): string | null {
+  if (!stamp) return null;
+  const d = new Date(stamp);
+  if (Number.isNaN(d.getTime())) return stamp;
+  return d.toLocaleString(dateLocale, { weekday: "short", hour: "2-digit", minute: "2-digit" });
+}
+
 export const api = {
   snapshot: () => invoke<Snapshot>("get_snapshot"),
   probe: () => invoke<Probe>("probe_stack"),

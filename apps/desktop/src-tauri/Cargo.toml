@@ -1,6 +1,6 @@
 [package]
 name = "orazaka-desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "Orazaka Desktop — control panel and file bridge for the Orazaka sovereign AI platform"
 authors = ["Krizaka"]
 edition = "2021"
@@ -23,6 +23,12 @@ serde_json = "1"
 notify = "8"
 base64 = "0.22"
 url = "2"
+# automations (ADR-079): schedule in local time, hash-chained audit, run ids, the model port, PDF text
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+sha2 = "0.10"
+uuid = { version = "1", features = ["v4"] }
+ureq = { version = "2", default-features = false, features = ["json", "tls"] }
+pdf-extract = "0.9"
 
 [dev-dependencies]
 tempfile = "3"
@@ -31,5 +37,6 @@ tempfile = "3"
 opt-level = "s"
 lto = true
 codegen-units = 1
-panic = "abort"
+# unwind, not abort: a malformed PDF that panics in the text extractor fails that file, not the app
+panic = "unwind"
 strip = true

@@ -2412,6 +2412,16 @@
       "cause": "text and image are two checkpoints of the family; the network volume has 35 GB free, so it is fetched to the pod's container disk each session (2 minutes) instead of a recurring volume"
     },
     {
+      "kind": "process",
+      "what": "the first Wan 2.2 bake-off run (18 minutes of GPU) finished but was lost",
+      "cause": "the bake script saved numpy frames as if they were PIL images (output_type); fixed (output_type=pil) and run again"
+    },
+    {
+      "kind": "limit",
+      "what": "HunyuanVideo 1.5 720p image-to-video was stopped after 19 of 50 steps",
+      "cause": "90 s a step with model offload (75 GB resident), about 75 minutes a clip; its licence also excludes the EU, UK and South Korea"
+    },
+    {
       "kind": "infrastructure",
       "what": "every Studio run on dev answered HTTP 500 for about 30 minutes",
       "cause": "the billing service's connection pool regression (« This connection has been closed »); the pod was kept idle then, and the runs restarted once the fix was live"
@@ -2464,6 +2474,12 @@
       "what": "RunPod pod (six directed image-to-video clips with Wan 2.2 A14B, one retried, the 1080p/4K passes, the Orochia hero; stopped by id when done)",
       "gpu": "H100 80 GB (CA-MTL-1)",
       "hours": 2.72,
+      "usdPerHour": 3.99
+    },
+    {
+      "what": "RunPod pod (the image-to-video bake-off: four models, two shots; a first Wan run finished but crashed in the bake script's save step and was run again)",
+      "gpu": "H100 80 GB (CA-MTL-1)",
+      "hours": 1.77,
       "usdPerHour": 3.99
     },
     {
@@ -2540,5 +2556,113 @@
       "gpuUsdPerHour": 3.99,
       "verdict": "not run: weights larger than the pod's free disk; licence conditions to read first"
     }
-  ]
+  ],
+  "bakeOff": {
+    "note": "The same FLUX.2 [klein] still made at the video's own aspect through the image-generation Studio (1360×768 and 768×1360; Studio runs c3efac13-6c5b-4743-af3b-e856204f3d96 and 12cee392-9a0e-4a18-a496-44bf0d324c8a), the same motion-only prompt and negatives, the same seed. Direct diffusers runs on the pod, not Studio runs. Landscape: a cable car in the Alps at dawn (a dolly-in is asked); 9:16: a woman and a golden retriever walking in the snow (motion and anatomy)",
+    "gpuUsdPerHour": 3.99,
+    "rows": [
+      {
+        "model": "Wan 2.2 I2V A14B (40 steps, guidance 3.5)",
+        "licence": "Apache-2.0",
+        "commercial": "yes",
+        "shot": "16:9 landscape",
+        "size": "1280×720 · 81 fr · 16 fps",
+        "seconds": 1085.8,
+        "vramGb": 35.4,
+        "verdict": "clean and stable, but the camera barely obeys (the cabin recedes instead of the dolly-in); 18 minutes"
+      },
+      {
+        "model": "Wan 2.2 I2V A14B (40 steps, guidance 3.5)",
+        "licence": "Apache-2.0",
+        "commercial": "yes",
+        "shot": "9:16 people",
+        "size": "720×1280 · 81 fr · 16 fps",
+        "seconds": 1084.8,
+        "vramGb": 35.4,
+        "verdict": "the best anatomy: a natural gait, the dog's tail, the coat; no warped limb"
+      },
+      {
+        "model": "LTX-Video 0.9.8 13B distilled (8 steps)",
+        "licence": "LTX-Video Open Weights License 0.X",
+        "commercial": "yes (no revenue clause)",
+        "shot": "16:9 landscape",
+        "size": "1216×704 · 121 fr · 24 fps",
+        "seconds": 13.5,
+        "vramGb": 38.7,
+        "verdict": "the winner: sharp, the dolly-in is obeyed, 80× faster than Wan"
+      },
+      {
+        "model": "LTX-Video 0.9.8 13B distilled (8 steps)",
+        "licence": "LTX-Video Open Weights License 0.X",
+        "commercial": "yes (no revenue clause)",
+        "shot": "9:16 people",
+        "size": "704×1216 · 121 fr · 24 fps",
+        "seconds": 14.5,
+        "vramGb": 38.8,
+        "verdict": "a good preview: natural walk, but a dark boot-sole artefact on two frames"
+      },
+      {
+        "model": "CogVideoX1.5 5B I2V (50 steps)",
+        "licence": "CogVideoX License (commercial use: a free basic licence after registration, under 1M visits a month)",
+        "commercial": "conditions",
+        "shot": "16:9 landscape",
+        "size": "1360×768 · 81 fr · 16 fps",
+        "seconds": 406.4,
+        "vramGb": 26.6,
+        "verdict": "clean but almost static: the requested camera move is ignored"
+      },
+      {
+        "model": "CogVideoX1.5 5B I2V (50 steps)",
+        "licence": "CogVideoX License (commercial use: a free basic licence after registration, under 1M visits a month)",
+        "commercial": "conditions",
+        "shot": "9:16 people",
+        "size": "—",
+        "seconds": null,
+        "vramGb": null,
+        "verdict": "not finished: 768×1360 is refused (tensor size mismatch in the pipeline)"
+      },
+      {
+        "model": "HunyuanVideo 1.5 720p I2V (50 steps)",
+        "licence": "Tencent Hunyuan Community License",
+        "commercial": "no for us: excludes the EU, UK and South Korea, outputs included",
+        "shot": "16:9 landscape",
+        "size": "—",
+        "seconds": null,
+        "vramGb": null,
+        "verdict": "not finished: 19 of 50 steps at 90 s a step (75 GB offloaded), about 75 minutes a clip — and the territory exclusion rules it out for a public site"
+      },
+      {
+        "model": "Mochi 1 (genmo)",
+        "licence": "Apache-2.0",
+        "commercial": "yes",
+        "shot": "—",
+        "size": "—",
+        "seconds": null,
+        "vramGb": null,
+        "verdict": "not run: text-to-video only"
+      },
+      {
+        "model": "LongCat-Video (Meituan, 13.6B)",
+        "licence": "MIT",
+        "commercial": "yes",
+        "shot": "—",
+        "size": "—",
+        "seconds": null,
+        "vramGb": null,
+        "verdict": "not run: custom code outside diffusers; to try next"
+      }
+    ],
+    "winners": [
+      {
+        "use": "16:9 landscape and iteration",
+        "model": "LTX-Video 0.9.8 13B distilled",
+        "why": "14 s a 5 s clip at 1216×704, 39 GB, the camera move is obeyed, sharp — and commercial use is free of any revenue clause"
+      },
+      {
+        "use": "9:16 people and animals",
+        "model": "Wan 2.2 I2V A14B at 40 steps",
+        "why": "the best anatomy and gait; 18 minutes, so the finish of a hero clip, with LTX as the 14 s preview"
+      }
+    ]
+  }
 }

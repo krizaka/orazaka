@@ -7,6 +7,10 @@ region: tor
 domains:
   - domain: dev.orazaka.com
     type: PRIMARY
+  # The operator console, same `web` component (krizaka/orazaka-web-admin#31): the proxy of orazaka-web-client reads the
+  # Host and serves the console on this one. Replaces the app `orazaka-admin-dev` (docs/DEPLOY_DEV.md § Admin console).
+  - domain: admin.orazaka.com
+    type: ALIAS
 features:
   - buildpack-stack=ubuntu-22
 # The tor1 VPC: core reaches the broker Droplet (broker-dev.orazaka.com → its private IP) over it.
@@ -55,6 +59,14 @@ services:
       - { key: ROUTER_URL, scope: RUN_TIME, value: "http://core:8088" }
       - { key: NEXTAUTH_URL, scope: RUN_TIME, value: "https://dev.orazaka.com" }
       - { key: NEXTAUTH_SECRET, scope: RUN_TIME, type: SECRET, value: "__NEXTAUTH_SECRET_WEB__" }
+      # The operator console on Host admin.orazaka.com (src/console of orazaka-web-client). Its own session, its own flag:
+      # nothing of the public site's (cookie, signing key, sign-in flag) is shared. NEXTAUTH_URL stays the public site's;
+      # AUTH_TRUST_HOST lets next-auth build the console's callbacks from the Host it was asked on.
+      - { key: AUTH_TRUST_HOST, scope: RUN_TIME, value: "true" }
+      - { key: AUTH_CONSOLE_LOGIN_ENABLED, scope: RUN_TIME, value: "true" }
+      - { key: AUTH_CONSOLE_SECRET, scope: RUN_TIME, type: SECRET, value: "__NEXTAUTH_SECRET_ADMIN__" }
+      # Only these client addresses (do-connecting-ip) reach admin.orazaka.com, sign-in page included; empty = nobody.
+      - { key: AUTH_ALLOWED_IPS, scope: RUN_TIME, value: "142.122.41.109" }
 
   # The JVM services in one container (infra/deploy/Dockerfile + run-services.sh): edge :8088 (the
   # only port App Platform routes), users :8083, billing :8095, conversation :8080, studio :8096, job :8090,
