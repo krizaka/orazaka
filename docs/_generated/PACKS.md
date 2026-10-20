@@ -171,7 +171,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Media Studios",
  "tagline": "Generate, listen, describe — without leaving a run.",
  "description": null,
- "version": "1.10.0",
+ "version": "1.11.0",
  "tier": "DATA",
  "kind": "TOOLKIT",
  "distribution": "OSS",
@@ -1350,7 +1350,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | `echo-toolkit` | 1.1.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
 | `media-safety` | 1.1.0 | WORKER | CLOUD | SENSITIVE | no | `media-safety` | `orazaka.safety.media.assess` (worker `orazaka-worker-safety`) |
 | `message-authenticity` | 1.2.0 | WORKER | CLOUD | SENSITIVE | no | `message-authenticity` | `orazaka.message.authenticity.read` (worker `orazaka-worker-authenticity`) |
-| `orazaka-media` | 1.10.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-treatment`, `cinematic-critique`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
+| `orazaka-media` | 1.11.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-treatment`, `cinematic-critique`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.2.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
 | `profile-photo-check` | 1.1.0 | WORKER | CLOUD | SENSITIVE | no | `profile-photo-check` | `orazaka.photo.profile.inspect`, `orazaka.photo.profile.assess` (worker `orazaka-worker-photo`) |
 | `realestate-studio` | 1.2.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
