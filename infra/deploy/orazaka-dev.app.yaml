@@ -59,6 +59,9 @@ services:
       - { key: NODE_ENV, scope: RUN_TIME, value: production }
       - { key: ROUTER_URL, scope: RUN_TIME, value: "http://core:8088" }
       - { key: NEXTAUTH_URL, scope: RUN_TIME, value: "https://dev.orazaka.com" }
+      # Universal links / App Links (orazaka-web-client app-links.json): served only when set, empty = 404, never a placeholder.
+      - { key: APP_IOS_TEAM_ID, scope: RUN_TIME, value: "__APP_IOS_TEAM_ID__" }
+      - { key: APP_ANDROID_CERT_SHA256, scope: RUN_TIME, value: "__APP_ANDROID_CERT_SHA256__" }
       - { key: NEXTAUTH_SECRET, scope: RUN_TIME, type: SECRET, value: "__NEXTAUTH_SECRET_WEB__" }
       # The operator console on Host admin.orazaka.com (src/console of orazaka-web-client). Its own session, its own flag:
       # nothing of the public site's (cookie, signing key, sign-in flag) is shared. NEXTAUTH_URL stays the public site's;
