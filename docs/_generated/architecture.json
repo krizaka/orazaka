@@ -2850,7 +2850,7 @@
     {
       "key": "orazaka-media",
       "dir": "orazaka-media",
-      "version": "1.9.0",
+      "version": "1.10.0",
       "tier": "DATA",
       "kind": "TOOLKIT",
       "distribution": "OSS",
@@ -3238,6 +3238,102 @@
             "fr": {
               "label": "Génération vidéo",
               "tagline": "Un short vertical (9:16) ou un plan large, décrit puis rendu.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "cinematic-treatment",
+          "profession": "creative",
+          "iconKey": "video",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 30,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "brief",
+              "title": "Le brief"
+            },
+            {
+              "key": "aspect",
+              "title": "Format d'image"
+            },
+            {
+              "key": "durationSeconds",
+              "title": "Durée (secondes)"
+            },
+            {
+              "key": "notes",
+              "title": "Notes de la critique"
+            },
+            {
+              "key": "language",
+              "title": "Langue des textes"
+            },
+            {
+              "key": "model",
+              "title": "Modèle de langage"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "treatment",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Cinematic short — treatment",
+              "tagline": "A short brief becomes a story: an arc, intentions, living shots, directed lines, music, sound.",
+              "description": null
+            },
+            "fr": {
+              "label": "Court métrage — traitement",
+              "tagline": "Un brief court devient une histoire : un arc, des intentions, des plans vivants, des répliques dirigées, musique et sons.",
+              "description": null
+            }
+          }
+        },
+        {
+          "key": "cinematic-critique",
+          "profession": "creative",
+          "iconKey": "video",
+          "pricing": "INCLUDED",
+          "status": "PUBLISHED",
+          "estimatedCredits": 10,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "treatment",
+              "title": "Le traitement à juger"
+            },
+            {
+              "key": "model",
+              "title": "Modèle de langage"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "critique",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Cinematic short — critique",
+              "tagline": "A director's read of a treatment: scores, flat or off-topic shots rejected, what to change.",
+              "description": null
+            },
+            "fr": {
+              "label": "Court métrage — critique",
+              "tagline": "La lecture d'un réalisateur : des notes, les plans plats ou hors sujet rejetés, quoi changer.",
               "description": null
             }
           }
@@ -6073,6 +6169,116 @@
         ],
         "aliases": [],
         "options": []
+      },
+      {
+        "name": "cinema treat",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Write the story of a brief (arc, intentions, purposeful shots, directed lines, music cues, sound list) and judge it",
+        "args": [
+          {
+            "name": "<dir>",
+            "desc": "Where the treatment and its critique are written"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-l, --language <lang>",
+            "desc": "en or fr",
+            "default": "en"
+          },
+          {
+            "flag": "-d, --duration <s>",
+            "desc": "Seconds of film",
+            "default": "60"
+          },
+          {
+            "flag": "-a, --aspect <aspect>",
+            "desc": "16:9 or 9:16",
+            "default": "16:9"
+          },
+          {
+            "flag": "--revisions <n>",
+            "desc": "How many times a rejected draft goes back to the writer",
+            "default": "2"
+          },
+          {
+            "flag": "--no-judge",
+            "desc": "The rubric alone decides (no language-model judge)",
+            "default": null
+          },
+          {
+            "flag": "--model <name>",
+            "desc": "The chat model of the writer and the judge",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "cinema critique",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Judge a treatment against the rubric (arc, purpose, alive, on-topic, continuity, voice, music, sound)",
+        "args": [
+          {
+            "name": "<treatment>",
+            "desc": "The treatment (JSON)"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-l, --language <lang>",
+            "desc": "en or fr",
+            "default": "en"
+          },
+          {
+            "flag": "--judge",
+            "desc": "Also ask the language-model judge (a cinematic-critique run)",
+            "default": null
+          },
+          {
+            "flag": "--model <name>",
+            "desc": "The judge's chat model",
+            "default": null
+          },
+          {
+            "flag": "-o, --out <file>",
+            "desc": "Write the critique (JSON) there",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "cinema timeline",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Place every line, music cue and sound of a treatment on the cut, and say which lines do not fit their shots",
+        "args": [
+          {
+            "name": "<treatment>",
+            "desc": "The treatment (JSON)"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-l, --language <lang>",
+            "desc": "en or fr",
+            "default": "en"
+          },
+          {
+            "flag": "--voice <report>",
+            "desc": "The voice step's report: [{id, seconds}] measured per line",
+            "default": null
+          },
+          {
+            "flag": "--spans <file>",
+            "desc": "The cut's own shot spans ([[start, end], …], e.g. the worker's cut.timeline) instead of back to back",
+            "default": null
+          }
+        ]
       },
       {
         "name": "config",

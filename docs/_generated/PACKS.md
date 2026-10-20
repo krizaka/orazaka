@@ -37,7 +37,7 @@ capability rows, a price, catalogue entries — and changes no code.
   "tagline": "Generate, listen, describe — without leaving a run.",
   "tier": "DATA",
   "category": "Creativity & media",
-  "studios": 14
+  "studios": 16
  },
  {
   "key": "outbound-prospection",
@@ -171,7 +171,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Media Studios",
  "tagline": "Generate, listen, describe — without leaving a run.",
  "description": null,
- "version": "1.9.0",
+ "version": "1.10.0",
  "tier": "DATA",
  "kind": "TOOLKIT",
  "distribution": "OSS",
@@ -359,6 +359,64 @@ capability rows, a price, catalogue entries — and changes no code.
     "CAPABILITY"
    ],
    "credits": 3600
+  },
+  {
+   "key": "cinematic-treatment",
+   "label": "Cinematic short — treatment",
+   "summary": "A short brief becomes a story: an arc, intentions, living shots, directed lines, music, sound.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "brief",
+     "title": "Le brief"
+    },
+    {
+     "key": "aspect",
+     "title": "Format d'image"
+    },
+    {
+     "key": "durationSeconds",
+     "title": "Durée (secondes)"
+    },
+    {
+     "key": "notes",
+     "title": "Notes de la critique"
+    },
+    {
+     "key": "language",
+     "title": "Langue des textes"
+    },
+    {
+     "key": "model",
+     "title": "Modèle de langage"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 30
+  },
+  {
+   "key": "cinematic-critique",
+   "label": "Cinematic short — critique",
+   "summary": "A director's read of a treatment: scores, flat or off-topic shots rejected, what to change.",
+   "description": null,
+   "inputs": [
+    {
+     "key": "treatment",
+     "title": "Le traitement à juger"
+    },
+    {
+     "key": "model",
+     "title": "Modèle de langage"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 10
   },
   {
    "key": "cinematic-script",
@@ -1292,7 +1350,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | `echo-toolkit` | 1.1.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
 | `media-safety` | 1.1.0 | WORKER | CLOUD | SENSITIVE | no | `media-safety` | `orazaka.safety.media.assess` (worker `orazaka-worker-safety`) |
 | `message-authenticity` | 1.2.0 | WORKER | CLOUD | SENSITIVE | no | `message-authenticity` | `orazaka.message.authenticity.read` (worker `orazaka-worker-authenticity`) |
-| `orazaka-media` | 1.9.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
+| `orazaka-media` | 1.10.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-treatment`, `cinematic-critique`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
 | `outbound-prospection` | 1.2.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
 | `profile-photo-check` | 1.1.0 | WORKER | CLOUD | SENSITIVE | no | `profile-photo-check` | `orazaka.photo.profile.inspect`, `orazaka.photo.profile.assess` (worker `orazaka-worker-photo`) |
 | `realestate-studio` | 1.2.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
