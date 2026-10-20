@@ -23,9 +23,18 @@ no matcher covers the path — the service has no security on it whatsoever.
 |:---|:---|:---|:---|:---|
 | GET | `/api/v1/automations` | authenticated | AutomationController | The caller's automations. |
 | POST | `/api/v1/automations` | authenticated | AutomationController | Creates an automation. |
+| GET | `/api/v1/automations/{automationId}/runs` | authenticated | RunController | The runs of one automation. |
+| GET | `/api/v1/automations/{automationId}/triggers` | authenticated | TriggerController | The triggers of the automation (no secrets). |
+| POST | `/api/v1/automations/{automationId}/triggers` | authenticated | TriggerController | Adds a trigger. |
+| DELETE | `/api/v1/automations/{automationId}/triggers/{triggerId}` | authenticated | TriggerController | Removes a trigger; its runs stay in the history. |
+| PATCH | `/api/v1/automations/{automationId}/triggers/{triggerId}` | authenticated | TriggerController | Enables or disables a trigger. |
+| POST | `/api/v1/automations/{automationId}/triggers/{triggerId}/rotate` | authenticated | TriggerController | Issues a new secret. |
 | DELETE | `/api/v1/automations/{id}` | authenticated | AutomationController | Removes an automation with its triggers and history. |
 | GET | `/api/v1/automations/{id}` | authenticated | AutomationController | One automation. |
 | PATCH | `/api/v1/automations/{id}` | authenticated | AutomationController | Changes an automation; a missing field is left as it is. |
+| GET | `/api/v1/automations/runs` | authenticated | RunController | Every run of every automation of the caller. |
+| GET | `/api/v1/automations/runs/{runId}` | authenticated | RunController | One run, with the webhook body it was started with. |
+| POST | `/hooks/{triggerId}` | authenticated | WebhookIngressController | Receives a signed call and starts the automation it stands for. |
 
 ## conversation-service
 
