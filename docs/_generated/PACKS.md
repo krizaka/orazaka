@@ -114,7 +114,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Real-Estate Studio",
  "tagline": "Your listings become Reels ready to publish.",
  "description": "The real-estate agent's pack: the Real-Estate Reels Studio and the credits to run it.",
- "version": "1.2.0",
+ "version": "1.3.0",
  "tier": "DATA",
  "kind": null,
  "distribution": "OSS",
@@ -171,7 +171,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Media Studios",
  "tagline": "Generate, listen, describe — without leaving a run.",
  "description": null,
- "version": "1.11.0",
+ "version": "1.12.0",
  "tier": "DATA",
  "kind": "TOOLKIT",
  "distribution": "OSS",
@@ -666,7 +666,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Outbound Prospecting",
  "tagline": "From a prospect list to a sequence that ships.",
  "description": "The salesperson's pack: qualify a list, write each prospect's angle, and get the follow-ups out — three Studios over the same list.",
- "version": "1.2.0",
+ "version": "1.3.0",
  "tier": "DATA",
  "kind": null,
  "distribution": "OSS",
@@ -775,7 +775,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Recommendations & insights",
  "tagline": "A feed per person and analytics per creator, on your own data.",
  "description": "The recommender your product calls with a service key: send pseudonymous events and your eligible items, read a \"for you\" feed, similar items and creator insights — every item says why it is there. Two Studios read your videos and suggest titles and tags.",
- "version": "1.5.0",
+ "version": "1.6.0",
  "tier": "DATA",
  "kind": null,
  "distribution": "OSS",
@@ -893,7 +893,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Wellbeing",
  "tagline": "Put into words what you live through, and bring it to your sessions.",
  "description": "Guided journaling, session preparation and mood tracking. Not care: no diagnosis, no advice on treatment, no emergency service — what you bring to a professional, not instead of one. Health data, kept 30 days at most, never used to train a model.",
- "version": "1.2.0",
+ "version": "1.3.0",
  "tier": "DATA",
  "kind": null,
  "distribution": "CLOUD",
@@ -1004,7 +1004,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
  "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
- "version": "1.6.0",
+ "version": "1.7.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1125,7 +1125,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Media safety",
  "tagline": "Is this photo, video or voice message safe to show?",
  "description": "Judges pictures (a photo, or frames of a video) and a voice message's transcript against a short, public set of lines: no nudity or sexual content, no graphic violence, no threats or harassment. An answer nobody could read is never a pass.",
- "version": "1.1.0",
+ "version": "1.2.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1183,7 +1183,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Message authenticity",
  "tagline": "Does this message read like a person wrote it? A signal, never a verdict.",
  "description": "Reads one message with a small open classifier and answers a coarse level — never a score. It can be wrong, above all on short texts and on non-native or French writing. It never writes a message for anyone.",
- "version": "1.2.0",
+ "version": "1.3.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1233,7 +1233,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Profile photo check",
  "tagline": "Are these photos one real adult's profile?",
  "description": "Checks a set of profile photos: enough of them, enough with a face, the same person from one face photo to the next, nothing written over the picture, no screenshots. It answers in codes, identifies no one and recognises no celebrity.",
- "version": "1.1.0",
+ "version": "1.2.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1299,7 +1299,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Trade Showcase",
  "tagline": null,
  "description": null,
- "version": "1.1.0",
+ "version": "1.2.0",
  "tier": "DATA",
  "kind": null,
  "distribution": "OSS",
@@ -1345,17 +1345,17 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 
 | Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |
 |:---|:---|:---|:---|:---|:---|:---|:---|
-| `data-analytics` | 1.5.0 | DATA | OSS | STANDARD | yes | `data-driven-ui`, `video-understanding`, `creator-suggestions` | — |
-| `document-validation` | 1.6.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
-| `echo-toolkit` | 1.1.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
-| `media-safety` | 1.1.0 | WORKER | CLOUD | SENSITIVE | no | `media-safety` | `orazaka.safety.media.assess` (worker `orazaka-worker-safety`) |
-| `message-authenticity` | 1.2.0 | WORKER | CLOUD | SENSITIVE | no | `message-authenticity` | `orazaka.message.authenticity.read` (worker `orazaka-worker-authenticity`) |
-| `orazaka-media` | 1.11.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-treatment`, `cinematic-critique`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
-| `outbound-prospection` | 1.2.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
-| `profile-photo-check` | 1.1.0 | WORKER | CLOUD | SENSITIVE | no | `profile-photo-check` | `orazaka.photo.profile.inspect`, `orazaka.photo.profile.assess` (worker `orazaka-worker-photo`) |
-| `realestate-studio` | 1.2.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
-| `trade-showcase` | 1.1.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |
-| `bien-etre` | 1.2.0 | DATA | CLOUD | REGULATED | yes | `guided-journaling`, `session-preparation`, `mood-tracking`, `session-summary` | — |
+| `data-analytics` | 1.6.0 | DATA | OSS | STANDARD | yes | `data-driven-ui`, `video-understanding`, `creator-suggestions` | — |
+| `document-validation` | 1.7.0 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
+| `echo-toolkit` | 1.2.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
+| `media-safety` | 1.2.0 | WORKER | CLOUD | SENSITIVE | no | `media-safety` | `orazaka.safety.media.assess` (worker `orazaka-worker-safety`) |
+| `message-authenticity` | 1.3.0 | WORKER | CLOUD | SENSITIVE | no | `message-authenticity` | `orazaka.message.authenticity.read` (worker `orazaka-worker-authenticity`) |
+| `orazaka-media` | 1.12.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-treatment`, `cinematic-critique`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
+| `outbound-prospection` | 1.3.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
+| `profile-photo-check` | 1.2.0 | WORKER | CLOUD | SENSITIVE | no | `profile-photo-check` | `orazaka.photo.profile.inspect`, `orazaka.photo.profile.assess` (worker `orazaka-worker-photo`) |
+| `realestate-studio` | 1.3.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
+| `trade-showcase` | 1.2.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |
+| `bien-etre` | 1.3.0 | DATA | CLOUD | REGULATED | yes | `guided-journaling`, `session-preparation`, `mood-tracking`, `session-summary` | — |
 
 ## From the terminal
 
