@@ -33,6 +33,8 @@ const QA_FILE = process.env.ORAZAKA_QA_FILE ?? join(homedir(), "krizaka-com/comp
 /** Placeholders that are settings, not secrets, and their defaults. */
 /** CORE_REBUILD busts the image build cache of the core component at every apply (see infra/deploy/Dockerfile). */
 const DEFAULTS = { CORE_REBUILD: new Date().toISOString().replace(/[:.]/g, "-") };
+/** Settings that may be empty: the feature they switch on is then simply off (universal links: no AASA / assetlinks served). */
+const OPTIONAL = new Set(["APP_IOS_TEAM_ID", "APP_ANDROID_CERT_SHA256"]);
 
 export function readEnvFile(text) {
   const env = {};
@@ -50,6 +52,7 @@ export function render(template, env) {
   const missing = new Set();
   const out = template.replace(/__([A-Z0-9_]+)__/g, (_, name) => {
     const value = env[name] ?? DEFAULTS[name];
+    if ((value === undefined || value === "") && OPTIONAL.has(name)) return "";
     if (value === undefined || value === "") {
       missing.add(name);
       return "";
