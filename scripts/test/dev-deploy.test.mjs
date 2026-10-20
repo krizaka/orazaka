@@ -224,6 +224,7 @@ test("service accounts sit on the `service` rate-limit tier, whose migration is 
   assert.match(sql, /VALUES \('service', 1000, 20, FALSE\)\s*ON CONFLICT \(tier_key\) DO NOTHING/);
   assert.match(sql, /UPDATE users SET rate_limit_tier = 'service'\s*WHERE username LIKE 'svc\\_%'/);
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "service-tier"\) serviceTier\(\)/);
+});
 
 test("orazaka-dev: the universal-links settings are declared and empty by default (the web app then serves no AASA / assetlinks)", () => {
   const text = spec("orazaka-dev");
