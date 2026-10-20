@@ -232,3 +232,11 @@ test("orazaka-dev: the universal-links settings are declared and empty by defaul
   assert.match(text, /key: APP_ANDROID_CERT_SHA256, scope: RUN_TIME, value: "__APP_ANDROID_CERT_SHA256__"/);
   assert.equal(render('X: "__APP_IOS_TEAM_ID__"', {}), 'X: ""');
 });
+
+test("the webhook migration is idempotent, seeds its limits as rows, and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-studio-webhooks.sql", import.meta.url), "utf8");
+  for (const statement of sql.match(/CREATE (TABLE|INDEX) [^\n]*/g)) assert.match(statement, /IF NOT EXISTS/, statement);
+  assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING/);
+  for (const key of ["max-attempts", "backoff-seconds", "backoff-cap-seconds", "timeout-seconds", "batch-size"]) assert.match(sql, new RegExp(`webhook\\.${key}`));
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "webhooks"\) webhooks\(\)/);
+});
