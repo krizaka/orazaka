@@ -217,3 +217,10 @@ test("connection budget: every JVM of the core goes through its PgBouncer pool (
   }
   assert.doesNotMatch(dev, /__DATABASE_PORT__/, "no direct (25060) datasource left in the core");
 });
+
+test("orazaka-dev: the universal-links settings are declared and empty by default (the web app then serves no AASA / assetlinks)", () => {
+  const text = spec("orazaka-dev");
+  assert.match(text, /key: APP_IOS_TEAM_ID, scope: RUN_TIME, value: "__APP_IOS_TEAM_ID__"/);
+  assert.match(text, /key: APP_ANDROID_CERT_SHA256, scope: RUN_TIME, value: "__APP_ANDROID_CERT_SHA256__"/);
+  assert.equal(render('X: "__APP_IOS_TEAM_ID__"', {}), 'X: ""');
+});
