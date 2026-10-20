@@ -39,6 +39,10 @@ ADD https://github.com/krizaka/orazaka-web-admin.git/info/refs?service=git-uploa
 ADD https://github.com/krizaka/orazaka-mobile-client.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-mobile-client
 ADD https://github.com/krizaka/orazaka-cli.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-cli
 ADD https://github.com/krizaka/orazaka-packs.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-packs
+# The apply's stamp (CORE_REBUILD, a BUILD_TIME variable of the core component) is part of the clone's cache key too: the builder
+# kept the cached clone (and its packs and jars) although a repository had moved — the ADD of a remote ref file is cached by URL.
+ARG CORE_REBUILD=0
+RUN echo "sources ${CORE_REBUILD}" > /tmp/sources-stamp
 RUN node scripts/workspace.mjs clone --depth 1
 
 # ── 2. Build the eight services and what they depend on ──────────────────────
