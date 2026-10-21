@@ -1,0 +1,35 @@
+# Orazaka admin dev — admin.orazaka.com (App Platform, project `orazaka`). docs/DEPLOY_DEV.md.
+# Its BFF reaches the public edge of orazaka-dev (https://dev.orazaka.com/edge); only ROLE_ADMIN signs in.
+name: orazaka-admin-dev
+region: tor
+domains:
+  - domain: admin.orazaka.com
+    type: PRIMARY
+features:
+  - buildpack-stack=ubuntu-22
+ingress:
+  rules:
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
+services:
+  - name: web
+    github:
+      repo: krizaka/orazaka-web-admin
+      branch: main
+      deploy_on_push: true
+    environment_slug: node-js
+    build_command: npm install --no-audit --no-fund && npm run build
+    run_command: npm start
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    envs:
+      - { key: AUTH_LOGIN_ENABLED, scope: RUN_AND_BUILD_TIME, value: "true" }
+      - { key: AUTH_SIGNUP_ENABLED, scope: RUN_AND_BUILD_TIME, value: "false" }
+      - { key: NODE_ENV, scope: RUN_TIME, value: production }
+      - { key: ROUTER_URL, scope: RUN_TIME, value: "https://dev.orazaka.com/edge" }
+      - { key: NEXTAUTH_URL, scope: RUN_TIME, value: "https://admin.orazaka.com" }
+      - { key: NEXTAUTH_SECRET, scope: RUN_TIME, type: SECRET, value: "__NEXTAUTH_SECRET_ADMIN__" }
