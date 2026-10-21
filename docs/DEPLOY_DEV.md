@@ -347,3 +347,14 @@ env by `scripts/gpu-dev.sh mac` — never printed, never in a repository. Select
 | Document validation (compliance-check, document-authenticity) | for a **granted** account | PAID Studios, billing off: an operator grant opens them (`service-account`, below); the worker runs in `core` |
 | Real-estate reels | locked | PAID Studio, billing off |
 | E-mails (verify, reset) | no | notifications not deployed |
+
+## The core journey on dev (Dev preview `journey.core`, `journey.ai-via-orazaka`)
+
+`node scripts/journey-dev.mjs --out <dir>` replays what Orazaka is for, on https://dev.orazaka.com/edge as the demo persona
+Eric (credentials from the environment, read with `secret.sh`, never printed): sign in → ask the chat → make an image with
+the `image-generation` Studio → have the picture read by `image-analysis` (uploaded as a photo from a device would be) →
+make a hosted clip with `video-generation`. Every step goes through the public API (no SQL, no direct model call) and records
+the edge request id; each Studio step also records its run id, the engine's own trace (`GET /api/v1/studios/runs/{id}`, the
+job ids of its steps). It writes the report (`journey-<date>.json`, `.md`) and the clip, and exits 1 unless every step is
+proven. Cost: about 0.70 USD (one hosted image, one 5 s hosted clip). The 9:16 models run on the GPU host, which is up only for
+a batch: pass `--aspect 9:16 --video-model wan2.2-ti2v-5b` while a pod is running. Rules tested first: `scripts/test/journey.test.mjs`.
