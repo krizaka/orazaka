@@ -10,7 +10,7 @@ generated: true
 
 > 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
 
-Orazaka is published as **22 repositories** in the [`krizaka`](https://github.com/krizaka) organisation: one per component, plus the workspace [`orazaka`](https://github.com/krizaka/orazaka) that assembles them (governance contract, `orazaka.workspace.json`, local infrastructure, end-to-end tests, these docs).
+Orazaka is published as **21 repositories** in the [`krizaka`](https://github.com/krizaka) organisation: one per component, plus the workspace [`orazaka`](https://github.com/krizaka/orazaka) that assembles them (governance contract, `orazaka.workspace.json`, local infrastructure, end-to-end tests, these docs).
 
 ```bash
 git clone https://github.com/krizaka/orazaka.git && cd orazaka
@@ -49,7 +49,6 @@ node scripts/workspace.mjs clone   # every repository at its workspace path
 | Repository | Kind | What it holds | Depends on |
 |:---|:---|:---|:---|
 | [`orazaka-web-client`](https://github.com/krizaka/orazaka-web-client) | npm | Next.js (App Router) client of the Orazaka platform with its mandatory BFF. Modules: `orazaka-web-client`. | `orazaka-ui-kit` |
-| [`orazaka-web-admin`](https://github.com/krizaka/orazaka-web-admin) | npm | Next.js SecOps & administration console of the Orazaka platform. Modules: `orazaka-web-admin`. | `orazaka-ui-kit` |
 | [`orazaka-mobile-client`](https://github.com/krizaka/orazaka-mobile-client) | npm | Expo / React Native client of the Orazaka platform (talks to the edge with Bearer tokens). Modules: `orazaka-mobile-client`. | `orazaka-ui-kit` |
 | [`orazaka-cli`](https://github.com/krizaka/orazaka-cli) | npm | The `orazaka` developer CLI: install, start, dev, test, docs and pack tooling for the Orazaka workspace, with an offline SQLite queue. Modules: `orazaka-cli`. | — |
 

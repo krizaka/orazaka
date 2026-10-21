@@ -15,9 +15,9 @@ interceptor pipeline, capabilities, MCP servers, plans, prices, wallets, Studios
 administrator is an account holding `ROLE_ADMIN`, granted by the identity service; every
 administrative endpoint checks it on the server (`@PreAuthorize`), whatever client calls it.
 
-## The SecOps console (`orazaka-web-admin`)
+## The SecOps console (`orazaka-web-client`)
 
-A Next.js console (port 3001) started with the rest of the stack by `orazaka dev` (`--skip-admin` to leave it out).
+A Next.js console served by `orazaka-web-client` on the admin host (`admin.orazaka.com`, host routing), started with the web client by `orazaka dev`.
 
 | Screen | What it is for | Tabs |
 |:---|:---|:---|
@@ -28,6 +28,7 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | `/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
 | `/operations` | `/operations` — dependencies, queue depth, recent errors, runs and the deployed version. | — |
 | `/studios` | The Studio Builder console (ADR-034 §12.4). | — |
+| `/tasks` | `/tasks` — what needs an operator: refused or failed actions without a success since, failed jobs (ADR-085). | — |
 | `/users` | `/users` — the platform's accounts: state, role, Law 25 export and erasure. | — |
 
 ![Billing — consumption per capability and model, refusals included](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/02-billing-usage.png)
@@ -47,7 +48,7 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 *Studios — the blueprint editor: versions, credits, steps and forms.*
 
 > The console's screens are in French for now, and it ships no sign-in page yet
-> ([orazaka-web-admin#5](https://github.com/krizaka/orazaka-web-admin/issues/5)): every administrative
+> (tracked in `orazaka-web-client`): every administrative
 > action is also an endpoint, listed below.
 
 ### How the console is secured
@@ -64,10 +65,12 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | GET | `/api/v1/features/all` | ADMIN | Admin: all capabilities (enabled or not) from the database. |
 | GET | `/api/v1/jobs` | authenticated | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
 | GET | `/api/v1/jobs/active-connections` | ADMIN | Retrieves the current active SSE connection count. |
+| GET | `/api/v1/models/admin/audit` | ADMIN | — |
 | GET | `/api/v1/models/catalog` | authenticated | Retrieves the complete AI model catalog definitions from the database. |
 | GET | `/api/v1/models/providers` | authenticated | Retrieves all available AI provider names from the database. |
 | GET | `/api/v1/status/health` | public | Returns sovereign readiness health details (public probe). |
 | GET | `/api/v1/status/infrastructure` | authenticated | Returns the current online/offline snapshot of the local inference engines. |
+| GET | `/api/v1/billing/admin/audit` | ADMIN | — |
 | GET | `/api/v1/billing/configuration` | ADMIN | The declared key vocabulary — type, permitted domain and code default per key. |
 | PATCH | `/api/v1/billing/configuration` | ADMIN | Applies one validated configuration change. |
 | GET | `/api/v1/billing/packs` | authenticated | The priced catalogue. |
@@ -102,6 +105,7 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | DELETE | `/api/v1/studios/{studioKey}/blueprints/{version}` | ADMIN | Deprecates a version without deleting it. |
 | PUT | `/api/v1/studios/{studioKey}/blueprints/{version}` | ADMIN | Creates or replaces a draft version. |
 | POST | `/api/v1/studios/{studioKey}/blueprints/{version}/publish` | ADMIN | Publishes a draft, minting it as the Studio's latest version. |
+| GET | `/api/v1/studios/admin/audit` | ADMIN | — |
 
 ## Every ADMIN-only endpoint
 

@@ -239,17 +239,6 @@
       ]
     },
     {
-      "name": "orazaka-web-admin",
-      "url": "https://github.com/krizaka/orazaka-web-admin",
-      "path": "orazaka-apps/ui/orazaka-web-admin",
-      "kind": "npm",
-      "layer": "app",
-      "description": "Next.js SecOps & administration console of the Orazaka platform.",
-      "dependsOn": [
-        "orazaka-ui-kit"
-      ]
-    },
-    {
       "name": "orazaka-mobile-client",
       "url": "https://github.com/krizaka/orazaka-mobile-client",
       "path": "orazaka-apps/ui/orazaka-mobile-client",
@@ -305,21 +294,6 @@
       "runtime": "node",
       "version": null,
       "description": "Expo / React Native client of the Orazaka platform (talks to the edge with Bearer tokens).",
-      "ports": {
-        "inbound": [],
-        "outbound": []
-      }
-    },
-    {
-      "id": "orazaka-web-admin",
-      "path": "orazaka-apps/ui/orazaka-web-admin",
-      "repository": "orazaka-web-admin",
-      "owner": "orazaka",
-      "role": "client",
-      "layer": "app",
-      "runtime": "node",
-      "version": null,
-      "description": "Next.js SecOps & administration console of the Orazaka platform.",
       "ports": {
         "inbound": [],
         "outbound": []
@@ -1761,12 +1735,6 @@
       "to": "krizaka-billing-service",
       "kind": "http",
       "via": "krizaka-billing-client"
-    },
-    {
-      "from": "orazaka-web-admin",
-      "to": "orazaka-edge",
-      "kind": "http",
-      "via": "localhost:8088"
     },
     {
       "from": "orazaka-web-client",
@@ -6719,13 +6687,13 @@
         "name": "dev",
         "top": "dev",
         "isTop": true,
-        "description": "Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile)",
+        "description": "Launch the full Orazaka application stack in parallel (9 services + Web, Mobile)",
         "args": [],
         "aliases": [],
         "options": [
           {
             "flag": "--only <services>",
-            "desc": "Launch only these services (comma-separated: edge,router,identity,automation,knowledge,job,billing,studio,notifications,web,admin,mobile)",
+            "desc": "Launch only these services (comma-separated: edge,router,identity,automation,knowledge,job,billing,studio,notifications,web,mobile)",
             "default": null
           },
           {
@@ -6780,7 +6748,7 @@
           },
           {
             "flag": "--skip-admin",
-            "desc": "Skip Admin console",
+            "desc": "Deprecated no-op: the operator console is served by the web client",
             "default": null
           },
           {
@@ -7646,7 +7614,7 @@
       },
       {
         "command": "dev",
-        "description": "Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile)",
+        "description": "Launch the full Orazaka application stack in parallel (9 services + Web, Mobile)",
         "processes": [
           {
             "key": "edge",
@@ -7697,11 +7665,6 @@
             "key": "web",
             "label": "WEB-CLIENT",
             "port": 3000
-          },
-          {
-            "key": "admin",
-            "label": "WEB-ADMIN",
-            "port": 3001
           },
           {
             "key": "mobile",

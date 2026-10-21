@@ -211,16 +211,6 @@
       ]
     },
     {
-      "name": "orazaka-web-admin",
-      "path": "orazaka-apps/ui/orazaka-web-admin",
-      "kind": "npm",
-      "layer": "app",
-      "description": "Next.js SecOps & administration console of the Orazaka platform.",
-      "dependsOn": [
-        "orazaka-ui-kit"
-      ]
-    },
-    {
       "name": "orazaka-mobile-client",
       "path": "orazaka-apps/ui/orazaka-mobile-client",
       "kind": "npm",
