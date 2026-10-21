@@ -260,3 +260,11 @@ label stays on the picture, small, top right. Rendered and checked at 16:9 and 9
 `gate.json` of a film now holds one check per step: the story (rubric scores and the judge's), each take on-model and
 alive/on-topic, the voice (WER, pitch movement, pace, and the person's listen), the loudness (measured LUFS, true peak),
 the foley coverage, the titles (rendered at both aspects).
+
+**« le relais » cost** (v2, 2026-10-21): 68 s of 4K film, 25 shots, 4 reshot (two bird takes off-model, one LTX landscape
+that invented birds, one phoenix that stayed still); $35.27 billed on RunPod within a $40 cap (one H200 at $5.29/h:
+the takes, two reshoots and the 25 SeedVR2 4K upscales) = **$31.12 per finished minute**. Of that, ~$4.1 went to two
+fresh pods the idle guard stopped during their first setup (pip, then a weights download longer than 20 minutes at 0 %
+GPU), and some minutes to a pod left idle after its last upscale. Treatment, keyframes, voice, score, foley, titles and
+the finish: $0 (a Mac). Two lessons became code: one batch per take for SeedVR2 (3.1 min per 4K take instead of 7–11)
+and a pod queue that stops its own pod when it empties or fails (krizaka-ui `tools/brand-films/dawn/pod/queue.sh`).
