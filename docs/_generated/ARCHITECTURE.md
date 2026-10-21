@@ -16,7 +16,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 |:---|:---|:---|
 | **Clients** | a UI repository of the workspace manifest (layer app, kind npm) | `orazaka-cli`, `orazaka-mobile-client`, `orazaka-web-client` |
 | **Services & workers** | a module with a main (SpringApplication.run), or a native worker | `orazaka-automation-service`, `orazaka-conversation-service`, `orazaka-edge`, `orazaka-job-service`, `orazaka-knowledge-service`, `orazaka-studio-service`, `orazaka-worker-media`, `krizaka-billing-service`, `krizaka-notifications-service`, `krizaka-users-service` |
-| **Adapters** | an imported module that is none of the below: persistence, typed HTTP clients, asset store, bridge | `orazaka-assets`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-studio-client`, `krizaka-billing-client`, `krizaka-users-client`, `krizaka-users-persistence` |
+| **Adapters** | an imported module that is none of the below: persistence, typed HTTP clients, asset store, bridge | `orazaka-assets`, `orazaka-crypto`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-studio-client`, `krizaka-billing-client`, `krizaka-users-client`, `krizaka-users-persistence` |
 | **Application** | the orchestration, pipeline and capability libraries around the core (AGENTS.md §2: business, interceptors, tools) | `orazaka-business`, `orazaka-interceptors`, `orazaka-tools` |
 | **Domain core** | a `*-core` module — the centre of its hexagon, depending on no outer layer | `orazaka-core`, `krizaka-users-core` |
 | **Contracts** | a Tier-1 `*-api` module — pure interfaces and records | `orazaka-jobs-api`, `orazaka-persistence-app-api`, `orazaka-studio-api`, `krizaka-billing-api`, `krizaka-notifications-api`, `krizaka-users-api` |
@@ -40,6 +40,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `krizaka-notifications-service` | service | `krizaka-notifications` | 0.2.0 | — | — |
 | `krizaka-users-service` | service | `krizaka-users` | 0.2.0 | — | — |
 | `orazaka-assets` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
+| `orazaka-crypto` | adapter | `orazaka-contracts` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-persistence-app` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-persistence-bridge` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-studio-client` | adapter | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
@@ -87,10 +88,11 @@ Build dependencies between the modules above (test scope excluded): who packages
 | `orazaka-edge` | `krizaka-security` |
 | `orazaka-job-service` | `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security`, `krizaka-users-api`, `krizaka-users-client`, `orazaka-assets`, `orazaka-business`, `orazaka-core`, `orazaka-interceptors`, `orazaka-jobs-api`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-tools` |
 | `orazaka-knowledge-service` | `krizaka-messaging`, `krizaka-security` |
-| `orazaka-studio-service` | `krizaka-billing-api`, `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security`, `orazaka-jobs-api`, `orazaka-studio-api` |
+| `orazaka-studio-service` | `krizaka-billing-api`, `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security`, `orazaka-crypto`, `orazaka-jobs-api`, `orazaka-studio-api` |
 | `krizaka-billing-service` | `krizaka-billing-api`, `krizaka-messaging`, `krizaka-security` |
 | `krizaka-notifications-service` | `krizaka-messaging`, `krizaka-notifications-api` |
 | `krizaka-users-service` | `krizaka-security`, `krizaka-users-core` |
+| `orazaka-assets` | `orazaka-crypto` |
 | `orazaka-persistence-app` | `krizaka-messaging`, `orazaka-jobs-api`, `orazaka-persistence-app-api` |
 | `orazaka-persistence-bridge` | `orazaka-core`, `orazaka-persistence-app-api` |
 | `orazaka-studio-client` | `krizaka-security`, `orazaka-studio-api` |
@@ -165,7 +167,6 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-job-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
 | `orazaka-job-service` | `krizaka-users-service` | http | `krizaka-users-client` |
 | `orazaka-job-service` | `orazaka-studio-service` | http | `orazaka-studio-client` |
-| `orazaka-mobile-client` | `orazaka-edge` | http | `localhost:8088` |
 | `orazaka-studio-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
 | `orazaka-web-client` | `orazaka-conversation-service` | http | `localhost:8080` |
 | `orazaka-web-client` | `orazaka-edge` | http | `localhost:8088` |
