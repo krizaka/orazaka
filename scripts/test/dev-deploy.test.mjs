@@ -42,7 +42,7 @@ test("orazaka-dev: only the edge, the web and the GPU relay are routed; the brok
 
 test("orazaka-dev serves the operator console on admin.orazaka.com: alias domain, its own session and flag, IP allow-list", () => {
   const text = spec("orazaka-dev");
-  assert.match(text, /- domain: dev\.orazaka\.com\n    type: PRIMARY/);
+  assert.match(text, /- domain: www\.orazaka\.com\n    type: PRIMARY/);
   // The alias is in the spec since the cut-over of 2026-10-21 (the domain left `orazaka-admin-dev` first: a domain belongs to one app).
   assert.match(text, /- domain: admin\.orazaka\.com\n    type: ALIAS/);
   // Same `web` component: no component of its own, no extra route, nothing paid.
@@ -81,6 +81,22 @@ test("the GPU relay allows exactly the broker, the job service and the reverse p
 test("the relay exposes LocalAI's port to the app as well as allowing it", () => {
   const spec = readFileSync(new URL("../../infra/deploy/orazaka-dev.app.yaml", import.meta.url), "utf8");
   assert.match(spec, /internal_ports: \[8085, 8086, 8188, 11434\]/);
+});
+
+test("www.orazaka.com is the public address; dev keeps /edge and the BFF; the apex answers 308 with www (epic krizaka/.github#119)", () => {
+  const spec = readFileSync(new URL("../../infra/deploy/orazaka-dev.app.yaml", import.meta.url), "utf8").replace(/^\s*#.*$/gm, "");
+  assert.match(spec, /- domain: www\.orazaka\.com\n\s+type: PRIMARY/);
+  assert.match(spec, /- domain: orazaka\.com\n\s+type: ALIAS/);
+  assert.match(spec, /- domain: dev\.orazaka\.com\n\s+type: ALIAS/);
+  assert.match(spec, /- domain: admin\.orazaka\.com\n\s+type: ALIAS/, "the console alias stays");
+  const rules = spec.slice(spec.indexOf("ingress:"));
+  assert.match(rules, /exact: orazaka\.com[\s\S]*?authority: www\.orazaka\.com[\s\S]*?redirect_code: 308/);
+  assert.match(rules, /name: core\s+match:\s+path:\s+prefix: \/edge/, "the engine's API is host-agnostic");
+  assert.match(spec, /key: NEXTAUTH_URL, scope: RUN_TIME, value: "https:\/\/www\.orazaka\.com"/);
+  assert.match(spec, /key: APP_DEV_HOST, scope: RUN_TIME, value: "dev\.orazaka\.com"/);
+  assert.match(spec, /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/, "www is indexed");
+  const cors = /key: CORS_ALLOWED_ORIGINS[^\n]*value: "([^"]+)"/.exec(spec)?.[1].split(",");
+  for (const origin of ["https://www.orazaka.com", "https://dev.orazaka.com", "https://admin.orazaka.com"]) assert.ok(cors?.includes(origin), origin);
 });
 
 test("password: long, mixed, different each time", () => {
