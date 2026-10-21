@@ -885,6 +885,36 @@
       }
     },
     {
+      "id": "krizaka-persistence",
+      "path": "krizaka/krizaka-platform-kit/krizaka-persistence",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "The tables of the kit's JDBC stores (outbox, message claims, idempotency keys, app-config) created and kept up to date by Flyway at startup, in their own history table, only for the stores a service declares; production defaults for the connection pool.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "krizaka-ratelimit",
+      "path": "krizaka/krizaka-platform-kit/krizaka-ratelimit",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "A requests-per-minute limit per key, written once: a token bucket per key (client address by default, or any key you resolve), observe or enforce, 429 with Retry-After as Problem Details, observed. Promoted from the Orazaka edge (ADR-083) and krizaka-users.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "krizaka-security",
       "path": "krizaka/krizaka-platform-kit/krizaka-security",
       "repository": "krizaka-platform-kit",
@@ -945,6 +975,21 @@
       }
     },
     {
+      "id": "krizaka-spring-boot-starter-persistence",
+      "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-persistence",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "The tables of the kit's JDBC stores migrated at startup in one dependency: krizaka-persistence (Flyway, its own history table, only the declared stores, pool defaults) with Spring JDBC and the PostgreSQL driver.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "krizaka-spring-boot-starter-rabbitmq",
       "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-rabbitmq",
       "repository": "krizaka-platform-kit",
@@ -954,6 +999,21 @@
       "runtime": "jvm",
       "version": "0.2.0",
       "description": "Events and consumers over RabbitMQ in one dependency: krizaka-messaging (outbox publishing, consumer queues with retry then DLQ, idempotent consumption) with Spring AMQP, JDBC and Jackson. Add your JDBC driver.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "krizaka-spring-boot-starter-ratelimit",
+      "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-ratelimit",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "A requests-per-minute limit per key in one dependency: krizaka-ratelimit (token bucket per key, observe or enforce, 429 with Retry-After as Problem Details) with Spring MVC.",
       "ports": {
         "inbound": [],
         "outbound": []
@@ -990,6 +1050,21 @@
       }
     },
     {
+      "id": "krizaka-spring-boot-starter-webhooks",
+      "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-webhooks",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "Signed webhooks in one dependency: krizaka-webhooks (Standard Webhooks signing and sending, verification with a 401 Problem Details, secret rotation) with Spring MVC.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "krizaka-web",
       "path": "krizaka/krizaka-platform-kit/krizaka-web",
       "repository": "krizaka-platform-kit",
@@ -999,6 +1074,21 @@
       "runtime": "jvm",
       "version": "0.2.0",
       "description": "The HTTP baseline of a Spring Boot service, written once: RFC 9457 Problem Details with stable error codes, X-Request-Id correlation into the MDC, Jackson 3 defaults, opaque cursor pagination and declared CORS origins.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "krizaka-webhooks",
+      "path": "krizaka/krizaka-platform-kit/krizaka-webhooks",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "Signed webhooks, written once, the Standard Webhooks way: sign and send with a stable id and secret rotation, verify what you receive (signature, constant-time, timestamp tolerance) with a 401 Problem Details otherwise; observed. Promoted from Orazaka (orazaka#189) and krizaka-notifications.",
       "ports": {
         "inbound": [],
         "outbound": []
@@ -1039,6 +1129,10 @@
       "to": "krizaka-notifications-api"
     },
     {
+      "from": "krizaka-ratelimit",
+      "to": "krizaka-web"
+    },
+    {
       "from": "krizaka-spring-boot-starter-app-config",
       "to": "krizaka-app-config"
     },
@@ -1055,8 +1149,20 @@
       "to": "krizaka-observability"
     },
     {
+      "from": "krizaka-spring-boot-starter-persistence",
+      "to": "krizaka-persistence"
+    },
+    {
       "from": "krizaka-spring-boot-starter-rabbitmq",
       "to": "krizaka-messaging"
+    },
+    {
+      "from": "krizaka-spring-boot-starter-ratelimit",
+      "to": "krizaka-ratelimit"
+    },
+    {
+      "from": "krizaka-spring-boot-starter-ratelimit",
+      "to": "krizaka-spring-boot-starter-web"
     },
     {
       "from": "krizaka-spring-boot-starter-security",
@@ -1065,6 +1171,14 @@
     {
       "from": "krizaka-spring-boot-starter-web",
       "to": "krizaka-web"
+    },
+    {
+      "from": "krizaka-spring-boot-starter-webhooks",
+      "to": "krizaka-spring-boot-starter-web"
+    },
+    {
+      "from": "krizaka-spring-boot-starter-webhooks",
+      "to": "krizaka-webhooks"
     },
     {
       "from": "krizaka-users-client",
@@ -1093,6 +1207,10 @@
     {
       "from": "krizaka-users-service",
       "to": "krizaka-users-core"
+    },
+    {
+      "from": "krizaka-webhooks",
+      "to": "krizaka-web"
     },
     {
       "from": "orazaka-automation-service",
@@ -2359,6 +2477,15 @@
         "description": "The Krizaka observability standard in one dependency: krizaka-observability (required service names, common metric tags, ECS logs, exposure and sampling defaults) with Actuator, OpenTelemetry tracing over OTLP and a Prometheus registry."
       },
       {
+        "id": "krizaka-spring-boot-starter-persistence",
+        "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-persistence",
+        "repository": "krizaka-platform-kit",
+        "role": "starter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "The tables of the kit's JDBC stores migrated at startup in one dependency: krizaka-persistence (Flyway, its own history table, only the declared stores, pool defaults) with Spring JDBC and the PostgreSQL driver."
+      },
+      {
         "id": "krizaka-spring-boot-starter-rabbitmq",
         "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-rabbitmq",
         "repository": "krizaka-platform-kit",
@@ -2366,6 +2493,15 @@
         "packaging": "jar",
         "version": "0.2.0",
         "description": "Events and consumers over RabbitMQ in one dependency: krizaka-messaging (outbox publishing, consumer queues with retry then DLQ, idempotent consumption) with Spring AMQP, JDBC and Jackson. Add your JDBC driver."
+      },
+      {
+        "id": "krizaka-spring-boot-starter-ratelimit",
+        "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-ratelimit",
+        "repository": "krizaka-platform-kit",
+        "role": "starter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "A requests-per-minute limit per key in one dependency: krizaka-ratelimit (token bucket per key, observe or enforce, 429 with Retry-After as Problem Details) with Spring MVC."
       },
       {
         "id": "krizaka-spring-boot-starter-security",
@@ -2384,6 +2520,15 @@
         "packaging": "jar",
         "version": "0.2.0",
         "description": "HTTP service baseline in one dependency: krizaka-web (Problem Details, request correlation, Jackson defaults, cursor pagination, declared CORS) with Spring MVC, bean validation and Actuator."
+      },
+      {
+        "id": "krizaka-spring-boot-starter-webhooks",
+        "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-webhooks",
+        "repository": "krizaka-platform-kit",
+        "role": "starter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Signed webhooks in one dependency: krizaka-webhooks (Standard Webhooks signing and sending, verification with a 401 Problem Details, secret rotation) with Spring MVC."
       },
       {
         "id": "krizaka-app-config",
@@ -2422,6 +2567,24 @@
         "description": "One observability standard for Spring Boot services: every service names itself (product, service, version) or does not start, its metrics carry those names as common tags, and the defaults every service repeats — ECS JSON console logs, health/info/prometheus exposed, 10% trace sampling — are set once, at the lowest priority."
       },
       {
+        "id": "krizaka-persistence",
+        "path": "krizaka/krizaka-platform-kit/krizaka-persistence",
+        "repository": "krizaka-platform-kit",
+        "role": "platform",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "The tables of the kit's JDBC stores (outbox, message claims, idempotency keys, app-config) created and kept up to date by Flyway at startup, in their own history table, only for the stores a service declares; production defaults for the connection pool."
+      },
+      {
+        "id": "krizaka-ratelimit",
+        "path": "krizaka/krizaka-platform-kit/krizaka-ratelimit",
+        "repository": "krizaka-platform-kit",
+        "role": "platform",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "A requests-per-minute limit per key, written once: a token bucket per key (client address by default, or any key you resolve), observe or enforce, 429 with Retry-After as Problem Details, observed. Promoted from the Orazaka edge (ADR-083) and krizaka-users."
+      },
+      {
         "id": "krizaka-security",
         "path": "krizaka/krizaka-platform-kit/krizaka-security",
         "repository": "krizaka-platform-kit",
@@ -2438,6 +2601,15 @@
         "packaging": "jar",
         "version": "0.2.0",
         "description": "The HTTP baseline of a Spring Boot service, written once: RFC 9457 Problem Details with stable error codes, X-Request-Id correlation into the MDC, Jackson 3 defaults, opaque cursor pagination and declared CORS origins."
+      },
+      {
+        "id": "krizaka-webhooks",
+        "path": "krizaka/krizaka-platform-kit/krizaka-webhooks",
+        "repository": "krizaka-platform-kit",
+        "role": "platform",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Signed webhooks, written once, the Standard Webhooks way: sign and send with a stable id and secret rotation, verify what you receive (signature, constant-time, timestamp tolerance) with a 401 Problem Details otherwise; observed. Promoted from Orazaka (orazaka#189) and krizaka-notifications."
       },
       {
         "id": "krizaka-bom",
@@ -2634,6 +2806,46 @@
         "kind": "test"
       },
       {
+        "from": "krizaka-persistence",
+        "to": "krizaka-app-config",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-persistence",
+        "to": "krizaka-idempotency",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-persistence",
+        "to": "krizaka-messaging",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-persistence",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-persistence",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-ratelimit",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-ratelimit",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-ratelimit",
+        "to": "krizaka-web",
+        "kind": "compile"
+      },
+      {
         "from": "krizaka-security",
         "to": "krizaka-parent",
         "kind": "parent"
@@ -2679,6 +2891,16 @@
         "kind": "parent"
       },
       {
+        "from": "krizaka-spring-boot-starter-persistence",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-persistence",
+        "to": "krizaka-persistence",
+        "kind": "compile"
+      },
+      {
         "from": "krizaka-spring-boot-starter-rabbitmq",
         "to": "krizaka-messaging",
         "kind": "compile"
@@ -2692,6 +2914,21 @@
         "from": "krizaka-spring-boot-starter-rabbitmq",
         "to": "krizaka-test-support",
         "kind": "test"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-ratelimit",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-ratelimit",
+        "to": "krizaka-ratelimit",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-ratelimit",
+        "to": "krizaka-spring-boot-starter-web",
+        "kind": "compile"
       },
       {
         "from": "krizaka-spring-boot-starter-security",
@@ -2711,6 +2948,21 @@
       {
         "from": "krizaka-spring-boot-starter-web",
         "to": "krizaka-web",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-webhooks",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-webhooks",
+        "to": "krizaka-spring-boot-starter-web",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-webhooks",
+        "to": "krizaka-webhooks",
         "kind": "compile"
       },
       {
@@ -2827,6 +3079,21 @@
         "from": "krizaka-web",
         "to": "krizaka-test-support",
         "kind": "test"
+      },
+      {
+        "from": "krizaka-webhooks",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-webhooks",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-webhooks",
+        "to": "krizaka-web",
+        "kind": "compile"
       }
     ]
   },
