@@ -125,7 +125,7 @@ same arrangement `krizaka-billing-client` already uses for `CreditAuthorizationC
 ```mermaid
 graph LR
   UI["web-client :3000<br/>features/studio"] -->|BFF| EDGE["orazaka-edge :8088"]
-  ADMIN["web-admin :3001<br/>Studio Builder"] -->|BFF| EDGE
+  ADMIN["web-client console<br/>Studio Builder"] -->|BFF| EDGE
   EDGE -->|/api/v1/studios| STU["orazaka-studio-service :8096"]
   EDGE -->|/api/v1/billing| BIL["krizaka-billing-service :8095"]
   STU -->|Tier-1 CreditAuthorizationClient| BIL
@@ -896,7 +896,7 @@ src/services/studio.api.ts
 - Dates via `date-fns` (ERR-108). Input blocked while `isSending || isGenerating` (ERR-126).
 - Run progress reuses `JobStreamContext` / `useJobSSE`. **Do not build a second SSE channel.**
 
-### 12.4 Admin — the Studio Builder (`orazaka-web-admin` :3001)
+### 12.4 Admin — the Studio Builder (the operator console of `orazaka-web-client`)
 
 `src/features/studio/` with a three-pane authoring view: step list (drag to reorder) · step inspector
 (feature-key picker sourced from `GET /api/v1/features/all`, templated inputs with live placeholder
@@ -1132,7 +1132,7 @@ orazaka-apps/ui/orazaka-web-client/src/core/context/translations{,.types}.ts (ed
 orazaka-apps/ui/orazaka-web-client/src/app/(protected)/studios/**            (see §12.2)
 orazaka-apps/ui/orazaka-web-client/src/features/studio/**                    (see §12.2)
 orazaka-apps/ui/orazaka-web-client/src/services/studio.api.ts
-orazaka-apps/ui/orazaka-web-admin/src/features/studio/**                     (Studio Builder)
+orazaka-apps/ui/orazaka-web-client/src/console/features/studio/**                     (Studio Builder)
 orazaka-apps/ui/orazaka-cli/src/commands/studio.command.ts
 orazaka-end2end/src/test/java/.../StudioLifecycleE2ETest.java
 docs/adr/ADR-034-studio-marketplace.md                                       (new)

@@ -6,7 +6,7 @@ Orazaka: `orazaka_db`, `krizaka_users_db`, `krizaka_billing_db`, `orazaka_studio
 `orazaka_automation_db`; Orochia: `orochia_db`, `orochia_admin_db`. It replaces the App Platform dev databases (which a
 laptop could not reach and which forbid `CREATE SCHEMA`). Never a second cluster, never production on it.
 
-Access: **trusted sources** are the dev apps (`orochia-dev`, `orochia-admin-dev`, `orazaka-dev`) and the maintainer's
+Access: **trusted sources** are the dev apps (`orochia-dev`, `orazaka-dev`) and the maintainer's
 IP, so `psql` and DBeaver work from there with `sslmode=require` (`verify-full` with the cluster CA). pgvector is
 available (`CREATE EXTENSION vector` in `orazaka_knowledge_db`, done).
 
@@ -55,7 +55,6 @@ a ceiling per service (what it may hold at once), kept under 22 with room for a 
 | core: automation | `pool-automation` | 1 | no transaction is held across a remote call (ADR-084 §6) |
 | core: billing | `pool-billing` | 3 | outbox relay + requests: 1 starved it (`query_wait_timeout`, 2026-10-17) |
 | orochia-dev web | direct | 3 | pool 2 + 1 LISTEN (session by nature) |
-| orochia-admin-dev | direct | 1 | |
 | yasakia-dev, yomizaka-dev | `pool-yasakia` / `pool-yomizaka` (or direct) | 1 + 1 | `DATABASE_MAX_CONNECTIONS=2`; migrations on `DATABASE_DIRECT_URL` (a deploy-time job) |
 | kachizaka-dev, akinaza-dev | `pool-kachizaka`, `pool-akinaza` | 1 + 1 | `DATABASE_MAX_CONNECTIONS=1` |
 | accounts, newsletter (next services) | `pool-accounts`, `pool-newsletter` | 1 + 1 | reserved |

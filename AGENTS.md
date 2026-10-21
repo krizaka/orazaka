@@ -72,7 +72,7 @@ Every component is its **own GitHub repository** so that any Krizaka application
 | **Krizaka building blocks** (`krizaka/`, `com.krizaka:*` on Maven Central — Orazaka consumes them, does not own them) | `krizaka-build` (parent POM, BOM, generic test kit) · `krizaka-platform-kit` (`krizaka-security`, `krizaka-messaging`) · `krizaka-users` (register, verify, login, OAuth, forgot/reset password, profile, API keys; `-api`, `-client`) · `krizaka-notifications` (e-mail · SMS · webhook per channel) · `krizaka-billing` (credits, plans, metering; `-api`, `-client`) |
 | Foundation (Orazaka) | `orazaka-build` (parent POM + BOM + governance kit) · `orazaka-contracts` (platform Tier-1) · `orazaka-edge` · `orazaka-ui-kit` (`@krizaka/orazaka-shared`, `@krizaka/orazaka-design-system`) |
 | AI engine | `orazaka-ai-engine` (core, interceptors, tools, business, persistence) · `orazaka-studio` · `orazaka-conversation-service` · `orazaka-job-service` · `orazaka-knowledge-service` · `orazaka-automation-service` · `orazaka-worker-media` |
-| Apps & content | `orazaka-web-client` · `orazaka-web-admin` · `orazaka-mobile-client` · `orazaka-cli` · `orazaka-packs` |
+| Apps & content | `orazaka-web-client` (with its operator console) · `orazaka-mobile-client` · `orazaka-cli` · `orazaka-packs` |
 
 **Repository rules** (build-enforced where a rule can see them):
 
@@ -239,13 +239,13 @@ All clients live under `orazaka-apps/ui/` — one repository each, linked by the
 | Package | Role | Port |
 |:---|:---|:---:|
 | `orazaka-web-client` | Next.js 16 client (App Router) | 3000 |
-| `orazaka-web-admin` | legacy standalone SecOps console (replaced by the console of `orazaka-web-client`, host `admin.*`; to be archived) | 3001 |
+| `orazaka-web-admin` | **retired**: the operator console is in `orazaka-web-client`, host `admin.*` (the repository is archived) | — |
 | `orazaka-mobile-client` | Expo SDK 53 | 8081 |
 | `orazaka-cli` | dev CLI + offline SQLite queue | — |
 | `@krizaka/orazaka-shared` (repo `orazaka-ui-kit`) | TS types + Zod + **design tokens** (framework-agnostic; single source, consumed by web, mobile, cli) | — |
 | `@krizaka/orazaka-design-system` (repo `orazaka-ui-kit`) | **web** React components + Tailwind preset + theme + Lucide registry (consumes `shared` tokens); its `theme.css` declares its own Tailwind `@source` | — |
 
-- **Design system**: web components shared by `web-client` + `web-admin` in `orazaka-design-system`. **Banned**: duplicating components between web-client and web-admin, or putting React components in `orazaka-shared` (which stays pure contracts + tokens). **Mobile** has its own RN components but imports the **same tokens** from `shared`.
+- **Design system**: web components shared by `web-client` (its operator console included) in `orazaka-design-system`. **Banned**: duplicating components between the console and the rest of web-client, or putting React components in `orazaka-shared` (which stays pure contracts + tokens). **Mobile** has its own RN components but imports the **same tokens** from `shared`.
 - **BFF mandatory for the browser**: a web page **never** hits the router (`:8080`) or Ollama (`:11434`) directly. All browser traffic proxies through Next.js server API routes.
 - **Native clients go to the edge**, not through the BFF: `orazaka-mobile-client` calls `:8088` with `Authorization: Bearer`. The BFF authenticates with a **next-auth session cookie**, which a native app can neither obtain nor carry, so routing it there would mean building a second, native-only auth path inside a component that exists to serve the browser. The edge already exchanges keys for JWTs (`ApiKeyExchangeFilter`) and every service behind it enforces its own security — the guarantee the BFF rule protects (no client reaches a service unauthenticated) is upheld by the edge, not weakened. The rule for the browser is unchanged and non-negotiable.
 - Types: always via `@krizaka/orazaka-shared` (`"@krizaka/orazaka-shared": "*"`). Ban interface duplication and cross-imports between client packs.

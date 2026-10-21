@@ -773,7 +773,7 @@ the option of swapping Lago later without touching the ledger.
 ## 12. Admin plane — everything commercial is in the DB, editable live
 
 **The governing rule: nothing commercial is in code or in yaml.** Offers, prices, entitlements,
-packs and the behavioural switches are all rows, all editable from `orazaka-web-admin`, all
+packs and the behavioural switches are all rows, all editable from the operator console (`orazaka-web-client`), all
 versioned. Deploying is never the way to change what Orazaka sells. This is the direct application
 of AGENTS.md §4 (*domain data & behavior live in the DB*) and ADR-027/031 to the monetisation plane.
 
@@ -790,7 +790,7 @@ of AGENTS.md §4 (*domain data & behavior live in the DB*) and ADR-027/031 to th
 Backend: the resource controllers of §10 under `@PreAuthorize("hasRole('ADMIN')")`, every mutation
 snapshotted into `billing_version_history` (attributable, diffable, rollback-able).
 
-Frontend: `orazaka-web-admin` (:3001), through its BFF routes (the browser never calls :8095
+Frontend: the operator console of `orazaka-web-client` (admin host), through its BFF routes (the browser never calls :8095
 directly — AGENTS.md §8), components from `orazaka-design-system`, ≤ 250 lines per `.tsx`.
 
 | Screen | What the admin does | Non-negotiable |

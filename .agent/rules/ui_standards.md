@@ -28,7 +28,7 @@
 All client applications are grouped under `orazaka-apps/ui/` as an npm workspace:
 
 - **`orazaka-web-client/`**: Client-facing Next.js 16 App Router application (port 3000). Cinematic dark-mode, React 19, input-blocking.
-- **`orazaka-web-admin/`**: Isolated SecOps Administration Console (port 3001). Must never share runtime state with `orazaka-web-client`.
+- **The operator console** (in `orazaka-web-client`, served on `admin.*`): an isolated SecOps Administration Console. Must never share runtime state with the public site of `orazaka-web-client`.
 - **`orazaka-mobile-client/`**: Expo SDK 53 cross-platform mobile app. **Two typed stacks chosen by session** — auth (Login, Register, ForgotPassword, ResetPassword) and app (a six-tab bar: Studios, Chat, Jobs, Connecteurs, Système, Profil; plus StudioDetail, StudioRun, Subscription, Console, AdminGovernance). Every colour comes from `themes` in `orazaka-shared`; no literal `hsl()`/hex in a screen.
 - **Mobile talks to the edge**, never to the BFF (AGENTS.md §8): `src/config/api.ts` owns the base URL and the bearer, `src/core/AuthContext.tsx` owns the session (JWT in `expo-secure-store`, never AsyncStorage — it is a credential), `src/core/useApi.ts` owns loading/error/retry. A screen builds no URL and sets no header.
 - **Streaming on mobile is XHR, not `fetch`/`EventSource`**: React Native's `fetch` exposes no readable stream and `EventSource` cannot carry an `Authorization` header. `src/core/streamChat.ts` is the one place that knows this.
@@ -41,7 +41,7 @@ All client applications are grouped under `orazaka-apps/ui/` as an npm workspace
 
 Text entry surfaces must lock when `isSending || isGenerating`. This applies to **all** client platforms (web, admin, mobile):
 - Disable textareas, menus, attachments, and submit buttons.
-- Applies to both web (`orazaka-web-client`, `orazaka-web-admin`) and mobile (`orazaka-mobile-client`).
+- Applies to both web (`orazaka-web-client`, console included) and mobile (`orazaka-mobile-client`).
 
 ## §6 Form Event Typing
 
