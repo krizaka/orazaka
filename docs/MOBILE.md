@@ -136,7 +136,7 @@ The repository's CI builds the workspace and runs `npm run validate` (lint, type
 pull request. The Maestro flow runs on a Mac with a simulator and the stack up:
 
 ```bash
-maestro test .maestro/smoke.yaml -e ORAZAKA_EMAIL=eric.morel@example.com -e ORAZAKA_PASSWORD=<password>
+maestro test .maestro/smoke.yaml -e ORAZAKA_EMAIL=<email> -e ORAZAKA_PASSWORD=<password>
 ```
 
 ---
