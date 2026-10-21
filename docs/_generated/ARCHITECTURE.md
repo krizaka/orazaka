@@ -20,7 +20,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | **Application** | the orchestration, pipeline and capability libraries around the core (AGENTS.md §2: business, interceptors, tools) | `orazaka-business`, `orazaka-interceptors`, `orazaka-tools` |
 | **Domain core** | a `*-core` module — the centre of its hexagon, depending on no outer layer | `orazaka-core`, `krizaka-users-core` |
 | **Contracts** | a Tier-1 `*-api` module — pure interfaces and records | `orazaka-jobs-api`, `orazaka-persistence-app-api`, `orazaka-studio-api`, `krizaka-billing-api`, `krizaka-notifications-api`, `krizaka-users-api` |
-| **Krizaka platform kit** | a module of krizaka-platform-kit — the cross-cutting code with one author (ADR-073), starters included | `krizaka-app-config`, `krizaka-messaging`, `krizaka-observability`, `krizaka-security`, `krizaka-spring-boot-starter-app-config`, `krizaka-spring-boot-starter-observability`, `krizaka-spring-boot-starter-rabbitmq`, `krizaka-spring-boot-starter-security`, `krizaka-spring-boot-starter-web`, `krizaka-web` |
+| **Krizaka platform kit** | a module of krizaka-platform-kit — the cross-cutting code with one author (ADR-073), starters included | `krizaka-app-config`, `krizaka-idempotency`, `krizaka-messaging`, `krizaka-observability`, `krizaka-security`, `krizaka-spring-boot-starter-app-config`, `krizaka-spring-boot-starter-idempotency`, `krizaka-spring-boot-starter-observability`, `krizaka-spring-boot-starter-rabbitmq`, `krizaka-spring-boot-starter-security`, `krizaka-spring-boot-starter-web`, `krizaka-web` |
 
 ## Modules
 
@@ -59,10 +59,12 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `krizaka-notifications-api` | contract | `krizaka-notifications` | 0.2.0 | — | — |
 | `krizaka-users-api` | contract | `krizaka-users` | 0.2.0 | — | — |
 | `krizaka-app-config` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
+| `krizaka-idempotency` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-messaging` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-observability` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-security` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-spring-boot-starter-app-config` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
+| `krizaka-spring-boot-starter-idempotency` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-spring-boot-starter-observability` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
 | `krizaka-spring-boot-starter-security` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
@@ -97,7 +99,9 @@ Build dependencies between the modules above (test scope excluded): who packages
 | `krizaka-users-core` | `krizaka-users-api`, `krizaka-users-persistence` |
 | `orazaka-persistence-app-api` | `orazaka-jobs-api` |
 | `orazaka-studio-api` | `orazaka-jobs-api` |
+| `krizaka-idempotency` | `krizaka-web` |
 | `krizaka-spring-boot-starter-app-config` | `krizaka-app-config` |
+| `krizaka-spring-boot-starter-idempotency` | `krizaka-idempotency`, `krizaka-spring-boot-starter-web` |
 | `krizaka-spring-boot-starter-observability` | `krizaka-observability` |
 | `krizaka-spring-boot-starter-rabbitmq` | `krizaka-messaging` |
 | `krizaka-spring-boot-starter-security` | `krizaka-security` |

@@ -840,6 +840,21 @@
       }
     },
     {
+      "id": "krizaka-idempotency",
+      "path": "krizaka/krizaka-platform-kit/krizaka-idempotency",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "HTTP Idempotency-Key, written once: an action runs at most once per key, a retry with the same key and request replays the stored response, the same key with another request is a 422 Problem Details; PostgreSQL or in-memory store, observed. Promoted from Orazaka (ADR-083).",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "krizaka-messaging",
       "path": "krizaka/krizaka-platform-kit/krizaka-messaging",
       "repository": "krizaka-platform-kit",
@@ -894,6 +909,21 @@
       "runtime": "jvm",
       "version": "0.2.0",
       "description": "App version compatibility in one dependency: krizaka-app-config (the public app-config endpoint, the 426 Upgrade Required filter, N-1 contract compatibility, the audited admin API) with Spring MVC and JDBC.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "krizaka-spring-boot-starter-idempotency",
+      "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-idempotency",
+      "repository": "krizaka-platform-kit",
+      "owner": "krizaka",
+      "role": "platform",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "HTTP Idempotency-Key in one dependency: krizaka-idempotency (at most once per key, replay, 422 on reuse, PostgreSQL store) with Spring MVC and JDBC. Add your JDBC driver.",
       "ports": {
         "inbound": [],
         "outbound": []
@@ -997,6 +1027,10 @@
       "to": "krizaka-security"
     },
     {
+      "from": "krizaka-idempotency",
+      "to": "krizaka-web"
+    },
+    {
       "from": "krizaka-notifications-service",
       "to": "krizaka-messaging"
     },
@@ -1007,6 +1041,14 @@
     {
       "from": "krizaka-spring-boot-starter-app-config",
       "to": "krizaka-app-config"
+    },
+    {
+      "from": "krizaka-spring-boot-starter-idempotency",
+      "to": "krizaka-idempotency"
+    },
+    {
+      "from": "krizaka-spring-boot-starter-idempotency",
+      "to": "krizaka-spring-boot-starter-web"
     },
     {
       "from": "krizaka-spring-boot-starter-observability",
@@ -2299,6 +2341,15 @@
         "description": "App version compatibility in one dependency: krizaka-app-config (the public app-config endpoint, the 426 Upgrade Required filter, N-1 contract compatibility, the audited admin API) with Spring MVC and JDBC."
       },
       {
+        "id": "krizaka-spring-boot-starter-idempotency",
+        "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-idempotency",
+        "repository": "krizaka-platform-kit",
+        "role": "starter",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "HTTP Idempotency-Key in one dependency: krizaka-idempotency (at most once per key, replay, 422 on reuse, PostgreSQL store) with Spring MVC and JDBC. Add your JDBC driver."
+      },
+      {
         "id": "krizaka-spring-boot-starter-observability",
         "path": "krizaka/krizaka-platform-kit/starters/krizaka-spring-boot-starter-observability",
         "repository": "krizaka-platform-kit",
@@ -2342,6 +2393,15 @@
         "packaging": "jar",
         "version": "0.2.0",
         "description": "Version compatibility between a backend and the apps that call it, written once: a public cached app-config endpoint (minimum and latest version, update mode, maintenance, contract range, store URL, flags, localized message) read from database parameters, a filter that answers 426 Upgrade Required to a client below the minimum, N-1 contract compatibility with Deprecation and Sunset headers, and an audited admin API with rollback."
+      },
+      {
+        "id": "krizaka-idempotency",
+        "path": "krizaka/krizaka-platform-kit/krizaka-idempotency",
+        "repository": "krizaka-platform-kit",
+        "role": "platform",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "HTTP Idempotency-Key, written once: an action runs at most once per key, a retry with the same key and request replays the stored response, the same key with another request is a 422 Problem Details; PostgreSQL or in-memory store, observed. Promoted from Orazaka (ADR-083)."
       },
       {
         "id": "krizaka-messaging",
@@ -2494,6 +2554,21 @@
         "kind": "parent"
       },
       {
+        "from": "krizaka-idempotency",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-idempotency",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-idempotency",
+        "to": "krizaka-web",
+        "kind": "compile"
+      },
+      {
         "from": "krizaka-messaging",
         "to": "krizaka-parent",
         "kind": "parent"
@@ -2577,6 +2652,21 @@
         "from": "krizaka-spring-boot-starter-app-config",
         "to": "krizaka-parent",
         "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-idempotency",
+        "to": "krizaka-idempotency",
+        "kind": "compile"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-idempotency",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-spring-boot-starter-idempotency",
+        "to": "krizaka-spring-boot-starter-web",
+        "kind": "compile"
       },
       {
         "from": "krizaka-spring-boot-starter-observability",
@@ -4144,7 +4234,7 @@
     {
       "key": "bien-etre",
       "dir": "wellbeing",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "tier": "DATA",
       "kind": null,
       "distribution": "CLOUD",
