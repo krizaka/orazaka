@@ -261,6 +261,21 @@ label stays on the picture, small, top right. Rendered and checked at 16:9 and 9
 alive/on-topic, the voice (WER, pitch movement, pace, and the person's listen), the loudness (measured LUFS, true peak),
 the foley coverage, the titles (rendered at both aspects).
 
+### v2.8 No children, no child-like figures, no dolls or toys (2026-10-21)
+
+A hard rule for every Orochia or brand film, after a FLUX plate put a child-like doll in the flamingo's bed
+(« Orochia : la première livraison », keyframe 03; its Wan take was rejected and reshot from a clean plate).
+- **Prompts:** every plate, keyframe, character and shot prompt carries « No children, no child-like figures, no dolls or toys »,
+  with or without a treatment's keep lines (`NO_CHILDREN`, orazaka-cli `cinema.production.ts`; krizaka-ui
+  `tools/brand-films/dawn/keyframes.py`). The keyframe and Wan negatives name child, children, child-like figure, doll and toy.
+- **Frame check:** each keyframe is checked before any GPU, then six frames sampled across each take
+  (`cinema.childsafe.ts`: `sampleTimes`, `CHILD_CHECK_PROMPT`, `parseChildCheck`, `childGate`; run by `childsafe.py`).
+  - The model is Qwen2.5-VL 7B (Apache-2.0), local on MLX.
+  - It answers one yes/no question, read strictly: only a clear NO clears a frame.
+  - One flagged frame rejects the take, and a film passes only after a person's review (`gate.json childSafe.reviewedBy`).
+- **Measured:** the check flags the doll keyframe and the doll take, and clears the 18 clean keyframes and the clean takes.
+  LLaVA 1.6 and BakLLaVA missed the doll, so they are refused for this check.
+
 **« le relais » cost** (v2, 2026-10-21): 68 s of 4K film, 25 shots, 4 reshot (two bird takes off-model, one LTX landscape
 that invented birds, one phoenix that stayed still); $35.27 billed on RunPod within a $40 cap (one H200 at $5.29/h:
 the takes, two reshoots and the 25 SeedVR2 4K upscales) = **$31.12 per finished minute**. Of that, ~$4.1 went to two
