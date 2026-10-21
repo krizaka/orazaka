@@ -8,7 +8,8 @@ order: 55
 # ADR-055 — The REGULATED controls, and the wellbeing pack
 
 - **Status**: Accepted
-- **Date**: 2026-09-10
+- **Date**: 2026-09-10 — **amended 2026-10-21** (orazaka#301: consent 2.1, the erase, retention of
+  conversation memory, what is encrypted, backups; §3, §5 and §9 are current, the rest is as accepted)
 - **Scope**: `PackConsent`, `PackSafety`, `CrisisResource`, `PackBundle`, `StepDispatch`,
   `SafetyInterceptor`, `ScopeGuardInterceptor`, `PipelineRegistry`, `StudioInstallationService`,
   `SecurityProperties`, `orazaka-packs/wellbeing/**`
@@ -59,7 +60,17 @@ The refusal is `451` carrying the version and the statement, so a client renders
 to be agreed to instead of inventing wording of its own for a legal notice. A `400` would have said
 the caller was wrong; they are not wrong, they have not been asked.
 
-Measured against the running platform:
+**Current behaviour (orazaka#301, consent 2.1).** The statement is the pack's, **served by the server in
+the caller's language** — `pack.consent_statement` is the default (French), `pack.consent_statements`
+the others (`en`) — never translated by a client: `GET /api/v1/studios/packs/{pack}/consent?locale=`,
+and the `451` itself carries `statement` (in the `?locale=` asked), `statements` (every language) and
+`regions` (each region's verified line with its source and date), so a person sees the line they would
+be given before they agree. A bump of the version, the words or a translation reaches an environment
+that already carries the pack (`PackInstallRepository.isApplied` compares the consent too: judged by the
+Studios' blueprint versions alone, a new statement was never written where the old one was installed).
+Version **2.1** states what the system does, claim by claim (§9).
+
+Measured against the running platform (consent version as of 2026-09-10):
 
 ```
 1. no consent at all               → 451 consent_required, consentVersion=1.0, statement returned
@@ -114,6 +125,15 @@ Read at the source on **2026-09-10**:
 > is the Dutch-language `Zelfmoordlijn`, and shipping it for a francophone user would have been a
 > number that answers in the wrong language to someone in crisis. It was wrong in the draft of this
 > pack and was caught by checking rather than by remembering.
+
+**Re-read at the official source on 2026-10-20** (orazaka#301), one line at a time, and the table now has
+five regions: `CA-QC` — **1 866 APPELLE (1 866 277-3553)**, text **535353**, "en tout temps, de partout
+au Québec" ([quebec.ca](https://www.quebec.ca/sante/conseils-et-prevention/sante-mentale/obtenir-aide-en-sante-mentale/ressources-aide-et-soutien-en-sante-mentale),
+page updated 2026-07-06); 9-8-8 reaches the Québec line from Québec; **Info-Social 811**, 24 h/24, 365 j/an,
+free and confidential ([quebec.ca](https://www.quebec.ca/en/health/finding-a-resource/info-social-811)).
+988.ca states a 24/7 call-or-text line but **not its languages**, so the pack no longer claims "français et
+anglais" for `CA`. The lines are served by the server (`regions` of the `451` and of the consent
+endpoint); no client holds a number.
 
 Everywhere else, the pack does not install. **These change** — a line is renumbered, a service
 merged, a charity closes — which is why `verifiedOn` exists and why a resource without it cannot
@@ -199,3 +219,70 @@ switch the control off again — and one binds the property end to end through S
 
 **This was found by trying to use a control, not by reading it.** The same is true of §7's defect
 and of the Belgian number. Three for three, in the phase where that matters most.
+
+## 9. What the statement says is what the system does (orazaka#301, consent 2.1)
+
+« Vous pouvez tout supprimer à tout moment » was a promise with no endpoint behind it. Each claim of the
+statement now has a mechanism and a test, and a claim that could not be verified was changed to what is
+true. **Never an unverified claim in a consent text.**
+
+### 9.1 Erase and withdraw
+
+| The statement says | Mechanism | Proof |
+|:---|:---|:---|
+| « Supprimer toutes mes données de bien-être » erases entries, spoken or written exchanges, results, files, the consent | `DELETE /api/v1/studios/packs/{pack}/my-data` (`ProtectedDataService`): runs with inputs, outputs, steps, events; webhook deliveries and outbox messages built from them; installations with the consent they recorded; then, **asked first** and across services, the job plane (`POST /internal/v1/jobs/erase`: row, executor directory, durable copy on Bunny) and the conversation service (`POST /internal/v1/protected-conversations/erase`: the memory of voice and listening turns) | `ProtectedDataServiceIT` (real `80-studio.sql`: the person's words searched in **every table**), `ProtectedJobRetentionIT`, `ProtectedConversationIT` (every table of the conversation schema) |
+| … or a single entry | `DELETE /api/v1/studios/runs/{id}` | same IT |
+| only a content-free trace remains | append-only `studio_run_audit`, event `DATA_ERASED` / `RUN_ERASED`: who, which Studio, which class, when — the minimal proof of withdrawal; its write is **not** best-effort, a failure rolls the erase back | `theTrailKeepsTheProofAndNoContent` |
+| withdrawing = uninstalling; what was recorded disappears within 30 days, or at once on erase | uninstall soft-revokes; the retention sweeps below | `RetentionSweeper` (runs), `JobRetentionService` (jobs: a protected job is purged at its terminal state), `ProtectedConversationSweeper` (conversations) |
+
+Owner only (the actor is the token's subject, never a parameter), idempotent (asking again erases nothing
+and writes no new audit row), and **all-or-nothing across services**: the other services are asked
+inside the transaction before anything of the Studio service's is deleted; if one cannot erase, the call
+answers `503` and nothing is deleted — a person is never told their data is gone when part of it is not.
+
+### 9.2 Voice and listening turns
+
+A turn under an installation is written to the conversation memory (the next turn needs the previous
+one), keyed by a conversation id the client chose and with **no owner** — so neither erase nor retention
+could reach it, and `orazaka_chat_messages` kept it indefinitely. `orazaka_protected_conversation`
+(conversation id, actor, installation, pack; **no content**) is written when a turn is prepared under a
+regulated installation (`VoiceTurnService`); it is what the erase and the 30-day sweep (counted from the
+conversation's last turn) go through. **The audio is not stored**: the recording is transcribed in memory,
+and a spoken sentence waits in `VoiceClipStore` — in memory, never on disk — for 300 s behind a signed URL
+(ADR-076 §2). Conversations of a regulated pack held **before** this change are not indexed and age out
+with nothing; on dev they are test data.
+
+### 9.3 What is encrypted — verified, and said as it is
+
+| Where | What is true | Source |
+|:---|:---|:---|
+| Between the device and the service | HTTPS at the edge | App Platform ingress |
+| Between the service and its database | TLS: `sslmode=require` on every datasource | `infra/deploy/orazaka-dev.app.yaml` |
+| Between the services and the broker | TLS only (5671) | same file, `SPRING_RABBITMQ_SSL_*` |
+| Working files (job inputs/outputs), on disk **and** on Bunny | **application-level envelope encryption**, one data key per file wrapped by a master key outside the repository; only sealed envelopes cross the durable-store port | [ADR-054](ADR-054-asset-encryption-at-rest.md), `DurableAssetStore` |
+| Run inputs and outputs, job payloads and results, conversation messages | **plain `jsonb` / `text` columns**: not encrypted by the application. At rest they sit on the managed cluster's disks, **encrypted by the host** (DigitalOcean: "Data in all Managed Database clusters is encrypted at rest with LUKS") | [DigitalOcean shared responsibility model](https://www.digitalocean.com/security/shared-responsibility-model-managed-databases), [PostgreSQL features](https://docs.digitalocean.com/products/databases/postgresql/details/features/) |
+
+So the pre-2.1 sentence « elles sont chiffrées » was **not exactly true**: files are, the rows are only
+disk-encrypted by the provider. The statement now says exactly that, including « sans chiffrement
+supplémentaire champ par champ ». Column-level encryption was not implemented: it would not remove the
+operator's ability to read what the application can read, and the erase and retention (the controls the
+law asks for) do not depend on it. It stays an option, to be chosen deliberately — and the statement
+changes the day it exists.
+
+### 9.4 Backups
+
+The cluster takes full backups daily and keeps write-ahead logs so that it can be restored to any point
+in the **previous seven days** (DigitalOcean, PostgreSQL features); `doctl databases backups` on the dev
+cluster lists exactly seven daily backups (2026-10-14 … 2026-10-20 when read). The provider encrypts them
+(AES-256 CTR + HMAC-SHA256, a random key per file). The statement therefore says: encrypted technical
+backups are kept 7 days; what is deleted, or expires, disappears from them within 7 days at most. A
+restore within that window would bring a deleted entry back; the 7 days is the honest bound, not zero.
+Bunny deletes an object on request and the pack states no backup for it.
+
+### 9.5 Tests that keep the statement true
+
+`tests/wellbeing-consent.test.mjs` (orazaka-packs) pins the French and English texts to the same figures
+and promises, to « 7 jours », to the TLS / key-per-file / disk-encryption wording, and refuses a claim of
+column encryption. The 30-day figure the texts state is `retention.sensitive-run-days` (studio) and
+`orazaka.conversation.protected-retention-days` (conversation): they must be changed together, and the
+consent version bumped with them.
