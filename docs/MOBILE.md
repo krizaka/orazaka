@@ -13,7 +13,7 @@ come from the server, it says so.
 | :--- | :--- |
 | iOS simulator (iOS 27) | ✅ builds and runs against the local stack — sign-in, Studios, chat, jobs, connectors, profile |
 | Android emulator (Android 16) | ✅ development build runs against the local stack — sign-in, Studios, jobs, profile |
-| iPhone / store builds | ❌ no EAS project, no signing — the app runs from a development build only |
+| iPhone / store builds | ✅ EAS project `orazaka-mobile` (EAS-managed credentials); iOS builds ship to an internal TestFlight group (App Store Connect record `com.krizaka.orazaka`), never submitted for review; Android: a preview APK (internal distribution). Every profile of `eas.json` points at `https://dev.orazaka.com/edge` |
 | Expo SDK | ⚠️ 53 — the move to SDK 57 (the other Krizaka apps) is planned; two stopgaps below keep 53 building and launching on Xcode 27 / iOS 27 |
 
 ---
@@ -144,8 +144,8 @@ maestro test .maestro/smoke.yaml -e ORAZAKA_EMAIL=eric.morel@example.com -e ORAZ
 ## 4. What is missing
 
 - **Expo SDK 57** — and with it the end of the two stopgaps above.
-- **Android**: a run on a phone.
-- **Builds for a phone**: an EAS project, signing, TestFlight / an APK.
-- **Words**: the screens mix English and French written in the code; the app has no message catalogue yet.
+- **Android**: a run on a physical phone (the preview APK is run on the Android 16 emulator and signs in as the persona on dev).
+- **Push notifications**: the APNs key is still manual; no push yet.
+- **Words**: the app has an English and a French catalogue (`src/i18n/en.json`, `fr.json`); a few server messages still arrive in the server's language.
 - **Système, Gouvernance, Abonnement**: read from the server instead of values written in the app.
-- **Theme**: dark only; the tab bar has no icons yet.
+- **Theme**: the app follows the device (`userInterfaceStyle: automatic`); the tab bar carries the same @krizaka/icons glyphs as the web rail.
