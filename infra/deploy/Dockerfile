@@ -35,7 +35,6 @@ ADD https://github.com/krizaka/orazaka-edge.git/info/refs?service=git-upload-pac
 ADD https://github.com/krizaka/orazaka-worker-media.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-worker-media
 ADD https://github.com/krizaka/orazaka-ui-kit.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-ui-kit
 ADD https://github.com/krizaka/orazaka-web-client.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-web-client
-ADD https://github.com/krizaka/orazaka-web-admin.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-web-admin
 ADD https://github.com/krizaka/orazaka-mobile-client.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-mobile-client
 ADD https://github.com/krizaka/orazaka-cli.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-cli
 ADD https://github.com/krizaka/orazaka-packs.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-packs

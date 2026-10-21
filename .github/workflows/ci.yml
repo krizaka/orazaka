@@ -92,7 +92,6 @@ jobs:
           npm ci --no-audit --no-fund
           npm run build:shared
           npm run validate
-          npm run validate:admin
 
       - name: Docs are generated from this code
         # The generated docs also read the default branches of the other repositories, so they drift when those merge,

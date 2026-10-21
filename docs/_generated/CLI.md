@@ -60,7 +60,7 @@ orazaka start — Start Orazaka infrastructure — dev mode (Docker middleware +
   4. Media Generation Worker
   5a. Starting Router (Spring Boot) (--mode full)
   5b. Starting Next.js UI (--mode full)
-orazaka dev — Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile)
+orazaka dev — Launch the full Orazaka application stack in parallel (9 services + Web, Mobile)
   EDGE :8088
   ROUTER :8080
   IDENTITY :8083
@@ -71,7 +71,6 @@ orazaka dev — Launch the full Orazaka application stack in parallel (9 service
   STUDIO :8096
   NOTIFICATIONS :8097
   WEB-CLIENT :3000
-  WEB-ADMIN :3001
   MOBILE :8081
   worker.yaml (Python workers, no HTTP port)
 ```
@@ -126,7 +125,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka db reseed` | Drop & re-apply infra/initdb/*.sql (schema + seed). Destroys all local dev data. |
 | `orazaka demo` | Demonstration persona on the local stack (never on a deployed one) |
 | `orazaka demo seed` | Create or refresh Eric, the demo persona: account, onboarding, plan, packs and Studios (replayable) |
-| `orazaka dev` | Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile) |
+| `orazaka dev` | Launch the full Orazaka application stack in parallel (9 services + Web, Mobile) |
 | `orazaka docs` | Code-driven documentation: build (generate) \| sync (to the site) |
 | `orazaka docs build` | Regenerate docs/_generated/ from the code |
 | `orazaka docs sync` | Copy docs/ (+ generated) into the Krizaka site content tree |
@@ -370,11 +369,11 @@ Create or refresh Eric, the demo persona: account, onboarding, plan, packs and S
 
 ### `orazaka dev`
 
-Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile)
+Launch the full Orazaka application stack in parallel (9 services + Web, Mobile)
 
 | Argument / option | Description |
 |:---|:---|
-| `--only <services>` | Launch only these services (comma-separated: edge,router,identity,automation,knowledge,job,billing,studio,notifications,web,admin,mobile) |
+| `--only <services>` | Launch only these services (comma-separated: edge,router,identity,automation,knowledge,job,billing,studio,notifications,web,mobile) |
 | `--skip-edge` | Skip the Edge gateway (strangler facade on :8088) |
 | `--skip-identity` | Skip the Identity service (:8083) |
 | `--skip-router` | Skip the Router (Spring Boot) backend — run RouterApplication from your IDE instead |
@@ -385,7 +384,7 @@ Launch the full Orazaka application stack in parallel (9 services + Web, Admin, 
 | `--skip-billing` | Skip the Billing service (:8095) |
 | `--skip-studio` | Skip the Studio service (:8096) |
 | `--skip-notifications` | Skip the Notification service (:8097) |
-| `--skip-admin` | Skip Admin console |
+| `--skip-admin` | Deprecated no-op: the operator console is served by the web client |
 | `--skip-mobile` | Skip Expo mobile server |
 | `--skip-web` | Skip Web client |
 | `--skip-workers` | Skip the Python workers declared by worker.yaml |

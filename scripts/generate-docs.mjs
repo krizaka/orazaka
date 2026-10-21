@@ -2650,15 +2650,18 @@ const mdPacks = (p, cli, catalog) => {
 // ── Administration ──────────────────────────────────────────────────────────
 
 function extractAdmin(api) {
-  const repo = REPOSITORIES.find((r) => r.name === "orazaka-web-admin");
-  const dir = repo ? join(ROOT, repo.path, "src") : null;
+  // The operator console lives in orazaka-web-client (host routing: admin.orazaka.com), not in a repository of its own.
+  const repo = REPOSITORIES.find((r) => r.name === "orazaka-web-client");
+  const src = repo ? join(ROOT, repo.path, "src") : null;
+  const appDir = src ? join(src, "app", "console") : null;
+  const dir = src ? join(src, "console") : null;
   const screens = [];
   const called = new Set();
   let auth = { authority: null, provider: null };
   if (dir && existsSync(dir)) {
-    for (const f of walk(join(dir, "app"), (p) => basename(p) === "page.tsx").sort()) {
+    for (const f of walk(appDir, (p) => basename(p) === "page.tsx").sort()) {
       const s = read(f);
-      const route = screenRoute(relative(join(dir, "app"), join(f, "..")));
+      const route = screenRoute(relative(appDir, join(f, "..")));
       const at = s.search(/export default function/);
       const tabs = [...s.matchAll(/\{\s*id:\s*"(\w+)",\s*label:\s*"([^"]+)"\s*\}/g)].map((m) => m[2]);
       screens.push({ route, summary: firstSentence(javadocAbove(s, at)), tabs });
@@ -2706,9 +2709,9 @@ const mdAdmin = (a) => {
     `administrator is an account holding \`${a.auth.authority ?? "ROLE_ADMIN"}\`, granted by the identity service; every`,
     "administrative endpoint checks it on the server (`@PreAuthorize`), whatever client calls it.",
     "",
-    `## The SecOps console (${code(a.repo ?? "orazaka-web-admin")})`,
+    `## The SecOps console (${code(a.repo ?? "orazaka-web-client")})`,
     "",
-    "A Next.js console (port 3001) started with the rest of the stack by `orazaka dev` (`--skip-admin` to leave it out).",
+    "A Next.js console served by `orazaka-web-client` on the admin host (`admin.orazaka.com`, host routing), started with the web client by `orazaka dev`.",
     "",
     "| Screen | What it is for | Tabs |",
     "|:---|:---|:---|",
@@ -2718,7 +2721,7 @@ const mdAdmin = (a) => {
     "",
     ...ADMIN_CAPTURES.flatMap((c) => [`![${c.caption}](${c.url})`, "", `*${c.caption}.*`, ""]),
     "> The console's screens are in French for now, and it ships no sign-in page yet",
-    "> ([orazaka-web-admin#5](https://github.com/krizaka/orazaka-web-admin/issues/5)): every administrative",
+    "> (tracked in `orazaka-web-client`): every administrative",
     "> action is also an endpoint, listed below.",
     "",
     "### How the console is secured",

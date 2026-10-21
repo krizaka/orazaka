@@ -14,7 +14,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 
 | Role | Rule | Modules |
 |:---|:---|:---|
-| **Clients** | a UI repository of the workspace manifest (layer app, kind npm) | `orazaka-cli`, `orazaka-mobile-client`, `orazaka-web-admin`, `orazaka-web-client` |
+| **Clients** | a UI repository of the workspace manifest (layer app, kind npm) | `orazaka-cli`, `orazaka-mobile-client`, `orazaka-web-client` |
 | **Services & workers** | a module with a main (SpringApplication.run), or a native worker | `orazaka-automation-service`, `orazaka-conversation-service`, `orazaka-edge`, `orazaka-job-service`, `orazaka-knowledge-service`, `orazaka-studio-service`, `orazaka-worker-media`, `krizaka-billing-service`, `krizaka-notifications-service`, `krizaka-users-service` |
 | **Adapters** | an imported module that is none of the below: persistence, typed HTTP clients, asset store, bridge | `orazaka-assets`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-studio-client`, `krizaka-billing-client`, `krizaka-users-client`, `krizaka-users-persistence` |
 | **Application** | the orchestration, pipeline and capability libraries around the core (AGENTS.md §2: business, interceptors, tools) | `orazaka-business`, `orazaka-interceptors`, `orazaka-tools` |
@@ -28,7 +28,6 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 |:---|:---|:---|:---|:---|:---|
 | `orazaka-cli` | client | `orazaka-cli` | — | — | — |
 | `orazaka-mobile-client` | client | `orazaka-mobile-client` | — | — | — |
-| `orazaka-web-admin` | client | `orazaka-web-admin` | — | — | — |
 | `orazaka-web-client` | client | `orazaka-web-client` | — | — | — |
 | `orazaka-automation-service` | service | `orazaka-automation-service` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-conversation-service` | service | `orazaka-conversation-service` | 1.0.0-SNAPSHOT | — | — |
@@ -168,7 +167,6 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-job-service` | `orazaka-studio-service` | http | `orazaka-studio-client` |
 | `orazaka-mobile-client` | `orazaka-edge` | http | `localhost:8088` |
 | `orazaka-studio-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
-| `orazaka-web-admin` | `orazaka-edge` | http | `localhost:8088` |
 | `orazaka-web-client` | `orazaka-conversation-service` | http | `localhost:8080` |
 | `orazaka-web-client` | `orazaka-edge` | http | `localhost:8088` |
 
