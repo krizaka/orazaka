@@ -110,6 +110,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/internal/v1/jobs/{jobId}/input/image` | SERVICE | JobOutputController | The starting image of a job, for a worker that does not share the platform's disk. |
 | GET | `/internal/v1/jobs/{jobId}/output/{filename}` | SERVICE | JobOutputController | Reads one of the actor's own outputs back (a step whose input is an earlier step's clip). |
 | PUT | `/internal/v1/jobs/{jobId}/output/{filename}` | SERVICE | JobOutputController | Stores one output file of a job, sealed, and answers the URL it is served under. |
+| POST | `/internal/v1/jobs/erase` | SERVICE | JobErasureController | Erases jobs of one person: rows, files and the durable copy. |
 | GET | `/internal/v1/models/options` | SERVICE | ModelOptionsController | The published models of one category, the ones that answer first, the default marked. |
 | GET | `/internal/v1/models/queue` | SERVICE | ModelOptionsController | The queue a job on a model is published with when it is not the capability's own (a hosted video model is run by the CPU worker's queue, a self-hosted one by the GPU worker's). |
 | POST | `/internal/v1/workers` | SERVICE | WorkerController | Registers a worker, or refreshes what is known about it. |
@@ -237,11 +238,14 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/studios/installations/{installationId}/upgrade` | authenticated | StudioInstallationController | Moves the pin to the newest published version — never automatic. |
 | GET | `/api/v1/studios/packs` | authenticated | PackCatalogController | The marketplace, optionally narrowed to one shelf. |
 | GET | `/api/v1/studios/packs/{packKey}` | authenticated | PackCatalogController | One Pack's detail. |
+| GET | `/api/v1/studios/packs/{packKey}/consent` | authenticated | ProtectedDataController | What a person agrees to, in their language, with the verified crisis line of each region. |
+| DELETE | `/api/v1/studios/packs/{packKey}/my-data` | authenticated | ProtectedDataController | Erases everything the pack holds of the caller: entries, inputs and outputs, files, installations and the consent they recorded. |
 | POST | `/api/v1/studios/packs/bundles` | ADMIN | PackBundleController | Installs a bundle. |
 | DELETE | `/api/v1/studios/packs/bundles/{bundleKey}` | ADMIN | PackBundleController | Removes a bundle's catalogue rows and withdraws its pack from sale. |
 | POST | `/api/v1/studios/packs/bundles/validation` | ADMIN | PackBundleController | Checks a bundle against this platform without writing anything. |
 | GET | `/api/v1/studios/packs/categories` | authenticated | PackCatalogController | The shelves themselves, so the client renders headings it did not have to invent. |
 | GET | `/api/v1/studios/runs` | authenticated | StudioRunController | This actor's run history. |
+| DELETE | `/api/v1/studios/runs/{runId}` | authenticated | ProtectedDataController | Erases one entry of the caller's: a run of a protected pack, with its inputs, outputs and files. |
 | GET | `/api/v1/studios/runs/{runId}` | authenticated | StudioRunController | One run with its per-step states and outputs. |
 | POST | `/api/v1/studios/runs/{runId}/approve` | authenticated | StudioRunController | Resolves an approval step, resuming the run. |
 | POST | `/api/v1/studios/runs/{runId}/cancel` | authenticated | StudioRunController | Cancels a run and releases its hold. |
