@@ -19,7 +19,9 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | — | images, 9:16 video | an hourly GPU droplet, only while started (`scripts/gpu-dev.sh`) | `small` / `big` | 0.76 / 1.57 **per hour** |
 | — | model weights | Volume `orazaka-gpu-models-<region>`, 80 GB, kept between droplets | — | 8 |
 
-**Total: $47/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens). Upgrading `core` to
+**Total: $47/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens).
+
+**Organisation total, measured 2026-10-21 (`doctl`, recurring cloud, GPU apart): about $97/month** — ten web services at $5, the Orazaka core $20, `gpu-relay` $5, the fourth static site $3, the shared PostgreSQL $15, the broker droplet $4 — under the $100 ceiling; about **$87** once `orazaka-admin-dev` (rollback until 2026-10-23) and `orochia-admin-dev` are deleted. There is no RunPod network volume on the account (the earlier « ≈ $14 volume » line was wrong); the GPU is billed by the hour, on use. Dev services run on the smallest instance that fits (`apps-s-1vcpu-0.5gb`; the JVM core cannot go below `basic-s`). Upgrading `core` to
 `basic-m` (4 GB, 2 vCPU, $40) is the first lever if it restarts under load: still $54.
 
 ### The `core` container
