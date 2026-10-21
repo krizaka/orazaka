@@ -122,6 +122,7 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | POST | `/api/v1/models` | Adds a new model definition to the catalog. |
 | DELETE | `/api/v1/models/{id}` | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | Updates an existing model definition in the catalog. |
+| GET | `/api/v1/models/admin/audit` | — |
 | GET | `/api/v1/pipeline/interceptors` | Retrieves all pipeline interceptor configurations ordered by execution order. |
 | PUT | `/api/v1/pipeline/interceptors` | Bulk-updates pipeline interceptor ordering and enabled state. |
 | POST | `/api/v1/pipeline/interceptors/reset` | Resets all pipeline interceptor configurations to hardcoded defaults. |
@@ -132,6 +133,7 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 
 | Method | Path | Summary |
 |:---|:---|:---|
+| GET | `/api/v1/billing/admin/audit` | — |
 | GET | `/api/v1/billing/configuration` | The declared key vocabulary — type, permitted domain and code default per key. |
 | PATCH | `/api/v1/billing/configuration` | Applies one validated configuration change. |
 | GET | `/api/v1/billing/pack-subscriptions` | Every live holder of a pack — what an admin checks before withdrawing one. |
@@ -177,6 +179,7 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | DELETE | `/api/v1/studios/{studioKey}/blueprints/{version}` | Deprecates a version without deleting it. |
 | PUT | `/api/v1/studios/{studioKey}/blueprints/{version}` | Creates or replaces a draft version. |
 | POST | `/api/v1/studios/{studioKey}/blueprints/{version}/publish` | Publishes a draft, minting it as the Studio's latest version. |
+| GET | `/api/v1/studios/admin/audit` | — |
 | POST | `/api/v1/studios/packs/bundles` | Installs a bundle. |
 | DELETE | `/api/v1/studios/packs/bundles/{bundleKey}` | Removes a bundle's catalogue rows and withdraws its pack from sale. |
 | POST | `/api/v1/studios/packs/bundles/validation` | Checks a bundle against this platform without writing anything. |

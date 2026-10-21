@@ -80,6 +80,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/models` | ADMIN | ModelController | Adds a new model definition to the catalog. |
 | DELETE | `/api/v1/models/{id}` | ADMIN | ModelController | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | ADMIN | ModelController | Updates an existing model definition in the catalog. |
+| GET | `/api/v1/models/admin/audit` | ADMIN | OperatorAuditController |  |
 | GET | `/api/v1/models/catalog` | authenticated | ModelController | Retrieves the complete AI model catalog definitions from the database. |
 | GET | `/api/v1/models/providers` | authenticated | ModelController | Retrieves all available AI provider names from the database. |
 | GET | `/api/v1/models/supported` | authenticated | ModelController | Retrieves the list of supported model names grouped by media type. |
@@ -138,6 +139,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| GET | `/api/v1/billing/admin/audit` | ADMIN | OperatorAuditController |  |
 | GET | `/api/v1/billing/configuration` | ADMIN | ConfigurationController | The declared key vocabulary — type, permitted domain and code default per key. |
 | PATCH | `/api/v1/billing/configuration` | ADMIN | ConfigurationController | Applies one validated configuration change. |
 | GET | `/api/v1/billing/pack-subscriptions` | ADMIN | PackSubscriptionController | Every live holder of a pack — what an admin checks before withdrawing one. |
@@ -230,6 +232,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/studios/{studioKey}/policy-check` | authenticated | StudioRunController | Dry-run of the content policy: what would a run with these inputs do? Nothing is held, stored or sent to a provider. |
 | POST | `/api/v1/studios/{studioKey}/runs` | authenticated | StudioRunController | Starts a run of a Studio, addressed by its key rather than by an installation. |
 | GET | `/api/v1/studios/{studioKey}/versions` | authenticated | StudioController | A Studio's version history. |
+| GET | `/api/v1/studios/admin/audit` | ADMIN | OperatorAuditController |  |
 | GET | `/api/v1/studios/composer` | authenticated | StudioController | The Studios that belong in a chat composer, for this actor. |
 | GET | `/api/v1/studios/installations` | authenticated | StudioInstallationController | "My Studios". |
 | DELETE | `/api/v1/studios/installations/{installationId}` | authenticated | StudioInstallationController | Uninstalls, keeping the configuration for a future reinstall. |

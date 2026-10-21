@@ -96,14 +96,14 @@
       "checked": "2026-10-19"
     },
     "admin.operator-tasks": {
-      "evidence": null,
-      "gap": "Operator tasks not yet proven against the real DB.",
-      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/33"
+      "evidence": "https://krizaka-assets.b-cdn.net/pr-assets/orazaka-web-client/devpreview-admin-audit/tasks.dark.desktop.png",
+      "checked": "2026-10-21",
+      "note": "The operator tasks of Orazaka run against the real DB through the console API on dev: accounts (list, detail, suspend/restore, role, export, erase) with their audit; billing (plans, packs, pricebook, wallets) and Studio blueprints/bundles and the model registry, each write audited; settings as parameters with revision, who, when, why: app-config PUT then rollback proven live (android revision 1 -> 2 -> 3, requests devpreview-config-0005/-0006, both audited). The Tasks tab (Operations -> Tasks, orazaka-web-client#213) is the operator's queue, derived from the services' audit and the job queue (a refused/failed action with no later success, a failed job of the last day), tested first (src/console/test/tasks.test.mts). Not covered: moderation and consent-withdrawal queues (Orazaka has no moderation surface; the wellbeing erase of orazaka#301 is the user's own action) and a one-click retry of a failed job (no retry endpoint yet)."
     },
     "admin.audit-log": {
-      "evidence": null,
-      "gap": "The audit log screen and its test are not yet linked.",
-      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/34"
+      "evidence": "https://github.com/krizaka/orazaka/blob/main/docs/adr/ADR-085-operator-audit-trail.md",
+      "checked": "2026-10-21",
+      "note": "Every operator write leaves an audit line (actor, action, target, request id, ok|refused|failed, ids only) in each service that has an operator surface: identity (krizaka-users#45/#46: account suspend/restore/role/export/erase), billing (krizaka-billing#45: every ADMIN write), Studio (orazaka-studio#43: blueprints, pack bundles), engine (orazaka-conversation-service#45/#46: model registry, app config); the edge keeps/issues the X-Request-Id (orazaka-edge#33). Tests first in each repo (filters, outcome, identity IT). Console: Audit log over the four services, filter by service/outcome/who/action/request, CSV (orazaka-web-client#208/#209/#211/#212). Live on dev as the operator, requests devpreview-suspend-0001 (ok), -self-0003 (refused SELF), -ghost-0004 (failed not_found), -billing-0001, -studio-0002, -engine-0003 (refused), -config-0005/-0006 (app-config publish and rollback, ok). Console crawl 36/36 clean: https://krizaka-assets.b-cdn.net/pr-assets/orazaka-web-client/devpreview-admin-audit/audit.dark.desktop.png"
     },
     "admin.shell": {
       "evidence": "https://krizaka-assets.b-cdn.net/pr-assets/orazaka-web-client/devpreview-admin-shell/supervision.dark.desktop.png",
