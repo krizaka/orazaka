@@ -82,9 +82,9 @@
       "issue": "https://github.com/krizaka/orazaka-web-client/issues/126"
     },
     "ops.cost": {
-      "evidence": null,
-      "gap": "The dev deployment cost is not yet in the cost table and DEPLOYMENT.md; the core resize waits for Oussama.",
-      "issue": "https://github.com/krizaka/orazaka/issues/215"
+      "evidence": "https://github.com/krizaka/orazaka/blob/main/docs/DEPLOY_DEV.md",
+      "checked": "2026-10-21",
+      "note": "Measured 2026-10-21 with doctl: recurring cloud about 97 USD/month (ceiling 100, GPU apart), about 87 after the two old admin apps are deleted; the RunPod volume line was a phantom (no network volume on the account). Orazaka's dev deployment ($47) is in DEPLOY_DEV.md, the organisation table in the private cost file (\u00a7 6.2); smallest instances throughout, the JVM core at basic-s."
     },
     "admin.gated": {
       "evidence": null,
