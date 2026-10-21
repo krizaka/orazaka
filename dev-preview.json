@@ -52,24 +52,24 @@
       "issue": "https://github.com/krizaka/orazaka-mobile-client/issues/37"
     },
     "mobile.app-links": {
-      "evidence": null,
-      "gap": "No app-links config (AASA / assetlinks) for the product yet.",
-      "issue": "https://github.com/krizaka/orazaka-mobile-client/issues/36"
+      "evidence": "https://dev.orazaka.com/.well-known/apple-app-site-association",
+      "checked": "2026-10-20",
+      "note": "2026-10-20: node scripts/check-app-links.mjs --live https://dev.orazaka.com (orazaka-web-client) = ok: AASA and assetlinks.json served 200 application/json, bundle id and package com.krizaka.orazaka, Apple CDN and Google Digital Asset Links agree; CI runs check-app-links (web: npm run validate; mobile: scripts/app-links.test.mjs)."
     },
     "quality.ci-green": {
-      "evidence": null,
-      "gap": "CI on main of krizaka/orazaka is red until the generated docs are re-synced (main is red, orazaka#243).",
-      "issue": "https://github.com/krizaka/orazaka/issues/179"
+      "evidence": "https://github.com/krizaka/orazaka/actions?query=branch%3Amain",
+      "checked": "2026-10-20",
+      "note": "CI on main of krizaka/orazaka: 11 consecutive green runs on 2026-10-20 (the red-main job is skipped by design when the workspace job passes)."
     },
     "quality.tests": {
-      "evidence": null,
-      "gap": "Evidence waits for a green CI on main.",
-      "issue": "https://github.com/krizaka/orazaka/issues/179"
+      "evidence": "https://github.com/krizaka/orazaka-web-client/blob/main/src/app/api/auth/register/__tests__/route.test.ts",
+      "checked": "2026-10-20",
+      "note": "Sign-up closed: this test; the console gate: src/__tests__/host-routing.test.ts and src/console/test/gate.test.mts; indexing policy: src/__tests__/indexing.test.ts; all run by the CI of krizaka/orazaka-web-client."
     },
     "security.alerts": {
-      "evidence": null,
-      "gap": "8 open high CodeQL alerts and 6 high Dependabot alerts over the product repositories.",
-      "issue": "https://github.com/krizaka/orazaka/issues/119"
+      "evidence": "https://github.com/krizaka/orazaka/issues/119",
+      "checked": "2026-10-20",
+      "note": "2026-10-20: probe over the 17 repositories = codeql high 0, dependabot high 0, secrets 0. Dismissed with a written reason: orazaka-mobile-client Dependabot 6-9 (braces, node-forge, image-size x2: Metro/Expo build tooling, no patched release or incompatible with Metro, not in the app bundle); orazaka-ui-kit secret-scanning 1 (a whsec_AAAA placeholder in a test)."
     },
     "docs.current": {
       "evidence": null,
@@ -116,9 +116,9 @@
       "issue": "https://github.com/krizaka/orazaka-web-admin/issues/36"
     },
     "admin.ci": {
-      "evidence": null,
-      "gap": "CI link of the console to be recorded once green.",
-      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/33"
+      "evidence": "https://github.com/krizaka/orazaka-web-client/actions?query=branch%3Amain",
+      "checked": "2026-10-20",
+      "note": "The console lives in orazaka-web-client (host routing, orazaka-web-admin#31): its tests (npm run test:console, host-routing.test.ts) run in that repository CI on every pull request."
     }
   }
 }
