@@ -893,7 +893,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Wellbeing",
  "tagline": "Put into words what you live through, and bring it to your sessions.",
  "description": "Guided journaling, session preparation and mood tracking. Not care: no diagnosis, no advice on treatment, no emergency service — what you bring to a professional, not instead of one. Health data, kept 30 days at most, never used to train a model.",
- "version": "1.3.0",
+ "version": "1.4.0",
  "tier": "DATA",
  "kind": null,
  "distribution": "CLOUD",
@@ -1355,7 +1355,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | `profile-photo-check` | 1.2.0 | WORKER | CLOUD | SENSITIVE | no | `profile-photo-check` | `orazaka.photo.profile.inspect`, `orazaka.photo.profile.assess` (worker `orazaka-worker-photo`) |
 | `realestate-studio` | 1.3.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
 | `trade-showcase` | 1.2.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |
-| `bien-etre` | 1.3.0 | DATA | CLOUD | REGULATED | yes | `guided-journaling`, `session-preparation`, `mood-tracking`, `session-summary` | — |
+| `bien-etre` | 1.4.0 | DATA | CLOUD | REGULATED | yes | `guided-journaling`, `session-preparation`, `mood-tracking`, `session-summary` | — |
 
 ## From the terminal
 

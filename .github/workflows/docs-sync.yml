@@ -51,9 +51,6 @@ jobs:
             echo "docs/_generated is up to date"
             exit 0
           fi
-          # A PR opened or updated with GITHUB_TOKEN starts no workflow. A workflow_dispatch run of CI on the branch
-          # reports its checks on the same commit, which is what the required check "workspace" reads: no extra token.
-          gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref chore/docs-sync
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B chore/docs-sync
