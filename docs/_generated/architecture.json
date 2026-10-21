@@ -4678,7 +4678,7 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.7.0",
+      "version": "1.7.2",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -6601,6 +6601,26 @@
           {
             "flag": "--spans <file>",
             "desc": "The cut's own shot spans ([[start, end], …], e.g. the worker's cut.timeline) instead of back to back",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "cinema stage",
+        "top": "cinema",
+        "isTop": false,
+        "description": "Check a v3 treatment's staging, camera and cut, and write the questions every keyframe and take must answer",
+        "args": [
+          {
+            "name": "<treatment>",
+            "desc": "The treatment (JSON, with score.bpm, beats, camera, angle, light and staging per shot)"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "-o, --out <file>",
+            "desc": "Write the frame questions (JSON: per shot, then the take questions) there",
             "default": null
           }
         ]

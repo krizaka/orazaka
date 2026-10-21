@@ -97,7 +97,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 ## Commands
 
 ```cli-commands
-33 commands, 38 subcommands — every one in the table below.
+33 commands, 39 subcommands — every one in the table below.
 ```
 
 | Command | Description |
@@ -120,6 +120,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka cinema treat <dir>` | Write the story of a brief (arc, intentions, purposeful shots, directed lines, music cues, sound list) and judge it |
 | `orazaka cinema critique <treatment>` | Judge a treatment against the rubric (arc, purpose, alive, on-topic, continuity, voice, music, sound) |
 | `orazaka cinema timeline <treatment>` | Place every line, music cue and sound of a treatment on the cut, and say which lines do not fit their shots |
+| `orazaka cinema stage <treatment>` | Check a v3 treatment's staging, camera and cut, and write the questions every keyframe and take must answer |
 | `orazaka config` | Interactive configuration wizard — review and update .env variables |
 | `orazaka db` | Database maintenance operations |
 | `orazaka db reseed` | Drop & re-apply infra/initdb/*.sql (schema + seed). Destroys all local dev data. |
@@ -339,6 +340,15 @@ Place every line, music cue and sound of a treatment on the cut, and say which l
 | `-l, --language <lang>` | en or fr (default: `en`) |
 | `--voice <report>` | The voice step's report: [{id, seconds}] measured per line |
 | `--spans <file>` | The cut's own shot spans ([[start, end], …], e.g. the worker's cut.timeline) instead of back to back |
+
+### `orazaka cinema stage <treatment>`
+
+Check a v3 treatment's staging, camera and cut, and write the questions every keyframe and take must answer
+
+| Argument / option | Description |
+|:---|:---|
+| `<treatment>` | The treatment (JSON, with score.bpm, beats, camera, angle, light and staging per shot) |
+| `-o, --out <file>` | Write the frame questions (JSON: per shot, then the take questions) there |
 
 ### `orazaka config`
 

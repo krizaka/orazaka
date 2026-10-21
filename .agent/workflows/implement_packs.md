@@ -117,7 +117,7 @@ CREATE  orazaka-apps/services/orazaka-studio/orazaka-studio-service/src/test/...
 # ── UI: the minimum to keep today's behaviour ──────────────────────────────
 MODIFY  orazaka-apps/ui/orazaka-ui-kit/orazaka-shared/src/schemas/pack.ts  (+ index.ts)
 MODIFY  orazaka-apps/ui/orazaka-web-client/src/features/billing/components/PackMarketplace.tsx
-MODIFY  orazaka-apps/ui/orazaka-web-admin/src/features/billing/components/{PacksScreen,PackEditor}.tsx
+MODIFY  orazaka-apps/ui/orazaka-web-client/src/console/features/billing/components/{PacksScreen,PackEditor}.tsx
 MODIFY  orazaka-apps/ui/orazaka-web-client/src/services/*.api.ts           (the pack calls)
 MODIFY  orazaka-apps/services/orazaka-edge/src/main/resources/application.yml  (verify /api/v1/studios covers the new path)
 
@@ -236,7 +236,7 @@ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8088/api/v1/billing/p
 # 6. The two user-visible surfaces still behave exactly as before
 #    /packs renders the pack, "Add to my space" still works, admin editor still saves
 npm --workspace orazaka-web-client run test
-npm --workspace orazaka-web-admin run test
+npm --workspace orazaka-web-client run test
 
 # 7. Invariant #3 actually bites. Temporarily delete the
 #    ('realestate-studio','studio.realestate-reels') row from 70-billing.sql and re-run:
