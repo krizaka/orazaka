@@ -60,3 +60,31 @@ false, and the console has nothing to show for the operator's *to-do* (failed ru
   (kit 0.3.0) replaces the current one without changing the event.
 - Refused: a log-scraping audit (not transactional, loses events); one table written by every service (couples their
   databases, SEAM-001); storing the request's body (content in the audit).
+
+## Delivery: how the services get the kit's building blocks before November (evaluated 2026-10-21)
+
+The request-id filter (`krizaka-web` `CorrelationIdFilter`, same header and rules as the edge's) and the outbox are in
+`krizaka-platform-kit` `main`, **unreleased**: Central has 0.2.0 without `krizaka-web`, and Maven Central is frozen until
+November. Options weighed:
+
+1. **GitHub Packages (Maven), `0.3.0-SNAPSHOT`.** Not clean today. GitHub Packages requires credentials *even to read a public
+   package*: every consumer needs a token in `settings.xml` — the services' own CI (the `packages: read` GITHUB_TOKEN works
+   there), but also the **DigitalOcean App Platform image build of `core`** (no GITHUB_TOKEN exists there: it would need a
+   long-lived PAT as a build secret) and every developer's machine. It also forks the artefact's address (`maven.pkg.github.com`
+   alongside Central) in six poms that must be reverted in November, and kit `main` still carries version **0.2.0** (release-please
+   owns the bump), so a snapshot would collide with Central's different 0.2.0.
+2. **A workspace build from source.** The Orazaka workspace already builds every repository from source in dependency order
+   (`orazaka.workspace.json`, the core image, `component.yml`): the kit is in it. Orazaka-owned services (edge, studio, job service,
+   engine) could consume the kit's `main` with no registry, no token, no Central. Cost: the kit's version must differ from
+   Central's 0.2.0 while unreleased (a `0.3.0-SNAPSHOT` set by the release PR, krizaka-platform-kit#10, not by hand), and Krizaka's
+   standalone, Central-published services (`krizaka-users`, `krizaka-billing`) cannot take it before it is on Central — they stay on
+   0.2.0 until then.
+3. **Wait for the release** (kit 0.3.0 on Central, November).
+
+**Decision.** Do not publish to GitHub Packages. Build slices in the order the dependency allows:
+- *Now, no kit:* the edge hop (done: orazaka-edge#33, live) and the **audit read model and console view** (they read what
+  `admin_audit` already holds plus the new nullable columns; the console's *Audit log* gains the filters, the request link and
+  the CSV; the *Tasks* queue reads run states the job and studio services already expose). These are Orazaka-owned and need no kit.
+- *With workspace-from-source (option 2), once krizaka-platform-kit#10 sets 0.3.0-SNAPSHOT on `main`:* request-id hops and audit
+  emissions in the **Orazaka-owned** services (studio, job service, engine).
+- *With the Central release:* `krizaka-users` and `krizaka-billing` adopt the filter and emit their audit events.

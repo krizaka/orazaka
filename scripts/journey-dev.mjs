@@ -114,14 +114,7 @@ async function main() {
 
   await step("analysis", async () => {
     if (!state.image?.assetId) throw new Error("no image to analyse (run the image step)");
-    // The person's own file: the generated picture is downloaded and uploaded again, as a photo from their device would be.
-    const picture = await call("GET", state.image.path, undefined, { raw: true });
-    const form = new FormData();
-    form.append("file", new Blob([await picture.res.arrayBuffer()], { type: "image/png" }), "flamingo.png");
-    const uploaded = await call("POST", "/api/v1/media/upload", undefined, { form });
-    const assetId = uploaded.data.assetId ?? uploaded.data.id;
-    if (!assetId) throw new Error("the upload answered no asset id");
-    const { run, requestId } = await studio("image-analysis", { assetId, prompt: "Describe this image in one sentence." });
+    const { run, requestId } = await studio("image-analysis", { assetId: state.image.assetId, prompt: "Describe this image in one sentence." });
     if (run.status !== "SUCCEEDED") throw Object.assign(new Error(`image-analysis run ${run.id} ${run.status}: ${run.errorMessage ?? ""}`), { requestId });
     const said = (run.outputs ?? []).find((x) => x?.type === "TEXT" || x?.type === "MARKDOWN")?.value ?? JSON.stringify(run.outputs ?? []);
     return { requestId, note: `image-analysis run ${run.id}: « ${String(said).slice(0, 140)} »`, ...runFacts(run) };

@@ -354,7 +354,7 @@ env by `scripts/gpu-dev.sh mac` — never printed, never in a repository. Select
 
 `node scripts/journey-dev.mjs --out <dir>` replays what Orazaka is for, on https://dev.orazaka.com/edge as the demo persona
 Eric (credentials from the environment, read with `secret.sh`, never printed): sign in → ask the chat → make an image with
-the `image-generation` Studio → have the picture read by `image-analysis` (uploaded as a photo from a device would be) →
+the `image-generation` Studio → have the picture read by `image-analysis` →
 make a hosted clip with `video-generation`. Every step goes through the public API (no SQL, no direct model call) and records
 the edge request id; each Studio step also records its run id, the engine's own trace (`GET /api/v1/studios/runs/{id}`, the
 job ids of its steps). It writes the report (`journey-<date>.json`, `.md`) and the clip, and exits 1 unless every step is
