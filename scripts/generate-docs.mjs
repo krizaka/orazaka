@@ -2606,7 +2606,7 @@ const mdPacks = (p, cli, catalog) => {
     "capability rows, a price, catalogue entries — and changes no code.",
     "",
     "> **Packs are not use-cases.** A pack is a business offer — Studios a customer installs and runs. A",
-    "> [use-case](USE_CASES.md) is a technical entry point of the engine (`chat.assistant`, `studio.run`…) declared",
+    "> use-case is a technical entry point of the engine (`chat.assistant`, `studio.run`…) declared",
     "> in Java in `orazaka-business` ([business layer](BUSINESS.md)); every Studio run goes through the `studio.run` one.",
     "",
   );

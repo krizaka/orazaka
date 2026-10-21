@@ -33,3 +33,13 @@ test("the docs state the Node.js minimum CI runs", () => {
     for (const m of mins) assert.equal(m, major, `${f} says Node ${m}+, CI runs ${major}`);
   }
 });
+
+// Unpublished on dev.orazaka.com (orazaka-web-client#231): a marketing playbook, a tour and a generated stub.
+// A published doc, and the README, must not link them or the removed /gallery page.
+test("no published doc links a page the site no longer publishes", () => {
+  const gone = [/BUSINESS_IMPLEMENTATION\.md/, /CINEMATIC_SHORTS\.md/, /\]\(USE_CASES\.md\)/, /orazaka\.com\/gallery/];
+  for (const f of [...PUBLISHED, "docs/_generated/PACKS.md", "README.md"]) {
+    const md = read(f);
+    for (const re of gone) assert.ok(!re.test(md), `${f} links an unpublished page (${re})`);
+  }
+});
