@@ -239,7 +239,7 @@ All clients live under `orazaka-apps/ui/` — one repository each, linked by the
 | Package | Role | Port |
 |:---|:---|:---:|
 | `orazaka-web-client` | Next.js 16 client (App Router) | 3000 |
-| `orazaka-web-admin` | SecOps console | 3001 |
+| `orazaka-web-admin` | legacy standalone SecOps console (replaced by the console of `orazaka-web-client`, host `admin.*`; to be archived) | 3001 |
 | `orazaka-mobile-client` | Expo SDK 53 | 8081 |
 | `orazaka-cli` | dev CLI + offline SQLite queue | — |
 | `@krizaka/orazaka-shared` (repo `orazaka-ui-kit`) | TS types + Zod + **design tokens** (framework-agnostic; single source, consumed by web, mobile, cli) | — |

@@ -87,7 +87,7 @@ cloned under `krizaka/` so the reactor builds them from source. Documentation: [
 | Repository | What it is |
 |:---|:---|
 | [`orazaka-web-client`](https://github.com/krizaka/orazaka-web-client) | Next.js (App Router) client of the Orazaka platform with its mandatory BFF. |
-| [`orazaka-web-admin`](https://github.com/krizaka/orazaka-web-admin) | Next.js SecOps & administration console of the Orazaka platform. |
+| [`orazaka-web-admin`](https://github.com/krizaka/orazaka-web-admin) | **Legacy** standalone SecOps console — replaced by the operator console served by `orazaka-web-client` on `admin.orazaka.com` (host routing); archived once the old app's rollback window has passed. |
 | [`orazaka-mobile-client`](https://github.com/krizaka/orazaka-mobile-client) | Expo / React Native client of the Orazaka platform (talks to the edge with Bearer tokens). |
 | [`orazaka-cli`](https://github.com/krizaka/orazaka-cli) | The `orazaka` developer CLI: install, start, dev, `demo seed`, test, docs and pack tooling for the Orazaka workspace, with an offline SQLite queue. |
 | [`orazaka-packs`](https://github.com/krizaka/orazaka-packs) | Reference packs for the Orazaka Studio marketplace (document validation, media, prospection, real-estate, wellbeing…) and the pack manifest schema. |
