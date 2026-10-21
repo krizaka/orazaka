@@ -15,3 +15,16 @@ test("CI is dispatched on chore/docs-sync once, and only after the branch is pus
   assert.ok(push > 0, "the branch is pushed");
   assert.ok(dispatches[0].index > push, "the dispatch follows the push");
 });
+
+// Root of the recurring « docs are stale » reds: the generated docs read the default branches of ~20 repositories, so they
+// drift whenever one of them merges, while docs-sync ran once a day and left its pull request waiting for a human. Every
+// PR touching docs/ or scripts/ failed in between. It now runs every two hours and puts auto-merge on its own pull request.
+test("docs-sync runs every two hours, not daily", () => {
+  assert.match(wf, /cron: "17 \*\/2 \* \* \*"/);
+});
+
+test("its pull request is merged by itself once green", () => {
+  const merge = wf.indexOf("gh pr merge");
+  assert.ok(merge > wf.indexOf("gh pr create"), "auto-merge follows the creation");
+  assert.match(wf, /gh pr merge[^\n]*--auto --squash/);
+});
