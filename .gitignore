@@ -35,7 +35,6 @@ target/
 # Production builds & tools
 **/build/
 **/dist/
-**/.vercel
 **/*.tsbuildinfo
 **/next-env.d.ts
 
