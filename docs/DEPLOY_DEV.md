@@ -12,7 +12,6 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | `orazaka-dev` | `core` | one image, seven JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
 | Droplet | `orazaka-broker-dev` | RabbitMQ 4.2, **TLS only** (5671), bound to its private IP, cloud firewall: VPC `10.118.0.0/20` only | `s-1vcpu-512mb-10gb` | 4 |
 | `orazaka-dev` | `web` (same component) | the operator console, `admin.orazaka.com` = an alias of `dev.orazaka.com`, served by host routing (§ Admin console), BFF → `http://core:8088` | — | 0 |
-| `orazaka-admin-dev` | `web` | **retiring** (kept 48 h as the rollback): `krizaka/orazaka-web-admin` | `apps-s-1vcpu-0.5gb` | 5 → 0 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
 | — | chat | DigitalOcean serverless inference, `mistral-3-14B`, per token | — | ≈ 0 at test volume |
 | `orazaka-dev` | `gpu-relay` | chisel server, `dev.orazaka.com/gpu-relay` — the GPU host dials out to it (§ GPU) | `apps-s-1vcpu-0.5gb` | 5 |
@@ -146,9 +145,6 @@ Cut-over (the old app serves the live console until step 3):
    unchanged if it already points there.
 4. Check from an allowed address: `/login` signs a `ROLE_ADMIN` in; from any other address `https://admin.orazaka.com/`
    answers 403; `https://dev.orazaka.com/console` answers 404; `https://dev.orazaka.com/api/healthz` 200.
-5. Rollback (for 48 h): remove the alias from `orazaka-dev`, give the domain back to `orazaka-admin-dev`
-   (`node scripts/dev-deploy.mjs apply orazaka-admin-dev`, `infra/deploy/orazaka-admin-dev.app.yaml` is kept for that).
-   Then, only with Oussama's go, delete `orazaka-admin-dev` and its spec.
 
 ## Deploy
 

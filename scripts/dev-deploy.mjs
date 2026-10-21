@@ -2,7 +2,7 @@
 /**
  * Orazaka dev deployment (App Platform, project `orazaka`) — docs/DEPLOY_DEV.md.
  *
- *   node scripts/dev-deploy.mjs apply <orazaka-dev|orazaka-admin-dev> [--dry-run] [--drop-attached-db] [--env-file <file>]
+ *   node scripts/dev-deploy.mjs apply <orazaka-dev> [--dry-run] [--drop-attached-db] [--env-file <file>]
  *   node scripts/dev-deploy.mjs data        # infra/deploy/dev-data.sql into orazaka_db (routing is data)
  *   node scripts/dev-deploy.mjs policy      # infra/deploy/dev-content-policy.sql into orazaka_studio_db (docs/CONTENT_POLICY.md)
  *   node scripts/dev-deploy.mjs recommendations  # the recommender's tables on orazaka_knowledge_db (ADR-078)
@@ -529,7 +529,7 @@ print("dns:",[x["content"] for x in rr.get("records",[])])`;
 }
 
 function status() {
-  for (const name of ["orazaka-dev", "orazaka-admin-dev"]) {
+  for (const name of ["orazaka-dev"]) {
     const id = appId(name);
     console.log(id ? doctl(["apps", "get", id, "--format", "ID,Spec.Name,DefaultIngress,Updated", "--no-header"]).trim() : `${name}: not created`);
   }
