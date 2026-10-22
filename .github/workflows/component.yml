@@ -23,12 +23,29 @@ on:
         required: false
         default: false
         type: boolean
+      ignore:
+        description: "changes.yml: JavaScript RegExp, a changed file matching it never needs the build. Keep out of it every file the governance rules read (AGENTS.md, docs, READMEs): the default only skips files no build can read."
+        required: false
+        default: '^\.changeset/|^(LICENSE|NOTICE|SECURITY|CODE_OF_CONDUCT|SUPPORT)(\.md)?$|^\.github/(ISSUE_TEMPLATE/|pull_request_template\.md$|FUNDING\.yml$|dependabot\.yml$)'
+        type: string
 
 permissions:
   contents: read
 
 jobs:
+  # A change that no build can read (licence, templates, changesets) skips the heavy job: the required check
+  # `component / verify` reports « Skipped », which branch protection counts as passing. Fail-open: the job runs unless
+  # the gate answered exactly `false` (a tag, a schedule, a dispatch and a broken gate run in full).
+  changes:
+    permissions:
+      contents: read
+    uses: krizaka/.github/.github/workflows/changes.yml@ccd224612f5bb9db815335654f359a595a597fbb # main
+    with:
+      ignore: ${{ inputs.ignore }}
+
   verify:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
