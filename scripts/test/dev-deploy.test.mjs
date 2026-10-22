@@ -336,3 +336,13 @@ test("the automations migration is the model part of the service's own bootstrap
   assert.ok(bootstrap.includes(marker), "the model marker moved");
   assert.equal(migration.slice(migration.indexOf(marker)), bootstrap.slice(bootstrap.indexOf(marker)));
 });
+
+test("the dev persona Mira: a fictional plain user on a reserved .test domain, never admin, her own secret keys", () => {
+  const m = personaAccount("mira");
+  assert.equal(m.username, "Mira");
+  assert.match(m.email, /@orazaka\.test$/);
+  assert.deepEqual(m.roles, ["ROLE_USER"]);
+  assert.equal(m.secret, "MIRA");
+  assert.equal(personaAccount().username, "Eric");
+  assert.throws(() => personaAccount("admin"), /unknown persona/);
+});
