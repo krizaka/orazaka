@@ -40,3 +40,12 @@ test("the measures write where the next pod and the operator can read them", () 
   assert.match(measure, /\/models\/measure\//);
   assert.match(measure, /results\.jsonl/);
 });
+
+test("an EXITED pod does not hold the slot: only a pod that runs refuses a second one (its stopped disk costs cents, not a GPU)", () => {
+  assert.match(lib, /startswith\("orazaka-gpu"\) and p\.get\("desiredStatus"\) != "EXITED"/);
+});
+
+test("stop ends the pods that run, never an EXITED one: a stopped pod keeps its disk (weights, work) for whoever owns it", () => {
+  const stop = lib.slice(lib.indexOf("runpod_stop() {"), lib.indexOf("runpod_ledger_close() {"));
+  assert.match(stop, /startswith\("orazaka-gpu"\) and p\.get\("desiredStatus"\) != "EXITED"/);
+});
