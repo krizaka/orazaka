@@ -1,78 +1,56 @@
-# Content policy — you decide
+# Content policy: you decide
 
-Orazaka is open source and does not censor. It ships a **policy engine that the operator configures**, not a
-built-in filter. A fresh, self-hosted install is **permissive**: nothing is refused because of what a prompt is
-about. What the engine gives you is a way to say, in your own database, what *your* installation refuses or
-routes — and to protect *your* provider accounts from terms you have agreed to.
+Orazaka is open source and does not censor. It ships a policy engine that **the operator configures**. A fresh install is permissive: nothing is refused because of what a prompt is about. You decide what your installation refuses, and you can protect your provider accounts from terms you accepted.
 
-## What it does
+## What happens on every Studio run
 
-For every Studio run, **before** credits are held, a run row is written or any provider is reached, Orazaka:
+Before any credit is held, run written or provider reached, Orazaka:
 
-1. **Classifies the prompt locally** (rules, in the service's own JVM — the prompt is never sent anywhere to be
-   classified). Labels: `SEXUAL_EXPLICIT`, `SEXUAL_SUGGESTIVE`, `MINORS_RISK`, `VIOLENCE_GRAPHIC`,
-   `REAL_PERSON_LIKENESS`, `NONE`.
-2. **Applies your configuration** (tenant settings, then provider terms — below).
-3. **Writes the decision to an append-only audit table** (`content_policy_audit`): the labels, the decision
-   (`ALLOWED`, `WARNED`, `REFUSED`) and the rule that decided. **Never the prompt.**
+1. Classifies the prompt locally. It never leaves the service. Labels: `SEXUAL_EXPLICIT`, `SEXUAL_SUGGESTIVE`, `MINORS_RISK`, `VIOLENCE_GRAPHIC`, `REAL_PERSON_LIKENESS`, `NONE`.
+2. Applies your configuration.
+3. Writes the decision to an append-only audit table: labels, decision (`ALLOWED`, `WARNED`, `REFUSED`) and rule. Never the prompt.
 
-A refusal answers `422` with the stable code `content.policy_refused`, the rule and the labels. Clients translate
-the code; the server does not send prose.
+A refusal answers `422` with the stable code `content.policy_refused`. Clients translate it.
 
 ## The one rule you cannot change
 
-**`MINORS_RISK` is always refused**, for every tenant, on every provider, whatever the settings say. Sexual
-content involving a minor is illegal everywhere; this is not a moral filter and not a setting. Nothing in the
-database turns it off.
+`MINORS_RISK` is always refused, for every tenant and every provider. Sexual content involving a minor is illegal everywhere. No setting turns it off.
 
-## What you configure (all in the Studio database)
+## What you configure
 
-| Table | What it says | Default (no rows) |
+| Table | What it says | Default |
 |---|---|---|
-| `content_policy_tenant` | For a `subject` (`'*'` = the whole install, or one actor id) and a label: `ALLOW` or `REFUSE`. | Everything allowed |
-| `content_provider_policy` | What a provider's **terms** allow: `allows_adult_content`, `allows_graphic_violence`, `allows_real_person_likeness`, and `enforcement` = `BLOCK` or `WARN`. Keyed by the capability's feature key (e.g. `orazaka.core.media.video`). | No restriction |
-| `content_policy_rule` | Extra classifier patterns (a label and a regex over lower-cased, accent-folded text). | Built-in rules only |
+| `content_policy_tenant` | For a subject (`'*'` is the whole install) and a label: `ALLOW` or `REFUSE`. | Everything allowed |
+| `content_provider_policy` | What a provider's terms allow, and `enforcement`: `BLOCK` or `WARN`. | No restriction |
+| `content_policy_rule` | Extra classifier patterns. | Built-in rules only |
 
-### Protecting your provider account
-
-Hosted inference providers publish acceptable-use terms. If yours forbids a kind of content, mark the capability
-that reaches it:
+Protect a hosted provider account by marking the capability that reaches it:
 
 ```sql
 INSERT INTO content_provider_policy (provider_key, allows_adult_content, enforcement, note)
-VALUES ('orazaka.core.media.video', FALSE, 'BLOCK', 'Hosted provider terms: no adult content');
+VALUES ('orazaka.core.media.video', FALSE, 'BLOCK', 'Hosted provider terms');
 ```
 
-A run whose prompt carries `SEXUAL_EXPLICIT` or `SEXUAL_SUGGESTIVE` is then refused (`BLOCK`) or logged and let
-through (`WARN`) **before the provider is called**. This exists to protect the operator's own account, not to
-judge the user. Point the same prompt at a capability served by your own hardware — which you have not
-restricted — and it runs.
-
-### Refusing something on your install
+The same prompt sent to a capability on your own hardware still runs. Refuse something for everyone, then allow it for one actor:
 
 ```sql
--- refuse explicit sexual content for everyone on this install
 INSERT INTO content_policy_tenant (subject, label, action) VALUES ('*', 'SEXUAL_EXPLICIT', 'REFUSE');
--- allow it again for one actor (a row for the actor overrides the '*' row)
 INSERT INTO content_policy_tenant (subject, label, action) VALUES ('actor-id', 'SEXUAL_EXPLICIT', 'ALLOW');
 ```
 
-## Checking without generating: the dry run
+## Test without generating
 
-`POST /api/v1/studios/{studioKey}/policy-check` with the same body as a run answers what the policy would do —
-labels, decision, rule, warnings, the capabilities involved — **without holding credits, writing a run or calling
-any provider**. Use it to test your configuration.
+`POST /api/v1/studios/{studioKey}/policy-check` takes the body of a run and answers labels, decision and rule. It holds no credits and calls no provider.
 
-## What it does not do (yet)
+## Limits today
 
-- It classifies the **input**. A classifier on the generated frames (output side) is tracked as a follow-up.
-- Rules are the local floor; a local-model classifier can sit behind the same contract.
-- Direct image jobs that do not go through a Studio are not covered by the Studio gate yet (follow-up).
-- Provider terms are marked per capability; per-model marking is a follow-up.
+- Only the input is classified, not the generated frames.
+- Direct image jobs outside a Studio are not covered yet.
+- Provider terms are marked per capability, not per model.
 
-## Our hosted dev instance
+Our hosted dev instance marks its video capability `BLOCK` for adult content, to respect its provider's terms. That is configuration (`infra/deploy/dev-content-policy.sql`), not code.
 
-`dev.orazaka.com` runs with DigitalOcean's terms respected: the video capability, served by DigitalOcean
-serverless inference, is marked `allows_adult_content = FALSE` (`BLOCK`). That is configuration
-(`infra/deploy/dev-content-policy.sql`, applied by `node scripts/dev-deploy.mjs policy`), not code — your install
-has no such row unless you add it.
+## Next
+
+- [Run a Studio](STUDIO_GUIDE.md): where the policy applies.
+- [Administration](_generated/ADMIN.md): what an administrator controls.

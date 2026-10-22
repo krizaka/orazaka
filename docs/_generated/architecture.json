@@ -4695,7 +4695,7 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.7.2",
+      "version": "1.7.3",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
