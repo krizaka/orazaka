@@ -72,3 +72,16 @@ DigitalOcean monitoring has no connection-count metric, so the alarm is a read-o
 psql "$URL" -At -F, -c "select usename, count(*) from pg_stat_activity where datname is not null group by 1" \
   | node scripts/db-connections.mjs     # exit 1 above 80 % of the 22 usable
 ```
+
+## Rotating a role's password
+
+A role is rotated one app at a time: reset it (the `user reset` command of doctl, JSON output captured and never
+printed), store the new value at once in the maintainer's env file (`DATABASE_PASSWORD_<ROLE>`), probe it on the
+direct port (25060) and the pool port (25061), give it to the app, redeploy, check the app's health and that it
+opened sessions with the new role (`pg_stat_activity`). An app with a `databases:` component gets it through
+`${db.DATABASE_URL}` (the platform redeploys on a reset); the others hold it in SECRET variables (`DATABASE_URL`
+through the pool, `DATABASE_DIRECT_URL` direct, both `?sslmode=require`; the JDBC services a plain `*_PASSWORD`).
+
+The pool and connection listings of doctl print every role's password inside its URI: they are only run with a
+`--format` free of Password and URI, or captured into a variable. The session guard (`secret-guard.sh`) refuses
+the others, with `--context` in front and with the command aliases.
