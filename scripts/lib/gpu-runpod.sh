@@ -56,7 +56,8 @@ print(next((v['id'] for v in vs if v.get('name') == '$RP_VOLUME' and v.get('data
 
 runpod_start() {
   [[ -n "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || die "no AI_GPU_RUNPOD_API_KEY in $ENV_FILE"
-  [[ -n "$(secret AI_GPU_RELAY_PASSWORD || true)" ]] || die "no relay credential — scripts/gpu-dev.sh relay-secret"
+  # MEASURE=1 (gpu-dev.sh runpod measure): a pod that measures and ends, with no relay, no broker, no service token.
+  [[ -n "${MEASURE:-}" || -n "$(secret AI_GPU_RELAY_PASSWORD || true)" ]] || die "no relay credential — scripts/gpu-dev.sh relay-secret"
   local running; running=$(rp_pods | python3 -c 'import json,sys; print(len([p for p in (json.load(sys.stdin) or []) if p.get("name","").startswith("orazaka-gpu")]))')
   [[ "$running" == "0" ]] || die "a RunPod pod already runs — scripts/gpu-dev.sh runpod status (or stop)"
   local balance spend; read -r balance spend <<<"$(rp_balance)"
@@ -90,20 +91,27 @@ sys.exit(1)" || { say "  $dc: no stock"; continue; }
     # Every credential reaches the pod as an environment variable (RunPod's own, visible to this account only).
     WORKER_REF="$worker_ref" PROFILE="${GPU_RUNPOD_PROFILE:-big}" GPU_LIST="$gpu_list" DC="$dc" VOLUME="$volume" MAX_HOURS="$max_hours" \
     IDLE_MINUTES="${GPU_IDLE_MINUTES:-30}" DISK_GB="${GPU_RUNPOD_DISK_GB:-60}" RP_IMAGE="$RP_IMAGE" PUBKEY="$(cat "$LOCAL/id_ed25519.pub")" \
-    RELAY_URL="$RELAY_URL" RELAY_AUTH="gpu:$(secret AI_GPU_RELAY_PASSWORD)" RABBIT_PASSWORD="$(secret RABBITMQ_PASS_GPU)" \
-    SERVICE_TOKEN="$(mint_service_token "$max_hours")" BROKER_CA_B64="$(broker_ca_b64)" BOOT="$ROOT/infra/gpu/runpod-bootstrap.sh" \
+    RELAY_URL="$RELAY_URL" RELAY_AUTH="${MEASURE:+x}${MEASURE:-gpu:$(secret AI_GPU_RELAY_PASSWORD)}" \
+    RABBIT_PASSWORD="${MEASURE:+x}${MEASURE:-$(secret RABBITMQ_PASS_GPU)}" \
+    SERVICE_TOKEN="${MEASURE:+x}${MEASURE:-$(mint_service_token "$max_hours")}" BROKER_CA_B64="${MEASURE:+x}${MEASURE:-$(broker_ca_b64)}" \
+    MEASURE="${MEASURE:-}" MEASURE_ARGS="${MEASURE_ARGS:-}" MEASURE_PIP="${MEASURE_PIP:-}" \
+    BOOT="$ROOT/infra/gpu/$([[ -n "${MEASURE:-}" ]] && echo runpod-measure.sh || echo runpod-bootstrap.sh)" \
     HF_TOKEN="$(secret AI_HUGGINGFACE_TOKEN 2>/dev/null || true)" DISK_GB="${GPU_RUNPOD_DISK_GB:-}" \
     python3 - "$body" <<'PY'
 import base64, json, os, sys
 e = os.environ
 boot = base64.b64encode(open(e["BOOT"], "rb").read()).decode()
-env = {k: e[k] for k in ("WORKER_REF", "PROFILE", "RELAY_URL", "RELAY_AUTH", "RABBIT_PASSWORD", "SERVICE_TOKEN", "BROKER_CA_B64", "MAX_HOURS", "IDLE_MINUTES")}
+if e.get("MEASURE"):
+    # Measurement only: the pod never learns the relay, the broker or a service token.
+    env = {k: e[k] for k in ("WORKER_REF", "PROFILE", "MAX_HOURS", "IDLE_MINUTES", "MEASURE_ARGS", "MEASURE_PIP")}
+else:
+    env = {k: e[k] for k in ("WORKER_REF", "PROFILE", "RELAY_URL", "RELAY_AUTH", "RABBIT_PASSWORD", "SERVICE_TOKEN", "BROKER_CA_B64", "MAX_HOURS", "IDLE_MINUTES")}
 if e.get("HF_TOKEN"):
     env["HF_TOKEN"] = e["HF_TOKEN"]  # downloads of public weights, faster and not rate-limited
 env["PUBLIC_KEY"] = e["PUBKEY"]
 env["ORAZAKA_BOOT_B64"] = boot
 body = {
-    "name": "orazaka-gpu-" + e["PROFILE"],
+    "name": "orazaka-gpu-" + ("measure" if e.get("MEASURE") else e["PROFILE"]),
     "imageName": e["RP_IMAGE"],
     "cloudType": "SECURE",
     "computeType": "GPU",
@@ -203,12 +211,14 @@ runpod_logs() {
 runpod() {
   case "${1:-}" in
     start) shift; runpod_start "$@" ;;
+    # A pod that only measures (infra/gpu/runpod-measure.sh): MEASURE_ARGS="load wan2.2-ti2v-5b" … ; it ends itself.
+    measure) shift; MEASURE=1 runpod_start "$@" ;;
     stop) runpod_stop ;;
     status) runpod_status ;;
     logs) runpod_logs ;;
     # The spend guard (ADR-078): stops a pod idle GPU_IDLE_MINUTES (20) or older than GPU_MAX_HOURS (6), once or in a loop.
     once|loop)
       AI_GPU_RUNPOD_API_KEY="${AI_GPU_RUNPOD_API_KEY:-$(rp_key)}" python3 "$ROOT/scripts/runpod-guard.py" "$1" "${@:2}" ;;
-    *) echo "usage: scripts/gpu-dev.sh runpod start [gpu] | stop | status | logs | once | loop" >&2; exit 2 ;;
+    *) echo "usage: scripts/gpu-dev.sh runpod start [gpu] | measure [gpu] | stop | status | logs | once | loop" >&2; exit 2 ;;
   esac
 }
