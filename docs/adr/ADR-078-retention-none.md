@@ -63,3 +63,11 @@ needed (no 422), nothing synthesised or billed for speech. A **recording** still
 (transcription), and the crisis and scope replies stay the pack's fixed text, shown without a voice.
 Whether an environment speaks is therefore the plan's row: turn `capability.audio` on when a voice engine
 serves it.
+
+## 5. The pack speaks as the neighbour
+
+`orazaka-packs/wellbeing` 1.6.0: the pack's system prompt (ADR-076 §3) is « le voisin » — an AI
+neighbour, light other angles, « Je ne sais pas, mais tu trouveras » and a factual anecdote or a joke, no
+advice, no medical or therapeutic vocabulary, a warm close after the turn limit. The crisis terms, the
+fixed reply and the lines are unchanged and still answer before the model.
+
