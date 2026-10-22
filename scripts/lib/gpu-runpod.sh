@@ -58,7 +58,7 @@ runpod_start() {
   [[ -n "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || die "no AI_GPU_RUNPOD_API_KEY in $ENV_FILE"
   # MEASURE=1 (gpu-dev.sh runpod measure): a pod that measures and ends, with no relay, no broker, no service token.
   [[ -n "${MEASURE:-}" || -n "$(secret AI_GPU_RELAY_PASSWORD || true)" ]] || die "no relay credential — scripts/gpu-dev.sh relay-secret"
-  local running; running=$(rp_pods | python3 -c 'import json,sys; print(len([p for p in (json.load(sys.stdin) or []) if p.get("name","").startswith("orazaka-gpu")]))')
+  local running; running=$(rp_pods | python3 -c 'import json,sys; print(len([p for p in (json.load(sys.stdin) or []) if p.get("name","").startswith("orazaka-gpu") and p.get("desiredStatus") != "EXITED"]))')
   [[ "$running" == "0" ]] || die "a RunPod pod already runs — scripts/gpu-dev.sh runpod status (or stop)"
   local balance spend; read -r balance spend <<<"$(rp_balance)"
   python3 -c "import sys; sys.exit(0 if float('$balance') >= float('${GPU_RUNPOD_MIN_BALANCE:-10}') else 1)" \
