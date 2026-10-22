@@ -71,3 +71,16 @@ neighbour, light other angles, « Je ne sais pas, mais tu trouveras » and a fac
 advice, no medical or therapeutic vocabulary, a warm close after the turn limit. The crisis terms, the
 fixed reply and the lines are unchanged and still answer before the model.
 
+
+## 6. What the live check found (2026-10-22, dev)
+
+- A pack whose only change is its **system prompt** was never re-applied by `PackBootstrap` (the same
+  blind spot as the consent statement, orazaka#301): `isApplied` now compares the pack row's `safety` too
+  (orazaka-studio#52).
+- A refusal before the stream (451 consent, 402 credits, 503 engine off) is JSON; for a caller that
+  accepts `text/event-stream` (the voice turn) it had no content type of its own and failed with a 500
+  (orazaka-conversation-service#49).
+- A consent bump (`bien-etre` 2.1) makes the **installation** of a service account answer 451 until it
+  is re-posted with the new `consentVersion`; the Yororis service account was re-consented to 2.1.
+- Proof of the mode, on a Yororis moment taken live: `orazaka_chat_messages`, `orazaka_jobs`,
+  `outbox_events` unchanged; billing wrote its hold and `usage_event` (ids, capability, quantities).
