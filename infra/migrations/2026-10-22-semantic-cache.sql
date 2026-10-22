@@ -22,5 +22,5 @@ CREATE INDEX IF NOT EXISTS idx_semantic_cache_embedding
     ON semantic_cache_entry USING hnsw (embedding vector_cosine_ops);
 
 INSERT INTO pipeline_interceptor_config (interceptor_key, display_label, execution_order, is_enabled, description) VALUES
-('SemanticCacheInterceptor','Semantic Cache Interceptor',8, FALSE, 'Answers a repeated question from a cache before any model (ai-engine#40). OFF by default, and a pack must also declare orazaka.cache.mode. Runs after the Refiner row (same order, created later), before the Router.')
+('SemanticCacheInterceptor','Semantic Cache Interceptor',8, FALSE, 'Answers a repeated question from a cache before any model (ai-engine#40). OFF by default, and a pack must also declare orazaka.pipeline.cache.mode. Runs after the Refiner row (same order, created later), before the Router.')
 ON CONFLICT (interceptor_key) DO NOTHING;
