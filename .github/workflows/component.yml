@@ -23,6 +23,11 @@ on:
         required: false
         default: false
         type: boolean
+      duplication:
+        description: "Run the duplicate-code check (krizaka/.github actions/dup-check: jscpd + the repository's dup-ratchet.json, which may only go down)."
+        required: false
+        default: false
+        type: boolean
       ignore:
         description: "changes.yml: JavaScript RegExp, a changed file matching it never needs the build. Keep out of it every file the governance rules read (AGENTS.md, docs, READMEs): the default only skips files no build can read."
         required: false
@@ -42,6 +47,23 @@ jobs:
     uses: krizaka/.github/.github/workflows/changes.yml@ccd224612f5bb9db815335654f359a595a597fbb # main
     with:
       ignore: ${{ inputs.ignore }}
+
+  duplication:
+    # No copy-pasted code (org rule 2026-10-22): the duplicated lines of the calling repository may only go down.
+    needs: changes
+    if: ${{ inputs.duplication && !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "22"
+      - uses: krizaka/.github/actions/dup-check@1cb2e1b6f572ba712083cb6f05fd041370c5ea0b # v1.5.0
 
   verify:
     needs: changes
