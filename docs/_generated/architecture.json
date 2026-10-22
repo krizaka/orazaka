@@ -1840,6 +1840,15 @@
       "summary": "Resolves fuzzy user questions against compiled context matrices and reformulates them into clear, explicit instructions using an LLM call."
     },
     {
+      "interceptor": "SemanticCacheInterceptor",
+      "order": 8,
+      "enabled": false,
+      "phase": "dynamic",
+      "implemented": true,
+      "concern": "cache",
+      "summary": "Answers a turn from a cache, before any model — placed in Phase 2 just before the router by a `pipeline_interceptor_config` row, never by an `@Order`."
+    },
+    {
       "interceptor": "RouterInterceptor",
       "order": 9,
       "enabled": true,

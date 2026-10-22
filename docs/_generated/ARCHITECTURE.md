@@ -192,6 +192,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | 6 | `BrandContextInterceptor` | ✅ | ✅ |
 | 7 | `MemoryInterceptor` | ✅ | ✅ |
 | 8 | `RefinerInterceptor` | ✅ | ✅ |
+| 8 | `SemanticCacheInterceptor` | — | ✅ |
 | 9 | `RouterInterceptor` | ✅ | ✅ |
 | 9 | `ToolInterceptor` | ✅ | ✅ |
 | 10 | `MediaInterceptor` | ✅ | ⚠ no class |

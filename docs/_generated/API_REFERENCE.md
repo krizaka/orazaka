@@ -167,6 +167,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | SubscriptionController | Moves an actor onto a plan — upgrade, downgrade or trial. |
 | POST | `/api/v1/billing/subscriptions/{actorId}/rollover` | ADMIN | SubscriptionController | Rolls a subscription into its next period, honouring a pending cancellation. |
 | GET | `/api/v1/billing/usage/capabilities` | ADMIN | UsageController | Consumption and refusals per capability × model. |
+| GET | `/api/v1/billing/usage/me` | ADMIN | UsageController | The caller's own usage and cost for a calendar month. |
 | GET | `/api/v1/billing/usage/top-consumers` | ADMIN | UsageController | The heaviest consumers. |
 | GET | `/api/v1/billing/wallets/{actorId}` | ADMIN | WalletController | Reads an actor's balances. |
 | POST | `/api/v1/billing/wallets/{actorId}/adjustments` | ADMIN | WalletController | Issues a manual credit adjustment — support goodwill, or a claw-back. |

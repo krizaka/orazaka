@@ -156,6 +156,7 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | POST | `/api/v1/billing/subscriptions/{actorId}` | Moves an actor onto a plan — upgrade, downgrade or trial. |
 | POST | `/api/v1/billing/subscriptions/{actorId}/rollover` | Rolls a subscription into its next period, honouring a pending cancellation. |
 | GET | `/api/v1/billing/usage/capabilities` | Consumption and refusals per capability × model. |
+| GET | `/api/v1/billing/usage/me` | The caller's own usage and cost for a calendar month. |
 | GET | `/api/v1/billing/usage/top-consumers` | The heaviest consumers. |
 | GET | `/api/v1/billing/wallets/{actorId}` | Reads an actor's balances. |
 | POST | `/api/v1/billing/wallets/{actorId}/adjustments` | Issues a manual credit adjustment — support goodwill, or a claw-back. |
