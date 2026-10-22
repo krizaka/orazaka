@@ -347,6 +347,29 @@ ON CONFLICT (actor_id, entitlement_key) DO UPDATE SET reason = EXCLUDED.reason, 
 `;
 }
 
+/**
+ * A product's OWN plan (a key is never shared, a plan is never shared): `svc-<product>`, not public, copied from the
+ * `ultimate` entitlements plus `retention.none`, with the product's service account subscribed to it. Idempotent.
+ */
+export function planSql(product, actorId) {
+  const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
+  if (!/^[a-z][a-z0-9-]{1,30}$/.test(product)) throw new Error(`not a product id: ${product}`);
+  const plan = `svc-${product}`;
+  return `BEGIN;
+INSERT INTO billing_plan (plan_key, label, tier_rank, monthly_credit_grant, price_cents, currency, rate_limit_tier_key, is_public, is_active)
+SELECT ${q(plan)}, ${q(`Service: ${product}`)}, 100, 20000, 0, currency, 'service', FALSE, TRUE FROM billing_plan WHERE plan_key = 'ultimate'
+ON CONFLICT (plan_key) DO NOTHING;
+INSERT INTO billing_plan_entitlement (plan_key, entitlement_key, value_type, value)
+SELECT ${q(plan)}, entitlement_key, value_type, value FROM billing_plan_entitlement WHERE plan_key = 'ultimate'
+ON CONFLICT DO NOTHING;
+INSERT INTO billing_plan_entitlement (plan_key, entitlement_key, value_type, value) VALUES (${q(plan)}, 'retention.none', 'boolean', 'true') ON CONFLICT DO NOTHING;
+UPDATE billing_subscription SET status = 'CANCELED', updated_at = now() WHERE actor_id = ${q(actorId)} AND status IN ('TRIALING','ACTIVE','PAST_DUE');
+INSERT INTO billing_subscription (actor_id, plan_key, status, period_start, period_end)
+VALUES (${q(actorId)}, ${q(plan)}, 'ACTIVE', now(), now() + interval '30 days');
+COMMIT;
+`;
+}
+
 /** Sets KEY=value lines in an env file (kept, created mode 600), without ever printing a value. */
 export function upsertEnv(text, values) {
   const lines = text ? text.replace(/\n$/, "").split("\n") : [];
@@ -388,6 +411,7 @@ async function createServiceAccount(product, flags) {
   const name = `${product}-dev`;
   for (const k of await edge("/api/v1/api-keys", { token })) if (k.name === name) await edge(`/api/v1/api-keys/${k.id}`, { token, method: "DELETE" });
   const { key } = await edge("/api/v1/api-keys", { token, body: scopes.length ? { name, scopes } : { name } });
+  psql(env, "krizaka_billing_db", "krizaka_billing_db", "DATABASE_PASSWORD_KRIZAKA_BILLING_DB", [], planSql(product, actorId));
   if (studios.length) psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], grantSql(actorId, studios, product));
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, upsertEnv(existsSync(out) ? readFileSync(out, "utf8") : "", connectionVars(opt("--prefix"), EDGE_URL, key)), { mode: 0o600 });
