@@ -22,6 +22,7 @@ generated: true
 | 6 | `BrandContextInterceptor` | enrichment | ✅ |
 | 7 | `MemoryInterceptor` | enrichment | ✅ |
 | 8 | `RefinerInterceptor` | reformulation | ✅ |
+| 8 | `SemanticCacheInterceptor` | cache | — |
 | 9 | `RouterInterceptor` | reformulation | ✅ |
 | 9 | `ToolInterceptor` | tooling | ✅ |
 | 11 | `UserContextInterceptor` | context | ✅ |
