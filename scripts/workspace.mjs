@@ -134,13 +134,20 @@ function npmWorkspaces(r) {
     : [r.name];
 }
 
+/**
+ * An upstream is built to be installed, not tested: its own CI runs its tests. `-DskipTests` alone still runs the
+ * Failsafe integration tests (Testcontainers: 30-90 s per upstream repository), so both flags are always given together
+ * (scripts/test/workspace-ci.test.mjs).
+ */
+const SKIP_TESTS = ["-DskipTests", "-DskipITs"];
+
 function ci(name) {
   const target = repo(name);
   const mavenUpstream = upstream(name).filter((r) => r.kind === "maven");
 
   if (target.kind === "maven") {
     for (const r of mavenUpstream) {
-      run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", "-DskipTests"], { cwd: ROOT });
+      run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", ...SKIP_TESTS], { cwd: ROOT });
     }
     run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "verify"], { cwd: ROOT });
     return;
@@ -181,7 +188,7 @@ function ci(name) {
     // A pack is judged by the platform that installs it: the pack-bundle and catalogue rules of the
     // studio service, and the document-validation rule engine's own tests.
     for (const r of upstream("orazaka-studio").filter((x) => x.kind === "maven")) {
-      run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", "-DskipTests"], { cwd: ROOT });
+      run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", ...SKIP_TESTS], { cwd: ROOT });
     }
     run(
       MVNW,
@@ -225,7 +232,7 @@ function isPublished(ws) {
 function publish(name) {
   const target = repo(name);
   if (target.kind === "maven") {
-    run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "deploy", "-DskipTests"], { cwd: ROOT });
+    run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "deploy", ...SKIP_TESTS], { cwd: ROOT });
     return;
   }
   if (target.name === "orazaka-ui-kit") {
