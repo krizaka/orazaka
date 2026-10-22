@@ -46,7 +46,7 @@ So the claim « nothing is kept » was **not** true of a turn taken with a `conv
   else. A caller that wants context sends it with each turn (`context`, ≤ 2 000 tokens), as Yororis does.
 - **Logs.** No log statement of the bridge mentions a prompt or a completion, in any mode
   (`EngineStreamBridgeTest.shouldNeverLogWhatThePersonSaidEvenAtDebug`). Exceptions of a model client
-  can still quote a fragment (ADR-064 §…); the voice turn logs the class only.
+  can still quote a fragment; the voice turn logs the class only.
 - **Not covered**: rows written *before* the plan had the flag stay in the cluster and its backups
   until deleted; a Studio run is a different mechanism (retention by class, ADR-065).
 
