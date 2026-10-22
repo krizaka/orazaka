@@ -153,7 +153,7 @@ else:
 }
 
 runpod_stop() {
-  local ids; ids=$(rp_pods | python3 -c 'import json,sys; print(" ".join(p["id"] for p in (json.load(sys.stdin) or []) if p.get("name","").startswith("orazaka-gpu")))')
+  local ids; ids=$(rp_pods | python3 -c 'import json,sys; print(" ".join(p["id"] for p in (json.load(sys.stdin) or []) if p.get("name","").startswith("orazaka-gpu") and p.get("desiredStatus") != "EXITED"))')
   if [[ -z "$ids" ]]; then say "no RunPod pod running — \$0/hour"; runpod_ledger_close; return; fi
   local id; for id in $ids; do rp_call DELETE "/pods/$id" >/dev/null && say "destroyed RunPod pod $id — billing stopped (the models volume is kept)"; done
   runpod_ledger_close
