@@ -70,7 +70,7 @@ answers):
 
 Everything that can refuse a turn is decided **before** the stream opens, so a refusal is a status
 and never half a stream: `404` unknown installation, `451` consent to an older statement (the
-pack's version and statement, verbatim), `403` no `capability.audio` in the plan, `422` no voice for
+pack's version and statement, verbatim), `403` a recording without `capability.audio` in the plan (a typed turn without it is answered as text, [ADR-078](ADR-078-retention-none.md) §4), `422` no voice for
 the locale, `402` no credits, `400` a malformed turn.
 
 **`audio.url`** is `GET /api/v1/voice/clips/{id}?expires=…&signature=…`: valid **300 s**, signed
