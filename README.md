@@ -18,7 +18,7 @@
 [![Orazaka](https://img.shields.io/badge/part%20of-Orazaka-f67e23)](https://github.com/krizaka/orazaka#repositories)
 [![Website](https://img.shields.io/badge/site-dev.orazaka.com-f67e23)](https://dev.orazaka.com)
 
-[Website](https://dev.orazaka.com) · [Documentation](https://dev.orazaka.com/docs) · [Demos](https://dev.orazaka.com/gallery) · [Krizaka](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
+[Website](https://dev.orazaka.com) · [Documentation](https://dev.orazaka.com/docs) · [Krizaka](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
 
 </div>
 <!-- /krizaka-header -->
