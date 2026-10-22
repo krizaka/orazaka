@@ -71,7 +71,7 @@ client's Mac or Linux/NVIDIA box). Numbers *(est.)* unless cited.
 | Stage weights from the network volume to local NVMe at boot, memory-map safetensors | the 129 s load may drop 2-4x *(est.)*; measure first | High | **Do now** (cheap) |
 | Image holds the runtime only, weights on the volume (already true) + slim image (orazaka#316) | pull time and disk fee | High | Continue |
 | Cached-model features of the platform | skips download | Low | Check at the spike; never a dependency |
-| Lazy / streamed loading (safetensors streaming, Run:ai Model Streamer) | first layers before the file ends | High | Evaluate for LLMs only (Wan loads whole pipelines) |
+| Lazy / streamed loading (safetensors streaming, Run:ai Model Streamer, Apache-2.0) | tensors read in parallel from NVMe straight to the GPU | High | **Do now** with FP8 weights (section 7.1) |
 | Warm-container snapshot (CRIU, CUDA checkpoint, GPU memory snapshot) | 5-10x on cold start for vLLM-class servers (Modal reports ~10x) | Low today (root, driver-bound, young) | Watch |
 | Keep hot by traffic (LRU per VRAM budget, pre-load on queue depth) | hides load for repeat models | High | **Do** in the worker |
 
@@ -120,14 +120,14 @@ latency awareness, no response cache. The DB already carries what is needed to g
 **Phase 0 - see (now).** Per-run timing fields (queue wait, cold start, model load, render, upload) in the
 measurements (orazaka#315). Nothing below is sized without them.
 
-**Phase 1 - stop paying for idle and for loading (before 2026-11-15).**
+**Phase 1 - stop paying for idle and for loading.** (Superseded by section 7: one active plan, no date.)
 1. Serverless spike with a decision gate (RunPod flex, FlashBoot, 5B and FLUX, same image, weights on the volume).
 2. Model-cache contract: one `/models` layout, stage to local NVMe, verify by digest, same on Mac, pod and k3s.
 3. Stage events in the run stream: a 60-130 s cold start is a progress step, not a freeze.
 4. Router fallback chain with a circuit breaker.
 5. On-prem packaging: a GPU compose profile and a k3s manifest of the **same** worker image, no RunPod needed.
 
-**Phase 2 - cost per unit (November-December).** Keep-hot LRU in the worker, cascade and exact-match cache in the
+**Phase 2 - cost per unit.** Keep-hot LRU in the worker, cascade and exact-match cache in the
 router, offline model bundle (OCI) with `orazaka models pack/import`.
 
 **Phase 3 - volume (when measured traffic asks).** vLLM provider type with FP8/AWQ for self-served LLMs, spot pods for
@@ -141,9 +141,84 @@ runs the same image with no cloud account.
 
 The existing GPU backlog (orazaka#157, #205, #206, #315, #316, #320-#324, worker-media#28) is not duplicated. This
 study adds the router, the cache contract, the on-prem packaging, the UX events and the spike gate. The issues are
-listed in the pull request and in milestone « Infra portability — 2026-11-15 ».
+listed in section 7 and in milestone « Infra portability » (no date).
 
 ## 6. Refused for now
 
 Modal or Replicate as the platform (lock-in); GPU snapshot/restore (immature on our drivers); a second queue technology
-(Redis) for batching; vLLM before there is LLM volume to batch; any change of the product API for portability reasons.
+(Redis) for batching; the vLLM *provider row* stays data, and the GPU-server profile with prefix caching is now in the plan (section 7.5); any change of the product API for portability reasons.
+
+## 7. Founder decision, 2026-10-21: one active plan, no date
+
+The 2026-11-15 date is dropped. The only goal is the best open-source architecture and the lowest infrastructure cost.
+There is no « before » and « after » split: all nine issues are in one milestone, **Infra portability** (orazaka,
+orazaka-ai-engine, orazaka-worker-media, orazaka-cli). Order of work: 7.1 and 7.3 first (the 129 s and the cost per
+clip), then 7.4 (cache), then the rest. Every figure below is an estimate *(est.)* until measured on a real pod.
+
+### 7.1 Cold start 129 s to under 12 s, and faster diffusion (worker-media#63)
+
+What the worker really runs today (`models.yaml`, read 2026-10-21): **Wan 2.2 TI2V 5B** and **Wan 2.1 T2V 1.3B**
+(diffusers, BF16, Apache-2.0), **FLUX.2 [klein] 4B** (GGUF Q8_0 + Qwen3-4B GGUF through `sd-server`, Apache-2.0),
+AnimateDiff on the Mac (MPS). Wan 2.1 14B and Wan 2.2 A14B are **not** in the worker: A14B (the 57 GB / 129 s case of
+ADR-078) is a provider-served route. The Wan-AI repositories hold no FP8 file (checked on the Hub), so the FP8
+checkpoints are **produced by us** (Apache-2.0 allows derivatives), digest-pinned, and published in the model store.
+
+| Lever | What | Hardware | Licence (read in its repository, 2026-10-21) |
+|:---|:---|:---|:---|
+| FP8 `safetensors` (E4M3, per-tensor scales) | half the bytes to read and to hold in VRAM | native FP8 tensor cores on Hopper (H100, sm90) and Ada (L40S, 4090, sm89); **BF16 path kept** for Ampere (A100) and Mac | model licences unchanged (Apache-2.0) |
+| `runai-model-streamer` (or direct mmap NVMe to GPU) | tensors read in parallel, no full-file copy through host RAM | any NVMe | Apache-2.0 (run-ai/runai-model-streamer) |
+| TeaCache | skips redundant denoising steps by timestep-embedding similarity | any CUDA | Apache-2.0 (ali-vilab/TeaCache); last push 2025-06 and written for Wan 2.1: must be proven on Wan 2.2 |
+| SageAttention (INT8/FP8 attention) | faster attention | sm80+ (INT8), sm89/sm90 (FP8) | Apache-2.0 (thu-ml/SageAttention) |
+
+Target: 34 GB (5B, BF16) to about 17 GB (FP8); under 12 s needs about 1.4 GB/s sustained, within one Gen4 NVMe. The
+network volume stays the source of truth, NVMe is the stage. For a 57 GB model (A14B) FP8 gives about 29 GB, which needs
+2.4 GB/s: it will be measured, not promised. Inference: TeaCache + SageAttention, 2 to 2.5x faster *(est.)*.
+FLUX.2 stays on `sd-server` (GGUF); its FP8 and streaming path is checked, not assumed.
+
+### 7.2 Serverless GPU, scale to zero (orazaka#342)
+
+Scale to zero is coupled to the RabbitMQ queue (`orazaka-job-service` publishes, the worker consumes): the queue depth
+wakes a worker; no depth, no GPU. A smart `idle_timeout` of about 60 s after a job absorbs a user's burst with the
+weights hot in VRAM, then a strict scale to $0. It works with the keep-hot manager (worker-media#65): the model stays
+resident exactly as long as the idle window.
+
+Economic target *(est.)*: cost per clip = (load + n x render + idle) x price per second / n. With the H100 pod price
+($3.99/h = $0.00111/s), FP8 + NVMe load 12 s, render about 70-80 s with TeaCache and SageAttention, idle 60 s: a lone
+clip about $0.17, a burst of 3 about $0.11, a burst of 5 about $0.10. Target **under $0.12-0.15 per clip** on bursts,
+against $0.80 mixed today. The serverless price per second (ADR-078's $0.0016/s) is unconfirmed and moves these figures.
+
+### 7.3 Deterministic real-time progress (worker-media#64)
+
+The worker publishes granular events on **RabbitMQ**, which the stack already runs in dev and in the cloud (Redis exists
+only in the local compose and is not deployed, decision 2026-10-16): `COLD_START_WAKEUP`, `STREAMING_WEIGHTS_NVME` (real
+percentage of tensors read), `INFERENCE_STEP` (step X / total, sliding ETA from the last runs of that model and
+hardware), `SANDBOX_VERIFICATION`, `COMPLETED`. `orazaka-job-service` turns them into the existing numbered run events
+(ADR-083, #189), served as SSE with `Last-Event-ID` resume. Optional on the wire (ADR-048).
+
+### 7.4 Semantic cache and small model, in the interceptor chain (orazaka-ai-engine#40)
+
+`SemanticCacheInterceptor` (Apache-2.0) in `orazaka-interceptors`, in Phase 2 **just before `RouterInterceptor`**, placed
+by a `pipeline_interceptor_config` row (never `@Order`). On a hit it ends the turn through the existing
+`PipelineShortCircuitException`: 0 GPU, and 0 or a reduced credit in `EntitlementInterceptor`. Store: PostgreSQL
+pgvector (already in the stack; Redis is not deployed). Embeddings: a local model, `bge-m3` (MIT, multilingual, fits
+EN/FR) or `nomic-embed-text-v1.5` (Apache-2.0, lighter, English-leaning), through an Ollama provider row. Partition
+key `(tenantId/studioId, scopeGuardHash, modelTier)`, cosine threshold at least 0.94. The exact-match tier (hash of
+tenant, model, parameters, messages) is checked first. Opt-in per pack or route, off by default for tools, RAG over
+changing data, user-specific context and numbers that matter (invoices, taxes, leases: Akinaza, Yomizaka).
+The non-negotiable safety conditions are the acceptance criteria of the issue. The opt-in cascade (small model first)
+stays in the same issue, after the cache.
+
+### 7.5 Prefix caching on the GPU-server profile (orazaka#343, ai-engine#39, ai-engine#41)
+
+The unified image's GPU-server profile serves LLMs with **SGLang (RadixAttention)** or **vLLM
+`--enable-prefix-caching`** (both Apache-2.0), behind the OpenAI-compatible API that `AiClient` already consumes
+(`openai-compatible` provider row, ai-engine#41, folded into #343's deliverables). Why now: the 15-interceptor pipeline
+(Safety, ScopeGuard, BrandContext, Rag, Tool) builds a long system prefix that recurs on every call; prefix caching
+saves 60-80 % of GPU time and time to first token *(est., to measure)*. Ollama or LocalAI stay in `AiClient` as the
+automatic local / offline fallback (ai-engine#39): used when the remote GPU worker is off or the deployment is fully
+on-prem.
+
+### 7.6 Also in the plan
+
+Keep-hot resident models (worker-media#65, aligned with `idle_timeout`); offline OCI model bundle with signed digests
+(orazaka-cli#81, it carries the FP8 checkpoints and the model-cache layout).
