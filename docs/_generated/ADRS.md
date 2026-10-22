@@ -80,3 +80,4 @@ generated: true
 | ADR-083 | ADR-083 — Client connectivity and capacity | `adr/ADR-083-client-connectivity-and-capacity.md` |
 | ADR-084 | ADR-084 — Automation triggers | `adr/ADR-084-automation-triggers.md` |
 | ADR-085 | ADR-085 — One operator audit trail | `adr/ADR-085-operator-audit-trail.md` |
+| ADR-086 | ADR-086 — Durable agent sessions on Studio runs | `adr/ADR-086-durable-agent-sessions-on-studio-runs.md` |
