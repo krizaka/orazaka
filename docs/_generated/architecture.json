@@ -480,6 +480,21 @@
       }
     },
     {
+      "id": "orazaka-crypto",
+      "path": "orazaka-libs/orazaka-contracts/orazaka-crypto",
+      "repository": "orazaka-contracts",
+      "owner": "orazaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "1.0.0-SNAPSHOT",
+      "description": "The platform's master keyring (load the key, wrap and unwrap) and the secret sealer built on it (ADR-054, ADR-084): no Spring, no JDBC, no storage. A leaf that every service may depend on.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "orazaka-persistence-app",
       "path": "orazaka-libs/orazaka-ai-engine/orazaka-persistence-app",
       "repository": "orazaka-ai-engine",
@@ -1187,6 +1202,10 @@
       "to": "krizaka-web"
     },
     {
+      "from": "orazaka-assets",
+      "to": "orazaka-crypto"
+    },
+    {
       "from": "orazaka-automation-service",
       "to": "krizaka-billing-client"
     },
@@ -1417,6 +1436,10 @@
     {
       "from": "orazaka-studio-service",
       "to": "krizaka-security"
+    },
+    {
+      "from": "orazaka-studio-service",
+      "to": "orazaka-crypto"
     },
     {
       "from": "orazaka-studio-service",
@@ -1723,12 +1746,6 @@
       "to": "orazaka-studio-service",
       "kind": "http",
       "via": "orazaka-studio-client"
-    },
-    {
-      "from": "orazaka-mobile-client",
-      "to": "orazaka-edge",
-      "kind": "http",
-      "via": "localhost:8088"
     },
     {
       "from": "orazaka-studio-service",
