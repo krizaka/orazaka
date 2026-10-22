@@ -346,3 +346,14 @@ test("the dev persona Mira: a fictional plain user on a reserved .test domain, n
   assert.equal(personaAccount().username, "Eric");
   assert.throws(() => personaAccount("admin"), /unknown persona/);
 });
+
+test("a product's key comes with its OWN plan, never a shared one", async () => {
+  const { planSql } = await import("../dev-deploy.mjs");
+  const yomizaka = planSql("yomizaka", "u-1");
+  const akinaza = planSql("akinaza", "u-2");
+  assert.match(yomizaka, /'svc-yomizaka'/);
+  assert.ok(!yomizaka.includes("svc-akinaza") && !akinaza.includes("svc-yomizaka"));
+  assert.match(yomizaka, /'retention\.none', 'boolean', 'true'/);
+  assert.match(yomizaka, /is_public[\s\S]*FALSE/);
+  assert.throws(() => planSql("Bad Id", "u"), /not a product id/);
+});
