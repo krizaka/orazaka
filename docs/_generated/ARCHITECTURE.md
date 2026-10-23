@@ -48,7 +48,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-business` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-interceptors` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-tools` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
-| `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AiClient, CatalogModelService, ChatSessionService, JobService, McpService | AudioGeneratorClient, CapabilityProvider, ChatGeneratorClient, ChatMemoryStore, EmbeddingClient, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, SemanticClassifierPort, TestShaperPort, ToolRegistry, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
+| `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AiClient, CatalogModelService, ChatSessionService, JobService, McpService, StepRouter | AudioGeneratorClient, CapabilityProvider, ChatGeneratorClient, ChatMemoryStore, EmbeddingClient, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, SemanticClassifierPort, StepModelRecorder, StepRouteProvider, TestShaperPort, ToolRegistry, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
 | `krizaka-users-core` | domain | `krizaka-users` | 0.2.0 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, PasswordRecoveryService, RateLimitProvider, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, CryptographyPort, OAuth2ProviderVerifier, PasswordEventPublisher, PasswordResetTokenRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
 | `orazaka-jobs-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-persistence-app-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | CapabilityManager, CatalogModelManager, ChatMemoryPersistenceProvider, ChatSessionPersistenceProvider, JobPersistenceProvider, OutboxStore, PipelineConfigManager, PlatformMcpServerPersistenceProvider, PlatformToolConfigPersistenceProvider, RuntimeConfigProvider, SpeechVoiceManager, UserMcpServerPersistenceProvider, ValidationPipelineManager | — |
@@ -138,7 +138,6 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-job-service` | `orazaka-conversation-service` | amqp | `orazaka.events.job-relay` (`job.{…}.cancelled`) |
 | `orazaka-job-service` | `orazaka-knowledge-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
 | `orazaka-job-service` | `orazaka-studio-service` | amqp | `krizaka.billing.settlements` (`job.{…}.done`) |
-| `orazaka-job-service` | `orazaka-studio-service` | amqp | `orazaka.events.studio` (`job.{…}.done`) |
 | `orazaka-job-service` | `orazaka-studio-service` | amqp | `orazaka.events.studio.capability` (`evt.capability.changed`) |
 | `orazaka-studio-service` | `orazaka-automation-service` | amqp | `orazaka.jobs.automation` (`job.automation.approved`) |
 | `orazaka-studio-service` | `orazaka-job-service` | amqp | `orazaka.jobs.batch` (`job.media.generate`) |
@@ -217,7 +216,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `krizaka.notifications.user-events` | `orazaka.events` | `evt.user.*` | `krizaka.notifications.user-events.dlq` | `krizaka-notifications-service` | `krizaka-notifications-service` |
 | `orazaka.automation.studio-runs` | `orazaka.events` | — | `orazaka.automation.studio-runs.dlq` | `orazaka-automation-service` | `orazaka-automation-service` |
 | `orazaka.events.job-relay` | `orazaka.events` | `job.#` | `orazaka.events.job-relay.dlq` | `orazaka-persistence-app` | `orazaka-conversation-service` |
-| `orazaka.events.studio` | `orazaka.events` | `job.*.done, job.*.error` | `orazaka.events.studio.dlq` | `orazaka-studio-service` | `orazaka-studio-service` |
+| `orazaka.events.studio` | `orazaka.events` | `job.*.done, job.*.error` | `orazaka.events.studio.dlq` | `orazaka-studio-service` | — |
 | `orazaka.events.studio.capability` | `orazaka.events` | `evt.capability.*` | `orazaka.events.studio.capability.dlq` | `orazaka-studio-service` | `orazaka-studio-service` |
 | `orazaka.events.studio.connector` | `orazaka.events` | `evt.automation.telemetry` | `orazaka.events.studio.connector.dlq` | `orazaka-studio-service` | `orazaka-studio-service` |
 | `orazaka.events.studio.subscription` | `orazaka.events` | `evt.subscription.*` | `orazaka.events.studio.subscription.dlq` | `orazaka-studio-service` | `orazaka-studio-service` |

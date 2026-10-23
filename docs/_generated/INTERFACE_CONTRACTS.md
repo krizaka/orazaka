@@ -17,6 +17,7 @@ generated: true
 - `ChatSessionService`
 - `JobService`
 - `McpService`
+- `StepRouter`
 
 **Outbound ports**
 
@@ -35,6 +36,8 @@ generated: true
 - `PlatformMcpServerProvider`
 - `PlatformToolConfigProvider`
 - `SemanticClassifierPort`
+- `StepModelRecorder`
+- `StepRouteProvider`
 - `TestShaperPort`
 - `ToolRegistry`
 - `UserCredentialsProvider`
