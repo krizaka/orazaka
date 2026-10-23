@@ -7,8 +7,6 @@ generated: true
 ---
 
 # Measured runs
-
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
 What the video and image models Orazaka routes to really did, measured on **2026-10-17**: each figure below is read from the **run records** of the platform (start and finish of every Studio run, its size and seed, its outcome) and from the engine's own log — none is typed by hand. Every number is for **this setup** and is measured again when the setup changes (a new model, engine version, provider or machine).
 
 ## Setup

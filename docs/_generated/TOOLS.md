@@ -8,8 +8,6 @@ generated: true
 
 # Tools & MCP
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 In Orazaka a **tool** is a function a model may call during a turn (Spring AI function calling).
 `orazaka-tools` (repository `orazaka-ai-engine`) holds the tool registry, the bridge to external MCP servers, the
 tool result cache and the sandbox that isolates tools which write. Tools are attached to a turn by the

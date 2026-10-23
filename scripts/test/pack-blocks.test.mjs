@@ -45,3 +45,14 @@ test("the generated Packs page lays the Studios out as cards: no table with more
     if (/^\|\s*Studio\s*\|/.test(line)) assert.fail(`a Studios table is back: ${line.slice(0, 80)}`);
   }
 });
+
+test("a generated page carries no banner for the reader (front matter `generated: true` says it to the tools), and the reference packs table is three columns", () => {
+  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "docs", "_generated");
+  for (const f of fs.readdirSync(dir).filter((n) => n.endsWith(".md"))) {
+    const md = fs.readFileSync(path.join(dir, f), "utf8");
+    assert.doesNotMatch(md, /Generated from code|do not hand-edit/, `${f} shows the generator's banner`);
+    assert.match(md, /^generated: true$/m, `${f} keeps its front matter marker`);
+  }
+  const packs = fs.readFileSync(path.join(dir, "PACKS.md"), "utf8");
+  assert.match(packs, /^\| Pack \| Version \| Studios \|$/m);
+});

@@ -8,8 +8,6 @@ generated: true
 
 # ADR Ledger
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 | ADR | Title | Source file |
 |:---|:---|:---|
 | ADR-001 | _(cited in code, no dedicated file)_ | — |

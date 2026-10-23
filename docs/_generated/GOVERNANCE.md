@@ -8,8 +8,6 @@ generated: true
 
 # Governance Rules
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 
 A rule with **no suite** is a rule that enforces nothing — it is written, it compiles, and no
 build fails when it is violated. Treat an empty cell as a defect, not as a gap.
