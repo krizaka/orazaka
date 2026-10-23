@@ -357,3 +357,17 @@ test("a product's key comes with its OWN plan, never a shared one", async () => 
   assert.match(yomizaka, /is_public[\s\S]*FALSE/);
   assert.throws(() => planSql("Bad Id", "u"), /not a product id/);
 });
+
+test("the Krizaka account is the company as an SME customer: a plain user, free plan, French — never an admin or a service account", () => {
+  const k = personaAccount("krizaka");
+  assert.equal(k.username, "Krizaka");
+  assert.equal(k.email, "orazaka@krizaka.com");
+  assert.deepEqual(k.roles, ["ROLE_USER"]);
+  assert.equal(k.tier, "free");
+  assert.equal(k.secret, "KRIZAKA");
+  const sql = seedSql([{ ...k, hash: "$2y$10$h" }]);
+  assert.match(sql, /'\{"language":"fr"\}'/);
+  assert.equal((sql.match(/'ROLE_ADMIN'/g) ?? []).length, 0);
+  assert.doesNotMatch(k.username, /^svc_/);
+  assert.match(seedSql([{ ...personaAccount(), hash: "h" }]), /'\{"language":"en"\}'/, "the others stay in English");
+});
