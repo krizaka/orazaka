@@ -10,6 +10,7 @@
  *   node scripts/workspace.mjs status                   branch / dirty / ahead-behind of each
  *   node scripts/workspace.mjs pull                     fast-forward every clean repository
  *   node scripts/workspace.mjs deps <repository>        its upstream repositories, in build order
+ *   node scripts/workspace.mjs upstreams <repository>   install its Maven upstreams, tests skipped (a coding agent's setup)
  *   node scripts/workspace.mjs ci <repository>          build its upstreams, then verify it
  *   node scripts/workspace.mjs publish <repository>     publish it (CI, on a v* tag): Maven → GitHub Packages, npm → npmjs
  *
@@ -141,14 +142,18 @@ function npmWorkspaces(r) {
  */
 const SKIP_TESTS = ["-DskipTests", "-DskipITs"];
 
+/** Installs a Maven component's upstreams into the local repository, tests skipped: what a component needs before it builds alone. */
+function upstreams(name) {
+  for (const r of upstream(name).filter((x) => x.kind === "maven")) {
+    run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", ...SKIP_TESTS], { cwd: ROOT });
+  }
+}
+
 function ci(name) {
   const target = repo(name);
-  const mavenUpstream = upstream(name).filter((r) => r.kind === "maven");
 
   if (target.kind === "maven") {
-    for (const r of mavenUpstream) {
-      run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", ...SKIP_TESTS], { cwd: ROOT });
-    }
+    upstreams(name);
     run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "verify"], { cwd: ROOT });
     return;
   }
@@ -289,6 +294,9 @@ switch (command) {
     break;
   case "ci":
     ci(args[0] ?? "");
+    break;
+  case "upstreams":
+    upstreams(args[0] ?? "");
     break;
   case "publish":
     publish(args[0] ?? "");
