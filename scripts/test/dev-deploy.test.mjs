@@ -330,6 +330,15 @@ test("the searchKnowledge rename (orazaka-ai-engine#59) is copied, additive and 
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "search-knowledge"\) searchKnowledge\(\)/);
 });
 
+test("the MCP token columns become TEXT for sealed envelopes (orazaka-ai-engine#58), keeping every value", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-mcp-token-text.sql", import.meta.url), "utf8");
+  for (const table of ["user_mcp_servers", "platform_mcp_servers"]) {
+    assert.ok(sql.includes(`ALTER TABLE ${table} ALTER COLUMN auth_token TYPE TEXT;`), table);
+  }
+  assert.doesNotMatch(sql, /\b(DROP|DELETE|UPDATE)\b/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "mcp-token-text"\) mcpTokenText\(\)/);
+});
+
 test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
   assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
 });
