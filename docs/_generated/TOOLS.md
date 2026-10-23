@@ -88,8 +88,6 @@ Static defaults live under `orazaka.tools` in `application.yml`.
 | `created_at` | `TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP` |
 | `expires_at` | `TIMESTAMP WITH TIME ZONE NOT NULL` |
 
-Seeded tool configuration: `searchWeb`.
-
 ## MCP servers
 
 Orazaka is an MCP **client**: before a turn, `DefaultMcpOrchestrator` queries every enabled `REMOTE` platform

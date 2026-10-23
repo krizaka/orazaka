@@ -173,6 +173,10 @@ Webhooks**; delivery is at-least-once, so receivers should deduplicate on `webho
 [Studio guide](docs/STUDIO_GUIDE.md#follow-a-run) for event resumption, signatures, retries, and the
 delivery log.
 
+## Grounded research (proposed)
+
+The engine looking things up, reading the source and citing it, instead of answering from memory: [ADR-087](docs/adr/ADR-087-grounded-research.md) and its [design](docs/design/grounded-research.md) (proposed, not built yet).
+
 ## Workspace layout
 
 ```
