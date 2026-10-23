@@ -308,7 +308,7 @@ test("the runtime-config admin migration (orazaka-studio#72, #71) is additive, i
   assert.match(sql, /CREATE TABLE IF NOT EXISTS studio_runtime_config_audit/);
   assert.match(sql, /CREATE INDEX IF NOT EXISTS idx_studio_runtime_config_audit_at/);
   // The saga's two settings exist on dev, with their bounds, and an admin's value survives a re-run.
-  for (const key of ["run.blueprint-cache-size", "run.outcome-listener.concurrency"]) assert.match(sql, new RegExp(`'${key.replace(/\./g, "\\.")}'`), key);
+  for (const key of ["run.blueprint-cache-size", "run.outcome-listener.concurrency"]) assert.ok(sql.includes(`'${key}'`), key);
   assert.match(sql, /ON CONFLICT \(config_key\) DO UPDATE SET\s+default_value = EXCLUDED\.default_value/);
   assert.doesNotMatch(sql, /config_value = EXCLUDED/);
   assert.doesNotMatch(sql, /DROP (TABLE|COLUMN)/);
