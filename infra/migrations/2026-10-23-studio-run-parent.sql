@@ -9,3 +9,6 @@
 ALTER TABLE studio_run ADD COLUMN IF NOT EXISTS parent_run_id UUID REFERENCES studio_run(id) ON DELETE CASCADE;
 
 CREATE INDEX IF NOT EXISTS idx_studio_run_parent ON studio_run(parent_run_id) WHERE parent_run_id IS NOT NULL;
+
+-- orazaka-studio#63 — a run resumed from a step names the run it resumes. No FK: retention may purge the origin first.
+ALTER TABLE studio_run ADD COLUMN IF NOT EXISTS resumed_from UUID;

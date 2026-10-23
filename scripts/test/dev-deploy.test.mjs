@@ -290,10 +290,11 @@ test("the run-event migration is idempotent (triggers are dropped before they ar
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-events"\) runEvents\(\)/);
 });
 
-test("the parent-run migration (orazaka-studio#62) is additive, idempotent and has its command", () => {
+test("the run-link migration (orazaka-studio#62 parent, #63 resume) is additive, idempotent and has its command", () => {
   const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-studio-run-parent.sql", import.meta.url), "utf8");
   assert.match(sql, /ADD COLUMN IF NOT EXISTS parent_run_id UUID REFERENCES studio_run\(id\) ON DELETE CASCADE/);
   assert.match(sql, /CREATE INDEX IF NOT EXISTS idx_studio_run_parent/);
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS resumed_from UUID;/);
   assert.doesNotMatch(sql, /DROP (TABLE|COLUMN)/);
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-parent"\) runParent\(\)/);
 });

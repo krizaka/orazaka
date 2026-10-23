@@ -546,6 +546,8 @@ the admin console, validated at publish time, and interpreted at run time.
 | `TRANSFORM` | In-process, pure | Only declarative reshaping (pick/join/format). **No expression evaluation, no scripting.** |
 | `STUDIO` | A child run | Calls another **published** Studio (`studioKey`): a child run with its own id, no hold of its own (settled inside the parent's), its outputs become the step's (`{{steps.<out>.<key>}}`), its failure the step's with its cause — the step's `onError` decides. **One level**: a Studio that calls Studios cannot be called, and none calls itself (orazaka-studio#62). |
 
+**Resume from a step** (orazaka-studio#63): `POST /api/v1/studios/runs/{id}/resume {"fromStep"}` starts a new run (`resumedFrom` names the origin) that keeps the outputs of every step outside the re-run set — the step asked for, every step that did not succeed, and their dependants — copied without consumption, so only the re-run steps are billed.
+
 ### 6.2 Templating — deliberately not Turing-complete
 
 `{{ … }}` resolves against a typed `RunScope` record holding `inputs`, `config`, `steps`, `item`
