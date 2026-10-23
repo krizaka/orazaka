@@ -205,6 +205,12 @@ function mcpTokenText() {
   const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-mcp-token-text.sql"), "utf8");
   psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
   console.log("orazaka_db: user_mcp_servers / platform_mcp_servers.auth_token are TEXT");
+/** The grounded-research tables, settings and (disabled) sources of ADR-087 slice 1 — idempotent, additive; research stays off. */
+function researchTables() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-research-tables.sql"), "utf8");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
+  console.log("orazaka_db: research_source, research_document, research_fetch, research_consent and research.* settings in place (off)");
 }
 
 /** The `service` rate-limit tier and the existing svc_* users moved onto it (ADR-083 slice 2) — idempotent. */
@@ -626,6 +632,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "runtime-config-admin") runtimeConfigAdmin();
     else if (command === "mcp-token-text") mcpTokenText();
     else if (command === "search-knowledge") searchKnowledge();
+    else if (command === "research-tables") researchTables();
     else if (command === "service-tier") serviceTier();
     else if (command === "webhooks") webhooks();
     else if (command === "automations") automations();
@@ -635,7 +642,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | runtime-config-admin | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {
