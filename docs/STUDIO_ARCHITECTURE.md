@@ -196,7 +196,7 @@ the anti-corruption boundary (ERR-127), and it is why the run path needs no defe
 ```java
 public record BlueprintStep(
     String id,                      // unique within the blueprint
-    StepKind kind,                  // CAPABILITY | KNOWLEDGE | CONNECTOR | APPROVAL | TRANSFORM
+    StepKind kind,                  // CAPABILITY | KNOWLEDGE | CONNECTOR | APPROVAL | TRANSFORM | STUDIO
     String featureKey,              // OPAQUE ref into orazaka_capabilities; required for CAPABILITY
     Set<String> dependsOn,
     Map<String, String> inputs,     // templated: {{inputs.photos}}, {{steps.brief.text}}
@@ -544,6 +544,9 @@ the admin console, validated at publish time, and interpreted at run time.
 | `CONNECTOR` | `job.automation.approved` → `ConnectorDispatcher`, answering on `evt.automation.telemetry` | Reuses `connector_credentials`. The step names a `connectorType`; the Studio service never sees a secret. |
 | `APPROVAL` | No execution — parks the run at `AWAITING_INPUT` | Renders `PlanApprovalCard` |
 | `TRANSFORM` | In-process, pure | Only declarative reshaping (pick/join/format). **No expression evaluation, no scripting.** |
+| `STUDIO` | A child run | Calls another **published** Studio (`studioKey`): a child run with its own id, no hold of its own (settled inside the parent's), its outputs become the step's (`{{steps.<out>.<key>}}`), its failure the step's with its cause — the step's `onError` decides. **One level**: a Studio that calls Studios cannot be called, and none calls itself (orazaka-studio#62). |
+
+**Resume from a step** (orazaka-studio#63): `POST /api/v1/studios/runs/{id}/resume {"fromStep"}` starts a new run (`resumedFrom` names the origin) that keeps the outputs of every step outside the re-run set — the step asked for, every step that did not succeed, and their dependants — copied without consumption, so only the re-run steps are billed.
 
 ### 6.2 Templating — deliberately not Turing-complete
 

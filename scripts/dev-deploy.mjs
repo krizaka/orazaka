@@ -175,6 +175,14 @@ function runResultCache() {
   console.log("orazaka_studio_db: studio_run result cache columns, index and setting in place");
 }
 
+/** The engine v2 run links: the parent of a run a STUDIO step called (orazaka-studio#62) and the run a resume starts from (#63) — idempotent, additive. */
+function runParent() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-studio-run-parent.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: studio_run.parent_run_id (+ index) and resumed_from in place");
+}
+
 /** The `service` rate-limit tier and the existing svc_* users moved onto it (ADR-083 slice 2) — idempotent. */
 function serviceTier() {
   const env = secrets();
@@ -590,6 +598,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "run-idempotency") runIdempotency();
     else if (command === "run-events") runEvents();
     else if (command === "run-result-cache") runResultCache();
+    else if (command === "run-parent") runParent();
     else if (command === "service-tier") serviceTier();
     else if (command === "webhooks") webhooks();
     else if (command === "automations") automations();
@@ -599,7 +608,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {
