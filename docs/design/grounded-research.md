@@ -24,7 +24,7 @@ A grounded answer goes through the existing pipeline. The new parts are in **bol
 | 7 | **Fetch & extract** | **`PageFetcher`** with **`SafeHttpClient`** | SSRF guard, robots, rate, size and time caps; extraction to text; the document is stored once in `research_document` (URL + hash), and every call writes `research_fetch`. |
 | 8 | **Ground the prompt** | `GroundingInterceptor` | The extracts go into the prompt as quoted, delimited **data** blocks (user role), each with its URL and hash. The system prompt requires a citation for every claim. |
 | 9 | Model | existing routing (`DynamicModelRouter`, per-step routing #54) | Produces the answer in the citation shape. |
-| 10 | **Verify** | **`CitationVerifierInterceptor`** (validation) | Quote found in the stored document? URL resolved? Unlisted URLs, repositories and statutes checked? Each failure downgrades the claim to `TO_VALIDATE` (mode `MARK`) or drops it (mode `STRICT`). |
+| 10 | **Verify** | **`CitationVerifierInterceptor`** (validation) | Quote found in the stored document, after normalisation (NFC, case folding, French typography: « » “ ” ’, U+202F/U+00A0, œ/æ)? URL resolved? Unlisted URLs, repositories and statutes checked? Each failure downgrades the claim to `TO_VALIDATE` (mode `MARK`) or drops it (mode `STRICT`). |
 | 11 | Contract | Studio `OutputContract` (#59) | The step's output must match the citation schema below, or the step fails as `EXECUTOR_FAULT`. |
 | 12 | Metering | `ChatSettlementListener` / job metering → billing | Tokens as `CHAT`; each search, lookup and fetch that is not a cache hit as `RESEARCH`/`CALL`. |
 
@@ -88,8 +88,8 @@ dev-deploy migration in the workspace.
 
 | Key | Default | Meaning |
 |:---|:---|:---|
-| `research.enabled` | `false` | master switch |
-| `research.max-searches` | `3` | per answer |
+| `research.enabled` | `false` | master switch; production stays off until SearXNG is validated |
+| `research.max-searches` | `3` | per answer, declared into the run budget of ADR-088 |
 | `research.max-fetches` | `8` | per answer |
 | `research.fetch.timeout-ms` | `10000` | connect + read |
 | `research.fetch.max-bytes` | `2097152` | 2 MB, before extraction |

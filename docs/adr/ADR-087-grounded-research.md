@@ -106,9 +106,10 @@ those four. It adds no second mechanism beside them.
   provider (a vendor is a value, never a type), its scope (global, pack, Studio or actor), allow and deny patterns on
   host and path, its freshness, its rate, and whether it needs consent. Details are in the
   [design](../design/grounded-research.md#data-model).
-- **Search defaults to a self-hosted SearXNG**, for sovereignty (AGPL-3.0, we run it unmodified as a separate service;
+- **Search defaults to a self-hosted SearXNG on dev only**, for sovereignty (AGPL-3.0, we run it unmodified as a separate service;
   our code only calls its HTTP API). **Brave Search API is the paid alternative** behind the same port, at $5 per 1,000
-  requests with $5 of monthly credit, read above. The administrator chooses per source. Hosting SearXNG costs one small
+  requests with $5 of monthly credit, read above. The administrator chooses per source. **In production, search is off
+  by default** until SearXNG's hosting and upstream limits are validated (CTO review of this ADR). Hosting SearXNG costs one small
   container, an amount **TO VALIDATE** on the dev platform. Whether SearXNG's upstream engines rate-limit or block a single
   instance is **TO VALIDATE** with a load test: it is the reason the paid option exists.
 - **Fetch and extract**: readability-style extraction to text with the main content kept, over HTTPS (HTTP only if the
@@ -137,7 +138,10 @@ those four. It adds no second mechanism beside them.
   A claim without a citation is **removed** (mode `STRICT`) or **kept and marked `TO_VALIDATE`** (mode `MARK`, the
   default). It is never asserted. The mode is a setting, per source scope.
 - **The verifier is deterministic, not another model**. For each citation, it reads the cached document by its hash (the
-  same bytes the answer was built from), normalises whitespace, case and quotes, and checks that the passage appears. It
+  same bytes the answer was built from), normalises the text and checks that the passage appears. The normalisation is Unicode NFC, then case folding, then
+  French typography: « » and “ ” become plain quotes, ’ becomes ', the narrow and ordinary no-break spaces (U+202F,
+  U+00A0) become a space (so « : » before ; : ! ? matches), the ligatures œ and æ become oe and ae, and runs of whitespace
+  collapse. Golden tests cover French and English. It
   checks that the URL resolved (2xx, final URL after redirects recorded). It also scans the answer text for URLs,
   repository names (`owner/repo`) and statute references that are **not** among the citations: each one is checked
   (resolved, or looked up on GitHub) or becomes `TO_VALIDATE`. A failed check downgrades the claim; it never rewrites it.
@@ -180,7 +184,9 @@ those four. It adds no second mechanism beside them.
 - **Metering**: a new billable capability `RESEARCH` in the pricebook, unit `CALL`, with `model_name` set to the provider
   key (`searxng`, `brave`, `fetch`, `canlii`…). A fetch, a search and an official lookup each cost credits the
   administrator sets. The model tokens of the grounded answer are billed as today (`CHAT`, `KILOTOKEN`). A cache hit costs
-  0. The hold covers the worst case: `research.max-searches` plus `research.max-fetches` per answer.
+  0. The hold covers the worst case: `research.max-searches` plus `research.max-fetches` per answer. These caps and the
+  hold are **the per-run budget of ADR-088** (krizaka/orazaka#389), not a second mechanism: grounded research
+  declares its worst case into that budget, and the run's budget is what stops it.
 
 ### 6. Evaluation
 
