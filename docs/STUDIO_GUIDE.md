@@ -36,8 +36,7 @@ Use `GET /api/v1/studios/runs/{runId}/events` to follow one run, or
 `GET /api/v1/studios/runs/events` to follow the caller's in-flight runs on one SSE connection. Each
 `run` event carries the current run snapshot; the terminal `done` event carries the final snapshot.
 `Last-Event-ID` resumes a per-run stream from its durable, monotonically increasing event number.
-Idle streams send a 15-second heartbeat. A stream is one connection, not a charge for each event,
-and its concurrent-connection limit is configured per actor in Studio's database.
+Idle streams send a 15-second heartbeat; the open streams per actor are a database setting.
 
 For server-to-server completion notifications, configure an endpoint in **Settings → Webhooks** or
 use `POST /api/v1/studios/webhooks`. The endpoint URL must use HTTPS and resolve to public addresses.
