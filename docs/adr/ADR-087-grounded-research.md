@@ -134,21 +134,47 @@ those four. It adds no second mechanism beside them.
 
 - **Every factual claim of a grounded answer carries its citation**:
   - the URL it was read from;
-  - the **quoted passage** (verbatim, ≤ 300 characters);
+  - the **quoted passage** (verbatim, ≤ `research.quote.max-chars`, 300 by default);
   - when it was fetched;
   - the hash of the fetched content.
   A claim without a citation is **removed** (mode `STRICT`) or **kept and marked `TO_VALIDATE`** (mode `MARK`, the
   default). It is never asserted. The mode is a setting, per source scope.
-- **The verifier is deterministic, not another model**. For each citation, it reads the cached document by its hash (the
-  same bytes the answer was built from), normalises the text and checks that the passage appears. The normalisation is Unicode NFC, then case folding, then
-  French typography: « » and “ ” become plain quotes, ’ becomes ', the narrow and ordinary no-break spaces (U+202F,
-  U+00A0) become a space (so « : » before ; : ! ? matches), the ligatures œ and æ become oe and ae, and runs of whitespace
-  collapse. Golden tests cover French and English. It
-  checks that the URL resolved (2xx, final URL after redirects recorded). It also scans the answer text for URLs,
-  repository names (`owner/repo`) and statute references that are **not** among the citations: each one is checked
-  (resolved, or looked up on GitHub) or becomes `TO_VALIDATE`. A failed check downgrades the claim; it never rewrites it.
+- **The verifier is deterministic, not another model.** It runs two checks, and a claim is `VERIFIED` only when both
+  hold for one of its citations.
+  1. **Provenance.** The citation names a document **this answer read**: a document of the request's own research
+     session, through a source it was authorised to use (see the cache below). The quote appears in it once both are
+     normalised:
+     - Unicode NFC, then case folding;
+     - French typography: « » and “ ” become plain quotes, ’ becomes ', the narrow and ordinary no-break spaces
+       (U+202F, U+00A0) become a space (so « : » before ; : ! ? matches), the ligatures œ and æ become oe and ae;
+     - dashes, the ellipsis, and runs of whitespace.
+  2. **Support, as far as it can be checked without a model.** A quote can be genuine and still not say what the claim
+     says: the invented 14-day rule could cite a real, unrelated passage. So every **number, date and named
+     reference** of the claim must appear in its quoted passage, or in the cited document's own reference: its title,
+     or the heading of the section the quote is in. This covers article numbers, statute names and repository names.
+     « 14 jours … Loi sur la protection du consommateur » citing a passage that says « trente jours » of another
+     statute stays `TO_VALIDATE` (`UNSUPPORTED`).
+  `VERIFIED` therefore means *sourced and consistent with its source on every checkable fact*. It does not mean
+  « a lawyer agrees ». That is why legal and fiscal answers keep `reviewStatus` and the products show the quote next to
+  the claim. A model that judges entailment may be added after these checks, in slice 7, but **only to downgrade** a
+  claim, never to upgrade one.
+- **The answer is rendered from the claims, never taken from the model.** A model's free prose could assert what no
+  claim carries, or repeat a claim the verifier rejected. The `answer` that leaves the engine is built by the verifier
+  from the claims after verification:
+  - `VERIFIED` claims are written as they are;
+  - `TO_VALIDATE` claims are prefixed with `[TO_VALIDATE]` (mode `MARK`) or absent (mode `STRICT`);
+  - an answer with no claims is empty.
+  The model's own `answer` text is only scanned for references (below), never served.
+- **Unlisted references.** The verifier scans the model's prose for URLs, repository names (`owner/repo`) and statute
+  references that no verified claim covers. Each one becomes a `TO_VALIDATE` line (`UNLISTED_REFERENCE`). Once the
+  lookups exist (slice 4), a check of such a reference is a research call charged to the same budget as every other
+  call (§5).
 - **The shape is a step output contract** (orazaka-studio#59), so a run whose output breaks it fails like any other
   contract breach. It is written within the keywords `OutputContract` enforces; the schema is in the design.
+- **Nothing unverified reaches a client.** A grounded request is never streamed token by token. The engine buffers the
+  model's answer, verifies it, and then sends it in one piece. A request that asks for a stream gets the same verified
+  answer as a single event. The semantic cache (ai-engine#40) neither answers nor stores a grounded request: its answer
+  depends on what the sources say today.
 
 ### 4. Security
 
@@ -167,28 +193,52 @@ those four. It adds no second mechanism beside them.
   - the user agent is honest (`OrazakaResearch/<version> (+https://www.orazaka.com)`).
 - **Audit**: every search and fetch writes a `research_fetch` row (who, which source, host, path hash, status, bytes,
   duration, run or chat id). Queries and page contents never go in logs (ADR-064). Retention follows the run's data class.
-- **Loi 25**: no personal information goes to an external search without consent and a purpose. A query carries the
-  data class of its context: a Studio run's `DataClass`, or the chat's. A query from a `SENSITIVE` or `REGULATED`
-  context goes only to sources flagged `allowsPersonalData` that the actor has consented to. The consent is a recorded
-  row with its purpose, as the Studio's install consent is. Otherwise the search is refused with a reason the product
-  can show. The self-hosted search never forwards the actor's identity; what SearXNG sends upstream is the query alone,
-  and that is still an external disclosure, so the same rule applies to it.
+- **Loi 25**: no personal information leaves the engine without consent and a purpose, **whatever the data class**.
+  Retention classes (ADR-065) say how long we keep a text, not whether it names someone, so an ordinary chat is not
+  exempt. The rule applies to every **user-derived** disclosure to a third party:
+  - a search query: SearXNG forwards it to its upstream engines, Brave receives it;
+  - a URL whose path or query was built from the user's text.
+  Such a disclosure needs a recorded `research_consent` for that source, with its purpose, as the Studio's install
+  consent is recorded. Without one, the call is refused with `CONSENT` and a reason the product can show.
+  - **Exempt**, because nothing personal is sent: fetching an allowlisted document chosen by an adapter from a
+    reference (« art. 1904 C.c.Q. », a repository name), and fetching a URL that a search result returned.
+  - **A defined minimisation may replace consent** only once it exists and is tested. That means a query rewritten by
+    the engine from the claims it needs, with the user's own words, names and identifiers removed. It is not part of
+    slice 3. Until then, consent is required.
+  Acceptance includes a `STANDARD` chat question that names a person: without consent, nothing is searched.
 - **Secrets**: MCP and provider credentials move out of `user_mcp_servers.auth_token` into encrypted storage (the existing
   encryption at rest, ADR-054), referenced by id.
 
 ### 5. Cost and caching
 
-- **Cache**: a fetched document is stored once, keyed by **URL + content hash**: `research_document` holds the extracted
-  text, ETag and Last-Modified. Each source has a freshness setting (official texts: 7 days; the web: 1 day), and a
-  refetch inside it is a cache hit. Search results are cached by `(provider, normalised query)` for the source's
-  freshness, and only when the provider's terms allow storing them (Brave: storage rights depend on the plan, so the
-  default is no storage).
-- **Metering**: a new billable capability `RESEARCH` in the pricebook, unit `CALL`, with `model_name` set to the provider
-  key (`searxng`, `brave`, `fetch`, `canlii`…). A fetch, a search and an official lookup each cost credits the
-  administrator sets. The model tokens of the grounded answer are billed as today (`CHAT`, `KILOTOKEN`). A cache hit costs
-  0. The hold covers the worst case: `research.max-searches` plus `research.max-fetches` per answer. These caps and the
-  hold are **the per-run budget of ADR-088** (krizaka/orazaka#389), not a second mechanism: grounded research
-  declares its worst case into that budget, and the run's budget is what stops it.
+- **Cache, scoped to the source.** A fetched document is stored by **source + URL + content hash** (`research_document`):
+  the extracted text, the final URL, ETag and Last-Modified.
+  - A hit is served only to a request **through the same source**, after that source's **current** policy (allow and
+    deny patterns, scope, consent) has been applied to the URL again.
+  - A hit is served only while it is younger than that source's **current** freshness, not the freshness it was stored
+    with.
+  - A redirected document is stored under the source that authorised every hop.
+  - An actor-scoped or credentialed source's documents serve only that source, so a private document read with one
+    actor's credentials never answers another actor's lookup or citation.
+  - The same bytes may be stored twice under two sources: deduplication is not worth a leak.
+  - Each source has a freshness setting (official texts: 7 days; the web: 1 day).
+- **Search results** are cached by **source** + normalised query, never by provider: two SearXNG sources with different
+  endpoints or policies are not interchangeable. A change to a source's configuration invalidates its cache. A search
+  hit goes through the current scope, consent and allowlist checks before it is served, and it is stored only when the
+  provider's terms allow storing it (Brave: storage rights depend on the plan, so the default is no storage).
+- **One budget for every call.** Every billable research operation counts against one per-answer cap,
+  `research.max-calls`, and against **the run budget of ADR-088** (krizaka/orazaka#389): no second mechanism. The
+  operations are:
+  - a search, a fetch, an official or GitHub lookup;
+  - the verifier's check of an unlisted reference;
+  - a lookup tool called by an agent loop.
+  `research.max-searches` and `research.max-fetches` stay as narrower limits inside it. The hold is sized at
+  `research.max-calls` × the highest `RESEARCH` price among the enabled sources, plus the tokens. When the budget is
+  spent, the remaining references stay `TO_VALIDATE` (`BUDGET`); they are never checked on credit. Acceptance includes
+  an answer with fifty repository references: the calls stop at the cap and the bill never exceeds the hold.
+- **Metering**: a new billable capability `RESEARCH` in the pricebook, unit `CALL`, with `model_name` set to the
+  provider key (`searxng`, `brave`, `fetch`, `canlii`, `github`…). The administrator sets the price of each call. The
+  model tokens of the grounded answer are billed as today (`CHAT`, `KILOTOKEN`). A cache hit costs 0.
 
 ### 6. Evaluation
 
@@ -196,8 +246,10 @@ those four. It adds no second mechanism beside them.
   The first one is the legal-review brief of krizaka/krizaka-com#365. A grounded run must contain:
   - **no repository that does not exist**, checked against the GitHub API;
   - **no URL that does not resolve**;
-  - **no misattributed rule**: every statement about a statute carries a citation whose quote is found in the cited text,
-    or is marked `TO_VALIDATE`.
+  - **no misattributed rule**: each expected proposition (statute, provision, rule) is asserted only by a claim whose
+    citation is that provision, with the numbers and names of the claim found in the quote or the document's reference.
+    One case pairs a genuine quote with a wrong claim (the right passage, the wrong number or statute): it must stay
+    `TO_VALIDATE`.
 - The offline lane checks the contract and the verifier on recorded documents. The live lane runs on the protected
   runner, against live sources.
 - **A regression on the model alone is recorded too**: the same case without grounding must still show the invention.
