@@ -345,6 +345,7 @@ test("the research tables (ADR-087 slice 1) are additive, idempotent, off by def
   assert.ok(sql.includes("('research.enabled', 'false', 'boolean'"));
   assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING/);
   assert.match(sql, /ON CONFLICT \(source_key\) DO NOTHING/);
+  assert.ok(sql.includes("('CitationVerifierInterceptor','Citation Verifier Interceptor',12, FALSE,"));
   // Foreign keys say ON DELETE; no statement drops, deletes or updates rows.
   assert.doesNotMatch(sql.replace(/ON DELETE (SET NULL|CASCADE)/g, ""), /\b(DROP|DELETE|UPDATE)\b/);
   assert.doesNotMatch(sql, /, TRUE\)\s*(,|ON CONFLICT)/);

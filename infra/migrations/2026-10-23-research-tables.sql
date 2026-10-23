@@ -105,3 +105,8 @@ INSERT INTO research_source (source_key, kind, provider, base_url, allow_pattern
 ('registraire', 'OFFICIAL', 'registraire', 'https://www.registreentreprises.gouv.qc.ca', '{www.registreentreprises.gouv.qc.ca/**}', 604800, FALSE),
 ('github-krizaka', 'CODE_HOST', 'github', 'https://api.github.com', '{api.github.com/repos/krizaka/**,github.com/krizaka/**}', 3600, FALSE)
 ON CONFLICT (source_key) DO NOTHING;
+
+-- The verifier of grounded research (ADR-087 slice 2): OFF until the grounding flag of slice 5 turns it on per request.
+INSERT INTO pipeline_interceptor_config (interceptor_key, display_label, execution_order, is_enabled, description) VALUES
+('CitationVerifierInterceptor','Citation Verifier Interceptor',12, FALSE, 'Checks every claim of a grounded answer against what research read (ADR-087). OFF by default.')
+ON CONFLICT (interceptor_key) DO NOTHING;
