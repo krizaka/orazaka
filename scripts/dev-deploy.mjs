@@ -9,7 +9,7 @@
  *   node scripts/dev-deploy.mjs analytics        # the analytics tables, kinds and settings v1 (ADR-081)
  *   node scripts/dev-deploy.mjs service-tier     # the `service` rate-limit tier, svc_* users moved onto it (ADR-083)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
- *   node scripts/dev-deploy.mjs persona [eric|mira]  # Eric, the demo persona (a plain user, free tier) → @dev APP_QA_ORAZAKA_PERSONA_*, never printed; sign-up stays closed
+ *   node scripts/dev-deploy.mjs persona [eric|mira|krizaka]  # a plain user, free tier: Eric/Mira the demo personas, Krizaka the company as an SME customer → @dev APP_QA_ORAZAKA_<NAME>_*, never printed; sign-up stays closed
  *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
  *   node scripts/dev-deploy.mjs broker      # the TLS RabbitMQ Droplet in the tor1 VPC (once; idempotent)
@@ -231,9 +231,13 @@ export function personaAccount(name = "eric") {
   const personas = {
     eric: { username: "Eric", email: "eric.morel@example.com", secret: "PERSONA" },
     mira: { username: "Mira", email: "mira.tremblay@orazaka.test", secret: "MIRA" },
+    // The company itself as a customer (Oussama, 2026-10-22): Krizaka is an SME, it uses Orazaka the way an SME would —
+    // a plain user on the free plan, in French — to see its own products from the inside. Not a demo persona, not a
+    // service account: the products keep their own svc_<product> keys (one key, one plan, one usage per product).
+    krizaka: { username: "Krizaka", email: "orazaka@krizaka.com", secret: "KRIZAKA", language: "fr" },
   };
   const p = personas[name];
-  if (!p) throw new Error(`unknown persona: ${name} (eric | mira)`);
+  if (!p) throw new Error(`unknown persona: ${name} (eric | mira | krizaka)`);
   return { key: "persona", ...p, tier: "free", roles: ["ROLE_USER"] };
 }
 
@@ -242,7 +246,7 @@ export function seedSql(accounts) {
   const rows = accounts.map(
     (a) =>
       `INSERT INTO users (id, username, password_hash, email, enabled, preferences, rate_limit_tier)
-       VALUES (gen_random_uuid()::text, ${q(a.username)}, ${q(a.hash)}, ${q(a.email)}, true, '{"language":"en"}', ${q(a.tier)})
+       VALUES (gen_random_uuid()::text, ${q(a.username)}, ${q(a.hash)}, ${q(a.email)}, true, ${q(JSON.stringify({ language: a.language === "fr" ? "fr" : "en" }))}, ${q(a.tier)})
        ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash, enabled = true,
          email = EXCLUDED.email, rate_limit_tier = EXCLUDED.rate_limit_tier;
        ${a.roles
