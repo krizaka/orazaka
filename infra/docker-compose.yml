@@ -132,7 +132,7 @@ services:
   # default localhost:1025). Locally every message lands here instead of a real
   # inbox: verification and password-reset links are read at http://localhost:8025.
   mailpit:
-    image: axllent/mailpit:v1.30
+    image: axllent/mailpit:v1.31
     container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-mailpit
     restart: always
     ports:
