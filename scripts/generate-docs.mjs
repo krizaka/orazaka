@@ -105,9 +105,7 @@ function frontmatter(title, description, category, order) {
     "",
     `# ${title}`,
     "",
-    "> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. " +
-      "Run `orazaka docs build` to refresh.",
-    "",
+    // No banner for the reader: `generated: true` above says it to the tools, and the site shows « generated » itself.
   ].join("\n");
 }
 
@@ -2619,14 +2617,11 @@ const mdPacks = (p, cli, catalog) => {
   lines.push(
     `## The reference packs (${code(p.repo)})`,
     "",
-    "| Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |",
-    "|:---|:---|:---|:---|:---|:---|:---|:---|",
+    // Three columns: the cards above carry tier, distribution and class; this is the index of what to install.
+    "| Pack | Version | Studios |",
+    "|:---|:---|:---|",
   );
-  for (const x of p.packs) {
-    lines.push(
-      `| ${code(x.key)} | ${x.version} | ${x.tier} | ${x.distribution} | ${x.regulatoryClass} | ${x.onShelf ? "yes" : "no"} | ${x.studios.map(code).join(", ") || "—"} | ${x.capabilities.length ? x.capabilities.map(code).join(", ") + (x.workers.length ? ` (worker ${x.workers.map(code).join(", ")})` : "") : "—"} |`,
-    );
-  }
+  for (const x of p.packs) lines.push(`| ${code(x.key)} | ${x.version} | ${x.studios.map(code).join(" · ") || "—"} |`);
   const packCli = cli.filter((c) => (c.top === "pack" || c.top === "studio") && !c.isTop);
   if (packCli.length) {
     lines.push("", "## From the terminal", "", "| Command | What it does |", "|:---|:---|");

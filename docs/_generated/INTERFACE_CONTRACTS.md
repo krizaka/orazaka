@@ -8,8 +8,6 @@ generated: true
 
 # Interface Contracts (generated)
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 ## `orazaka-core`
 
 **Inbound ports**

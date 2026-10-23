@@ -8,8 +8,6 @@ generated: true
 
 # Architecture Reference
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 Ports & Adapters: dependencies point toward the core. Each module has one **role** — one ring of the hexagon, outermost first — read from the code by the rule beside it.
 
 | Role | Rule | Modules |

@@ -8,8 +8,6 @@ generated: true
 
 # Repositories
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 Orazaka is published as **21 repositories** in the [`krizaka`](https://github.com/krizaka) organisation: one per component, plus the workspace [`orazaka`](https://github.com/krizaka/orazaka) that assembles them (governance contract, `orazaka.workspace.json`, local infrastructure, end-to-end tests, these docs).
 
 ```bash

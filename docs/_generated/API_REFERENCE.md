@@ -8,8 +8,6 @@ generated: true
 
 # API Reference
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 
 **Access** is read from each service's `SecurityConfig`, most-specific matcher first — the same
 order Spring Security applies. `SERVICE` is the machine-to-machine authority required on

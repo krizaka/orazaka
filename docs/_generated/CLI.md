@@ -8,8 +8,6 @@ generated: true
 
 # CLI Reference
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 The `orazaka` CLI is the single orchestrator of the platform: it clones and configures the
 workspace, starts the infrastructure, runs the whole stack, tests it, builds these docs and
 installs packs. No shell script to remember — one command per intent.
