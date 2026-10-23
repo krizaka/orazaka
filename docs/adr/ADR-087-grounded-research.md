@@ -38,7 +38,8 @@ things up, read the source, and cite it, for every product, configured by the ad
 |:---|:---|:---|
 | Interceptor pipeline | `orazaka-interceptors`; order and on/off in `pipeline_interceptor_config` (`30-jobs-config.sql:280`) | DB-driven chain of `PromptContextInterceptor`s before and after the model. This is the extension point. |
 | `McpInterceptor` | `interceptor/enrichment/McpInterceptor.java` | Calls `McpOrchestrator.resolveExternalContext()` and prepends the result as a **`SystemMessage("MCP Context: …")`**. |
-| `DefaultMcpOrchestrator` | `orazaka-tools/…/adapter/mcp/DefaultMcpOrchestrator.java` | A plain HTTP `GET` on each `REMOTE` platform server and each user server (`platform_mcp_servers`, `user_mcp_servers`), body concatenated. It does not speak the MCP protocol (no `initialize`, no `tools/list`, no `tools/call`), and errors become an empty string. |
+| `DefaultMcpOrchestrator` (the context path) | `orazaka-tools/…/adapter/mcp/DefaultMcpOrchestrator.java` | A plain HTTP `GET` on each `REMOTE` platform server and each user server (`platform_mcp_servers`, `user_mcp_servers`), bodies concatenated for `McpInterceptor`. It does not speak MCP, and errors become an empty string. |
+| `McpClientFactory` (the tool path) | `orazaka-core/…/pipeline/McpClientFactory.java`, called by `EnginePipelineBridge` | A real MCP client (Spring AI MCP SDK): SSE for remote and user servers, stdio for `LOCAL` platform rows. It opens one client per server per request, and attaches **every** server's tools to every non-Ollama request, with no effect class (read-only or mutating). |
 | `McpService` | `orazaka-tools/…/service/McpService.java` | `getMcpTools()` returns `List.of()` and `getMcpContext()` returns `""`: a stub. |
 | `ToolInterceptor` | `interceptor/tooling/ToolInterceptor.java` | Attaches tools to a non-streaming request. The two "specialised" tools are chosen by keywords (`"image"`, `"audio"`, `"voice"`…). |
 | `DefaultToolRegistry` | `orazaka-tools/…/adapter/mcp/DefaultToolRegistry.java` | Three tools. **`searchWeb` is not a web search**: it queries the knowledge service's corpus (`knowledgeService.searchSources`). `analyzePoster` and `analyzeAudioExtract` return canned strings. |
@@ -51,8 +52,7 @@ things up, read the source, and cite it, for every product, configured by the ad
 | Mutable secret store | `user_mcp_servers.auth_token VARCHAR(1000)` | **Plain text.** |
 
 So the engine has the right extension points (pipeline, tools, cache, contract, pricebook, settings), but no live
-research. Four of the pieces above are misleading: `searchWeb` is a corpus query, the MCP client is a `GET`, its result is
-injected as a system instruction, and MCP tokens are stored in clear. This ADR builds on the extension points and corrects
+research. Some of the pieces above are misleading or unsafe. `searchWeb` is a corpus query. There are two MCP paths: the context path is a `GET` whose result is injected as a system instruction, while the tool path is a real client that offers every tool with no effect class. And MCP tokens are stored in clear. This ADR builds on the extension points and corrects
 those four. It adds no second mechanism beside them.
 
 ### What we read outside the code (sources opened 2026-10-23)
@@ -98,7 +98,7 @@ those four. It adds no second mechanism beside them.
 - A product does nothing beyond the flag or the step. Nothing is built in a product's BFF.
 - **Search, fetch, official sources, GitHub and MCP are tools of `orazaka-tools`**, each behind a port: `SearchProvider`,
   `PageFetcher`, `OfficialSource`, `CodeHost`. They are registered in `DefaultToolRegistry`, so the model can call them in
-  an agent loop as well as through the interceptor. There is no second tool registry and no second MCP client.
+  an agent loop as well as through the interceptor. There is no second tool registry, and the MCP client is `McpClientFactory`, the one that already speaks MCP.
 
 ### 2. Sources are data the administrator manages
 
@@ -123,8 +123,10 @@ those four. It adds no second mechanism beside them.
     validated. Meanwhile, a claim that needs them comes back `TO VALIDATE` with the official URL to open.
 - **GitHub**: the API, through the organisation's GitHub App installation token, read-only (repositories, files,
   issues). It is the source of truth for « does this repository exist ».
-- **MCP servers**: through the existing `platform_mcp_servers` / `user_mcp_servers` rows. `DefaultMcpOrchestrator`
-  becomes a real MCP client (Streamable HTTP: `initialize`, `tools/list`, `tools/call`), and its tools join the registry.
+- **MCP servers**: through the existing `platform_mcp_servers` / `user_mcp_servers` rows and the existing client
+  (`McpClientFactory`). The `GET` context path of `DefaultMcpOrchestrator` is retired: MCP context comes from the
+  client (resources or a tool result), as data. The client gains Streamable HTTP beside SSE and stdio, and the tools
+  carry an effect class.
   The pack v2 `mcpServers:` field (orazaka-packs#107, with `toolEffects` from #24) declares them, and **grounded research
   only calls `READ_ONLY` tools**.
 
@@ -220,7 +222,7 @@ those four. It adds no second mechanism beside them.
 - Four defects of the current code are fixed on the way:
   - `searchWeb` is renamed to what it is (`searchKnowledge`);
   - MCP content is no longer a system instruction;
-  - the MCP client speaks MCP;
+  - one MCP client, with effect classes, instead of a `GET` beside it;
   - MCP tokens are encrypted at rest.
   The first two change behaviour, and their tests change with them.
 - New tables and settings live with the engine's other tables (`30-jobs-config.sql`, then a dev-deploy migration). A
@@ -250,4 +252,5 @@ test-first, and each ships its README and generated docs.
    flag, `RESEARCH` pricebook, holds.
 6. **The console** (web-client): sources, settings, audit.
 7. **Evaluation and the first Studio** (packs): the golden cases, then a grounded legal-brief Studio.
-8. **MCP client** (ai-engine, with packs#107): real MCP over Streamable HTTP, `READ_ONLY` tools only.
+8. **One MCP client** (ai-engine, with packs#107): retire the `GET` context path; `McpClientFactory` gains Streamable
+   HTTP and effect classes; grounded research is offered `READ_ONLY` tools only.

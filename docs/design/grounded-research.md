@@ -222,7 +222,7 @@ Each slice is one pull request per repository. Each is test-first, with its READ
 | 5 | orazaka-job-service, krizaka-billing, orazaka-ai-engine | Capability `orazaka.core.research.grounded`, `grounding` flag, `RESEARCH` pricebook, holds sized on the caps | A grounded run is billed tokens + non-cached calls exactly once; latency and cost measured on 20 questions and written in the PR |
 | 6 | orazaka-web-client | Console: sources, audit, settings keys | Component and API-mocked tests; dark and light; FR/EN; only `@krizaka/ui` |
 | 7 | orazaka-packs | Golden cases (legal brief of krizaka-com#365 first), then a grounded legal-brief Studio | Grounded: no non-existent repository, no unresolved URL, no statute claim without a found quote or `TO_VALIDATE`. Ungrounded control: the invention is still observed |
-| 8 | orazaka-ai-engine (+ packs#107) | `DefaultMcpOrchestrator` speaks MCP (Streamable HTTP: `initialize`, `tools/list`, `tools/call`); only `READ_ONLY` tools are offered to grounded research | Integration test against a local MCP test server; a `MUTATE` tool is never offered in a grounded call |
+| 8 | orazaka-ai-engine (+ packs#107) | Retire the `GET` context path of `DefaultMcpOrchestrator`; `McpClientFactory` (the client that already speaks MCP over SSE and stdio) gains Streamable HTTP, a client reused across requests, and an effect class per tool (`READ_ONLY`, `DRAFT`, `MUTATE_WITH_APPROVAL`); grounded research is offered `READ_ONLY` tools only | Integration test against a local MCP test server; a `MUTATE` tool is never offered in a grounded call; no `GET` to an MCP URL remains |
 
 ## Open points (TO VALIDATE)
 
