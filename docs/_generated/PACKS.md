@@ -8,8 +8,6 @@ generated: true
 
 # Packs & Studios
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 A **Studio** is a business workflow — a versioned DAG of steps (model calls, transforms, human approvals,
 connectors) with its own input form. A **pack** is a directory that ships Studios: a `pack.yaml` manifest,
 its translations, the blueprints and, for a `WORKER` pack, its own worker. Installing a pack writes data —
@@ -1071,7 +1069,7 @@ capability rows, a price, catalogue entries — and changes no code.
    "inputs": [
     {
      "key": "documentBase64",
-     "title": "Le fichier PDF"
+     "title": "Le document"
     },
     {
      "key": "expectedIssuer",
@@ -1343,19 +1341,19 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 
 ## The reference packs (`orazaka-packs`)
 
-| Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |
-|:---|:---|:---|:---|:---|:---|:---|:---|
-| `data-analytics` | 1.6.0 | DATA | OSS | STANDARD | yes | `data-driven-ui`, `video-understanding`, `creator-suggestions` | — |
-| `document-validation` | 1.7.3 | WORKER | CLOUD | SENSITIVE | yes | `document-authenticity`, `compliance-check` | `orazaka.validation.document.screen`, `orazaka.validation.document.signals`, `orazaka.validation.document.assemble` (worker `orazaka-worker-validation`) |
-| `echo-toolkit` | 1.2.0 | WORKER | OSS | STANDARD | yes | `echo-reverse` | `orazaka.echo.text.reverse` (worker `orazaka-worker-echo`) |
-| `media-safety` | 1.2.0 | WORKER | CLOUD | SENSITIVE | no | `media-safety` | `orazaka.safety.media.assess` (worker `orazaka-worker-safety`) |
-| `message-authenticity` | 1.3.0 | WORKER | CLOUD | SENSITIVE | no | `message-authenticity` | `orazaka.message.authenticity.read` (worker `orazaka-worker-authenticity`) |
-| `orazaka-media` | 1.13.0 | DATA | OSS | STANDARD | yes | `image-generation`, `art-golden-hour`, `art-miniature`, `art-still-life`, `art-montreal-night`, `video-generation`, `cinematic-treatment`, `cinematic-critique`, `cinematic-script`, `cinematic-cut`, `video-with-sound`, `video-sound`, `speech-synthesis`, `image-analysis`, `audio-analysis`, `video-analysis` | — |
-| `outbound-prospection` | 1.3.0 | DATA | OSS | STANDARD | yes | `outbound-prospection`, `lead-research`, `followup-sequences` | — |
-| `profile-photo-check` | 1.2.0 | WORKER | CLOUD | SENSITIVE | no | `profile-photo-check` | `orazaka.photo.profile.inspect`, `orazaka.photo.profile.assess` (worker `orazaka-worker-photo`) |
-| `realestate-studio` | 1.3.0 | DATA | OSS | STANDARD | yes | `realestate-reels` | — |
-| `trade-showcase` | 1.2.0 | DATA | OSS | STANDARD | no | `trade-showcase` | — |
-| `bien-etre` | 1.6.0 | DATA | CLOUD | REGULATED | yes | `guided-journaling`, `session-preparation`, `mood-tracking`, `session-summary` | — |
+| Pack | Version | Studios |
+|:---|:---|:---|
+| `data-analytics` | 1.6.0 | `data-driven-ui` · `video-understanding` · `creator-suggestions` |
+| `document-validation` | 1.7.3 | `document-authenticity` · `compliance-check` |
+| `echo-toolkit` | 1.2.0 | `echo-reverse` |
+| `media-safety` | 1.2.0 | `media-safety` |
+| `message-authenticity` | 1.3.0 | `message-authenticity` |
+| `orazaka-media` | 1.13.0 | `image-generation` · `art-golden-hour` · `art-miniature` · `art-still-life` · `art-montreal-night` · `video-generation` · `cinematic-treatment` · `cinematic-critique` · `cinematic-script` · `cinematic-cut` · `video-with-sound` · `video-sound` · `speech-synthesis` · `image-analysis` · `audio-analysis` · `video-analysis` |
+| `outbound-prospection` | 1.3.0 | `outbound-prospection` · `lead-research` · `followup-sequences` |
+| `profile-photo-check` | 1.2.0 | `profile-photo-check` |
+| `realestate-studio` | 1.3.0 | `realestate-reels` |
+| `trade-showcase` | 1.2.0 | `trade-showcase` |
+| `bien-etre` | 1.6.0 | `guided-journaling` · `session-preparation` · `mood-tracking` · `session-summary` |
 
 ## From the terminal
 

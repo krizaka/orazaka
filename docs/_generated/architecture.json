@@ -4815,7 +4815,7 @@
           "inputs": [
             {
               "key": "documentBase64",
-              "title": "Le fichier PDF"
+              "title": "Le document"
             },
             {
               "key": "expectedIssuer",

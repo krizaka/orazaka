@@ -8,8 +8,6 @@ generated: true
 
 # Jobs, Schedules & Automation
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 Three mechanisms run work in the background, each with one owner:
 
 - **The job plane** (`orazaka-job-service`) — asynchronous AI work: a capability is published as a job on

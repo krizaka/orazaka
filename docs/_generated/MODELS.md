@@ -8,8 +8,6 @@ generated: true
 
 # Supported Models
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 ## Local first
 
 Orazaka supports **37 models**: **28 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **9 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.

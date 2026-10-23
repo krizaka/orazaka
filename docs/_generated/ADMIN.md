@@ -8,8 +8,6 @@ generated: true
 
 # Administration
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 Everything commercial and operational in Orazaka is **data an administrator edits** — models, the
 interceptor pipeline, capabilities, MCP servers, plans, prices, wallets, Studios — never a redeploy. An
 administrator is an account holding `ROLE_ADMIN`, granted by the identity service; every
