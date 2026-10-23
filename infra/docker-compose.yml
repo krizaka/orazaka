@@ -7,13 +7,17 @@
 #   • Apps (router, workers, web, admin) run as NATIVE processes via `orazaka dev`
 #     — they are not services here.
 # Brought up by `orazaka start`. Ports bound to loopback for host-run E2E.
+#   • Names and host ports come from the environment, today's values as defaults (orazaka#385):
+#     COMPOSE_CONTAINER_PREFIX (orazaka), POSTGRES_PORT, REDIS_PORT, RABBITMQ_PORT, RABBITMQ_MGMT_PORT,
+#     JAEGER_UI_PORT, OTLP_HTTP_PORT, MAILPIT_SMTP_PORT, MAILPIT_UI_PORT, LAGO_API_PORT, LAGO_FRONT_PORT.
+#     A second stack beside the first: `docker compose -p <name>` with another prefix and other ports.
 # ==============================================================================
 
 services:
   # ── PostgreSQL with pgvector (write model + read projections + outbox) ──────
   db-vector:
     image: ankane/pgvector:latest
-    container_name: orazaka-db-vector
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-db-vector
     restart: always
     environment:
       POSTGRES_DB: ${DB_NAME:-orazaka_db}
@@ -64,11 +68,11 @@ services:
   # ── Redis (cache / read projections / rate-limit counters) ──────────────────
   redis:
     image: redis:8-alpine
-    container_name: orazaka-redis
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-redis
     restart: always
     # Loopback-only publish for host-run E2E tests (E2eRedisClient → localhost:6379).
     ports:
-      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     security_opt:
       - no-new-privileges:true
     healthcheck:
@@ -86,7 +90,7 @@ services:
     # from 4.0 onward — 3.13 answers PRECONDITION_FAILED and the consumer never starts. Pinning
     # the broker below the framework is not a conservative choice here, it is a broken one.
     image: rabbitmq:4-management-alpine
-    container_name: orazaka-rabbitmq
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-rabbitmq
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
@@ -94,8 +98,8 @@ services:
     # Loopback-only publish for host-run E2E tests (E2eAmqpClient → localhost:5672)
     # and the management UI at http://localhost:15672 (guest/guest by default).
     ports:
-      - "127.0.0.1:5672:5672"
-      - "127.0.0.1:15672:15672"
+      - "127.0.0.1:${RABBITMQ_PORT:-5672}:5672"
+      - "127.0.0.1:${RABBITMQ_MGMT_PORT:-15672}:15672"
     security_opt:
       - no-new-privileges:true
     healthcheck:
@@ -111,13 +115,13 @@ services:
   # Single-purpose all-in-one (in-memory storage): traces are dev-disposable.
   jaeger:
     image: jaegertracing/all-in-one:1.60
-    container_name: orazaka-jaeger
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-jaeger
     restart: always
     # Loopback-only publish: host-run apps export to localhost:4318 (OTLP/HTTP);
     # UI at http://localhost:16686.
     ports:
-      - "127.0.0.1:16686:16686"
-      - "127.0.0.1:4318:4318"
+      - "127.0.0.1:${JAEGER_UI_PORT:-16686}:16686"
+      - "127.0.0.1:${OTLP_HTTP_PORT:-4318}:4318"
     security_opt:
       - no-new-privileges:true
     networks:
@@ -129,11 +133,11 @@ services:
   # inbox: verification and password-reset links are read at http://localhost:8025.
   mailpit:
     image: axllent/mailpit:v1.30
-    container_name: orazaka-mailpit
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-mailpit
     restart: always
     ports:
-      - "127.0.0.1:1025:1025"
-      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
     security_opt:
       - no-new-privileges:true
     networks:
@@ -160,7 +164,7 @@ services:
   # exist only to prove the seam is wired and stays inert.
   lago-db:
     image: postgres:16-alpine
-    container_name: orazaka-lago-db
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-lago-db
     profiles: [billing]
     restart: always
     environment:
@@ -181,7 +185,7 @@ services:
 
   lago-redis:
     image: redis:8-alpine
-    container_name: orazaka-lago-redis
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-lago-redis
     profiles: [billing]
     restart: always
     security_opt:
@@ -196,7 +200,7 @@ services:
 
   lago-api:
     image: getlago/api:v1.55.0
-    container_name: orazaka-lago-api
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-lago-api
     profiles: [billing]
     restart: always
     depends_on:
@@ -222,7 +226,7 @@ services:
 
   lago-worker:
     image: getlago/api:v1.55.0
-    container_name: orazaka-lago-worker
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-lago-worker
     profiles: [billing]
     restart: always
     command: ["./scripts/start.worker.sh"]
@@ -235,7 +239,7 @@ services:
 
   lago-front:
     image: getlago/front:v1.55.0
-    container_name: orazaka-lago-front
+    container_name: ${COMPOSE_CONTAINER_PREFIX:-orazaka}-lago-front
     profiles: [billing]
     restart: always
     environment:
