@@ -30,6 +30,26 @@ Pipes make a list: `--inputs tags=a|b|c`. For text with commas, use `--inputs-fi
 
 `POST /api/v1/studios/{studioKey}/policy-check` answers what the [content policy](CONTENT_POLICY.md) would do with your inputs. It holds no credits and calls no provider.
 
+## Follow a run
+
+Use `GET /api/v1/studios/runs/{runId}/events` to follow one run, or
+`GET /api/v1/studios/runs/events` to follow the caller's in-flight runs on one SSE connection. Each
+`run` event carries the current run snapshot; the terminal `done` event carries the final snapshot.
+`Last-Event-ID` resumes a per-run stream from its durable, monotonically increasing event number.
+Idle streams send a 15-second heartbeat; the open streams per actor are a database setting.
+
+For server-to-server completion notifications, configure an endpoint in **Settings → Webhooks** or
+use `POST /api/v1/studios/webhooks`. The endpoint URL must use HTTPS and resolve to public addresses.
+The secret is shown only when created or rotated. Verify the Standard Webhooks signature over the
+exact raw request body using `webhook-id`, `webhook-timestamp`, and `webhook-signature` (HMAC-SHA256,
+`v1,<base64>`); during rotation, accept either active signature. Treat delivery as at-least-once and
+deduplicate on the stable `webhook-id`.
+
+Failed deliveries are retried with exponentially increasing delays (defaults: 30 seconds, doubling
+to a one-hour cap, up to eight attempts), then retained as `DEAD`; successful and failed attempts are
+visible from `GET /api/v1/studios/webhooks/{id}/deliveries`. Retry count, initial delay, delay cap,
+timeout, and endpoint limits are database-backed runtime settings.
+
 ## Add your own
 
 A pack is a folder with a `pack.yaml` and its blueprints. The [packs reference](_generated/PACKS.md) lists every manifest field and shows how to write, validate and install one.

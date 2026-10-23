@@ -645,7 +645,8 @@
           "CatalogModelService",
           "ChatSessionService",
           "JobService",
-          "McpService"
+          "McpService",
+          "StepRouter"
         ],
         "outbound": [
           "AudioGeneratorClient",
@@ -663,6 +664,8 @@
           "PlatformMcpServerProvider",
           "PlatformToolConfigProvider",
           "SemanticClassifierPort",
+          "StepModelRecorder",
+          "StepRouteProvider",
           "TestShaperPort",
           "ToolRegistry",
           "UserCredentialsProvider",
@@ -1579,14 +1582,6 @@
       "from": "orazaka-job-service",
       "to": "orazaka-studio-service",
       "kind": "amqp",
-      "via": "orazaka.events.studio",
-      "exchange": "orazaka.events",
-      "routingKey": "job.{…}.done"
-    },
-    {
-      "from": "orazaka-job-service",
-      "to": "orazaka-studio-service",
-      "kind": "amqp",
       "via": "orazaka.events.studio.capability",
       "exchange": "orazaka.events",
       "routingKey": "evt.capability.changed"
@@ -2229,22 +2224,12 @@
       },
       {
         "module": "orazaka-studio-service",
-        "queue": "orazaka.events.studio",
-        "retry": "kit"
-      },
-      {
-        "module": "orazaka-studio-service",
         "queue": "orazaka.events.studio.capability",
         "retry": "kit"
       },
       {
         "module": "orazaka-studio-service",
         "queue": "orazaka.events.studio.connector",
-        "retry": "kit"
-      },
-      {
-        "module": "orazaka-studio-service",
-        "queue": "orazaka.events.studio.dlq",
         "retry": "kit"
       },
       {
@@ -4704,7 +4689,7 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.7.3",
+      "version": "1.7.4",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -4766,7 +4751,7 @@
           "versions": [
             "2024-02-21"
           ],
-          "rules": 10
+          "rules": 12
         },
         {
           "id": "qc-service-contract",
@@ -4820,6 +4805,10 @@
             {
               "key": "expectedIssuer",
               "title": "Émetteur attendu (facultatif)"
+            },
+            {
+              "key": "documentType",
+              "title": "Type de document (facultatif)"
             }
           ],
           "outputs": [
