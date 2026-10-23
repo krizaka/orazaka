@@ -91,7 +91,7 @@ Build dependencies between the modules above (test scope excluded): who packages
 | `krizaka-notifications-service` | `krizaka-messaging`, `krizaka-notifications-api` |
 | `krizaka-users-service` | `krizaka-security`, `krizaka-users-core` |
 | `orazaka-assets` | `orazaka-crypto` |
-| `orazaka-persistence-app` | `krizaka-messaging`, `orazaka-jobs-api`, `orazaka-persistence-app-api` |
+| `orazaka-persistence-app` | `krizaka-messaging`, `orazaka-crypto`, `orazaka-jobs-api`, `orazaka-persistence-app-api` |
 | `orazaka-persistence-bridge` | `orazaka-core`, `orazaka-persistence-app-api` |
 | `orazaka-studio-client` | `krizaka-security`, `orazaka-studio-api` |
 | `krizaka-billing-client` | `krizaka-billing-api`, `krizaka-security` |

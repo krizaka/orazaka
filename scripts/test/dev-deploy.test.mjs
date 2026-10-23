@@ -339,6 +339,34 @@ test("the MCP token columns become TEXT for sealed envelopes (orazaka-ai-engine#
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "mcp-token-text"\) mcpTokenText\(\)/);
 });
 
+test("the research tables (ADR-087 slice 1) are additive, idempotent, off by default and have their command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-research-tables.sql", import.meta.url), "utf8");
+  for (const table of ["research_source", "research_document", "research_fetch", "research_consent"]) {
+    assert.ok(sql.includes(`CREATE TABLE IF NOT EXISTS ${table} (`), table);
+  }
+  assert.ok(sql.includes("('research.enabled', 'false', 'boolean'"));
+  // The design of ADR-087 §5: a hit is served only through the source that read it, and a citation names the final URL.
+  assert.ok(sql.includes("PRIMARY KEY (source_id, url, content_hash)"));
+  assert.ok(sql.includes("final_url      TEXT        NOT NULL"));
+  assert.ok(sql.includes("('research.max-calls', '16', 'int'"));
+  // The same block as orazaka-job-service's initdb, so a fresh volume and a migrated database agree.
+  const jobService = new URL("../../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql", import.meta.url);
+  // (Checked when the workspace holds a job-service checkout that already carries the block — orazaka-job-service#65.)
+  const block = existsSync(jobService)
+    ? readFileSync(jobService, "utf8").match(/-- =+\n-- GROUNDED RESEARCH \(ADR-087[\s\S]*?ON CONFLICT \(source_key\) DO NOTHING;/)
+    : null;
+  if (block) {
+    assert.ok(sql.includes(block[0]), "the migration carries the job-service block verbatim");
+  }
+  assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING/);
+  assert.match(sql, /ON CONFLICT \(source_key\) DO NOTHING/);
+  assert.ok(sql.includes("('CitationVerifierInterceptor','Citation Verifier Interceptor',12, FALSE,"));
+  // Foreign keys say ON DELETE; no statement drops, deletes or updates rows.
+  assert.doesNotMatch(sql.replace(/ON DELETE (SET NULL|CASCADE)/g, ""), /\b(DROP|DELETE|UPDATE)\b/);
+  assert.doesNotMatch(sql, /, TRUE\)\s*(,|ON CONFLICT)/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "research-tables"\) researchTables\(\)/);
+});
+
 test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
   assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
 });
