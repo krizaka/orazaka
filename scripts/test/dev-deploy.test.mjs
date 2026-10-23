@@ -299,6 +299,22 @@ test("the run-link migration (orazaka-studio#62 parent, #63 resume) is additive,
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-parent"\) runParent\(\)/);
 });
 
+test("the runtime-config admin migration (orazaka-studio#72, #71) is additive, idempotent and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-studio-runtime-config-admin.sql", import.meta.url), "utf8");
+  assert.match(sql, /\\c orazaka_studio_db/);
+  for (const column of ["default_value TEXT", "min_value BIGINT", "max_value BIGINT", "max_items INTEGER"]) {
+    assert.match(sql, new RegExp(`ADD COLUMN IF NOT EXISTS ${column}`), column);
+  }
+  assert.match(sql, /CREATE TABLE IF NOT EXISTS studio_runtime_config_audit/);
+  assert.match(sql, /CREATE INDEX IF NOT EXISTS idx_studio_runtime_config_audit_at/);
+  // The saga's two settings exist on dev, with their bounds, and an admin's value survives a re-run.
+  for (const key of ["run.blueprint-cache-size", "run.outcome-listener.concurrency"]) assert.ok(sql.includes(`'${key}'`), key);
+  assert.match(sql, /ON CONFLICT \(config_key\) DO UPDATE SET\s+default_value = EXCLUDED\.default_value/);
+  assert.doesNotMatch(sql, /config_value = EXCLUDED/);
+  assert.doesNotMatch(sql, /DROP (TABLE|COLUMN)/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "runtime-config-admin"\) runtimeConfigAdmin\(\)/);
+});
+
 test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
   assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
 });
