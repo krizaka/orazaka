@@ -32,7 +32,7 @@ Orazaka holds the load?* Before choosing, this is what the code and the running 
 
 | Client | How it connects today | Auth | Evidence |
 |:---|:---|:---|:---|
-| **Products** (Orochia, Yomizaka, Yasakia, Yororis, Kachizaka, Akinaza) | Server to server: HTTPS to `…/edge` (`POST /api/v1/studios/{key}/runs` → **202 + run id**, then **polling** `GET /runs/{id}`); embeddings, recommendations and analytics are plain POST/GET | a **service key** `oz_…` with scopes (`ai:embed`, `reco:*`, `analytics:*`) | the integrations post; `ApiKeyScopes`; `docs/DEPLOY_DEV.md` |
+| **Products** (Orochia, Yomizaka, Yasakia, Yororis, Kachizaka, Akinaza) | Server to server: HTTPS to `…/edge` (`POST /api/v1/studios/{key}/runs` → **202 + run id**, then signed run webhooks; SSE is the fallback); embeddings, recommendations and analytics are plain POST/GET | a **service key** `oz_…` with scopes (`ai:embed`, `reco:*`, `analytics:*`) | the integrations post; `ApiKeyScopes`; `docs/DEPLOY_DEV.md` |
 | **Web client / admin** | Next.js BFF → edge; chat tokens over **SSE** (`GET/POST /api/v1/chat/stream/{id}`), the voice turn over SSE (ADR-076), per-user job events over SSE (`GET /api/v1/jobs/stream`) | session JWT | `ChatController`, `VoiceController`, `JobStreamService` |
 | **Mobile** | REST with a bearer token to the same edge; a compatibility and forced-update rule is a proposal ([#187](https://github.com/krizaka/orazaka/pull/187)) | session JWT | `docs/MOBILE.md` |
 | **Desktop** (Tauri) | two connection modes (local engine, account), REST | session JWT / key | [#173](https://github.com/krizaka/orazaka/pull/173), [#193](https://github.com/krizaka/orazaka/pull/193) (open) |
@@ -49,8 +49,8 @@ by a restart). Everything else is the services'.
 
 1. **No idempotency on run start.** A cut connection after the engine accepted leaves a paid orphan run or a lost one
    (the integrations post says so; the billing ledger is idempotent, the door in front of it was not).
-2. **Polling only** for long runs (slice A of #189 now offers a stream; products still poll until they adopt it). Seeding Orochia's dataset would have polled ~360 jobs a pass against a 2 000-call daily
-   quota; no push exists (#189, open, **no owner**).
+2. **Long-run polling** used to spend the daily quota and add latency. #189 now provides per-run and
+   per-key SSE streams plus signed completion webhooks; clients should adopt these instead of polling.
 3. **No per-minute limit at the edge.** The tiers exist as data (`rate_limits.requests_per_minute`, `concurrent_jobs`, a
    `users.rate_limit_tier`), a Redis bucket4j filter enforces them in the conversation service, but it is **off** in dev
    (`orazaka.identity.rate-limit.enabled`, no Redis deployed). A looping product gets 2 000 calls a day and nothing sooner.
@@ -84,7 +84,7 @@ by a restart). Everything else is the services'.
 
 | Client type | Request/response | Progress and results | Notes |
 |:---|:---|:---|:---|
-| Product **backend** | REST + service key + `Idempotency-Key` | **webhook**; SSE stream as the fallback while it is not built, polling meanwhile | the generated SDK once it exists |
+| Product **backend** | REST + service key + `Idempotency-Key` | **signed webhook** for completion; per-run SSE as a fallback | the generated SDK once it exists |
 | **Browser** (web, admin) | REST through the BFF | **SSE** | chat and voice already |
 | **Mobile** | REST + bearer | **SSE** in the foreground, push notification for a finished run when backgrounded | the forced-update rule (#187) covers old apps |
 | **Desktop**, **CLI** | REST + key/JWT | **SSE** | the CLI daemon may add a local socket; the wire to the edge stays HTTP |
@@ -258,14 +258,15 @@ Nothing here is bought by this ADR. No paid resource above $5/month is created w
 
 ## Consequences
 
-- Retrying a run start is safe; products can retry on 429/5xx. The edge answers a looping product within a minute instead
-  of a day, and tells it when to return. Both are additive: no client has to change to benefit, and none breaks.
+- Retrying a run start is safe; products can retry on 429/5xx. SSE delivers progress without one API request per event;
+  webhook delivery is at-least-once, signed, and inspectable in the endpoint's delivery log.
 - The rate limit ships in `observe` mode on purpose: the service accounts of the products are on the `free` tier (60/min)
   today and would be throttled by an immediate `enforce` (Orochia's seeding alone polled ~360 jobs a pass). Slice 2 moves
   service accounts to a fitting tier and flips dev to `enforce`.
 - The in-memory limiter is per edge instance. One edge today; a second edge needs the shared store before it ships.
 - A new weekly CI run and a PR check on the edge: a few minutes of runner time, no cost.
-- Progress is still polling until slice 4 lands. That is accepted for now and tracked, not hidden.
+- Stream connections are bounded by the Studio's database-backed per-actor limit; each connection is one request rather
+  than a request for every event.
 
 ## Refused
 
@@ -282,10 +283,10 @@ Nothing here is bought by this ADR. No paid resource above $5/month is created w
 | 1 | Idempotency key on run start ([orazaka-studio#20](https://github.com/krizaka/orazaka-studio/pull/20)); per-key rate limit, observe mode ([orazaka-edge#22](https://github.com/krizaka/orazaka-edge/pull/22), [krizaka-users#34](https://github.com/krizaka/krizaka-users/pull/34)); k6 suite + CI smoke (this PR) | **shipped** |
 | 2 | Service accounts on a fitting tier ([#262](https://github.com/krizaka/orazaka/pull/262)), Retry-After on the concurrency cap (orazaka-studio), dev to `enforce` (`ABUSE_RATE_LIMIT_MODE` in `infra/deploy/orazaka-dev.app.yaml`) | **shipped** |
 | 3 | Shared limiter store for more than one edge | issue (later) |
-| 4 | **#189**: slice A, SSE `GET /runs/{id}/events` — snapshots on change, heartbeat, bounded per actor ([orazaka-studio#21](https://github.com/krizaka/orazaka-studio/pull/21)); then the per-key stream and signed webhooks | **A shipped**; B open on #189 |
+| 4 | **#189**: per-run and per-key SSE; signed `run.completed` / `run.failed` webhooks, endpoint management, retries and delivery log | **shipped** |
 | 5 | Admission control by queue depth; provider circuit breakers; a defined answer to `rejectPublish` | issue |
 | 6 | Generated TypeScript and Java SDKs | issue |
 | 7 | OpenAPI as the source of truth + the contract-fixture test across repositories | issue |
 | 8 | MCP server exposure | issue (later) |
 | 9 | Local full-stack load run (`PROFILE=load`) and the nightly/weekly schedule; the bottleneck prediction of §6 confirmed or corrected | issue (needs the Docker stack and the heavy lock) |
-| 10 | SSE resume and fan-out: stable event ids, `Last-Event-ID`, per-instance registry (conversation-service#19) | issue |
+| 10 | SSE resume and fan-out: stable event ids, `Last-Event-ID`, 15 s heartbeat ([#241](https://github.com/krizaka/orazaka/issues/241)) | **shipped** |

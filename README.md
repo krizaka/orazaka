@@ -165,6 +165,14 @@ own machine. `npx orazaka` is [`@krizaka/orazaka-cli`](https://www.npmjs.com/pac
 `node scripts/workspace.mjs status` shows the branch and state of every repository;
 `node scripts/workspace.mjs pull` updates them all.
 
+## Follow Studio runs without polling
+
+Studio runs expose per-run and per-key Server-Sent Events streams, and signed `run.completed` /
+`run.failed` webhooks for server-to-server integrations. Webhook endpoints are managed in **Settings →
+Webhooks**; delivery is at-least-once, so receivers should deduplicate on `webhook-id`. See the
+[Studio guide](docs/STUDIO_GUIDE.md#follow-a-run) for event resumption, signatures, retries, and the
+delivery log.
+
 ## Workspace layout
 
 ```

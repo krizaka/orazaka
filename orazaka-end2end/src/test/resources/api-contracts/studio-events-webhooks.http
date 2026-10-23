@@ -1,0 +1,51 @@
+### Per-key event streams require authentication
+GET {{$dotenv ROUTER_URL}}/api/v1/studios/runs/events
+Accept: text/event-stream
+
+?? status == 401
+
+###
+
+### Per-run event streams require authentication
+GET {{$dotenv ROUTER_URL}}/api/v1/studios/runs/00000000-0000-0000-0000-000000000001/events
+Accept: text/event-stream
+
+?? status == 401
+
+###
+
+### Authenticate
+# @name login
+POST {{$dotenv ROUTER_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### A private HTTP target is refused — never register a local service as a callback
+POST {{$dotenv ROUTER_URL}}/api/v1/studios/webhooks
+Authorization: ******
+Content-Type: application/json
+
+{
+  "url": "http://127.0.0.1:8080/orazaka-contract",
+  "events": ["run.completed", "run.failed"]
+}
+
+?? status == 400
+
+###
+
+### The authenticated caller can list endpoints without exposing their secrets
+GET {{$dotenv ROUTER_URL}}/api/v1/studios/webhooks
+Authorization: ******
+
+?? status == 200
+?? js Array.isArray(response.parsedBody) == true
+?? js response.parsedBody.filter(endpoint => Object.hasOwn(endpoint, "secret")).length == 0
