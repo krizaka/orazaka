@@ -167,6 +167,14 @@ function runIdempotency() {
   console.log("orazaka_studio_db: studio_run idempotency columns and index in place");
 }
 
+/** The exact result cache of studio_run (orazaka-studio#61): fingerprint, source run, index and setting — idempotent, additive. */
+function runResultCache() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-studio-run-result-cache.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: studio_run result cache columns, index and setting in place");
+}
+
 /** The `service` rate-limit tier and the existing svc_* users moved onto it (ADR-083 slice 2) — idempotent. */
 function serviceTier() {
   const env = secrets();
@@ -581,6 +589,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "analytics") analytics();
     else if (command === "run-idempotency") runIdempotency();
     else if (command === "run-events") runEvents();
+    else if (command === "run-result-cache") runResultCache();
     else if (command === "service-tier") serviceTier();
     else if (command === "webhooks") webhooks();
     else if (command === "automations") automations();
@@ -590,7 +599,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {
