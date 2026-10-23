@@ -27,10 +27,12 @@ const PROFILES = {
   load: { sync: 100, run: 5, login: 2, chat: 2, seconds: 180, vus: 200 },
 };
 const profile = { ...PROFILES[__ENV.PROFILE || 'smoke'] };
-// Narrow overrides, for finding a knee: RATE (sync requests per second) and SECONDS.
+// Narrow overrides, for finding a knee: RATE (sync iterations per second), RUN_RATE (run starts per second) and SECONDS.
 if (__ENV.RATE) profile.sync = Number(__ENV.RATE);
+if (__ENV.RUN_RATE) profile.run = Number(__ENV.RUN_RATE);
 if (__ENV.SECONDS) profile.seconds = Number(__ENV.SECONDS);
 if (__ENV.RATE) profile.vus = Math.max(profile.vus, Math.ceil(Number(__ENV.RATE) / 2));
+if (__ENV.RUN_RATE) profile.vus = Math.max(profile.vus, Math.ceil(Number(__ENV.RUN_RATE) * 4));
 const wanted = (__ENV.SCENARIOS || 'sync,run,login').split(',');
 
 function scenario(name, exec, rate) {
@@ -132,6 +134,11 @@ export function runStartAndPoll(data) {
   runStart.add(start.timings.duration);
   const runId = start.json('id');
 
+  // NO_POLL=1: the start is what is measured (a stack with no worker never ends a run, and 90 s of polling per
+  // start would be the load, not the start).
+  if (__ENV.NO_POLL === '1') {
+    return;
+  }
   // The same key, the same request: the same run, flagged as a replay (ADR-083). NO_REPLAY=1 skips it
   // on a stack that does not have idempotency yet (it would start the run twice).
   if (__ENV.NO_REPLAY === '1') {
