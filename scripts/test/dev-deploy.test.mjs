@@ -315,6 +315,21 @@ test("the runtime-config admin migration (orazaka-studio#72, #71) is additive, i
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "runtime-config-admin"\) runtimeConfigAdmin\(\)/);
 });
 
+test("the searchKnowledge rename (orazaka-ai-engine#59) is copied, additive and idempotent, and has its command", () => {
+  const tool = readFileSync(new URL("../../infra/migrations/2026-10-23-search-knowledge-tool.sql", import.meta.url), "utf8");
+  const sources = readFileSync(new URL("../../infra/migrations/2026-10-23-search-knowledge-sources.sql", import.meta.url), "utf8");
+  for (const sql of [tool, sources]) {
+    assert.match(sql, /SELECT 'searchKnowledge'/);
+    assert.match(sql, /WHERE tool_id = 'searchWeb'/);
+    assert.match(sql, /ON CONFLICT \(tool_id(, content)?\) DO NOTHING/);
+    assert.doesNotMatch(sql, /\b(DELETE|DROP|UPDATE)\b/);
+  }
+  assert.match(sources, /\\c orazaka_knowledge_db/);
+  const fixtures = readFileSync(new URL("../../infra/initdb/90-dev-fixtures.sql", import.meta.url), "utf8");
+  assert.doesNotMatch(fixtures, /^\('searchWeb'/m);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "search-knowledge"\) searchKnowledge\(\)/);
+});
+
 test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
   assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
 });

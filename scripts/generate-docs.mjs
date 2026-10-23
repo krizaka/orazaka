@@ -2089,7 +2089,7 @@ const mdTools = (t, api, cli) => {
   }
   lines.push(
     "",
-    "`searchWeb` searches the sources the knowledge service holds for the signed-in user. `analyzePoster` and",
+    "`searchKnowledge` searches the sources the knowledge service holds for the signed-in user (not the web). `analyzePoster` and",
     "`analyzeAudioExtract` are reference tools: they demonstrate the contract and return a fixed analysis.",
     "",
     "## When a tool is attached",
