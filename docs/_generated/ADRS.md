@@ -80,3 +80,4 @@ generated: true
 | ADR-084 | ADR-084 — Automation triggers | `adr/ADR-084-automation-triggers.md` |
 | ADR-085 | ADR-085 — One operator audit trail | `adr/ADR-085-operator-audit-trail.md` |
 | ADR-086 | ADR-086 — Durable agent sessions on Studio runs | `adr/ADR-086-durable-agent-sessions-on-studio-runs.md` |
+| ADR-087 | ADR-087 — Grounded research: the engine looks things up, reads the source and cites it | `adr/ADR-087-grounded-research.md` |
