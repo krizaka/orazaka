@@ -34,6 +34,9 @@ Times are **command to file**: from the start of the Studio run to the finished 
 | **Wan 2.2 TI2V 5B (image to video, RTX 4000 Ada 20 GB)** (video) | A DigitalOcean GPU droplet, by the hour (through the relay) | 1 / 1 | 1106 s (1106–1106, n=1) | — | $0.76 per GPU hour | $0.23 |
 | **Wan 2.2 T2V A14B (720p, H100 80 GB)** (video) | A DigitalOcean GPU droplet, by the hour (through the relay) | 8 / 8 | 1116 s (1104–1302, n=8) | — | $3.99 per GPU hour | $10.24 |
 | **Wan 2.2 A14B, image to video (720p, H100 80 GB)** (video) | A DigitalOcean GPU droplet, by the hour (through the relay) | 7 / 7 | 1179 s (1117–1350, n=7) | — | $3.99 per GPU hour | $9.16 |
+| **LTX-Video 0.9.8 13B distilled (720p, H100 80 GB, with the 1080p upscale)** (video) | A DigitalOcean GPU droplet, by the hour (through the relay) | 4 / 4 | 205 s (195–238, n=4) | — | $3.99 per GPU hour | $0.93 |
+| **Wan 2.2 I2V A14B (720p, 40 steps, H100 80 GB, with the 1080p upscale)** (video) | A DigitalOcean GPU droplet, by the hour (through the relay) | 1 / 1 | 1352 s (1352–1352, n=1) | — | $3.99 per GPU hour | $1.50 |
+| **FLUX.2 [klein] 4B (H100 80 GB, sd-server)** (image) | A DigitalOcean GPU droplet, by the hour (through the relay) | 5 / 5 | 6 s (5–7, n=5) | — | $3.99 per GPU hour | $0.03 |
 
 3 runs of Wan 2.2 T2V A14B succeeded but are left out of its time statistics (worker restart during the run).
 
@@ -148,6 +151,40 @@ A DigitalOcean GPU droplet, by the hour (through the relay) · licence Apache-2.
 - **GPU:** NVIDIA H100 80 GB (RunPod), two bf16 experts swapped by CPU offload — about 28 s per step, 19 to 22 minutes a clip
 - **checkpoint:** Wan-AI/Wan2.2-I2V-A14B-Diffusers (the image-to-video checkpoint of the family, fetched to the pod's own disk: 118 GB in 2 minutes)
 
+### LTX-Video 0.9.8 13B distilled (720p, H100 80 GB, with the 1080p upscale)
+
+A DigitalOcean GPU droplet, by the hour (through the relay) · licence LTX-Video Open Weights License 0.X
+
+- **size:** 1216×704 (16:9) or 704×1216 (9:16); 1920×1080 after the Studio's upscale step
+- **frames:** 121
+- **fps:** 24
+- **duration:** 5.04 s
+- **steps / guidance:** 8 / 1.0 (distilled)
+- **seed:** honoured
+- **GPU:** NVIDIA H100 80 GB (RunPod), resident (39 GB)
+- **run time:** about 15 s of generation; the run's 200 s include the model's load and the SeedVR2 pass (about 130 s)
+
+### Wan 2.2 I2V A14B (720p, 40 steps, H100 80 GB, with the 1080p upscale)
+
+A DigitalOcean GPU droplet, by the hour (through the relay) · licence Apache-2.0
+
+- **size:** 720×1280 (9:16) or 1280×720 (16:9); 1080×1920 after the upscale
+- **frames:** 81
+- **fps:** 16
+- **duration:** 5.06 s
+- **steps / guidance:** 40 / 3.5 and 3.5
+- **seed:** honoured
+- **GPU:** NVIDIA H100 80 GB (RunPod), two bf16 experts swapped by CPU offload (35 GB)
+
+### FLUX.2 [klein] 4B (H100 80 GB, sd-server)
+
+A DigitalOcean GPU droplet, by the hour (through the relay) · licence Apache-2.0
+
+- **size:** 1360×768 (16:9) or 768×1360 (9:16), the video's own aspect
+- **steps:** 4
+- **seed:** honoured
+- **engine:** stable-diffusion.cpp sd-server, CUDA
+
 ## Video upscaling
 
 The same clips, taken from 720p (or 480p) to 1080p or 4K by each candidate, on one NVIDIA H100 80 GB. The verdict is a person's, after looking at the same frames side by side with a plain Lanczos upscale; the cost is the run's own time at the GPU's hourly rate.
@@ -212,6 +249,8 @@ The same FLUX.2 [klein] still made at the video's own aspect through the image-g
 | limit | Wan 2.2 A14B image-to-video needs its own 106 GB checkpoint | text and image are two checkpoints of the family; the network volume has 35 GB free, so it is fetched to the pod's container disk each session (2 minutes) instead of a recurring volume |
 | process | the first Wan 2.2 bake-off run (18 minutes of GPU) finished but was lost | the bake script saved numpy frames as if they were PIL images (output_type); fixed (output_type=pil) and run again |
 | limit | HunyuanVideo 1.5 720p image-to-video was stopped after 19 of 50 steps | 90 s a step with model offload (75 GB resident), about 75 minutes a clip; its licence also excludes the EU, UK and South Korea |
+| infrastructure | every Studio run on dev answered HTTP 500 for about 30 minutes | the billing service's connection pool regression (« This connection has been closed »); the pod was kept idle then, and the runs restarted once the fix was live |
+| configuration | the first LTX runs failed in the worker (three causes, one after the other) | the weights were on the host's own disk and the loader did not look there; the tokenizer needs tiktoken, protobuf and imageio; the upscale asked ffmpeg to crop 1920 pixels from a 1865-pixel-wide picture (LTX makes 1216×704, narrower than 16:9). Fixed in orazaka-worker-media#43 |
 
 ## What it cost
 
@@ -223,7 +262,10 @@ The same FLUX.2 [klein] still made at the video's own aspect through the image-g
 | A DigitalOcean GPU droplet, by the hour (through the relay) | Wan 2.2 TI2V 5B (image to video, RTX 4000 Ada 20 GB) | $0.76 per GPU hour | 1 | $0.23 |
 | A DigitalOcean GPU droplet, by the hour (through the relay) | Wan 2.2 T2V A14B (720p, H100 80 GB) | $3.99 per GPU hour | 8 | $10.24 |
 | A DigitalOcean GPU droplet, by the hour (through the relay) | Wan 2.2 A14B, image to video (720p, H100 80 GB) | $3.99 per GPU hour | 7 | $9.16 |
-| **Total of the runs above** |  |  |  | **$42.24** |
+| A DigitalOcean GPU droplet, by the hour (through the relay) | LTX-Video 0.9.8 13B distilled (720p, H100 80 GB, with the 1080p upscale) | $3.99 per GPU hour | 4 | $0.93 |
+| A DigitalOcean GPU droplet, by the hour (through the relay) | Wan 2.2 I2V A14B (720p, 40 steps, H100 80 GB, with the 1080p upscale) | $3.99 per GPU hour | 1 | $1.50 |
+| A DigitalOcean GPU droplet, by the hour (through the relay) | FLUX.2 [klein] 4B (H100 80 GB, sd-server) | $3.99 per GPU hour | 5 | $0.03 |
+| **Total of the runs above** |  |  |  | **$44.70** |
 
 ### GPU droplet sessions (what was billed)
 
@@ -237,7 +279,8 @@ The same FLUX.2 [klein] still made at the video's own aspect through the image-g
 | RunPod pod (the 5B image-to-video batch of the home page, the 720p heroes, the first upscaler tests; ended by the spend guard once idle) | H100 80 GB (CA-MTL-1) | 2.50 | $3.99/h | $9.98 |
 | RunPod pod (six directed image-to-video clips with Wan 2.2 A14B, one retried, the 1080p/4K passes, the Orochia hero; stopped by id when done) | H100 80 GB (CA-MTL-1) | 2.72 | $3.99/h | $10.85 |
 | RunPod pod (the image-to-video bake-off: four models, two shots; a first Wan run finished but crashed in the bake script's save step and was run again) | H100 80 GB (CA-MTL-1) | 1.77 | $3.99/h | $7.06 |
-| **Total billed** |  |  |  | **$51.12** |
+| RunPod pod, profile kit (the five showcase clips through the Studios: FLUX stills, four LTX clips, one Wan 2.2 A14B 40-step clip, the 1080p upscale inside each run; the first attempts failed on a worker cache path, missing tokenizer dependencies and an upscale crop larger than the picture) | H100 80 GB (CA-MTL-1) | 0.90 | $3.99/h | $3.59 |
+| **Total billed** |  |  |  | **$54.71** |
 
 A droplet is billed from its creation to its destruction: the sessions include the setup (image build, weights), the load of the model and the attempts that failed, which the runs above do not. The cost of a run is its own start-to-finish time at the hourly rate.
 
