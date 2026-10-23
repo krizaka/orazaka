@@ -183,6 +183,9 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | PUT | `/api/v1/studios/{studioKey}/blueprints/{version}` | Creates or replaces a draft version. |
 | POST | `/api/v1/studios/{studioKey}/blueprints/{version}/publish` | Publishes a draft, minting it as the Studio's latest version. |
 | GET | `/api/v1/studios/admin/audit` | — |
+| GET | `/api/v1/studios/admin/runtime-config` | — |
+| PUT | `/api/v1/studios/admin/runtime-config/{key}` | — |
+| GET | `/api/v1/studios/admin/runtime-config/audit` | — |
 | POST | `/api/v1/studios/packs/bundles` | Installs a bundle. |
 | DELETE | `/api/v1/studios/packs/bundles/{bundleKey}` | Removes a bundle's catalogue rows and withdraws its pack from sale. |
 | POST | `/api/v1/studios/packs/bundles/validation` | Checks a bundle against this platform without writing anything. |

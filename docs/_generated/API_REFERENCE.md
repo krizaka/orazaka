@@ -232,6 +232,9 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/studios/{studioKey}/runs` | authenticated | StudioRunController | Starts a run of a Studio, addressed by its key rather than by an installation. |
 | GET | `/api/v1/studios/{studioKey}/versions` | authenticated | StudioController | A Studio's version history. |
 | GET | `/api/v1/studios/admin/audit` | ADMIN | OperatorAuditController |  |
+| GET | `/api/v1/studios/admin/runtime-config` | ADMIN | StudioRuntimeConfigController |  |
+| PUT | `/api/v1/studios/admin/runtime-config/{key}` | ADMIN | StudioRuntimeConfigController |  |
+| GET | `/api/v1/studios/admin/runtime-config/audit` | ADMIN | StudioRuntimeConfigController |  |
 | GET | `/api/v1/studios/composer` | authenticated | StudioController | The Studios that belong in a chat composer, for this actor. |
 | GET | `/api/v1/studios/installations` | authenticated | StudioInstallationController | "My Studios". |
 | DELETE | `/api/v1/studios/installations/{installationId}` | authenticated | StudioInstallationController | Uninstalls, keeping the configuration for a future reinstall. |
