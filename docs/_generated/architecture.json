@@ -1394,6 +1394,10 @@
     },
     {
       "from": "orazaka-persistence-app",
+      "to": "orazaka-crypto"
+    },
+    {
+      "from": "orazaka-persistence-app",
       "to": "orazaka-jobs-api"
     },
     {
@@ -1805,7 +1809,7 @@
       "phase": "dynamic",
       "implemented": true,
       "concern": "enrichment",
-      "summary": "MCP (Model Context Protocol) interceptor — enriches the prompt with external context resolved via the `McpOrchestrator`."
+      "summary": "MCP (Model Context Protocol) interceptor — puts the external context resolved via the `McpOrchestrator` in front of the model as data."
     },
     {
       "interceptor": "BrandContextInterceptor",

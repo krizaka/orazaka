@@ -205,6 +205,8 @@ function mcpTokenText() {
   const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-mcp-token-text.sql"), "utf8");
   psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
   console.log("orazaka_db: user_mcp_servers / platform_mcp_servers.auth_token are TEXT");
+}
+
 /** The grounded-research tables, settings and (disabled) sources of ADR-087 slice 1 — idempotent, additive; research stays off. */
 function researchTables() {
   const env = secrets();
