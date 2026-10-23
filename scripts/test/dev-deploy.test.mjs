@@ -290,6 +290,14 @@ test("the run-event migration is idempotent (triggers are dropped before they ar
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-events"\) runEvents\(\)/);
 });
 
+test("the parent-run migration (orazaka-studio#62) is additive, idempotent and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-studio-run-parent.sql", import.meta.url), "utf8");
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS parent_run_id UUID REFERENCES studio_run\(id\) ON DELETE CASCADE/);
+  assert.match(sql, /CREATE INDEX IF NOT EXISTS idx_studio_run_parent/);
+  assert.doesNotMatch(sql, /DROP (TABLE|COLUMN)/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-parent"\) runParent\(\)/);
+});
+
 test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
   assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
 });
