@@ -11,6 +11,7 @@ generated: true
 | ADR | Title | Source file |
 |:---|:---|:---|
 | ADR-001 | _(cited in code, no dedicated file)_ | — |
+| ADR-002 | _(cited in code, no dedicated file)_ | — |
 | ADR-003 | _(cited in code, no dedicated file)_ | — |
 | ADR-005 | _(cited in code, no dedicated file)_ | — |
 | ADR-007 | _(cited in code, no dedicated file)_ | — |
