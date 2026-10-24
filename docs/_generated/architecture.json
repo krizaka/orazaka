@@ -644,6 +644,7 @@
           "AiClient",
           "CatalogModelService",
           "ChatSessionService",
+          "CitationVerifier",
           "JobService",
           "McpService",
           "StepRouter"
@@ -1890,7 +1891,9 @@
       "order": 12,
       "enabled": false,
       "phase": "dynamic",
-      "implemented": false
+      "implemented": true,
+      "concern": "validation",
+      "summary": "The verifier stage of grounded research (ADR-087 §3): an answer in the citation shape is checked claim by claim against the documents research read for this turn — the ones the grounding stage recorded in the context (`PromptContext#researchRead()`) — by the `CitationVerifier`, before it is served; the served answer is the one the verifier renders from the claims, never the model's prose."
     }
   ],
   "coreChain": [

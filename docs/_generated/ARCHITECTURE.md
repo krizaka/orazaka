@@ -48,7 +48,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-business` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-interceptors` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-tools` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
-| `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AiClient, CatalogModelService, ChatSessionService, JobService, McpService, StepRouter | AudioGeneratorClient, CapabilityProvider, ChatGeneratorClient, ChatMemoryStore, CheckAuditLog, CheckKeyStore, ConsentRegistry, EmbeddingClient, ExternalCheckConnector, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, SemanticClassifierPort, StepModelRecorder, StepRouteProvider, TestShaperPort, ToolRegistry, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
+| `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AiClient, CatalogModelService, ChatSessionService, CitationVerifier, JobService, McpService, StepRouter | AudioGeneratorClient, CapabilityProvider, ChatGeneratorClient, ChatMemoryStore, CheckAuditLog, CheckKeyStore, ConsentRegistry, EmbeddingClient, ExternalCheckConnector, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, SemanticClassifierPort, StepModelRecorder, StepRouteProvider, TestShaperPort, ToolRegistry, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
 | `krizaka-users-core` | domain | `krizaka-users` | 0.2.0 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, PasswordRecoveryService, RateLimitProvider, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, CryptographyPort, OAuth2ProviderVerifier, PasswordEventPublisher, PasswordResetTokenRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
 | `orazaka-jobs-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-persistence-app-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | CapabilityManager, CatalogModelManager, ChatMemoryPersistenceProvider, ChatSessionPersistenceProvider, JobPersistenceProvider, OutboxStore, PipelineConfigManager, PlatformMcpServerPersistenceProvider, PlatformToolConfigPersistenceProvider, RuntimeConfigProvider, SpeechVoiceManager, UserMcpServerPersistenceProvider, ValidationPipelineManager | — |
@@ -194,7 +194,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | 9 | `ToolInterceptor` | ✅ | ✅ |
 | 10 | `MediaInterceptor` | ✅ | ⚠ no class |
 | 11 | `UserContextInterceptor` | ✅ | ✅ |
-| 12 | `CitationVerifierInterceptor` | — | ⚠ no class |
+| 12 | `CitationVerifierInterceptor` | — | ✅ |
 
 ## Messaging topology (AGENTS.md §6)
 

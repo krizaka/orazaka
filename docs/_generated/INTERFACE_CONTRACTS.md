@@ -15,6 +15,7 @@ generated: true
 - `AiClient`
 - `CatalogModelService`
 - `ChatSessionService`
+- `CitationVerifier`
 - `JobService`
 - `McpService`
 - `StepRouter`
