@@ -7,7 +7,9 @@ order: 89
 
 # ADR-089 — Rules from the law
 
-- **Status**: Proposed (2026-10-23). Phase 1 only: this ADR. Nothing is implemented before the CTO's « validé ».
+- **Status**: Accepted (2026-10-24), being implemented in the order of « The cut ». Amended 2026-10-24 in the cut-5 pull
+  request (orazaka-studio#80): the points settled in orazaka-packs#129 (§1) and the keys corrected on
+  [krizaka/orazaka#401](https://github.com/krizaka/orazaka/issues/401) (§2, §4). Each amendment says where it was decided.
 - **Date**: 2026-10-23
 - **Issue**: [krizaka/orazaka#401](https://github.com/krizaka/orazaka/issues/401)
 - **Builds on**: [ADR-087](ADR-087-grounded-research.md) (grounded research: sources as data, citations, the
@@ -190,6 +192,23 @@ by its signals, keeps the passage each signal matched, and returns:
 - An explicit `ruleset` input still overrides everything (back-compatible with 1.x callers) and is reported as
   `kindSource: RULESET_INPUT`.
 
+**Settled in packs#129** (CTO, 2026-10-24; implemented in orazaka-packs#131):
+
+1. **Ties.** The candidate with the highest weight wins when it is alone at the top. A tie at the top is ambiguous: the
+   declared kind breaks it only when it names exactly one of the **tied** kinds; otherwise `KIND_UNKNOWN` (or the
+   `classify` step, §4). A real lease that mentions a visit stays a lease.
+2. **Declared-kind vocabulary**: `LEASE`, `NOTICE`, `CONDITION_REPORT`, `INVOICE`, `SERVICE_CONTRACT`, `OTHER`, matched
+   through each kind's `declaredAs`; `OTHER` agrees only with the kinds that list it. Yomizaka maps « Bail » → `LEASE`,
+   « Contrat » → `SERVICE_CONTRACT`, « Autre » → `OTHER` on its side.
+3. **`excludes`**: a match disqualifies the kind.
+4. **Jurisdiction hints** add to a kind's weight and name the jurisdiction, but never make a kind a candidate on their
+   own: its signals must reach `law.identify.min-signal-weight`.
+5. **Status**: `qc-visit-notice` and `qc-condition-report` are `KNOWN` (`UNSUPPORTED_KIND`) until their rulesets land
+   (packs#125), then `PROMOTED`. The example above shows the promoted state.
+6. **Date and language**: date signals with one passage each (ISO, « 20 octobre 2026 », « October 20, 2026 »; an
+   impossible date is no date); language by French/English function-word counts. A date taken from `TODAY` stays
+   labelled as such in the report.
+
 **Owner**: orazaka-packs (kinds, worker). **Tests**: `test_identify.py` — each kind's fictional filled example is
 detected; the four blank templates' fictional equivalents (a visit notice and an état des lieux, FR and EN) are
 detected as their kind, never as a lease; a declared « Bail » on a visit notice gives `kindMismatch: true` and judges
@@ -208,9 +227,9 @@ migration (`2026-10-xx-law-corpus.sql`):
 | Table | Columns (main) | Notes |
 |:---|:---|:---|
 | `law_instrument` | `id` UUID PK, `jurisdiction` (`CA`, `QC`, `FR`, `BE-WAL`), `code` (`CCQ-1991`, `C-11`, `T-0.1`, `T-15.01-r3`, `E-15`, `SOR-91-45`), `title_fr`, `title_en`, `official_url_template` (e.g. `https://www.legisquebec.gouv.qc.ca/fr/version/lc/CCQ-1991?code=se:{ref}`), `source_key` → `research_source.source_key`, `licence`, `access_note` | One row per act or regulation. UNIQUE (`jurisdiction`, `code`). |
-| `law_article_version` | `instrument_id` FK, `ref` (`1931`, `169(4)`), `language` (`fr`, `en`), `in_force_from` DATE, `in_force_to` DATE NULL, `heading_path` TEXT, `text` TEXT, `content_hash` CHAR(64), `history_note` TEXT, `import_id` FK, `first_seen_at`, `last_seen_at` | PK (`instrument_id`, `ref`, `language`, `content_hash`). The hash is SHA-256 of the article's text (label and subsections; the historical note is stored, not hashed), normalised NFC with whitespace collapsed. A changed text is a new row; the previous row gets `in_force_to`. |
+| `law_article_version` | `instrument_id` FK, `ref` (`1931`, `169(4)`), `language` (`fr`, `en`), `in_force_from` DATE, `in_force_to` DATE NULL, `heading_path` TEXT, `text` TEXT, `content_hash` CHAR(64), `history_note` TEXT, `import_id` FK, `first_seen_at`, `last_seen_at` | PK (`instrument_id`, `ref`, `language`, `in_force_from`), with an index on (`instrument_id`, `ref`, `language`, `content_hash`) for lookups; `content_hash` NOT NULL. *Amended 2026-10-24 (krizaka/orazaka#401, orazaka-job-service#69): with the hash in the key, an amendment that is reverted (the text returns to an earlier version) collided with the earlier row; a revert is a new dated row (text A, B, A gives three rows, one open).* The hash is SHA-256 of the article's text (label and subsections; the historical note is stored, not hashed), normalised NFC with whitespace collapsed. A changed text is a new row; the previous row gets `in_force_to`. |
 | `law_import` | `id`, `source_key`, `mode` (`AUTOMATED`, `MANUAL`), `dataset_url`, `dataset_etag`, `dataset_sha256`, `consolidated_to` DATE, `imported_by`, `started_at`, `finished_at`, `articles_new`, `articles_changed`, `articles_unchanged`, `status` | Every import is traceable, a manual one included (who, which file, its hash). |
-| `law_retrieval` | `jurisdiction`, `kind_id`, `as_of_bucket` (the `in_force_from` of the newest article it used), `articles` JSONB (`[{instrument, ref, language, contentHash}]`), `claims` JSONB (ADR-087 shape), `run_id`, `created_at`, `stale` BOOLEAN | PK (`jurisdiction`, `kind_id`, `as_of_bucket`). The cache of stage 2 (§7). |
+| `law_retrieval` | `jurisdiction`, `kind_id`, `language`, `as_of_bucket` (the `in_force_from` of the newest article it used), `articles` JSONB (`[{instrument, ref, language, contentHash}]`), `claims` JSONB (ADR-087 shape), `run_id`, `created_at`, `stale` BOOLEAN | PK (`jurisdiction`, `kind_id`, `language`, `as_of_bucket`). The cache of stage 2 (§7). *Amended 2026-10-24 (krizaka/orazaka#401, orazaka-job-service#70): the key gains the language, because the claims are written in one language and a French retrieval is never served to an English request.* |
 
 **How the corpus is filled** (owner: `orazaka-ai-engine`, `orazaka-tools`, package `law`; scheduled by the watcher):
 
@@ -233,7 +252,9 @@ texts exist only from our own earlier imports) is `LAW_VERSION_UNKNOWN`: the ret
 built on it gives `INSUFFICIENT_EVIDENCE`, never a verdict read from a later text.
 
 **Retrieval is grounded research, not a new mechanism.** A blueprint step calls `orazaka.core.research.grounded` with
-`sources: ["law-corpus"]`, `jurisdiction`, `asOf` (new optional input) and a question built from the kind (« Quels
+`sources: ["law-corpus"]`, `jurisdiction`, `asOf` (a new input, **required**: no default is read from a clock — the
+UTC-day bug of yomizaka#309; a caller that wants one passes the calendar day in the jurisdiction's zone, `America/Toronto`
+for QC; amended 2026-10-24, krizaka/orazaka#401, orazaka-ai-engine#87) and a question built from the kind (« Quels
 articles régissent un avis de visite d'un logement au Québec ? »). The `lookupStatute` tool of ADR-087 gains `asOf` and
 reads the corpus: `lookupStatute {jurisdiction, instrument, reference, asOf, language}` →
 `{text, contentHash, inForceFrom, officialUrl, importId}`. A corpus document is a `research_document` like any other
@@ -278,7 +299,8 @@ citing rent articles; a recorded model answer citing an article the corpus does 
 
 `compliance-check` **2.0.0**: `identify` → `classify` (with `condition`, only when the identify step asks) → `resolve`
 → `screen` → `judge` → `report`. Inputs: `document`, `jurisdiction` (now optional), `declaredKind`
-(`LEASE | CONTRACT | NOTICE | CONDITION_REPORT | INVOICE | OTHER`), `asOf`, `ruleset` (override), `lecture` (§6).
+(`LEASE | NOTICE | CONDITION_REPORT | INVOICE | SERVICE_CONTRACT | OTHER`, settled in packs#129, point 2), `asOf`,
+`ruleset` (override), `lecture` (§6).
 
 - **Every finding cites the article and the passage.** The promoted ruleset carries, per rule, the `law` block
   (instrument, ref, language, `inForceFrom`, `contentHash`, official URL, and the article's quote, ≤ 300 characters).
@@ -301,7 +323,19 @@ citing rent articles; a recorded model answer citing an article the corpus does 
 the four blank templates' equivalents give no PASS at all; a ruleset whose pinned quote is not in its article fails
 `test_rules.py`; a citation quote altered by one word gives `INSUFFICIENT_EVIDENCE`; two identical runs give the same
 report (the second is `cached_from` the first); a 1.x call with `jurisdiction: QC` and no kind gives the lease, as
-before, with `kindSource: DEFAULT` and `kindMismatch` computed.
+before.
+
+*Decided by the CTO on orazaka-studio#80 (2026-10-24), cut 5:*
+- *A rule with no `law` block keeps its verdict for now, and the finding says so (« citation non épinglée »,
+  `citation.pinned: false`), never silently. Pinning the shipped rules is packs#125/#126.*
+- *The pinned article texts the pack holds (`law/`) are a snapshot for offline verification, not a second corpus.
+  Each file's hash is checked against its text, and when `lookupStatute` is reachable, against the corpus row (behind
+  the corpus switch, off by default).*
+- *`classify` chooses among the tied kinds plus `OTHER`.*
+- *2.0 has no default kind: judging an unrecognised text by the jurisdiction's lease (`kindSource: DEFAULT`) is legacy
+  behaviour, kept only for an explicit 1.x version (an installation pinned on a 1.x blueprint).*
+- *A run whose day came from the clock (`asOfSource: TODAY`) is never cached; a 2.0 run is cached only when `asOf` is
+  explicit or read from the document (`resultCacheable`, orazaka-studio#81). Yomizaka always sends `asOf` (`localDay`).*
 
 ### 5. Promote: a proposal becomes a dated, versioned ruleset
 
