@@ -373,7 +373,7 @@ test("the law corpus (ADR-089 cut 2) is additive, idempotent, every switch off, 
     assert.ok(sql.includes(`CREATE TABLE IF NOT EXISTS ${table} (`), table);
   }
   assert.ok(sql.includes("ADD COLUMN IF NOT EXISTS default_value"));
-  assert.ok(sql.includes("PRIMARY KEY (instrument_id, ref, language, content_hash)"));
+  assert.ok(sql.includes("PRIMARY KEY (instrument_id, ref, language, in_force_from)"));
   // Every switch is off: the corpus, the lecture, and both sources.
   assert.ok(sql.includes("('law.corpus.enabled', 'false', 'boolean'"));
   assert.ok(sql.includes("('law.lecture.enabled', 'false', 'boolean'"));
