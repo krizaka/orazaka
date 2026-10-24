@@ -381,6 +381,9 @@ test("the law corpus (ADR-089 cut 2) is additive, idempotent, every switch off, 
   assert.ok(sql.includes("604800, FALSE)"));
   assert.doesNotMatch(sql, /, TRUE\)/);
   assert.equal((sql.match(/\('law\./g) ?? []).length, 13);
+  // The cache is keyed by language too (a French retrieval is never served for English).
+  assert.match(sql, /language\s+VARCHAR\(2\)\s+NOT NULL CHECK \(language IN \('fr','en'\)\)/);
+  assert.ok(sql.includes("PRIMARY KEY (jurisdiction, kind_id, language, as_of_bucket)"));
   // The same block as orazaka-job-service's initdb, so a fresh volume and a migrated database agree.
   const jobService = new URL("../../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql", import.meta.url);
   const block = existsSync(jobService)
