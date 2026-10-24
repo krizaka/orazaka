@@ -94,6 +94,14 @@ capability rows, a price, catalogue entries — and changes no code.
   "studios": 1
  },
  {
+  "key": "tenant-screening-qc",
+  "title": "Tenant screening, Québec",
+  "tagline": "A rental applicant check, one stage at a time, stopped by the manager's rules.",
+  "tier": "WORKER",
+  "category": null,
+  "studios": 1
+ },
+ {
   "key": "trade-showcase",
   "title": "Trade Showcase",
   "tagline": null,
@@ -1002,7 +1010,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
  "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
- "version": "1.7.4",
+ "version": "1.8.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1293,6 +1301,72 @@ capability rows, a price, catalogue entries — and changes no code.
 }
 ```
 
+### Tenant screening, Québec
+
+```pack
+{
+ "key": "tenant-screening-qc",
+ "title": "Tenant screening, Québec",
+ "tagline": "A rental applicant check, one stage at a time, stopped by the manager's rules.",
+ "description": "Documents, then court records (TAL and plumitifs), then credit. A stage runs and is charged only if the one before it passed its cut-off, and each cut-off is the manager's rule. Consent is checked per purpose before each paid stage. Codes only: the landlord decides.",
+ "version": "1.0.0",
+ "tier": "WORKER",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": null,
+ "listed": false,
+ "workers": [
+  "orazaka-worker-screening"
+ ],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "tenant-screening-qc",
+   "label": "Tenant screening, Québec",
+   "summary": "A gated check that stops where the manager's rules say, and charges only what ran.",
+   "description": "Three stages with a cut-off after each, a consent check before each paid stage, credits debited per stage, and a report that says where it stopped and why. The applicant pays nothing by default.",
+   "inputs": [
+    {
+     "key": "subject",
+     "title": "La personne à vérifier"
+    },
+    {
+     "key": "consentedPurposes",
+     "title": "Consentements du candidat"
+    },
+    {
+     "key": "authenticityReport",
+     "title": "Authenticité des documents"
+    },
+    {
+     "key": "leaseReport",
+     "title": "Contrôle du bail (facultatif)"
+    },
+    {
+     "key": "cutoffs",
+     "title": "Règles d'arrêt (facultatif)"
+    },
+    {
+     "key": "creditCap",
+     "title": "Plafond de crédits (facultatif)"
+    }
+   ],
+   "steps": 11,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 60
+  }
+ ]
+}
+```
+
 ### Trade Showcase
 
 ```pack
@@ -1348,7 +1422,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | Pack | Version | Studios |
 |:---|:---|:---|
 | `data-analytics` | 1.6.0 | `data-driven-ui` · `video-understanding` · `creator-suggestions` |
-| `document-validation` | 1.7.4 | `document-authenticity` · `compliance-check` |
+| `document-validation` | 1.8.0 | `document-authenticity` · `compliance-check` |
 | `echo-toolkit` | 1.2.0 | `echo-reverse` |
 | `media-safety` | 1.2.0 | `media-safety` |
 | `message-authenticity` | 1.3.0 | `message-authenticity` |
@@ -1356,6 +1430,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | `outbound-prospection` | 1.3.0 | `outbound-prospection` · `lead-research` · `followup-sequences` |
 | `profile-photo-check` | 1.2.0 | `profile-photo-check` |
 | `realestate-studio` | 1.3.0 | `realestate-reels` |
+| `tenant-screening-qc` | 1.0.0 | `tenant-screening-qc` |
 | `trade-showcase` | 1.2.0 | `trade-showcase` |
 | `bien-etre` | 1.6.0 | `guided-journaling` · `session-preparation` · `mood-tracking` · `session-summary` |
 

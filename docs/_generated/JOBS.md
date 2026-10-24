@@ -84,6 +84,7 @@ the service's `application.yml` or environment.
 | `krizaka-billing` | `HoldSweeper.sweep` | every 60 s (`krizaka.billing-service.sweeper.interval`) | Time-triggered inbound adapter: releases `ACTIVE` holds that outlived their TTL. |
 | `orazaka-ai-engine` | `InfrastructureProber.probeVideoInfrastructure` | every 5 s (`orazaka.core.video.probing.interval-ms`) | Periodically pings the configured video port to check if the video inference engine is responsive. |
 | `orazaka-ai-engine` | `InfrastructureProber.probeImageInfrastructure` | every 5 s (`orazaka.core.image.probing.interval-ms`) | Periodically pings the configured image port to check if the image inference engine (Stable Diffusion) is responsive. |
+| `orazaka-ai-engine` | `LawWatchJob.run` | cron `0 0 6 * * MON` (`orazaka.law.watcher.cron`) | The scheduled run of the law watcher. |
 | `orazaka-ai-engine` | `SandboxEvictionScheduler.evictExpiredSandboxes` | every 60 s | Scheduled eviction process — prunes expired or orphaned jobId sandbox contexts from memory. |
 | `orazaka-automation-service` | `SweepTicker.tick` | every 15s (`orazaka.automation-service.scheduler.interval`) | The clock of the automation service: every interval it runs one sweep (schedule slots, queued runs, lost events, retention). |
 | `orazaka-conversation-service` | `JobReconciliationService.reconcileScheduled` | every 60 s (`orazaka.jobs.reconcile-interval-ms`) | Recovers jobs whose result was written to disk but whose terminal status update never reached the database (e.g. |

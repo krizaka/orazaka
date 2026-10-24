@@ -653,7 +653,11 @@
           "CapabilityProvider",
           "ChatGeneratorClient",
           "ChatMemoryStore",
+          "CheckAuditLog",
+          "CheckKeyStore",
+          "ConsentRegistry",
           "EmbeddingClient",
+          "ExternalCheckConnector",
           "ImageGeneratorClient",
           "InfrastructureStatusProvider",
           "KnowledgeService",
@@ -4700,7 +4704,7 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.7.4",
+      "version": "1.8.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -4717,6 +4721,7 @@
       },
       "capabilities": [
         "orazaka.validation.document.screen",
+        "orazaka.validation.document.identify",
         "orazaka.validation.document.signals",
         "orazaka.validation.document.assemble"
       ],
@@ -5258,6 +5263,116 @@
               "label": "Vérification des photos de profil",
               "tagline": "Des visages présents, la même personne partout, rien d'écrit sur la photo.",
               "description": "Trouve les visages de chaque photo, pose à un modèle de vision trois questions par oui ou non, et rend un verdict fait de codes. Les vecteurs de visage vivent le temps d'un travail et ne sont jamais gardés ; une réponse illisible du modèle ne bloque rien."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "tenant-screening-qc",
+      "dir": "tenant-screening-qc",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "categorySortWeight": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [
+        "orazaka.screening.plan",
+        "orazaka.screening.consent.check",
+        "orazaka.screening.documents.assess",
+        "orazaka.screening.courts.check",
+        "orazaka.screening.credit.check",
+        "orazaka.screening.cutoff.decide",
+        "orazaka.screening.report.assemble"
+      ],
+      "workers": [
+        "orazaka-worker-screening"
+      ],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Tenant screening, Québec",
+          "tagline": "A rental applicant check, one stage at a time, stopped by the manager's rules.",
+          "description": "Documents, then court records (TAL and plumitifs), then credit. A stage runs and is charged only if the one before it passed its cut-off, and each cut-off is the manager's rule. Consent is checked per purpose before each paid stage. Codes only: the landlord decides."
+        },
+        "fr": {
+          "label": "Vérification de locataire, Québec",
+          "tagline": "Une vérification de candidat à la location, une étape à la fois, arrêtée par les règles du gestionnaire.",
+          "description": "Les documents, puis les plumitifs et le TAL, puis le crédit. Une étape s'exécute et se facture seulement si la précédente a passé son seuil d'arrêt, et chaque seuil est une règle du gestionnaire. Le consentement est vérifié par finalité avant chaque étape payante. Des codes seulement : le locateur décide."
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "tenant-screening-qc",
+          "profession": "real-estate",
+          "iconKey": "shield-check",
+          "pricing": "FREE",
+          "status": "DRAFT",
+          "estimatedCredits": 60,
+          "steps": 11,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "subject",
+              "title": "La personne à vérifier"
+            },
+            {
+              "key": "consentedPurposes",
+              "title": "Consentements du candidat"
+            },
+            {
+              "key": "authenticityReport",
+              "title": "Authenticité des documents"
+            },
+            {
+              "key": "leaseReport",
+              "title": "Contrôle du bail (facultatif)"
+            },
+            {
+              "key": "cutoffs",
+              "title": "Règles d'arrêt (facultatif)"
+            },
+            {
+              "key": "creditCap",
+              "title": "Plafond de crédits (facultatif)"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "JSON"
+            },
+            {
+              "key": "status",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Tenant screening, Québec",
+              "tagline": "A gated check that stops where the manager's rules say, and charges only what ran.",
+              "description": "Three stages with a cut-off after each, a consent check before each paid stage, credits debited per stage, and a report that says where it stopped and why. The applicant pays nothing by default."
+            },
+            "fr": {
+              "label": "Vérification de locataire, Québec",
+              "tagline": "Une vérification qui s'arrête où les règles du gestionnaire le disent et ne facture que ce qui a tourné.",
+              "description": "Trois étapes avec un seuil d'arrêt après chacune, un consentement vérifié avant chaque étape payante, des crédits débités par étape, et un rapport qui dit où elle s'est arrêtée et pourquoi. Le candidat ne paie rien par défaut."
             }
           }
         }
