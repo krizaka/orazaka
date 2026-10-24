@@ -82,3 +82,4 @@ generated: true
 | ADR-086 | ADR-086 — Durable agent sessions on Studio runs | `adr/ADR-086-durable-agent-sessions-on-studio-runs.md` |
 | ADR-087 | ADR-087 — Grounded research: the engine looks things up, reads the source and cites it | `adr/ADR-087-grounded-research.md` |
 | ADR-088 | _(cited in code, no dedicated file)_ | — |
+| ADR-089 | ADR-089 — Rules from the law | `adr/ADR-089-rules-from-the-law.md` |

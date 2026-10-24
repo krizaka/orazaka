@@ -61,7 +61,7 @@ Static defaults live under `orazaka.tools` in `application.yml`.
 | `url` | `VARCHAR(1000)` |
 | `command` | `VARCHAR(1000)` |
 | `args` | `VARCHAR(2000)` |
-| `auth_token` | `VARCHAR(1000)` |
+| `auth_token` | `TEXT` |
 | `enabled` | `BOOLEAN DEFAULT TRUE` |
 | `created_at` | `TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP` |
 
@@ -73,7 +73,7 @@ Static defaults live under `orazaka.tools` in `application.yml`.
 | `user_id` | `VARCHAR(255) NOT NULL` |
 | `label` | `VARCHAR(255) NOT NULL` |
 | `url` | `VARCHAR(1000) NOT NULL` |
-| `auth_token` | `VARCHAR(1000)` |
+| `auth_token` | `TEXT` |
 | `enabled` | `BOOLEAN DEFAULT TRUE` |
 | `created_at` | `TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP` |
 

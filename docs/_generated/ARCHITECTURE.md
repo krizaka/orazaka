@@ -194,6 +194,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | 9 | `ToolInterceptor` | ✅ | ✅ |
 | 10 | `MediaInterceptor` | ✅ | ⚠ no class |
 | 11 | `UserContextInterceptor` | ✅ | ✅ |
+| 12 | `CitationVerifierInterceptor` | — | ⚠ no class |
 
 ## Messaging topology (AGENTS.md §6)
 

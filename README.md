@@ -177,6 +177,8 @@ delivery log.
 
 The engine looking things up, reading the source and citing it, instead of answering from memory: [ADR-087](docs/adr/ADR-087-grounded-research.md) and its [design](docs/design/grounded-research.md) (proposed, not built yet).
 
+The compliance checks built from the law, on top of it — identify the document, read the dated articles, propose rules, promote them to dated rulesets: [ADR-089](docs/adr/ADR-089-rules-from-the-law.md) (proposed, not built yet).
+
 ## Workspace layout
 
 ```

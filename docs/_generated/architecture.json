@@ -1880,6 +1880,13 @@
       "implemented": true,
       "concern": "context",
       "summary": "ContextInterceptor that dynamically injects onboarding profile details (ai_behavior, primary_industry) as structural system prompt constraints right before executing model inference or streaming."
+    },
+    {
+      "interceptor": "CitationVerifierInterceptor",
+      "order": 12,
+      "enabled": false,
+      "phase": "dynamic",
+      "implemented": false
     }
   ],
   "coreChain": [
