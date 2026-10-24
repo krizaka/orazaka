@@ -367,6 +367,41 @@ test("the research tables (ADR-087 slice 1) are additive, idempotent, off by def
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "research-tables"\) researchTables\(\)/);
 });
 
+test("the law corpus (ADR-089 cut 2) is additive, idempotent, every switch off, and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-24-law-corpus.sql", import.meta.url), "utf8");
+  for (const table of ["law_instrument", "law_article_version", "law_import", "law_retrieval", "rule_proposal", "kind_demand"]) {
+    assert.ok(sql.includes(`CREATE TABLE IF NOT EXISTS ${table} (`), table);
+  }
+  assert.ok(sql.includes("ADD COLUMN IF NOT EXISTS default_value"));
+  assert.ok(sql.includes("PRIMARY KEY (instrument_id, ref, language, in_force_from)"));
+  // Every switch is off: the corpus, the lecture, and both sources.
+  assert.ok(sql.includes("('law.corpus.enabled', 'false', 'boolean'"));
+  assert.ok(sql.includes("('law.lecture.enabled', 'false', 'boolean'"));
+  assert.ok(sql.includes("('law-corpus', 'OFFICIAL', 'law-corpus', NULL, '{}', 86400, FALSE)"));
+  assert.ok(sql.includes("604800, FALSE)"));
+  assert.doesNotMatch(sql, /, TRUE\)/);
+  assert.equal((sql.match(/\('law\./g) ?? []).length, 13);
+  // The cache is keyed by language too (a French retrieval is never served for English).
+  assert.match(sql, /language\s+VARCHAR\(2\)\s+NOT NULL CHECK \(language IN \('fr','en'\)\)/);
+  assert.ok(sql.includes("PRIMARY KEY (jurisdiction, kind_id, language, as_of_bucket)"));
+  // ... and on a database that has #69's table (no language): ALTER, guarded so it runs once.
+  assert.match(sql, /IF NOT EXISTS \(SELECT 1 FROM information_schema\.columns\s+WHERE table_name = 'law_retrieval' AND column_name = 'language'\) THEN\s+ALTER TABLE law_retrieval ADD COLUMN language VARCHAR\(2\) NOT NULL CHECK \(language IN \('fr','en'\)\);/);
+  assert.match(sql, /ALTER TABLE law_retrieval ADD PRIMARY KEY \(jurisdiction, kind_id, language, as_of_bucket\);/);
+  // The same block as orazaka-job-service's initdb, so a fresh volume and a migrated database agree.
+  const jobService = new URL("../../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql", import.meta.url);
+  const block = existsSync(jobService)
+    ? readFileSync(jobService, "utf8").match(/-- =+\n-- LAW CORPUS \(ADR-089[\s\S]*?ON CONFLICT \(source_key\) DO NOTHING;/)
+    : null;
+  if (block) {
+    assert.ok(sql.includes(block[0]), "the migration carries the job-service block verbatim");
+  }
+  assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING/);
+  assert.match(sql, /ON CONFLICT \(source_key\) DO NOTHING/);
+  // Nothing is dropped, deleted or rewritten: foreign keys say ON UPDATE CASCADE, the rest is additive.
+  assert.doesNotMatch(sql.replace(/ON UPDATE CASCADE/g, "").replace("DROP CONSTRAINT law_retrieval_pkey", ""), /\b(DROP|DELETE|UPDATE)\b/, "the only DROP is the cache key of job-service#69, replaced by the one with the language");
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "law-corpus"\) lawCorpus\(\)/);
+});
+
 test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
   assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
 });

@@ -215,6 +215,14 @@ function researchTables() {
   console.log("orazaka_db: research_source, research_document, research_fetch, research_consent and research.* settings in place (off)");
 }
 
+/** The law corpus tables, settings (default and bounds) and (disabled) sources of ADR-089 cut 2 — idempotent, additive; the corpus stays off. */
+function lawCorpus() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-24-law-corpus.sql"), "utf8");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
+  console.log("orazaka_db: law_* tables, rule_proposal, kind_demand, settings bounds and law.* settings in place (off)");
+}
+
 /** The `service` rate-limit tier and the existing svc_* users moved onto it (ADR-083 slice 2) — idempotent. */
 function serviceTier() {
   const env = secrets();
@@ -635,6 +643,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "mcp-token-text") mcpTokenText();
     else if (command === "search-knowledge") searchKnowledge();
     else if (command === "research-tables") researchTables();
+    else if (command === "law-corpus") lawCorpus();
     else if (command === "service-tier") serviceTier();
     else if (command === "webhooks") webhooks();
     else if (command === "automations") automations();
@@ -644,7 +653,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | law-corpus | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {

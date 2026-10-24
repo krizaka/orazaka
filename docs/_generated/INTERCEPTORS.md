@@ -24,6 +24,7 @@ generated: true
 | 9 | `RouterInterceptor` | reformulation | ✅ |
 | 9 | `ToolInterceptor` | tooling | ✅ |
 | 11 | `UserContextInterceptor` | context | ✅ |
+| 12 | `CitationVerifierInterceptor` | validation | — |
 | — | `ClosedLoopValidationInterceptor` | validation | — |
 | — | `CostShieldInterceptor` | validation | — |
 | — | `DynamicMemoryCondenser` | enrichment | — |
