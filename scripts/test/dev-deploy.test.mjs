@@ -290,6 +290,16 @@ test("the run-event migration is idempotent (triggers are dropped before they ar
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-events"\) runEvents\(\)/);
 });
 
+test("the result cache lists compliance-check in dev, once, without dropping what an operator listed (ADR-089 §4)", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-studio-run-result-cache.sql", import.meta.url), "utf8");
+  assert.match(sql, /\('run\.result-cache\.studios', 'document-authenticity,compliance-check', 'list'/);
+  assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING;/);
+  // Re-runnable: compliance-check is appended only where it is missing, the rest of the list is kept.
+  assert.match(sql, /config_value \|\| ',compliance-check'/);
+  assert.match(sql, /AND NOT \('compliance-check' = ANY \(string_to_array\(replace\(config_value, ' ', ''\), ','\)\)\);/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-result-cache"\) runResultCache\(\)/);
+});
+
 test("the run-link migration (orazaka-studio#62 parent, #63 resume) is additive, idempotent and has its command", () => {
   const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-studio-run-parent.sql", import.meta.url), "utf8");
   assert.match(sql, /ADD COLUMN IF NOT EXISTS parent_run_id UUID REFERENCES studio_run\(id\) ON DELETE CASCADE/);
