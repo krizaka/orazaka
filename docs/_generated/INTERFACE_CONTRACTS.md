@@ -25,7 +25,11 @@ generated: true
 - `CapabilityProvider`
 - `ChatGeneratorClient`
 - `ChatMemoryStore`
+- `CheckAuditLog`
+- `CheckKeyStore`
+- `ConsentRegistry`
 - `EmbeddingClient`
+- `ExternalCheckConnector`
 - `ImageGeneratorClient`
 - `InfrastructureStatusProvider`
 - `KnowledgeService`
