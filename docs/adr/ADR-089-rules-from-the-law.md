@@ -323,7 +323,19 @@ citing rent articles; a recorded model answer citing an article the corpus does 
 the four blank templates' equivalents give no PASS at all; a ruleset whose pinned quote is not in its article fails
 `test_rules.py`; a citation quote altered by one word gives `INSUFFICIENT_EVIDENCE`; two identical runs give the same
 report (the second is `cached_from` the first); a 1.x call with `jurisdiction: QC` and no kind gives the lease, as
-before, with `kindSource: DEFAULT` and `kindMismatch` computed.
+before.
+
+*Decided by the CTO on orazaka-studio#80 (2026-10-24), cut 5:*
+- *A rule with no `law` block keeps its verdict for now, and the finding says so (« citation non épinglée »,
+  `citation.pinned: false`), never silently. Pinning the shipped rules is packs#125/#126.*
+- *The pinned article texts the pack holds (`law/`) are a snapshot for offline verification, not a second corpus.
+  Each file's hash is checked against its text, and when `lookupStatute` is reachable, against the corpus row (behind
+  the corpus switch, off by default).*
+- *`classify` chooses among the tied kinds plus `OTHER`.*
+- *2.0 has no default kind: judging an unrecognised text by the jurisdiction's lease (`kindSource: DEFAULT`) is legacy
+  behaviour, kept only for an explicit 1.x version (an installation pinned on a 1.x blueprint).*
+- *A run whose day came from the clock (`asOfSource: TODAY`) is never cached; a 2.0 run is cached only when `asOf` is
+  explicit or read from the document (`resultCacheable`, orazaka-studio#81). Yomizaka always sends `asOf` (`localDay`).*
 
 ### 5. Promote: a proposal becomes a dated, versioned ruleset
 
