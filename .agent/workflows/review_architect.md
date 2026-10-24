@@ -9,7 +9,6 @@ description: ARCHITECTURAL REVIEW GATE & REJECTION CRITERIA
 2. Load `.agent/rules/naming_conventions.md`
 3. Load `.agent/rules/security_standards.md`
 4. Load `.agent/rules/performance_standards.md`
-5. Load `.agent/rules/ui_standards.md`
 
 ## §1 Rejection Gates
 

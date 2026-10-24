@@ -252,7 +252,6 @@ All clients live under `orazaka-apps/ui/` — one repository each, linked by the
 - Design: cinematic dark-mode; no inline hex or hardcoded Tailwind color classes. Max **250 lines/file** for `.tsx`. Dates via `date-fns` only **[ERR-108]**. Input-blocking when `isSending || isGenerating` **[ERR-126]**. Centralized Lucide icons (`Icon.tsx`).
 - **The 250-line cap is a component rule, and `*.registry.tsx` is exempt from it.** A registry of 84 icon paths is not a component, and splitting one into four files of 175 lines satisfies the letter while making a reader guess which file holds the icon they want. The exemption is narrow **by construction**: a `*.registry` file may hold any amount of data and **no component** — `no-restricted-syntax` fails on a function declaration there, so a registry that grows behaviour stops being exempt. Enforced by `max-lines` in each workspace's ESLint config.
 - **Every UI workspace must run ESLint**, not only a type-check. `orazaka-design-system` ran `tsc --noEmit` as its `lint`, which counts nothing — which is why `icon.tsx` reached **841 lines** against this very cap without one warning. A rule written in three configs and absent from the fourth is enforced in three places.
-- UI detail: [`.agent/rules/ui_standards.md`](.agent/rules/ui_standards.md).
 
 ---
 
