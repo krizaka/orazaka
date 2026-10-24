@@ -192,3 +192,17 @@ INSERT INTO research_source (source_key, kind, provider, base_url, allow_pattern
 ('donnees-quebec', 'OFFICIAL', 'donnees-quebec', 'https://www.donneesquebec.ca',
  '{www.donneesquebec.ca/recherche/dataset/c8433300-f752-4815-8ea2-69cad416dd80/**}', 604800, FALSE)
 ON CONFLICT (source_key) DO NOTHING;
+
+-- A database that already has job-service#69's law_retrieval (keyed without the language): add the language, which is part
+-- of the key since orazaka-job-service#70 (a French retrieval is never served for English). The cache is new and holds
+-- nothing worth keeping; ADD COLUMN ... NOT NULL refuses loudly if it does. Skipped when the column exists.
+DO $do$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'law_retrieval' AND column_name = 'language') THEN
+        ALTER TABLE law_retrieval ADD COLUMN language VARCHAR(2) NOT NULL CHECK (language IN ('fr','en'));
+        ALTER TABLE law_retrieval DROP CONSTRAINT law_retrieval_pkey;
+        ALTER TABLE law_retrieval ADD PRIMARY KEY (jurisdiction, kind_id, language, as_of_bucket);
+    END IF;
+END
+$do$;

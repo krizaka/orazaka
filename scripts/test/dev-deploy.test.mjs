@@ -384,6 +384,9 @@ test("the law corpus (ADR-089 cut 2) is additive, idempotent, every switch off, 
   // The cache is keyed by language too (a French retrieval is never served for English).
   assert.match(sql, /language\s+VARCHAR\(2\)\s+NOT NULL CHECK \(language IN \('fr','en'\)\)/);
   assert.ok(sql.includes("PRIMARY KEY (jurisdiction, kind_id, language, as_of_bucket)"));
+  // ... and on a database that has #69's table (no language): ALTER, guarded so it runs once.
+  assert.match(sql, /IF NOT EXISTS \(SELECT 1 FROM information_schema\.columns\s+WHERE table_name = 'law_retrieval' AND column_name = 'language'\) THEN\s+ALTER TABLE law_retrieval ADD COLUMN language VARCHAR\(2\) NOT NULL CHECK \(language IN \('fr','en'\)\);/);
+  assert.match(sql, /ALTER TABLE law_retrieval ADD PRIMARY KEY \(jurisdiction, kind_id, language, as_of_bucket\);/);
   // The same block as orazaka-job-service's initdb, so a fresh volume and a migrated database agree.
   const jobService = new URL("../../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql", import.meta.url);
   const block = existsSync(jobService)
@@ -395,7 +398,7 @@ test("the law corpus (ADR-089 cut 2) is additive, idempotent, every switch off, 
   assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING/);
   assert.match(sql, /ON CONFLICT \(source_key\) DO NOTHING/);
   // Nothing is dropped, deleted or rewritten: foreign keys say ON UPDATE CASCADE, the rest is additive.
-  assert.doesNotMatch(sql.replace(/ON UPDATE CASCADE/g, ""), /\b(DROP|DELETE|UPDATE)\b/);
+  assert.doesNotMatch(sql.replace(/ON UPDATE CASCADE/g, "").replace("DROP CONSTRAINT law_retrieval_pkey", ""), /\b(DROP|DELETE|UPDATE)\b/, "the only DROP is the cache key of job-service#69, replaced by the one with the language");
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "law-corpus"\) lawCorpus\(\)/);
 });
 
