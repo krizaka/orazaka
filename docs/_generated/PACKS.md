@@ -1010,7 +1010,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
  "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
- "version": "1.8.0",
+ "version": "1.9.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1109,6 +1109,10 @@ capability rows, a price, catalogue entries — and changes no code.
      "title": "Juridiction"
     },
     {
+     "key": "declaredKind",
+     "title": "Type de document déclaré"
+    },
+    {
      "key": "asOf",
      "title": "Règles en vigueur à la date du"
     },
@@ -1117,7 +1121,7 @@ capability rows, a price, catalogue entries — and changes no code.
      "title": "Corpus nommé"
     }
    ],
-   "steps": 3,
+   "steps": 6,
    "stepKinds": [
     "CAPABILITY"
    ],
@@ -1309,7 +1313,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Tenant screening, Québec",
  "tagline": "A rental applicant check, one stage at a time, stopped by the manager's rules.",
  "description": "Documents, then court records (TAL and plumitifs), then credit. A stage runs and is charged only if the one before it passed its cut-off, and each cut-off is the manager's rule. Consent is checked per purpose before each paid stage. Codes only: the landlord decides.",
- "version": "1.0.0",
+ "version": "2.0.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1422,7 +1426,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | Pack | Version | Studios |
 |:---|:---|:---|
 | `data-analytics` | 1.6.0 | `data-driven-ui` · `video-understanding` · `creator-suggestions` |
-| `document-validation` | 1.8.0 | `document-authenticity` · `compliance-check` |
+| `document-validation` | 1.9.0 | `document-authenticity` · `compliance-check` |
 | `echo-toolkit` | 1.2.0 | `echo-reverse` |
 | `media-safety` | 1.2.0 | `media-safety` |
 | `message-authenticity` | 1.3.0 | `message-authenticity` |
@@ -1430,7 +1434,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | `outbound-prospection` | 1.3.0 | `outbound-prospection` · `lead-research` · `followup-sequences` |
 | `profile-photo-check` | 1.2.0 | `profile-photo-check` |
 | `realestate-studio` | 1.3.0 | `realestate-reels` |
-| `tenant-screening-qc` | 1.0.0 | `tenant-screening-qc` |
+| `tenant-screening-qc` | 2.0.0 | `tenant-screening-qc` |
 | `trade-showcase` | 1.2.0 | `trade-showcase` |
 | `bien-etre` | 1.6.0 | `guided-journaling` · `session-preparation` · `mood-tracking` · `session-summary` |
 

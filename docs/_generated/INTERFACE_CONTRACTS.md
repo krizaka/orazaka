@@ -16,6 +16,7 @@ generated: true
 - `CatalogModelService`
 - `ChatSessionService`
 - `CitationVerifier`
+- `ExternalCheckCapability`
 - `JobService`
 - `McpService`
 - `StepRouter`
@@ -28,6 +29,8 @@ generated: true
 - `ChatMemoryStore`
 - `CheckAuditLog`
 - `CheckKeyStore`
+- `CheckMeter`
+- `CheckSubjectPepper`
 - `ConsentRegistry`
 - `EmbeddingClient`
 - `ExternalCheckConnector`
