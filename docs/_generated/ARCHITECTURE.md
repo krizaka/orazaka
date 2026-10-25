@@ -48,7 +48,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-business` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-interceptors` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-tools` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
-| `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AiClient, CatalogModelService, ChatSessionService, CitationVerifier, JobService, McpService, StepRouter | AudioGeneratorClient, CapabilityProvider, ChatGeneratorClient, ChatMemoryStore, CheckAuditLog, CheckKeyStore, ConsentRegistry, EmbeddingClient, ExternalCheckConnector, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, SemanticClassifierPort, StepModelRecorder, StepRouteProvider, TestShaperPort, ToolRegistry, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
+| `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AiClient, CatalogModelService, ChatSessionService, CitationVerifier, ExternalCheckCapability, JobService, McpService, StepRouter | AudioGeneratorClient, CapabilityProvider, ChatGeneratorClient, ChatMemoryStore, CheckAuditLog, CheckKeyStore, CheckMeter, CheckSubjectPepper, ConsentRegistry, EmbeddingClient, ExternalCheckConnector, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, SemanticClassifierPort, StepModelRecorder, StepRouteProvider, TestShaperPort, ToolRegistry, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
 | `krizaka-users-core` | domain | `krizaka-users` | 0.2.0 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, PasswordRecoveryService, RateLimitProvider, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, CryptographyPort, OAuth2ProviderVerifier, PasswordEventPublisher, PasswordResetTokenRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
 | `orazaka-jobs-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-persistence-app-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | CapabilityManager, CatalogModelManager, ChatMemoryPersistenceProvider, ChatSessionPersistenceProvider, JobPersistenceProvider, OutboxStore, PipelineConfigManager, PlatformMcpServerPersistenceProvider, PlatformToolConfigPersistenceProvider, RuntimeConfigProvider, SpeechVoiceManager, UserMcpServerPersistenceProvider, ValidationPipelineManager | — |
@@ -92,14 +92,14 @@ Build dependencies between the modules above (test scope excluded): who packages
 | `krizaka-users-service` | `krizaka-security`, `krizaka-users-core` |
 | `orazaka-assets` | `orazaka-crypto` |
 | `orazaka-persistence-app` | `krizaka-messaging`, `orazaka-crypto`, `orazaka-jobs-api`, `orazaka-persistence-app-api` |
-| `orazaka-persistence-bridge` | `orazaka-core`, `orazaka-persistence-app-api` |
+| `orazaka-persistence-bridge` | `orazaka-core`, `orazaka-crypto`, `orazaka-persistence-app-api` |
 | `orazaka-studio-client` | `krizaka-security`, `orazaka-studio-api` |
 | `krizaka-billing-client` | `krizaka-billing-api`, `krizaka-security` |
 | `krizaka-users-client` | `krizaka-security`, `krizaka-users-api` |
 | `krizaka-users-persistence` | `krizaka-messaging` |
 | `orazaka-business` | `orazaka-core`, `orazaka-studio-api`, `orazaka-studio-client` |
 | `orazaka-interceptors` | `krizaka-billing-api`, `orazaka-core`, `orazaka-jobs-api` |
-| `orazaka-tools` | `orazaka-core` |
+| `orazaka-tools` | `krizaka-billing-api`, `orazaka-core` |
 | `orazaka-core` | `krizaka-security`, `orazaka-persistence-app-api` |
 | `krizaka-users-core` | `krizaka-users-api`, `krizaka-users-persistence` |
 | `orazaka-persistence-app-api` | `orazaka-jobs-api` |

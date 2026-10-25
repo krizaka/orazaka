@@ -1010,7 +1010,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
  "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
- "version": "1.8.0",
+ "version": "1.9.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1109,6 +1109,10 @@ capability rows, a price, catalogue entries — and changes no code.
      "title": "Juridiction"
     },
     {
+     "key": "declaredKind",
+     "title": "Type de document déclaré"
+    },
+    {
      "key": "asOf",
      "title": "Règles en vigueur à la date du"
     },
@@ -1117,7 +1121,7 @@ capability rows, a price, catalogue entries — and changes no code.
      "title": "Corpus nommé"
     }
    ],
-   "steps": 3,
+   "steps": 6,
    "stepKinds": [
     "CAPABILITY"
    ],
@@ -1422,7 +1426,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | Pack | Version | Studios |
 |:---|:---|:---|
 | `data-analytics` | 1.6.0 | `data-driven-ui` · `video-understanding` · `creator-suggestions` |
-| `document-validation` | 1.8.0 | `document-authenticity` · `compliance-check` |
+| `document-validation` | 1.9.0 | `document-authenticity` · `compliance-check` |
 | `echo-toolkit` | 1.2.0 | `echo-reverse` |
 | `media-safety` | 1.2.0 | `media-safety` |
 | `message-authenticity` | 1.3.0 | `message-authenticity` |
