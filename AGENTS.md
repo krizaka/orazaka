@@ -372,7 +372,7 @@ The org code rules (addendum 2026-10-15) are checked by tools, not by review.
 These are the defects code review found most often on 2026-10-23. Check them yourself before you open or update a pull request:
 1. **Checks:** run the repository's full check (lint, typecheck, tests, build) and fix it. Never push a red check.
 2. **Concurrency:** any « count then insert » or « check then write » runs in one transaction with a lock, and has a concurrency test.
-3. **One gate:** a rule (limit, permission, validation) is enforced in the service, so no route can skip it. Test every route.
+3. **One gate:** a business rule (limit, permission, quota) is enforced in the service, so no route can skip it. Test every route. Field validation stays in the record's compact constructor (§4), never copied into the service.
 4. **Errors:** a cleanup (ROLLBACK, DROP, close) never masks the original error. Rethrow it, or throw an `AggregateError` with the original first.
 5. **Validation:** validate the original input, never a truncated or pre-trimmed copy. Server and client reject the same inputs.
 6. **Accessibility:**
