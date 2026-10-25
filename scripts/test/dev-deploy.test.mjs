@@ -412,6 +412,63 @@ test("the law corpus (ADR-089 cut 2) is additive, idempotent, every switch off, 
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "law-corpus"\) lawCorpus\(\)/);
 });
 
+test("the external checks (orazaka-packs#138) are additive, idempotent, fail closed on dev, and have their command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-25-external-checks.sql", import.meta.url), "utf8");
+  const code = sql.replace(/--.*$/gm, ""); // the statements, without the comments that explain them
+  // The three checks: enabled, one handler (DB-driven routing), drained by the job service, billed per CALL.
+  for (const key of ["courtrecords", "credit", "identity"]) {
+    assert.ok(code.includes(`('orazaka.core.checks.${key}', 'check.external', 'job.text.process', 'CALL', 'EXTERNAL_CHECK', 'INTERACTIVE',`), key);
+  }
+  assert.equal((code.match(/\('orazaka\.core\.checks\./g) ?? []).length, 3);
+  assert.equal((code.match(/::jsonb, true\)/g) ?? []).length, 3);
+  assert.match(code, /ON CONFLICT \(feature_key\) DO NOTHING;/);
+  // The billable_capability check gets its name and accepts EXTERNAL_CHECK; the old unnamed one is dropped if present.
+  assert.ok(code.includes("DROP CONSTRAINT IF EXISTS orazaka_capabilities_billable_capability_check;"));
+  assert.ok(code.includes("DROP CONSTRAINT IF EXISTS ck_orazaka_capabilities_billable_capability;"));
+  assert.match(code, /ADD CONSTRAINT ck_orazaka_capabilities_billable_capability\s+CHECK \(billable_capability IN \('CHAT','IMAGE','AUDIO','VIDEO','AGENT','EXTERNAL_CHECK'\)\);/);
+  // The audit: append-only, the subject only as an HMAC, refusal if and only if REFUSED.
+  assert.ok(code.includes("CREATE TABLE IF NOT EXISTS external_check_audit ("));
+  assert.ok(code.includes("subject_ref   CHAR(64)     NOT NULL"));
+  const audit = code.match(/CREATE TABLE IF NOT EXISTS external_check_audit \(([\s\S]*?)\n\);/)[1];
+  assert.doesNotMatch(audit, /\b(name|last_name|first_name|birth_date|address)\b/, "no personal-data column");
+  assert.ok(code.includes("CHECK ((outcome = 'REFUSED') = (refusal IS NOT NULL))"));
+  assert.ok(code.includes("DROP TRIGGER IF EXISTS trg_external_check_audit_append_only ON external_check_audit;"));
+  assert.match(code, /CREATE TRIGGER trg_external_check_audit_append_only BEFORE UPDATE ON external_check_audit/);
+  // Off on dev until an operator seals a pepper: no checks.subject-pepper row is seeded (no row, no check).
+  assert.doesNotMatch(code, /subject-pepper/);
+  assert.doesNotMatch(code, /INSERT INTO (?!orazaka_capabilities)/, "the capability rows are the only rows it writes");
+  // Nothing is deleted or rewritten; the only DROPs are the IF EXISTS of a constraint or trigger replaced by name.
+  assert.doesNotMatch(code.replace(/DROP (CONSTRAINT|TRIGGER) IF EXISTS/g, "").replace("BEFORE UPDATE ON", ""), /\b(DROP|DELETE|UPDATE|TRUNCATE)\b/);
+  // The same block as orazaka-job-service's initdb, so a fresh volume and a migrated database agree.
+  const jobService = new URL("../../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql", import.meta.url);
+  // (Checked when the workspace holds a job-service checkout that already carries the block — orazaka-job-service#74.)
+  const block = existsSync(jobService)
+    ? readFileSync(jobService, "utf8").match(/-- =+\n-- EXTERNAL CHECKS \(orazaka-packs#138[\s\S]*?ON CONFLICT \(feature_key\) DO NOTHING;/)
+    : null;
+  if (block) {
+    assert.ok(sql.includes(block[0]), "the migration carries the job-service block verbatim");
+  }
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "external-checks"\) externalChecks\(\)/);
+});
+
+test("the price book rows of the external checks and of research (krizaka-billing#57) are billing's migration, run on krizaka_billing_db", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-25-pricebook-external-check-research.sql", import.meta.url), "utf8");
+  const code = sql.replace(/--.*$/gm, "");
+  assert.match(code, /\(2, 'EXTERNAL_CHECK', 'mock',\s+'CALL', /);
+  assert.match(code, /\(2, 'RESEARCH',\s+'law-corpus', 'CALL', /);
+  assert.equal((code.match(/^\(2, '/gm) ?? []).length, 2);
+  assert.match(code, /ON CONFLICT DO NOTHING;/);
+  assert.doesNotMatch(code, /\b(DROP|DELETE|UPDATE|TRUNCATE)\b/);
+  // The same file as krizaka-billing's own migration (checked when the workspace holds a billing checkout that has it).
+  const billing = new URL("../../krizaka/krizaka-billing/infra/migrations/2026-10-25-pricebook-external-check-research.sql", import.meta.url);
+  if (existsSync(billing)) {
+    assert.equal(sql, readFileSync(billing, "utf8"), "the migration is billing's, unchanged");
+  }
+  const deploy = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
+  assert.match(deploy, /command === "pricebook-external-check-research"\) pricebookExternalCheckResearch\(\)/);
+  assert.match(deploy, /function pricebookExternalCheckResearch\(\) \{[^}]*"krizaka_billing_db", "krizaka_billing_db", "DATABASE_PASSWORD_KRIZAKA_BILLING_DB"/);
+});
+
 test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
   assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
 });
