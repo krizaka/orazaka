@@ -18,8 +18,9 @@
     "validate:ds": "npm run validate --workspace=@krizaka/orazaka-design-system",
     "install:web": "npx -y pnpm@12.10.1 --dir orazaka-web-client install --frozen-lockfile",
     "validate:web": "npm run install:web && npx -y pnpm@12.10.1 --dir orazaka-web-client run validate",
+    "check:web": "npm run install:web && npx -y pnpm@12.10.1 --dir orazaka-web-client run check:deploy-build",
     "validate:mobile": "npm run validate --workspace=orazaka-mobile-client",
-    "validate": "npm run validate:cli && npm run validate:ds && npm run validate:web && npm run validate:mobile"
+    "validate": "npm run validate:cli && npm run validate:ds && npm run check:web && npm run validate:mobile"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",

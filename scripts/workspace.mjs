@@ -163,6 +163,7 @@ function ci(name) {
   if (target.kind === "npm" && target.packageManager === "pnpm") {
     // Self-contained member: its own pnpm-lock.yaml pins its dependencies (orazaka-apps/ui/package-lock.json does not),
     // so a bump of @krizaka/ui there never waits for a lock here. Installed from the registry, frozen.
+    // The member's own tests (incl. krizaka-deps) run here, in ITS pull requests; the workspace job only builds it (check:web).
     run("npm", ["run", "validate:web"], { cwd: UI });
     run("npx", ["-y", PNPM, "--dir", target.path, "run", "build"], { cwd: ROOT });
     return;
