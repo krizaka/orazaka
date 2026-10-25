@@ -57,7 +57,9 @@ services:
       branch: main
       deploy_on_push: true
     environment_slug: node-js
-    build_command: npm install --no-audit --no-fund && npm run build
+    # The web client is a pnpm project: the buildpack installs it with pnpm, then this builds it. `npm install` on a
+    # pnpm tree crashes (« Cannot read properties of null (reading 'matches') »), orazaka-web-client#282.
+    build_command: pnpm run build
     run_command: npm start
     http_port: 8080
     instance_count: 1
