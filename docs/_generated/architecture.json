@@ -518,7 +518,7 @@
       "layer": "framework",
       "runtime": "jvm",
       "version": "1.0.0-SNAPSHOT",
-      "description": "Platform bridge library: package-private @Service adapters that implement the core's DB-backed outbound ports (CapabilityProvider, PipelineConfigProvider, PlatformToolConfigProvider, PlatformMcpServerProvider, UserMcpServerProvider, ValidationPipelineRepository) by delegating to the orazaka-persistence-app-api inbound ports. Bundled by every service that runs the cognitive pipeline in-process (conversation-service, job-service, …) so the shared core beans wire without each service re-implementing the same DB adapters. Discovered via the hosts' com.krizaka.orazaka component scan — no HTTP surface, no entrypoint.",
+      "description": "Platform bridge library: package-private @Service adapters that implement the core's DB-backed outbound ports (CapabilityProvider, PipelineConfigProvider, PlatformToolConfigProvider, PlatformMcpServerProvider, UserMcpServerProvider, ValidationPipelineRepository, CheckSubjectPepper) by delegating to the orazaka-persistence-app-api inbound ports. Bundled by every service that runs the cognitive pipeline in-process (conversation-service, job-service, …) so the shared core beans wire without each service re-implementing the same DB adapters. Discovered via the hosts' com.krizaka.orazaka component scan — no HTTP surface, no entrypoint.",
       "ports": {
         "inbound": [],
         "outbound": []
@@ -645,6 +645,7 @@
           "CatalogModelService",
           "ChatSessionService",
           "CitationVerifier",
+          "ExternalCheckCapability",
           "JobService",
           "McpService",
           "StepRouter"
@@ -656,6 +657,8 @@
           "ChatMemoryStore",
           "CheckAuditLog",
           "CheckKeyStore",
+          "CheckMeter",
+          "CheckSubjectPepper",
           "ConsentRegistry",
           "EmbeddingClient",
           "ExternalCheckConnector",
@@ -1419,6 +1422,10 @@
     },
     {
       "from": "orazaka-persistence-bridge",
+      "to": "orazaka-crypto"
+    },
+    {
+      "from": "orazaka-persistence-bridge",
       "to": "orazaka-persistence-app-api"
     },
     {
@@ -1460,6 +1467,10 @@
     {
       "from": "orazaka-studio-service",
       "to": "orazaka-studio-api"
+    },
+    {
+      "from": "orazaka-tools",
+      "to": "krizaka-billing-api"
     },
     {
       "from": "orazaka-tools",
@@ -2298,6 +2309,21 @@
         "routingKey": "job.text.process"
       },
       {
+        "feature": "orazaka.core.checks.courtrecords",
+        "handler": "check.external",
+        "routingKey": "job.text.process"
+      },
+      {
+        "feature": "orazaka.core.checks.credit",
+        "handler": "check.external",
+        "routingKey": "job.text.process"
+      },
+      {
+        "feature": "orazaka.core.checks.identity",
+        "handler": "check.external",
+        "routingKey": "job.text.process"
+      },
+      {
         "feature": "orazaka.core.media.speech",
         "handler": "speech.synthesize",
         "routingKey": "job.text.process"
@@ -2715,7 +2741,7 @@
       {
         "from": "krizaka-billing-service",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-bom",
@@ -2785,7 +2811,7 @@
       {
         "from": "krizaka-notifications-service",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-notifications-service",
@@ -3010,7 +3036,7 @@
       {
         "from": "krizaka-users-core",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-users-core",
@@ -3040,7 +3066,7 @@
       {
         "from": "krizaka-users-persistence",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-users-service",
@@ -3060,7 +3086,7 @@
       {
         "from": "krizaka-users-service",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-users-service",
@@ -4707,7 +4733,7 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.8.0",
+      "version": "1.9.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -4725,6 +4751,8 @@
       "capabilities": [
         "orazaka.validation.document.screen",
         "orazaka.validation.document.identify",
+        "orazaka.validation.document.resolve",
+        "orazaka.validation.document.report",
         "orazaka.validation.document.signals",
         "orazaka.validation.document.assemble"
       ],
@@ -4860,7 +4888,7 @@
           "pricing": "PAID",
           "status": "PUBLISHED",
           "estimatedCredits": 120,
-          "steps": 3,
+          "steps": 6,
           "stepKinds": [
             "CAPABILITY"
           ],
@@ -4872,6 +4900,10 @@
             {
               "key": "jurisdiction",
               "title": "Juridiction"
+            },
+            {
+              "key": "declaredKind",
+              "title": "Type de document déclaré"
             },
             {
               "key": "asOf",
@@ -4888,7 +4920,7 @@
               "type": "JSON"
             },
             {
-              "key": "ruleset",
+              "key": "outcome",
               "type": "TEXT"
             }
           ],
@@ -5274,7 +5306,7 @@
     {
       "key": "tenant-screening-qc",
       "dir": "tenant-screening-qc",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -5290,8 +5322,6 @@
         "orazaka.screening.plan",
         "orazaka.screening.consent.check",
         "orazaka.screening.documents.assess",
-        "orazaka.screening.courts.check",
-        "orazaka.screening.credit.check",
         "orazaka.screening.cutoff.decide",
         "orazaka.screening.report.assemble"
       ],

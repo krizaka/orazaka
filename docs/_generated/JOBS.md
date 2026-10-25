@@ -32,6 +32,9 @@ and **which code** runs it (`handler_key`). Both are data: a pack adds a capabil
 | `orazaka.core.media.video.analysis` | `video.analyze` | `job.media.generate` | `VideoAnalysisStrategy` (in process) |
 | `orazaka.studio.media.sound` | `media.sound` | `job.sound.generate` | a worker (see the [worker protocol](../WORKER_PROTOCOL.md)) |
 | `orazaka.core.chat.completion` | `text.generate` | `job.text.process` | `ChatGenerationStrategy` (in process) |
+| `orazaka.core.checks.courtrecords` | `check.external` | `job.text.process` | `ExternalCheckStrategy` (in process) |
+| `orazaka.core.checks.credit` | `check.external` | `job.text.process` | `ExternalCheckStrategy` (in process) |
+| `orazaka.core.checks.identity` | `check.external` | `job.text.process` | `ExternalCheckStrategy` (in process) |
 | `orazaka.core.media.speech` | `speech.synthesize` | `job.text.process` | `SpeechSynthesisStrategy` (in process) |
 | `orazaka.core.media.video` | `video.generate` | `job.video.generate` | a worker (see the [worker protocol](../WORKER_PROTOCOL.md)) |
 
@@ -42,6 +45,7 @@ One capability's execution, in process.
 | Handler key | Executor | Repository | Summary |
 |:---|:---|:---|:---|
 | `audio.analyze` | `AudioAnalysisStrategy` | `orazaka-job-service` | Executes audio transcription/analysis jobs by delegating to the `AudioPreProcessor`. |
+| `check.external` | `ExternalCheckStrategy` | `orazaka-job-service` | Runs the engine's external checks as job steps (orazaka-packs#138): the capabilities `orazaka.core.checks.courtrecords`, `.credit` and `.identity`, whose rows all name the handler `check.external`. |
 | `image.analyze` | `VisionAnalysisStrategy` | `orazaka-job-service` | Executes vision/image analysis jobs using the AI chat client with vision models. |
 | `image.generate` | `ImageGenerationStrategy` | `orazaka-job-service` | Executes image generation jobs via the AI client's image endpoint. |
 | `speech.synthesize` | `SpeechSynthesisStrategy` | `orazaka-job-service` | Executes text-to-speech synthesis jobs via the AI client's audio endpoint. |
