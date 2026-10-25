@@ -22,6 +22,7 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | `/` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
 | `/audit` | `/audit` — the audit trail of account administration. | — |
 | `/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
+| `/law` | `/law` — Law → Proposals (ADR-089 §8): the review queue and promotion of the rules from the law, the corpus, the demand. | — |
 | `/login` | — | — |
 | `/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
 | `/operations` | `/operations` — dependencies, queue depth, recent errors, runs and the deployed version. | — |

@@ -92,14 +92,14 @@ Build dependencies between the modules above (test scope excluded): who packages
 | `krizaka-users-service` | `krizaka-security`, `krizaka-users-core` |
 | `orazaka-assets` | `orazaka-crypto` |
 | `orazaka-persistence-app` | `krizaka-messaging`, `orazaka-crypto`, `orazaka-jobs-api`, `orazaka-persistence-app-api` |
-| `orazaka-persistence-bridge` | `orazaka-core`, `orazaka-persistence-app-api` |
+| `orazaka-persistence-bridge` | `orazaka-core`, `orazaka-crypto`, `orazaka-persistence-app-api` |
 | `orazaka-studio-client` | `krizaka-security`, `orazaka-studio-api` |
 | `krizaka-billing-client` | `krizaka-billing-api`, `krizaka-security` |
 | `krizaka-users-client` | `krizaka-security`, `krizaka-users-api` |
 | `krizaka-users-persistence` | `krizaka-messaging` |
 | `orazaka-business` | `orazaka-core`, `orazaka-studio-api`, `orazaka-studio-client` |
 | `orazaka-interceptors` | `krizaka-billing-api`, `orazaka-core`, `orazaka-jobs-api` |
-| `orazaka-tools` | `orazaka-core` |
+| `orazaka-tools` | `krizaka-billing-api`, `orazaka-core` |
 | `orazaka-core` | `krizaka-security`, `orazaka-persistence-app-api` |
 | `krizaka-users-core` | `krizaka-users-api`, `krizaka-users-persistence` |
 | `orazaka-persistence-app-api` | `orazaka-jobs-api` |
@@ -265,5 +265,8 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka.core.media.video.analysis` | `video.analyze` | `job.media.generate` |
 | `orazaka.studio.media.sound` | `media.sound` | `job.sound.generate` |
 | `orazaka.core.chat.completion` | `text.generate` | `job.text.process` |
+| `orazaka.core.checks.courtrecords` | `check.external` | `job.text.process` |
+| `orazaka.core.checks.credit` | `check.external` | `job.text.process` |
+| `orazaka.core.checks.identity` | `check.external` | `job.text.process` |
 | `orazaka.core.media.speech` | `speech.synthesize` | `job.text.process` |
 | `orazaka.core.media.video` | `video.generate` | `job.video.generate` |
