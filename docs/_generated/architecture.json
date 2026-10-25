@@ -645,6 +645,7 @@
           "CatalogModelService",
           "ChatSessionService",
           "CitationVerifier",
+          "ExternalCheckCapability",
           "JobService",
           "McpService",
           "StepRouter"
@@ -656,6 +657,8 @@
           "ChatMemoryStore",
           "CheckAuditLog",
           "CheckKeyStore",
+          "CheckMeter",
+          "CheckSubjectPepper",
           "ConsentRegistry",
           "EmbeddingClient",
           "ExternalCheckConnector",
@@ -4707,7 +4710,7 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.8.0",
+      "version": "1.9.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -4725,6 +4728,8 @@
       "capabilities": [
         "orazaka.validation.document.screen",
         "orazaka.validation.document.identify",
+        "orazaka.validation.document.resolve",
+        "orazaka.validation.document.report",
         "orazaka.validation.document.signals",
         "orazaka.validation.document.assemble"
       ],
@@ -4860,7 +4865,7 @@
           "pricing": "PAID",
           "status": "PUBLISHED",
           "estimatedCredits": 120,
-          "steps": 3,
+          "steps": 6,
           "stepKinds": [
             "CAPABILITY"
           ],
@@ -4872,6 +4877,10 @@
             {
               "key": "jurisdiction",
               "title": "Juridiction"
+            },
+            {
+              "key": "declaredKind",
+              "title": "Type de document déclaré"
             },
             {
               "key": "asOf",
@@ -4888,7 +4897,7 @@
               "type": "JSON"
             },
             {
-              "key": "ruleset",
+              "key": "outcome",
               "type": "TEXT"
             }
           ],
