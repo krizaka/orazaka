@@ -161,6 +161,14 @@ function analytics() {
   console.log("orazaka_knowledge_db: analytics tables, kinds and settings v1 in place");
 }
 
+/** The bake-off winners and the optional upscale on orazaka_db (a dev database that was not seeded from scratch) — idempotent. */
+function models() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-17-bakeoff-models.sql"), "utf8");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
+  console.log("orazaka_db: LTX-Video 0.9.8, Wan 2.2 I2V A14B (40 steps), SeedVR2 3B and the video capability's `upscale` input in place");
+}
+
 /** The Idempotency-Key columns and index of studio_run (ADR-083) — idempotent, additive, safe before the code ships. */
 function runIdempotency() {
   const env = secrets();
@@ -653,6 +661,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "policy") policy();
     else if (command === "recommendations") recommendations();
     else if (command === "analytics") analytics();
+    else if (command === "models") models();
     else if (command === "run-idempotency") runIdempotency();
     else if (command === "run-events") runEvents();
     else if (command === "run-result-cache") runResultCache();
@@ -673,7 +682,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | law-corpus | external-checks | pricebook-external-check-research | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | models | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | law-corpus | external-checks | pricebook-external-check-research | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {
