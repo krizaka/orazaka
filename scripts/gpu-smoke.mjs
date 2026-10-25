@@ -12,15 +12,16 @@
  * reports it — the model that answered, from our side (the job's own metadata, never a claim of the client).
  * Checks this environment cannot route are reported SKIPPED with the reason, never passed.
  *
- * Credentials: ORAZAKA_QA_EMAIL / ORAZAKA_QA_PASSWORD, else the "### Orazaka (ORA-DEPLOY" block of company/QA.md.
+ * Credentials: ORAZAKA_QA_EMAIL / ORAZAKA_QA_PASSWORD, else the seeded user in the QA store (secret.sh @qa
+ * ORAZAKA_USER_EMAIL / ORAZAKA_USER_PASSWORD, written by `dev-deploy.mjs seed`).
  * Nothing secret is printed or written to the report.
  */
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
 const BASE = process.env.ORAZAKA_EDGE_URL ?? "https://dev.orazaka.com/edge";
-const QA_FILE = process.env.ORAZAKA_QA_FILE ?? join(homedir(), "krizaka-com/company/QA.md");
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
   return i > 0 ? process.argv[i + 1] : fallback;
@@ -61,15 +62,17 @@ export const CHECKS = [
   { name: "rag", engine: "knowledge", skip: "the knowledge service is not deployed in dev (docs/DEPLOY_DEV.md)" },
 ];
 
-export function credentials(env = process.env, qaText = existsSync(QA_FILE) ? readFileSync(QA_FILE, "utf8") : "") {
+/** One key of the QA store, through secret.sh (the value stays in this process, never printed); "" when absent. */
+function qaSecret(key) {
+  const r = spawnSync(join(homedir(), ".krizaka-worktrees/tools/secret.sh"), ["@qa", key], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  return r.status === 0 ? r.stdout : "";
+}
+
+export function credentials(env = process.env, read = qaSecret) {
   if (env.ORAZAKA_QA_EMAIL && env.ORAZAKA_QA_PASSWORD) return { email: env.ORAZAKA_QA_EMAIL, password: env.ORAZAKA_QA_PASSWORD };
-  const start = qaText.indexOf("### Orazaka (ORA-DEPLOY");
-  if (start < 0) throw new Error("no QA credentials (ORAZAKA_QA_EMAIL/PASSWORD or company/QA.md)");
-  const block = qaText.slice(start);
-  const user = block.slice(block.indexOf("utilisateur"));
-  const email = /E-mail : `([^`]+)`/.exec(user)?.[1];
-  const password = /Mot de passe : `([^`]+)`/.exec(user)?.[1];
-  if (!email || !password) throw new Error("QA.md has no Orazaka user block");
+  const email = read("ORAZAKA_USER_EMAIL");
+  const password = read("ORAZAKA_USER_PASSWORD");
+  if (!email || !password) throw new Error("no QA credentials (ORAZAKA_QA_EMAIL/PASSWORD, or ORAZAKA_USER_* in the QA store: dev-deploy.mjs seed)");
   return { email, password };
 }
 

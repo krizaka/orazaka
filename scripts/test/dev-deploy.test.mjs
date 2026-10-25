@@ -1,8 +1,10 @@
 // node --test scripts/test — the dev deployment tool: specs are filled, never leaked, accounts are sound.
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { test } from "node:test";
-import { connectionVars, grantSql, parseScopes, password, personaAccount, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
+import { connectionVars, grantSql, parseScopes, password, personaAccount, readEnvFile, render, seedSql, serviceAccount, upsertEnv, writeEnvKeys } from "../dev-deploy.mjs";
 
 const spec = (name) => readFileSync(new URL(`../../infra/deploy/${name}.app.yaml`, import.meta.url), "utf8");
 
@@ -564,4 +566,21 @@ test("models: the bake-off winners, SeedVR2 and the video capability's `upscale`
   const deploy = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
   assert.match(deploy, /command === "models"\) models\(\)/);
   assert.match(deploy, /DATABASE_PASSWORD_ORAZAKA_DB/);
+});
+
+test("writeEnvKeys replaces only its own keys in place, keeps every other line, and the file stays 0600", () => {
+  const file = join(mkdtempSync(join(tmpdir(), "qa-store-")), "store.env");
+  writeFileSync(file, "# Section 11\nOTHER_KEY=keep-me\n\nORAZAKA_USER_PASSWORD=old\n", { mode: 0o644 });
+  writeEnvKeys(file, { ORAZAKA_USER_PASSWORD: "new", ORAZAKA_USER_EMAIL: "qa+user@orazaka.com" });
+  assert.equal(readFileSync(file, "utf8"), "# Section 11\nOTHER_KEY=keep-me\n\nORAZAKA_USER_PASSWORD=new\nORAZAKA_USER_EMAIL=qa+user@orazaka.com\n");
+  assert.equal(statSync(file).mode & 0o777, 0o600, "an existing readable file is closed before the secret lands");
+  assert.deepEqual(readdirSync(dirname(file)), ["store.env"], "no temporary file is left behind");
+});
+
+test("the seed stores the QA accounts in the QA store, never in a document", () => {
+  const code = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
+  const seed = code.slice(code.indexOf("function seed() {"), code.indexOf("\n}\n", code.indexOf("function seed() {")));
+  for (const key of ["ORAZAKA_USER_EMAIL", "ORAZAKA_USER_PASSWORD", "ORAZAKA_ADMIN_EMAIL", "ORAZAKA_ADMIN_PASSWORD"]) assert.ok(seed.includes(`storeSecret("${key}"`), key);
+  assert.doesNotMatch(code, /QA\.md|Mot de passe/, "no password goes to a Markdown sheet");
+  assert.doesNotMatch(code, /appendFileSync\(ENV_FILE/, "a key is replaced, never appended twice");
 });
