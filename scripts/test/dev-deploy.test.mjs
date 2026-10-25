@@ -584,3 +584,25 @@ test("the seed stores the QA accounts in the QA store, never in a document", () 
   assert.doesNotMatch(code, /QA\.md|Mot de passe/, "no password goes to a Markdown sheet");
   assert.doesNotMatch(code, /appendFileSync\(ENV_FILE/, "a key is replaced, never appended twice");
 });
+
+test("the semantic cache (orazaka-ai-engine#40) is additive, idempotent, OFF on dev, and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-22-semantic-cache.sql", import.meta.url), "utf8");
+  const code = sql.replace(/--.*$/gm, "");
+  assert.ok(code.includes("CREATE EXTENSION IF NOT EXISTS vector;"));
+  assert.ok(code.includes("CREATE TABLE IF NOT EXISTS semantic_cache_entry ("));
+  assert.match(code, /CONSTRAINT uq_semantic_cache_key UNIQUE \(tenant_id, scope_guard_hash, model_tier, exact_key\)/, "an entry is never shared across tenants");
+  assert.match(code, /CREATE INDEX IF NOT EXISTS idx_semantic_cache_expiry/);
+  assert.match(code, /CREATE INDEX IF NOT EXISTS idx_semantic_cache_embedding\s+ON semantic_cache_entry USING hnsw \(embedding vector_cosine_ops\)/);
+  // OFF: the interceptor row is disabled, and an existing row (an operator's choice) is never overwritten.
+  assert.match(code, /\('SemanticCacheInterceptor','Semantic Cache Interceptor',8, FALSE,/);
+  assert.match(code, /ON CONFLICT \(interceptor_key\) DO NOTHING;/);
+  assert.doesNotMatch(code, /\b(DROP|DELETE|UPDATE|TRUNCATE)\b/);
+  assert.doesNotMatch(code, /^\\c /m, "the command connects to orazaka_db itself");
+  // The same table as orazaka-job-service's initdb, so a fresh volume and a migrated database agree.
+  const jobService = new URL("../../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql", import.meta.url);
+  const table = existsSync(jobService)
+    ? readFileSync(jobService, "utf8").match(/CREATE TABLE IF NOT EXISTS semantic_cache_entry \([\s\S]*?USING hnsw \(embedding vector_cosine_ops\);/)
+    : null;
+  if (table) assert.ok(sql.includes(table[0]), "the migration carries the job-service table verbatim");
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "semantic-cache"\) semanticCache\(\)/);
+});

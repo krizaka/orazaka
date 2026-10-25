@@ -1,8 +1,6 @@
 -- The semantic cache for an existing database (ai-engine#40) — orazaka-job-service
 -- infra/initdb/30-jobs-config.sql carries the same table and row for a fresh one. OFF by default:
 -- the row is disabled and a pack must declare orazaka.cache.mode. Idempotent.
-\c orazaka_db
-
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE IF NOT EXISTS semantic_cache_entry (
     id               BIGSERIAL    PRIMARY KEY,
