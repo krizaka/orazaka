@@ -53,7 +53,7 @@ const JARS = {
 function jar(name) {
   const pattern = path.join(WORKSPACE, JARS[name]);
   const dir = path.dirname(pattern);
-  const wanted = path.basename(pattern).replace("*", "");
+  const wanted = path.basename(pattern).replaceAll("*", "");
   const [prefix, suffix] = path.basename(pattern).split("*");
   const found = existsSync(dir) ? readdirSync(dir).find((f) => f.endsWith(".jar") && (suffix === undefined ? f === wanted : f.startsWith(prefix) && f.endsWith(suffix) && !f.includes("-plain") && !f.includes("sources"))) : null;
   if (!found) {
@@ -150,7 +150,7 @@ async function up() {
   const common = {
     IDENTITY_JWT_SECRET: JWT, RABBITMQ_HOST: "127.0.0.1", RABBITMQ_PORT: String(PORTS.rabbit), RABBITMQ_USER: "guest", RABBITMQ_PASS: "guest",
     MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "0", TRACING_SAMPLING_PROBABILITY: "0", EVENTS_EXCHANGE: "orazaka.events", DLX_EXCHANGE: "orazaka.dlx",
-    CRYPTO_KEY: "load-stack-crypto-key-0123456789abcdef0123", CRYPTO_SALT: "load-stack-crypto-salt-0123456789abcdef", AUTH_SIGNUP_ENABLED: "false",
+    CRYPTO_KEY: "load-stack-crypto-key-0123456789abcdef0123", CRYPTO_SALT: "0123456789abcdef" /* 16 hex (docs/DEPLOY_DEV.md): the salt is hex-decoded */, AUTH_SIGNUP_ENABLED: "false",
     EMAIL_VERIFICATION_ENABLED: "false", LOGGING_LEVEL_ORAZAKA: "WARN", BILLING_ENABLED: "true", BILLING_INTERNAL_URL: `http://127.0.0.1:${PORTS.billing}`,
     ORAZAKA_PACKS_SOURCES: path.join(WORKSPACE, "orazaka-packs"), ABUSE_RATE_LIMIT_MODE: "observe", AUTH_API_KEY_DAILY_REQUESTS: "-1",
   };
