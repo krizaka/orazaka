@@ -30,7 +30,7 @@ async function call(method, path, body, raw) {
 }
 
 /** The inputs of one image run: the Studio's own fields, nothing the script invents. */
-export const imageInputs = (clip, model, size) => ({ prompt: clip.scene, size, model, ...(clip.imageSeed ? { seed: String(clip.imageSeed) } : {}) });
+export const imageInputs = (clip, model, size) => ({ prompt: clip.scene, size: clip.size ?? size, model: clip.imageModel ?? model, ...(clip.imageSeed ? { seed: String(clip.imageSeed) } : {}) });
 
 async function main() {
   const plan = JSON.parse(readFileSync(resolve(arg("plan")), "utf8"));
@@ -54,7 +54,7 @@ async function main() {
     }
     const jobs = [];
     for (const step of run.steps ?? []) if (step.jobId) jobs.push(await call("GET", `/api/v1/jobs/${step.jobId}`).catch(() => null));
-    const facts = { id: clip.id, runId: accepted.id, status: run.status, model, requestedSize: size, prompt: clip.scene, runSeconds: runSeconds(run), reported: factsOf(jobs.filter(Boolean)) };
+    const facts = { id: clip.id, runId: accepted.id, status: run.status, model: clip.imageModel ?? model, requestedSize: clip.size ?? size, prompt: clip.scene, runSeconds: runSeconds(run), reported: factsOf(jobs.filter(Boolean)) };
     if (run.status === "SUCCEEDED") {
       const o = (run.outputs ?? []).find((x) => typeof (x.value ?? x.url) === "string");
       const url = o?.value ?? o?.url;

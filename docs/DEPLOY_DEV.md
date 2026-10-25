@@ -71,6 +71,25 @@ node scripts/dev-deploy.mjs automations     # the model, triggers, webhook ledge
 - **The pool is one connection**: no transaction is held across the call to the Studio service. The connection budget is
   22 of 22 with it (docs/DEV_DATABASE.md); the next service needs the plan upgrade or a smaller pool elsewhere.
 
+## External checks — court records, credit, identity (orazaka-packs#138)
+
+The engine's checks are job steps (`orazaka.core.checks.courtrecords`, `.credit`, `.identity`, handler `check.external`,
+billed per `CALL` as `EXTERNAL_CHECK`), still on the mock connector. Two idempotent steps bring an existing dev database to
+the schema of a fresh one, after orazaka-job-service#74 and krizaka-billing#57 are deployed:
+
+```bash
+node scripts/dev-deploy.mjs external-checks                    # orazaka_db: the three rows, the named billable check, external_check_audit (append-only)
+node scripts/dev-deploy.mjs pricebook-external-check-research  # krizaka_billing_db: billing's rows (EXTERNAL_CHECK, mock, CALL) and (RESEARCH, law-corpus, CALL)
+```
+
+- **Off on dev, fail closed**: no `checks.subject-pepper` row is seeded, so the engine cannot name a subject and every check
+  job is refused until an operator seals a pepper. No row, no check.
+- The audit holds no personal data: the subject is an HMAC (`subject_ref`), a line is never rewritten (a trigger refuses
+  an `UPDATE`).
+- `infra/migrations/2026-10-25-external-checks.sql` is the `EXTERNAL CHECKS` block of orazaka-job-service's
+  `infra/initdb/30-jobs-config.sql`, and `2026-10-25-pricebook-external-check-research.sql` is krizaka-billing's migration of
+  the same name, unchanged; `scripts/test/dev-deploy.test.mjs` pins both against their checkouts.
+
 ## Service accounts — a Krizaka product calling Orazaka
 
 Krizaka's products consume AI **only through Orazaka**: Yomizaka runs the document Studios with its own account, never a

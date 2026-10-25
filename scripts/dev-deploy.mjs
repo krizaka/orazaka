@@ -7,6 +7,8 @@
  *   node scripts/dev-deploy.mjs policy      # infra/deploy/dev-content-policy.sql into orazaka_studio_db (docs/CONTENT_POLICY.md)
  *   node scripts/dev-deploy.mjs recommendations  # the recommender's tables on orazaka_knowledge_db (ADR-078)
  *   node scripts/dev-deploy.mjs analytics        # the analytics tables, kinds and settings v1 (ADR-081)
+ *   node scripts/dev-deploy.mjs external-checks  # the engine's external checks on orazaka_db, fail closed (orazaka-packs#138)
+ *   node scripts/dev-deploy.mjs pricebook-external-check-research  # their price book rows on krizaka_billing_db (krizaka-billing#57)
  *   node scripts/dev-deploy.mjs service-tier     # the `service` rate-limit tier, svc_* users moved onto it (ADR-083)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
  *   node scripts/dev-deploy.mjs persona [eric|mira|krizaka]  # a plain user, free tier: Eric/Mira the demo personas, Krizaka the company as an SME customer → @dev APP_QA_ORAZAKA_<NAME>_*, never printed; sign-up stays closed
@@ -221,6 +223,22 @@ function lawCorpus() {
   const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-24-law-corpus.sql"), "utf8");
   psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
   console.log("orazaka_db: law_* tables, rule_proposal, kind_demand, settings bounds and law.* settings in place (off)");
+}
+
+/** The external checks of orazaka-packs#138 (orazaka-job-service#74): three capability rows, the named billable check, the append-only audit — idempotent, additive; no pepper is seeded, so every check stays refused. */
+function externalChecks() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-25-external-checks.sql"), "utf8");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
+  console.log("orazaka_db: orazaka.core.checks.* capabilities, EXTERNAL_CHECK billable and external_check_audit in place (no pepper: checks refused)");
+}
+
+/** krizaka-billing's own migration (krizaka-billing#57): the per-CALL price book rows of EXTERNAL_CHECK/mock and RESEARCH/law-corpus — idempotent. */
+function pricebookExternalCheckResearch() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-25-pricebook-external-check-research.sql"), "utf8");
+  psql(env, "krizaka_billing_db", "krizaka_billing_db", "DATABASE_PASSWORD_KRIZAKA_BILLING_DB", [], sql);
+  console.log("krizaka_billing_db: price book rows (EXTERNAL_CHECK, mock, CALL) and (RESEARCH, law-corpus, CALL) in place");
 }
 
 /** The `service` rate-limit tier and the existing svc_* users moved onto it (ADR-083 slice 2) — idempotent. */
@@ -644,6 +662,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "search-knowledge") searchKnowledge();
     else if (command === "research-tables") researchTables();
     else if (command === "law-corpus") lawCorpus();
+    else if (command === "external-checks") externalChecks();
+    else if (command === "pricebook-external-check-research") pricebookExternalCheckResearch();
     else if (command === "service-tier") serviceTier();
     else if (command === "webhooks") webhooks();
     else if (command === "automations") automations();
@@ -653,7 +673,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | law-corpus | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | law-corpus | external-checks | pricebook-external-check-research | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {

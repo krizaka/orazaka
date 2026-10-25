@@ -1,0 +1,276 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Orazaka — law corpus read API",
+    "version": "1.0.0",
+    "description": "The dated, hashed text of the law (ADR-089 §2, §9), read through the engine's single door (ADR-068). Hand-written until krizaka/orazaka#238 generates contracts/openapi/ from the controllers; scripts/test/openapi-law.test.mjs pins it."
+  },
+  "servers": [
+    {
+      "url": "https://api.orazaka.com",
+      "description": "the edge; an oz_ key is exchanged there for a session"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "paths": {
+    "/api/v1/law/articles": {
+      "get": {
+        "operationId": "readLawArticle",
+        "summary": "The text of an article as it was in force on a day.",
+        "description": "Served by orazaka-conversation-service (LawArticleController → orazaka-tools LawArticleReadService). asOf is required: no day is read from a clock. The text is served only when it still gives the content_hash recorded with its row (fail closed: law-integrity-error, no text). An optional quote is checked against the text under the corpus normaliser (NFC, whitespace collapsed), deterministically. Metered as one RESEARCH CALL on provider law-corpus: held after validation, settled only on FOUND (whatever the quote check), released on every other outcome; an invalid question and a switched-off corpus hold nothing. With no meter wired the read is refused (503), never served unmetered.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jurisdiction",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "examples": [
+                "QC",
+                "CA"
+              ]
+            }
+          },
+          {
+            "name": "instrument",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "examples": [
+                "CCQ-1991",
+                "E-15"
+              ]
+            }
+          },
+          {
+            "name": "ref",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "examples": [
+                "1931",
+                "169(4)"
+              ]
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "fr",
+                "en"
+              ]
+            }
+          },
+          {
+            "name": "asOf",
+            "in": "query",
+            "required": true,
+            "description": "The day the text must be in force (ISO yyyy-MM-dd). Required; a caller that wants « today » sends its own calendar day (America/Toronto for QC).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "quote",
+            "in": "query",
+            "required": false,
+            "description": "Words to check against the article text. Not blank when sent.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "FOUND: the version in force on asOf, its hash checked. Charged: one CALL.",
+            "headers": {
+              "X-Orazaka-Read-Id": {
+                "description": "The identifier the read was metered under.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LawArticle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A part of the question is missing or unreadable (asOf included). Nothing held.",
+            "x-codes": [
+              "invalid-request"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No session (and no oz_ key exchanged by the edge).",
+            "x-codes": []
+          },
+          "402": {
+            "description": "The caller's budget or credits cannot hold the call. Nothing read.",
+            "x-codes": [
+              "law-budget-exceeded"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LAW_VERSION_UNKNOWN: no version of this article is known for that day. Not charged.",
+            "x-codes": [
+              "law-version-unknown"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "LAW_INTEGRITY_ERROR: the stored text no longer gives its recorded hash; no text. Not charged.",
+            "x-codes": [
+              "law-integrity-error"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "LAW_CORPUS_DISABLED (law.corpus.enabled is false: the operator's switch, temporary, not the caller's question) or LAW_METERING_UNAVAILABLE (no meter wired). Nothing held.",
+            "x-codes": [
+              "law-corpus-disabled",
+              "law-metering-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A session JWT, or an oz_ key that the edge exchanges for one."
+      }
+    },
+    "schemas": {
+      "LawArticle": {
+        "type": "object",
+        "required": [
+          "text",
+          "contentHash",
+          "inForceFrom",
+          "officialUrl",
+          "importId"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The normalised text (label and subsections; the historical note is not part of it)."
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 of the normalised text, checked on this read."
+          },
+          "inForceFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "officialUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "The publisher's page, the address a citation shows."
+          },
+          "importId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The law_import that brought this text in."
+          },
+          "quote": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "VERIFIED",
+              "NOT_IN_ARTICLE",
+              null
+            ],
+            "description": "The quote check, when a quote was sent."
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "description": "RFC 9457 Problem Details.",
+        "properties": {
+          "status": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "description": "The stable slug a client branches on."
+          },
+          "outcome": {
+            "type": "string",
+            "description": "The corpus outcome name (LAW_VERSION_UNKNOWN …), as the lookupStatute tool says it; absent on invalid-request."
+          },
+          "requestId": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

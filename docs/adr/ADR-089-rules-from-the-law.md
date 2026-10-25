@@ -10,6 +10,7 @@ order: 89
 - **Status**: Accepted (2026-10-24), being implemented in the order of « The cut ». Amended 2026-10-24 in the cut-5 pull
   request (orazaka-studio#80): the points settled in orazaka-packs#129 (§1) and the keys corrected on
   [krizaka/orazaka#401](https://github.com/krizaka/orazaka/issues/401) (§2, §4). Each amendment says where it was decided.
+  Amended 2026-10-25 for cut 8 (orazaka-ai-engine#82): where the derivation and `vet` run, see « Amendments ».
 - **Date**: 2026-10-23
 - **Issue**: [krizaka/orazaka#401](https://github.com/krizaka/orazaka/issues/401)
 - **Builds on**: [ADR-087](ADR-087-grounded-research.md) (grounded research: sources as data, citations, the
@@ -472,6 +473,27 @@ like `studio_runtime_config`; edited through the admin settings API and audited.
 - **TO VALIDATE, added to #393**: commercial use of the Données Québec dataset (CC BY-NC-ND 4.0), a written request
   to its publisher; until then, our good-faith reading above, and the lawyer list. Légis Québec and CanLII stay
   unread by the engine.
+
+## Amendments
+
+### 2026-10-25 — cut 8: the derivation runs in the engine, `vet` is Java (orazaka-ai-engine#82)
+
+Accepted by the CTO on [orazaka-ai-engine#82](https://github.com/krizaka/orazaka-ai-engine/issues/82)
+(implemented by orazaka-ai-engine#94, data in orazaka-packs#144). Two departures from §3 and §7:
+
+1. **The paid `propose` step runs in the engine, under a per-run cap.** ADR-088 is still a proposal: a Studio run has
+   no credit cap to declare `law.derive.max-credits` into. Until it has one, `RuleDerivationService`
+   (`orazaka-tools`) runs the derivation itself: before each model call, what was spent plus the call's ceiling must
+   fit in `law.derive.max-credits`, or the run stops (`BUDGET_EXHAUSTED`) and lists the articles it did not reach;
+   `0` keeps derivation off. When ADR-088 ships its Studio credit cap, the derivation becomes the `rule-derivation`
+   Studio run with `studio_run.credit_cap = law.derive.max-credits`, the saga makes the same comparison, and the engine
+   path is deleted: [orazaka-ai-engine#96](https://github.com/krizaka/orazaka-ai-engine/issues/96).
+2. **`vet` is `RuleProposalVet`, in Java, pure and failing closed.** It is deterministic (no model, no clock, no I/O
+   beyond the corpus at `asOf`), it is the one gate of the write path (only it builds a `VettedProposal`, the only
+   thing `rule_proposal` accepts; `[LAW-003]`, `[LAW-004]`), and anything it cannot prove is rejected
+   (`REJECTED_AUTO` with its `vet_report`). The review queue's Edit (cut 9) goes through the same gate. The pack's
+   Python worker `orazaka.validation.rules.vet` stays and proves the same verdicts on the same planted data
+   (`document-validation/derivation/`), so the two cannot drift apart unseen.
 
 ## The cut — issues in order
 
