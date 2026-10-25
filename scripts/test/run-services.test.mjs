@@ -62,3 +62,72 @@ test("the container stops its supervised workers when it stops (stop_all signals
   assert.match(text, /workers\+=\("\$!"\)/);
   assert.match(text, /for pid in "\$\{pids\[@\]\}" "\$\{workers\[@\]\}"; do kill -TERM/);
 });
+
+// ── The hosted-video worker: dev's cheap, always-on consumer for the models a provider serves (no GPU) ──
+const root = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+
+test("the supervisor starts the hosted-video worker by default, beside the validation worker", () => {
+  const sh = root("infra/deploy/run-services.sh");
+  assert.match(sh, /ORAZAKA_WORKERS-validation hosted-video/);
+  assert.match(sh, /hosted-video\)\s*\n\s*echo "\[run-services\] starting the hosted-video worker \(supervised\)"/);
+});
+
+test("the hosted-video worker is the media worker in hosted-only mode, on the lean venv, handing its output to the job service", () => {
+  const sh = root("infra/deploy/run-services.sh");
+  const fn = sh.slice(sh.indexOf("run_hosted_video_worker()"), sh.indexOf("# The Python workers of the packs"));
+  assert.match(fn, /MEDIA_WORKER_HOSTED_ONLY=true/);
+  assert.match(fn, /orazaka-worker-media/);
+  assert.match(fn, /MEDIA_ASSET_SINK_URL=http:\/\/localhost:8090/);
+  assert.match(fn, /JOB_SERVICE_INTERNAL_URL=http:\/\/localhost:8090/);
+  assert.match(fn, /AI_INFERENCE_KEY="\$\{AI_INFERENCE_KEY_ALL:-\$\{AI_INFERENCE_KEY:-\}\}"/, "the all-models key lists the hosted Wan");
+  assert.match(fn, /exec .*-m app\.consumer/);
+  // The worker resolves its upload root from its own file (…/orazaka-worker-media/app/main.py, 4 levels up = « / » in the image):
+  // « Permission denied: /var/orazaka-uploads ». The image's own uploads folder (owned by the orazaka user) is named explicitly.
+  assert.match(fn, /UPLOAD_DIR="\$\{ORAZAKA_APP_DIR:-\/app\}\/var\/orazaka-uploads"/);
+  // The media worker reads Spring's variable names for the broker (SPRING_RABBITMQ_*), the container carries RABBITMQ_*: without
+  // this map it dialled localhost as guest and never connected (dev, 2026-10-20).
+  for (const [spring, plain] of [["HOST", "HOST"], ["PORT", "PORT"], ["USERNAME", "USER"], ["PASSWORD", "PASS"]]) {
+    assert.match(fn, new RegExp(`SPRING_RABBITMQ_${spring}="\\$\\{RABBITMQ_${plain}:-\\}"`), `SPRING_RABBITMQ_${spring} from RABBITMQ_${plain}`);
+  }
+});
+
+test("the image carries the worker and only its lean dependencies: no torch, no GPU library", () => {
+  const docker = root("infra/deploy/Dockerfile");
+  assert.match(docker, /cp -r orazaka-apps\/workers\/orazaka-worker-media \/out\/orazaka-worker-media/);
+  const pip = docker.match(/pip install --no-cache-dir ([^\n]*)/)?.[1] ?? "";
+  for (const needed of ["pika==", "pyyaml==", "cryptography==", "pillow=="]) assert.ok(pip.toLowerCase().includes(needed), `${needed} in ${pip}`);
+  for (const heavy of ["torch", "diffusers", "mlx", "transformers"]) assert.ok(!pip.includes(heavy), heavy);
+});
+
+test("the app spec gives the core container the all-models inference key as a SECRET placeholder", () => {
+  const spec = root("infra/deploy/orazaka-dev.app.yaml");
+  assert.match(spec, /key: AI_INFERENCE_KEY_ALL, scope: RUN_TIME, type: SECRET, value: "__AI_INFERENCE_KEY_ALL__"/);
+});
+
+test("dev data gives hosted video its own queue, and migrates the table of the first version in place", () => {
+  const sql = root("infra/deploy/dev-data.sql");
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS hosted BOOLEAN NOT NULL DEFAULT FALSE/);
+  assert.match(sql, /\('video', TRUE,\s+'job\.hostedvideo\.generate'\)/);
+  assert.match(sql, /\('video', FALSE,\s+'job\.video\.generate'\)/);
+  assert.match(sql, /ON CONFLICT \(category, hosted\) DO NOTHING/);
+});
+
+// ── Start order: the job service answers before the services that call it at startup are started ──
+test("wait_port returns as soon as something listens, and gives up (status 1) after its timeout", async () => {
+  const { createServer } = await import("node:net");
+  const server = createServer().listen(0, "127.0.0.1");
+  await new Promise((resolve) => server.once("listening", resolve));
+  const { port } = server.address();
+  const up = bash(`wait_port 127.0.0.1 ${port} 5 && echo up=0 || echo up=1`);
+  assert.match(up.stdout, /up=0/, up.stderr);
+  await new Promise((resolve) => server.close(resolve));
+  const started = Date.now();
+  const down = bash(`wait_port 127.0.0.1 ${port} 2 && echo down=0 || echo down=1`);
+  assert.match(down.stdout, /down=1/, down.stderr);
+  assert.ok(Date.now() - started < 8000, "bounded by its timeout");
+});
+
+test("the supervisor waits for the job service before it starts the services that call it (8 JVMs in 2 GB started Studio before job: PackInstallException, exit 1)", () => {
+  const sh = root("infra/deploy/run-services.sh");
+  assert.match(sh, /job\) wait_port localhost 8090 "\$\{ORAZAKA_JOB_READY_TIMEOUT:-240\}"/);
+});

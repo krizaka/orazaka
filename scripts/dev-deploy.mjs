@@ -9,13 +9,14 @@
  *   node scripts/dev-deploy.mjs analytics        # the analytics tables, kinds and settings v1 (ADR-081)
  *   node scripts/dev-deploy.mjs service-tier     # the `service` rate-limit tier, svc_* users moved onto it (ADR-083)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
+ *   node scripts/dev-deploy.mjs persona [eric|mira|krizaka]  # a plain user, free tier: Eric/Mira the demo personas, Krizaka the company as an SME customer → @dev APP_QA_ORAZAKA_<NAME>_*, never printed; sign-up stays closed
  *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
  *   node scripts/dev-deploy.mjs broker      # the TLS RabbitMQ Droplet in the tor1 VPC (once; idempotent)
  *   node scripts/dev-deploy.mjs status
  *
- * Secrets are read through `~/.krizaka-worktrees/tools/secret.sh @dev KEY` (the company folder's `env/dev.env`, then
- * `env/org.env`), or from one file given with `--env-file ~/Documents/krizaka/env/dev.env` (or ORAZAKA_DEV_ENV_FILE);
+ * Secrets are read through `~/.krizaka-worktrees/tools/secret.sh @orazaka KEY` (secrets.map: `env/orazaka.env` — the keys that
+ * differ for Orazaka, its Bunny zone — then `env/dev.env`, then `env/org.env`), or from one file given with `--env-file ~/Documents/krizaka/env/dev.env` (or ORAZAKA_DEV_ENV_FILE);
  * never from the repository, and never printed: each `__NAME__` of infra/deploy/<app>.app.yaml is filled from them and
  * App Platform stores the SECRET ones encrypted. `--env-file` may sit anywhere on the command line.
  */
@@ -166,6 +167,62 @@ function runIdempotency() {
   console.log("orazaka_studio_db: studio_run idempotency columns and index in place");
 }
 
+/** The exact result cache of studio_run (orazaka-studio#61): fingerprint, source run, index and setting — idempotent, additive. */
+function runResultCache() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-studio-run-result-cache.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: studio_run result cache columns, index and setting in place");
+}
+
+/** The engine v2 run links: the parent of a run a STUDIO step called (orazaka-studio#62) and the run a resume starts from (#63) — idempotent, additive. */
+function runParent() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-studio-run-parent.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: studio_run.parent_run_id (+ index) and resumed_from in place");
+}
+
+/** The Studio's runtime settings for the admin (orazaka-studio#72: default, bounds, audit) and the saga's two settings (#71) — idempotent, additive. */
+function runtimeConfigAdmin() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-studio-runtime-config-admin.sql"), "utf8");
+  psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
+  console.log("orazaka_studio_db: studio_runtime_config defaults, bounds and audit in place; saga settings seeded");
+}
+
+/** The corpus search tool renamed `searchKnowledge` (orazaka-ai-engine#59, ADR-087 slice 0): its cache settings and its sources under the new key — copied, additive, idempotent. */
+function searchKnowledge() {
+  const env = secrets();
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], readFileSync(join(ROOT, "infra/migrations/2026-10-23-search-knowledge-tool.sql"), "utf8"));
+  psql(env, "orazaka_knowledge_db", "orazaka_knowledge_db", "DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB", [], readFileSync(join(ROOT, "infra/migrations/2026-10-23-search-knowledge-sources.sql"), "utf8"));
+  console.log("searchKnowledge: tool settings and knowledge sources in place (the searchWeb rows stay until the cleanup)");
+}
+
+/** MCP server token columns widened to TEXT for their sealed envelopes (orazaka-ai-engine#58) — idempotent, keeps every value. */
+function mcpTokenText() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-mcp-token-text.sql"), "utf8");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
+  console.log("orazaka_db: user_mcp_servers / platform_mcp_servers.auth_token are TEXT");
+}
+
+/** The grounded-research tables, settings and (disabled) sources of ADR-087 slice 1 — idempotent, additive; research stays off. */
+function researchTables() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-23-research-tables.sql"), "utf8");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
+  console.log("orazaka_db: research_source, research_document, research_fetch, research_consent and research.* settings in place (off)");
+}
+
+/** The law corpus tables, settings (default and bounds) and (disabled) sources of ADR-089 cut 2 — idempotent, additive; the corpus stays off. */
+function lawCorpus() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-24-law-corpus.sql"), "utf8");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
+  console.log("orazaka_db: law_* tables, rule_proposal, kind_demand, settings bounds and law.* settings in place (off)");
+}
+
 /** The `service` rate-limit tier and the existing svc_* users moved onto it (ADR-083 slice 2) — idempotent. */
 function serviceTier() {
   const env = secrets();
@@ -188,6 +245,14 @@ function runEvents() {
   const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-20-run-events.sql"), "utf8");
   psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], sql);
   console.log("orazaka_studio_db: run event numbering (event_seq, studio_run_event, triggers) in place");
+}
+
+/** The automation model, triggers, webhook ledger, cloud runs and rule set v2 on orazaka_automation_db (ADR-084) — idempotent. */
+function automations() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-20-automations.sql"), "utf8");
+  psql(env, "orazaka_automation_db", "orazaka_automation_db", "DATABASE_PASSWORD_ORAZAKA_AUTOMATION_DB", [], sql);
+  console.log("orazaka_automation_db: automations, triggers, webhook ledger, runs and rule set v2 in place");
 }
 
 function policy() {
@@ -213,12 +278,31 @@ const ACCOUNTS = [
   { key: "admin", username: "qa_admin", email: "qa+admin@orazaka.com", tier: "admin", roles: ["ROLE_USER", "ROLE_ADMIN"] },
 ];
 
+/**
+ * The demo persona of the dev environment: who signs in for a recording (rule « videos of real use cases »: a named
+ * persona, never the QA account on screen). A plain ROLE_USER on the free tier, an e-mail on a reserved domain
+ * (RFC 2606, never delivered). Sign-up stays closed: the account is put through the same seed as the QA ones.
+ */
+export function personaAccount(name = "eric") {
+  const personas = {
+    eric: { username: "Eric", email: "eric.morel@example.com", secret: "PERSONA" },
+    mira: { username: "Mira", email: "mira.tremblay@orazaka.test", secret: "MIRA" },
+    // The company itself as a customer (Oussama, 2026-10-22): Krizaka is an SME, it uses Orazaka the way an SME would —
+    // a plain user on the free plan, in French — to see its own products from the inside. Not a demo persona, not a
+    // service account: the products keep their own svc_<product> keys (one key, one plan, one usage per product).
+    krizaka: { username: "Krizaka", email: "orazaka@krizaka.com", secret: "KRIZAKA", language: "fr" },
+  };
+  const p = personas[name];
+  if (!p) throw new Error(`unknown persona: ${name} (eric | mira | krizaka)`);
+  return { key: "persona", ...p, tier: "free", roles: ["ROLE_USER"] };
+}
+
 export function seedSql(accounts) {
   const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
   const rows = accounts.map(
     (a) =>
       `INSERT INTO users (id, username, password_hash, email, enabled, preferences, rate_limit_tier)
-       VALUES (gen_random_uuid()::text, ${q(a.username)}, ${q(a.hash)}, ${q(a.email)}, true, '{"language":"en"}', ${q(a.tier)})
+       VALUES (gen_random_uuid()::text, ${q(a.username)}, ${q(a.hash)}, ${q(a.email)}, true, ${q(JSON.stringify({ language: a.language === "fr" ? "fr" : "en" }))}, ${q(a.tier)})
        ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash, enabled = true,
          email = EXCLUDED.email, rate_limit_tier = EXCLUDED.rate_limit_tier;
        ${a.roles
@@ -267,6 +351,17 @@ _Injectés dans \`krizaka_users_db\` (cluster \`krizaka-dev-pg\`) par \`node scr
   console.log(`seeded ${accounts.map((a) => a.email).join(", ")} — passwords written to ${QA_FILE} only`);
 }
 
+/** Eric on dev: created or refreshed (a re-run gives him a new password), the credentials stored in @dev only. */
+function seedPersona(name) {
+  const env = secrets();
+  const persona = personaAccount(name);
+  const pw = password();
+  psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], seedSql([{ ...persona, hash: bcrypt(pw) }]));
+  storeSecret(`APP_QA_ORAZAKA_${persona.secret}_EMAIL`, persona.email);
+  storeSecret(`APP_QA_ORAZAKA_${persona.secret}_PASSWORD`, pw);
+  console.log(`seeded the persona ${persona.username} (${persona.email}) — credentials stored in @dev (APP_QA_ORAZAKA_${persona.secret}_*), never printed`);
+}
+
 // ── Service accounts: a Krizaka product calling Orazaka (products consume AI only through Orazaka) ──
 const EDGE_URL = process.env.ORAZAKA_EDGE_URL ?? "https://dev.orazaka.com/edge";
 
@@ -312,6 +407,29 @@ ON CONFLICT (actor_id, entitlement_key) DO UPDATE SET reason = EXCLUDED.reason, 
 `;
 }
 
+/**
+ * A product's OWN plan (a key is never shared, a plan is never shared): `svc-<product>`, not public, copied from the
+ * `ultimate` entitlements plus `retention.none`, with the product's service account subscribed to it. Idempotent.
+ */
+export function planSql(product, actorId) {
+  const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
+  if (!/^[a-z][a-z0-9-]{1,30}$/.test(product)) throw new Error(`not a product id: ${product}`);
+  const plan = `svc-${product}`;
+  return `BEGIN;
+INSERT INTO billing_plan (plan_key, label, tier_rank, monthly_credit_grant, price_cents, currency, rate_limit_tier_key, is_public, is_active)
+SELECT ${q(plan)}, ${q(`Service: ${product}`)}, 100, 20000, 0, currency, 'service', FALSE, TRUE FROM billing_plan WHERE plan_key = 'ultimate'
+ON CONFLICT (plan_key) DO NOTHING;
+INSERT INTO billing_plan_entitlement (plan_key, entitlement_key, value_type, value)
+SELECT ${q(plan)}, entitlement_key, value_type, value FROM billing_plan_entitlement WHERE plan_key = 'ultimate'
+ON CONFLICT DO NOTHING;
+INSERT INTO billing_plan_entitlement (plan_key, entitlement_key, value_type, value) VALUES (${q(plan)}, 'retention.none', 'boolean', 'true') ON CONFLICT DO NOTHING;
+UPDATE billing_subscription SET status = 'CANCELED', updated_at = now() WHERE actor_id = ${q(actorId)} AND status IN ('TRIALING','ACTIVE','PAST_DUE');
+INSERT INTO billing_subscription (actor_id, plan_key, status, period_start, period_end)
+VALUES (${q(actorId)}, ${q(plan)}, 'ACTIVE', now(), now() + interval '30 days');
+COMMIT;
+`;
+}
+
 /** Sets KEY=value lines in an env file (kept, created mode 600), without ever printing a value. */
 export function upsertEnv(text, values) {
   const lines = text ? text.replace(/\n$/, "").split("\n") : [];
@@ -353,6 +471,7 @@ async function createServiceAccount(product, flags) {
   const name = `${product}-dev`;
   for (const k of await edge("/api/v1/api-keys", { token })) if (k.name === name) await edge(`/api/v1/api-keys/${k.id}`, { token, method: "DELETE" });
   const { key } = await edge("/api/v1/api-keys", { token, body: scopes.length ? { name, scopes } : { name } });
+  psql(env, "krizaka_billing_db", "krizaka_billing_db", "DATABASE_PASSWORD_KRIZAKA_BILLING_DB", [], planSql(product, actorId));
   if (studios.length) psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], grantSql(actorId, studios, product));
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, upsertEnv(existsSync(out) ? readFileSync(out, "utf8") : "", connectionVars(opt("--prefix"), EDGE_URL, key)), { mode: 0o600 });
@@ -518,14 +637,23 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "analytics") analytics();
     else if (command === "run-idempotency") runIdempotency();
     else if (command === "run-events") runEvents();
+    else if (command === "run-result-cache") runResultCache();
+    else if (command === "run-parent") runParent();
+    else if (command === "runtime-config-admin") runtimeConfigAdmin();
+    else if (command === "mcp-token-text") mcpTokenText();
+    else if (command === "search-knowledge") searchKnowledge();
+    else if (command === "research-tables") researchTables();
+    else if (command === "law-corpus") lawCorpus();
     else if (command === "service-tier") serviceTier();
     else if (command === "webhooks") webhooks();
+    else if (command === "automations") automations();
     else if (command === "seed") seed();
+    else if (command === "persona") seedPersona(rest[0]);
     else if (command === "service-account") await createServiceAccount(rest[0], rest.slice(1));
     else if (command === "broker") broker();
     else if (command === "status") status();
     else {
-      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | service-tier | webhooks | seed | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | law-corpus | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {

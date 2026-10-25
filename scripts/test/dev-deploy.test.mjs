@@ -1,8 +1,8 @@
 // node --test scripts/test — the dev deployment tool: specs are filled, never leaked, accounts are sound.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
-import { connectionVars, grantSql, parseScopes, password, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
+import { connectionVars, grantSql, parseScopes, password, personaAccount, readEnvFile, render, seedSql, serviceAccount, upsertEnv } from "../dev-deploy.mjs";
 
 const spec = (name) => readFileSync(new URL(`../../infra/deploy/${name}.app.yaml`, import.meta.url), "utf8");
 
@@ -42,7 +42,8 @@ test("orazaka-dev: only the edge, the web and the GPU relay are routed; the brok
 
 test("orazaka-dev serves the operator console on admin.orazaka.com: alias domain, its own session and flag, IP allow-list", () => {
   const text = spec("orazaka-dev");
-  assert.match(text, /- domain: dev\.orazaka\.com\n    type: PRIMARY/);
+  assert.match(text, /- domain: www\.orazaka\.com\n    type: PRIMARY/);
+  // The alias is in the spec since the cut-over of 2026-10-21 (the domain left `orazaka-admin-dev` first: a domain belongs to one app).
   assert.match(text, /- domain: admin\.orazaka\.com\n    type: ALIAS/);
   // Same `web` component: no component of its own, no extra route, nothing paid.
   assert.deepEqual([...text.matchAll(/^  - name: (\S+)/gm)].map((m) => m[1]).sort(), ["core", "gpu-relay", "web"]);
@@ -82,6 +83,22 @@ test("the relay exposes LocalAI's port to the app as well as allowing it", () =>
   assert.match(spec, /internal_ports: \[8085, 8086, 8188, 11434\]/);
 });
 
+test("www.orazaka.com is the public address; dev keeps /edge and the BFF; the apex answers 308 with www (epic krizaka/.github#119)", () => {
+  const spec = readFileSync(new URL("../../infra/deploy/orazaka-dev.app.yaml", import.meta.url), "utf8").replace(/^\s*#.*$/gm, "");
+  assert.match(spec, /- domain: www\.orazaka\.com\n\s+type: PRIMARY/);
+  assert.match(spec, /- domain: orazaka\.com\n\s+type: ALIAS/);
+  assert.match(spec, /- domain: dev\.orazaka\.com\n\s+type: ALIAS/);
+  assert.match(spec, /- domain: admin\.orazaka\.com\n\s+type: ALIAS/, "the console alias stays");
+  const rules = spec.slice(spec.indexOf("ingress:"));
+  assert.match(rules, /exact: orazaka\.com[\s\S]*?authority: www\.orazaka\.com[\s\S]*?redirect_code: 308/);
+  assert.match(rules, /name: core\s+match:\s+path:\s+prefix: \/edge/, "the engine's API is host-agnostic");
+  assert.match(spec, /key: NEXTAUTH_URL, scope: RUN_TIME, value: "https:\/\/www\.orazaka\.com"/);
+  assert.match(spec, /key: APP_DEV_HOST, scope: RUN_TIME, value: "dev\.orazaka\.com"/);
+  assert.match(spec, /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/, "www is indexed");
+  const cors = /key: CORS_ALLOWED_ORIGINS[^\n]*value: "([^"]+)"/.exec(spec)?.[1].split(",");
+  for (const origin of ["https://www.orazaka.com", "https://dev.orazaka.com", "https://admin.orazaka.com"]) assert.ok(cors?.includes(origin), origin);
+});
+
 test("password: long, mixed, different each time", () => {
   const a = password();
   assert.ok(a.length >= 28 && /[A-Za-z]/.test(a) && /\d/.test(a) && /[^A-Za-z0-9]/.test(a));
@@ -99,6 +116,17 @@ test("seedSql gives the admin ROLE_ADMIN, the user only ROLE_USER, and quotes va
   assert.match(sql, /ON CONFLICT \(username\) DO UPDATE/);
 });
 
+
+test("the demo persona on dev is a first name on a reserved e-mail domain, a plain user, never a QA account", () => {
+  const p = personaAccount();
+  assert.equal(p.username, "Eric");
+  assert.match(p.email, /@example\.com$/);
+  assert.deepEqual(p.roles, ["ROLE_USER"]);
+  assert.equal(p.tier, "free");
+  assert.doesNotMatch(`${p.username} ${p.email}`, /qa|admin|svc/i);
+  const sql = seedSql([{ ...p, hash: "$2y$10$h" }]);
+  assert.equal((sql.match(/'ROLE_ADMIN'/g) ?? []).length, 0);
+});
 
 test("brokerUsersScript: two users, the GPU worker confined to orazaka.* names, guest removed, quoting safe", async () => {
   const { brokerUsersScript, BROKER_PERMISSIONS } = await import("../dev-deploy.mjs");
@@ -178,10 +206,10 @@ test("the recommender (ADR-078): knowledge runs in core with its own database, i
   assert.match(dev, /key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql:\/\/__DATABASE_HOST__:25061\/pool-knowledge\?sslmode=require&prepareThreshold=0"/);
   assert.match(dev, /key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__"/);
   const docker = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
-  assert.match(docker, /orazaka-apps\/services\/orazaka-knowledge-service \\/);
+  assert.match(docker, /orazaka-apps\/services\/orazaka-knowledge-service[ ,]/);
   assert.match(docker, /\/out\/knowledge\.jar/);
   const runner = readFileSync(new URL("../../infra/deploy/run-services.sh", import.meta.url), "utf8");
-  assert.match(runner, /knowledge:knowledge\.jar:\d+ edge:edge\.jar/, "knowledge starts before the edge");
+  assert.match(runner, /knowledge:knowledge\.jar:\d+ [\w:. ]*edge:edge\.jar/, "knowledge starts before the edge");
   const sql = readFileSync(new URL("../../infra/migrations/2026-10-15-recommendations.sql", import.meta.url), "utf8");
   for (const statement of sql.match(/CREATE (TABLE|INDEX) [^\n]*/g)) assert.match(statement, /IF NOT EXISTS/, statement);
   assert.match(sql, /EXCEPTION WHEN duplicate_object THEN NULL/);
@@ -211,7 +239,7 @@ test("orazaka-dev: outputs go to the private Bunny zone, the key is a SECRET, de
 test("connection budget: every JVM of the core goes through its PgBouncer pool (25061, prepareThreshold=0), none direct", () => {
   const dev = spec("orazaka-dev");
   const urls = [...dev.matchAll(/key: (\w+_URL|SPRING_DATASOURCE_URL), scope: RUN_TIME, value: "(jdbc:postgresql:[^"]+)"/g)];
-  assert.equal(urls.length, 5, "orazaka_db, users, studio, knowledge, billing");
+  assert.equal(urls.length, 6, "orazaka_db, users, studio, knowledge, billing, automation");
   for (const [, key, url] of urls) {
     assert.match(url, /:25061\/pool-[a-z]+\?sslmode=require&prepareThreshold=0$/, `${key} must use its pool`);
   }
@@ -262,10 +290,206 @@ test("the run-event migration is idempotent (triggers are dropped before they ar
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-events"\) runEvents\(\)/);
 });
 
+test("the result cache lists compliance-check in dev, once, without dropping what an operator listed (ADR-089 §4)", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-studio-run-result-cache.sql", import.meta.url), "utf8");
+  assert.match(sql, /\('run\.result-cache\.studios', 'document-authenticity,compliance-check', 'list'/);
+  assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING;/);
+  // Re-runnable: compliance-check is appended only where it is missing, the rest of the list is kept.
+  assert.match(sql, /config_value \|\| ',compliance-check'/);
+  assert.match(sql, /AND NOT \('compliance-check' = ANY \(string_to_array\(replace\(config_value, ' ', ''\), ','\)\)\);/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-result-cache"\) runResultCache\(\)/);
+});
+
+test("the run-link migration (orazaka-studio#62 parent, #63 resume) is additive, idempotent and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-studio-run-parent.sql", import.meta.url), "utf8");
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS parent_run_id UUID REFERENCES studio_run\(id\) ON DELETE CASCADE/);
+  assert.match(sql, /CREATE INDEX IF NOT EXISTS idx_studio_run_parent/);
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS resumed_from UUID;/);
+  assert.doesNotMatch(sql, /DROP (TABLE|COLUMN)/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "run-parent"\) runParent\(\)/);
+});
+
+test("the runtime-config admin migration (orazaka-studio#72, #71) is additive, idempotent and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-studio-runtime-config-admin.sql", import.meta.url), "utf8");
+  assert.match(sql, /\\c orazaka_studio_db/);
+  for (const column of ["default_value TEXT", "min_value BIGINT", "max_value BIGINT", "max_items INTEGER"]) {
+    assert.match(sql, new RegExp(`ADD COLUMN IF NOT EXISTS ${column}`), column);
+  }
+  assert.match(sql, /CREATE TABLE IF NOT EXISTS studio_runtime_config_audit/);
+  assert.match(sql, /CREATE INDEX IF NOT EXISTS idx_studio_runtime_config_audit_at/);
+  // The saga's two settings exist on dev, with their bounds, and an admin's value survives a re-run.
+  for (const key of ["run.blueprint-cache-size", "run.outcome-listener.concurrency"]) assert.ok(sql.includes(`'${key}'`), key);
+  assert.match(sql, /ON CONFLICT \(config_key\) DO UPDATE SET\s+default_value = EXCLUDED\.default_value/);
+  assert.doesNotMatch(sql, /config_value = EXCLUDED/);
+  assert.doesNotMatch(sql, /DROP (TABLE|COLUMN)/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "runtime-config-admin"\) runtimeConfigAdmin\(\)/);
+});
+
+test("the searchKnowledge rename (orazaka-ai-engine#59) is copied, additive and idempotent, and has its command", () => {
+  const tool = readFileSync(new URL("../../infra/migrations/2026-10-23-search-knowledge-tool.sql", import.meta.url), "utf8");
+  const sources = readFileSync(new URL("../../infra/migrations/2026-10-23-search-knowledge-sources.sql", import.meta.url), "utf8");
+  for (const sql of [tool, sources]) {
+    assert.match(sql, /SELECT 'searchKnowledge'/);
+    assert.match(sql, /WHERE tool_id = 'searchWeb'/);
+    assert.match(sql, /ON CONFLICT \(tool_id(, content)?\) DO NOTHING/);
+    assert.doesNotMatch(sql, /\b(DELETE|DROP|UPDATE)\b/);
+  }
+  assert.match(sources, /\\c orazaka_knowledge_db/);
+  const fixtures = readFileSync(new URL("../../infra/initdb/90-dev-fixtures.sql", import.meta.url), "utf8");
+  assert.doesNotMatch(fixtures, /^\('searchWeb'/m);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "search-knowledge"\) searchKnowledge\(\)/);
+});
+
+test("the MCP token columns become TEXT for sealed envelopes (orazaka-ai-engine#58), keeping every value", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-mcp-token-text.sql", import.meta.url), "utf8");
+  for (const table of ["user_mcp_servers", "platform_mcp_servers"]) {
+    assert.ok(sql.includes(`ALTER TABLE ${table} ALTER COLUMN auth_token TYPE TEXT;`), table);
+  }
+  assert.doesNotMatch(sql, /\b(DROP|DELETE|UPDATE)\b/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "mcp-token-text"\) mcpTokenText\(\)/);
+});
+
+test("the research tables (ADR-087 slice 1) are additive, idempotent, off by default and have their command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-23-research-tables.sql", import.meta.url), "utf8");
+  for (const table of ["research_source", "research_document", "research_fetch", "research_consent"]) {
+    assert.ok(sql.includes(`CREATE TABLE IF NOT EXISTS ${table} (`), table);
+  }
+  assert.ok(sql.includes("('research.enabled', 'false', 'boolean'"));
+  // The design of ADR-087 §5: a hit is served only through the source that read it, and a citation names the final URL.
+  assert.ok(sql.includes("PRIMARY KEY (source_id, url, content_hash)"));
+  assert.ok(sql.includes("final_url      TEXT        NOT NULL"));
+  assert.ok(sql.includes("('research.max-calls', '16', 'int'"));
+  // The same block as orazaka-job-service's initdb, so a fresh volume and a migrated database agree.
+  const jobService = new URL("../../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql", import.meta.url);
+  // (Checked when the workspace holds a job-service checkout that already carries the block — orazaka-job-service#65.)
+  const block = existsSync(jobService)
+    ? readFileSync(jobService, "utf8").match(/-- =+\n-- GROUNDED RESEARCH \(ADR-087[\s\S]*?ON CONFLICT \(source_key\) DO NOTHING;/)
+    : null;
+  if (block) {
+    assert.ok(sql.includes(block[0]), "the migration carries the job-service block verbatim");
+  }
+  assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING/);
+  assert.match(sql, /ON CONFLICT \(source_key\) DO NOTHING/);
+  assert.ok(sql.includes("('CitationVerifierInterceptor','Citation Verifier Interceptor',12, FALSE,"));
+  // Foreign keys say ON DELETE; no statement drops, deletes or updates rows.
+  assert.doesNotMatch(sql.replace(/ON DELETE (SET NULL|CASCADE)/g, ""), /\b(DROP|DELETE|UPDATE)\b/);
+  assert.doesNotMatch(sql, /, TRUE\)\s*(,|ON CONFLICT)/);
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "research-tables"\) researchTables\(\)/);
+});
+
+test("the law corpus (ADR-089 cut 2) is additive, idempotent, every switch off, and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-24-law-corpus.sql", import.meta.url), "utf8");
+  for (const table of ["law_instrument", "law_article_version", "law_import", "law_retrieval", "rule_proposal", "kind_demand"]) {
+    assert.ok(sql.includes(`CREATE TABLE IF NOT EXISTS ${table} (`), table);
+  }
+  assert.ok(sql.includes("ADD COLUMN IF NOT EXISTS default_value"));
+  assert.ok(sql.includes("PRIMARY KEY (instrument_id, ref, language, in_force_from)"));
+  // Every switch is off: the corpus, the lecture, and both sources.
+  assert.ok(sql.includes("('law.corpus.enabled', 'false', 'boolean'"));
+  assert.ok(sql.includes("('law.lecture.enabled', 'false', 'boolean'"));
+  assert.ok(sql.includes("('law-corpus', 'OFFICIAL', 'law-corpus', NULL, '{}', 86400, FALSE)"));
+  assert.ok(sql.includes("604800, FALSE)"));
+  assert.doesNotMatch(sql, /, TRUE\)/);
+  assert.equal((sql.match(/\('law\./g) ?? []).length, 13);
+  // The cache is keyed by language too (a French retrieval is never served for English).
+  assert.match(sql, /language\s+VARCHAR\(2\)\s+NOT NULL CHECK \(language IN \('fr','en'\)\)/);
+  assert.ok(sql.includes("PRIMARY KEY (jurisdiction, kind_id, language, as_of_bucket)"));
+  // ... and on a database that has #69's table (no language): ALTER, guarded so it runs once.
+  assert.match(sql, /IF NOT EXISTS \(SELECT 1 FROM information_schema\.columns\s+WHERE table_name = 'law_retrieval' AND column_name = 'language'\) THEN\s+ALTER TABLE law_retrieval ADD COLUMN language VARCHAR\(2\) NOT NULL CHECK \(language IN \('fr','en'\)\);/);
+  assert.match(sql, /ALTER TABLE law_retrieval ADD PRIMARY KEY \(jurisdiction, kind_id, language, as_of_bucket\);/);
+  // The same block as orazaka-job-service's initdb, so a fresh volume and a migrated database agree.
+  const jobService = new URL("../../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql", import.meta.url);
+  const block = existsSync(jobService)
+    ? readFileSync(jobService, "utf8").match(/-- =+\n-- LAW CORPUS \(ADR-089[\s\S]*?ON CONFLICT \(source_key\) DO NOTHING;/)
+    : null;
+  if (block) {
+    assert.ok(sql.includes(block[0]), "the migration carries the job-service block verbatim");
+  }
+  assert.match(sql, /ON CONFLICT \(config_key\) DO NOTHING/);
+  assert.match(sql, /ON CONFLICT \(source_key\) DO NOTHING/);
+  // Nothing is dropped, deleted or rewritten: foreign keys say ON UPDATE CASCADE, the rest is additive.
+  assert.doesNotMatch(sql.replace(/ON UPDATE CASCADE/g, "").replace("DROP CONSTRAINT law_retrieval_pkey", ""), /\b(DROP|DELETE|UPDATE)\b/, "the only DROP is the cache key of job-service#69, replaced by the one with the language");
+  assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "law-corpus"\) lawCorpus\(\)/);
+});
+
 test("orazaka-dev is indexed: APP_SEARCH_INDEXING is on (krizaka-com AGENTS 2.4; it drifted to off twice and hid the site from Google)", () => {
   assert.match(spec("orazaka-dev"), /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/);
 });
 
 test("orazaka-dev enforces the per-key rate limit (ADR-083 slice 2: service accounts are on the `service` tier, 1000 a minute)", () => {
   assert.match(spec("orazaka-dev"), /key: ABUSE_RATE_LIMIT_MODE, scope: RUN_TIME, value: enforce/);
+});
+
+test("automations (ADR-084): the service is the eighth JVM of the core, with its own database through a pool of ONE", () => {
+  const dev = spec("orazaka-dev");
+  assert.match(dev, /key: AUTOMATION_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql:\/\/__DATABASE_HOST__:25061\/pool-automation\?sslmode=require&prepareThreshold=0"/);
+  assert.match(dev, /key: AUTOMATION_DB_USERNAME, scope: RUN_TIME, value: orazaka_automation_db/);
+  assert.match(dev, /key: AUTOMATION_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_AUTOMATION_DB__"/);
+  assert.match(dev, /key: AUTOMATION_DB_MAX_POOL_SIZE, scope: RUN_TIME, value: "1"/, "the pool is one connection: the code holds none across a remote call");
+  assert.match(dev, /key: AUTOMATION_PORT, scope: RUN_TIME, value: "8091"/);
+  assert.match(dev, /key: AUTOMATION_INTERNAL_URL, scope: RUN_TIME, value: "http:\/\/localhost:8091"/, "the edge routes /api/v1/automations and /hooks/ to it");
+  assert.match(dev, /key: STUDIO_INTERNAL_URL, scope: RUN_TIME, value: "http:\/\/localhost:8096"/, "it starts Studio runs over the Studio service's REST surface");
+  assert.match(dev, /key: APP_PUBLIC_EDGE_URL, scope: RUN_TIME, value: "https:\/\/dev\.orazaka\.com\/edge"/, "the address a sender is shown");
+  const docker = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
+  assert.match(docker, /orazaka-apps\/services\/orazaka-automation-service \\/);
+  assert.match(docker, /\/out\/automation\.jar/);
+  const runner = readFileSync(new URL("../../infra/deploy/run-services.sh", import.meta.url), "utf8");
+  assert.match(runner, /automation:automation\.jar:\d+ edge:edge\.jar/, "automation starts before the edge");
+});
+
+test("the automation migration is idempotent, extends the rule set without replacing it, and has its command", () => {
+  const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-automations.sql", import.meta.url), "utf8");
+  for (const statement of sql.match(/CREATE (TABLE|INDEX|UNIQUE INDEX) [^\n]*/g)) assert.match(statement, /IF NOT EXISTS/, statement);
+  for (const statement of sql.match(/ALTER TABLE [^\n]*ADD COLUMN [^\n]*/g)) assert.match(statement, /ADD COLUMN IF NOT EXISTS/, statement);
+  assert.match(sql, /ON CONFLICT \(version\) DO NOTHING/);
+  assert.match(sql, /secret_sealed/, "a webhook secret is stored sealed");
+  assert.doesNotMatch(sql, /\bsecret\s+(VARCHAR|TEXT)/i, "never a clear secret column");
+  assert.match(sql, /PRIMARY KEY \(trigger_id, webhook_id\)/, "the replay guard is the primary key");
+  const script = readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8");
+  assert.match(script, /command === "automations"\) automations\(\)/);
+});
+
+test("the automations migration is the model part of the service's own bootstrap (no drift) — judged when the service is cloned", (t) => {
+  const initdb = new URL("../../orazaka-apps/services/orazaka-automation-service/infra/initdb/50-automation.sql", import.meta.url);
+  if (!existsSync(initdb)) return t.skip("orazaka-automation-service is not cloned here");
+  const marker = "-- ─────────────────────────────────────────────────────────────────────────────\n-- THE AUTOMATION MODEL";
+  const bootstrap = readFileSync(initdb, "utf8");
+  const migration = readFileSync(new URL("../../infra/migrations/2026-10-20-automations.sql", import.meta.url), "utf8");
+  assert.ok(bootstrap.includes(marker), "the model marker moved");
+  assert.equal(migration.slice(migration.indexOf(marker)), bootstrap.slice(bootstrap.indexOf(marker)));
+});
+
+test("the dev persona Mira: a fictional plain user on a reserved .test domain, never admin, her own secret keys", () => {
+  const m = personaAccount("mira");
+  assert.equal(m.username, "Mira");
+  assert.match(m.email, /@orazaka\.test$/);
+  assert.deepEqual(m.roles, ["ROLE_USER"]);
+  assert.equal(m.secret, "MIRA");
+  assert.equal(personaAccount().username, "Eric");
+  assert.throws(() => personaAccount("admin"), /unknown persona/);
+});
+
+test("a product's key comes with its OWN plan, never a shared one", async () => {
+  const { planSql } = await import("../dev-deploy.mjs");
+  const yomizaka = planSql("yomizaka", "u-1");
+  const akinaza = planSql("akinaza", "u-2");
+  assert.match(yomizaka, /'svc-yomizaka'/);
+  assert.ok(!yomizaka.includes("svc-akinaza") && !akinaza.includes("svc-yomizaka"));
+  assert.match(yomizaka, /'retention\.none', 'boolean', 'true'/);
+  assert.match(yomizaka, /is_public[\s\S]*FALSE/);
+  assert.throws(() => planSql("Bad Id", "u"), /not a product id/);
+});
+
+test("the Krizaka account is the company as an SME customer: a plain user, free plan, French — never an admin or a service account", () => {
+  const k = personaAccount("krizaka");
+  assert.equal(k.username, "Krizaka");
+  assert.equal(k.email, "orazaka@krizaka.com");
+  assert.deepEqual(k.roles, ["ROLE_USER"]);
+  assert.equal(k.tier, "free");
+  assert.equal(k.secret, "KRIZAKA");
+  const sql = seedSql([{ ...k, hash: "$2y$10$h" }]);
+  assert.match(sql, /'\{"language":"fr"\}'/);
+  assert.equal((sql.match(/'ROLE_ADMIN'/g) ?? []).length, 0);
+  assert.doesNotMatch(k.username, /^svc_/);
+  assert.match(seedSql([{ ...personaAccount(), hash: "h" }]), /'\{"language":"en"\}'/, "the others stay in English");
 });

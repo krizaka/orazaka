@@ -8,8 +8,6 @@ generated: true
 
 # Interceptor Registry
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 | Order | Interceptor | Concern | Enabled |
 |:--|:---|:---|:--|
 | core 1 | `SafetyInterceptor` | validation | 🔒 non-bypassable |
@@ -22,9 +20,11 @@ generated: true
 | 6 | `BrandContextInterceptor` | enrichment | ✅ |
 | 7 | `MemoryInterceptor` | enrichment | ✅ |
 | 8 | `RefinerInterceptor` | reformulation | ✅ |
+| 8 | `SemanticCacheInterceptor` | cache | — |
 | 9 | `RouterInterceptor` | reformulation | ✅ |
 | 9 | `ToolInterceptor` | tooling | ✅ |
 | 11 | `UserContextInterceptor` | context | ✅ |
+| 12 | `CitationVerifierInterceptor` | validation | — |
 | — | `ClosedLoopValidationInterceptor` | validation | — |
 | — | `CostShieldInterceptor` | validation | — |
 | — | `DynamicMemoryCondenser` | enrichment | — |

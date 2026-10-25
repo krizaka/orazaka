@@ -163,7 +163,7 @@ ollama pull llama3.2:latest
 ### CLI Multi-Modal Usage
 ```bash
 # Authenticate
-npx orazaka login user@example.com password123
+npx orazaka login <email> <password>
 
 # Prompt Recommendations
 npx orazaka chat "Romantic movie recommendation for tonight"

@@ -118,7 +118,7 @@ export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 | Front-end | Surface | Consumed interfaces | Specific |
 | :--- | :--- | :--- | :--- |
 | **web-client** | end user (chat, playgrounds, job tracking) | `chat`, `intentions`, `jobs`, `catalog`, `auth` | SSE streaming, input-blocking |
-| **web-admin** | SecOps (models, pipeline, features, jobs, compliance) | + `admin: AdminApi` | ADMIN role required |
+| **web-client** (operator console, `admin.*`) | SecOps (models, pipeline, features, jobs, compliance) | + `admin: AdminApi` | ADMIN role required |
 | **mobile-client** | subset of web-client | `chat`, `intentions`, `jobs`, `auth` | Expo, light offline |
 | **cli** | developer (chat/agent/image, scripts) | all of `OrazakaClient` | **`OfflineJobQueue`** (SQLite) |
 

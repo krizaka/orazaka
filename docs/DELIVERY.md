@@ -170,7 +170,7 @@ release on a critical finding that has a fix.
 **Images are shared, public and pinned.** Every service and worker image is published to
 **GHCR** (`ghcr.io/krizaka/orazaka-edge`, `…/orazaka-studio`, `…/orazaka-job-service`,
 `…/orazaka-knowledge-service`, `…/orazaka-automation-service`, `…/orazaka-conversation-service`,
-`…/orazaka-web-client`, `…/orazaka-web-admin`, `…/orazaka-worker-media` with its `cuda-` variant, and the
+`…/orazaka-web-client`, `…/orazaka-worker-media` with its `cuda-` variant, and the
 Krizaka blocks the platform runs — users, billing, notifications), public, built by CI on release tags
 only, signed with cosign keyless and attested (SBOM + SLSA provenance). The compose bundle references
 them **by digest**, and `orazaka install`/`update` verify each signature (identity: the release

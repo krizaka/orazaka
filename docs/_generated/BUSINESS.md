@@ -8,8 +8,6 @@ generated: true
 
 # Business Layer
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 `orazaka-business` (repository `orazaka-ai-engine`) is the **App Factory** of the engine: the layer that decides
 *what* a request is for, never *how* a model answers it. Every request a client sends becomes one immutable
 `Intention`; the `UseCaseDispatcher` resolves it to the `UseCase` that serves its capability, checks the

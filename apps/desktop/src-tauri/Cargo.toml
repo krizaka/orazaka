@@ -15,6 +15,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+krizaka-tauri-kit = { git = "https://github.com/krizaka/krizaka-tauri-kit", tag = "v0.2.0" }
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-autostart = "2"

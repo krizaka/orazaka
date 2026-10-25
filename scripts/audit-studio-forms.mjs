@@ -4,10 +4,10 @@
  *
  *   node scripts/audit-studio-forms.mjs            # dev: orazaka_studio_db blueprints × orazaka_db models (read only)
  *
- * For the latest PUBLISHED blueprint of every Studio, each field that should be a list (an `enum`, or `x-options`
- * fed by the model catalogue) is checked: it has at least one choice (a catalogue category with at least one
- * `available` model), its words exist in English and French (`x-i18n`), and its helper is one line (≤ 140
- * characters). Exits 1 on a finding. Secrets come from secret.sh @dev (or --env-file, as dev-deploy),
+ * For the latest PUBLISHED blueprint of every Studio, each field is checked: its words exist in English and French
+ * (`x-i18n`: title and helper, and the placeholder of a free-text field; every output its label) and its helper is one line (≤ 140
+ * characters); a field that should be a list (an `enum`, or `x-options` fed by the model catalogue) also has at least
+ * one choice (a catalogue category with at least one `available` model). Exits 1 on a finding. Secrets come from secret.sh @dev (or --env-file, as dev-deploy),
  * never printed.
  */
 import { spawnSync } from "node:child_process";
@@ -25,18 +25,36 @@ export const HELPER_MAX = 140;
 export function auditForms(blueprints, models) {
   const findings = [];
   const offered = (category) => models.filter((m) => m.category === category && m.status === "available");
-  for (const { studioKey, version, inputSchema } of blueprints) {
+  for (const { studioKey, version, inputSchema, outputs = [] } of blueprints) {
+    // Every output speaks both languages (a label is what a person reads above the result).
+    for (const output of outputs) {
+      for (const lang of ["en", "fr"]) {
+        if (!output["x-i18n"]?.[lang]?.label?.trim()) findings.push(`${studioKey}@${version}#output:${output.key}: no ${lang} label (x-i18n.${lang}.label)`);
+      }
+    }
     for (const [key, def] of Object.entries(inputSchema?.properties ?? {})) {
       const where = `${studioKey}@${version}#${key}`;
       const options = def["x-options"];
       const isList = Array.isArray(def.enum) || options?.source === "models";
-      if (!isList) continue;
-      if (Array.isArray(def.enum) && def.enum.length === 0) findings.push(`${where}: an empty enum draws an empty select`);
-      if (options) {
-        const category = String(options.category);
-        if (category !== category.toLowerCase()) findings.push(`${where}: category « ${category} » is not lowercase`);
-        if (offered(category.toLowerCase()).length === 0) findings.push(`${where}: no available model in the « ${category} » category`);
+      if (isList) {
+        if (Array.isArray(def.enum) && def.enum.length === 0) findings.push(`${where}: an empty enum draws an empty select`);
+        if (options) {
+          const category = String(options.category);
+          if (category !== category.toLowerCase()) findings.push(`${where}: category « ${category} » is not lowercase`);
+          if (offered(category.toLowerCase()).length === 0) findings.push(`${where}: no available model in the « ${category} » category`);
+          if (options.aspectField) {
+            const governed = inputSchema.properties?.[options.aspectField]?.enum ?? [];
+            for (const [model, list] of Object.entries(options.aspects ?? {})) {
+              for (const aspect of list) if (!governed.includes(aspect)) findings.push(`${where}: model « ${model} » aspect « ${aspect} » is not in the enum of « ${options.aspectField} »`);
+            }
+            for (const m of offered(category.toLowerCase())) {
+              if (!(m.model_name in (options.aspects ?? {}))) findings.push(`${where}: model « ${m.model_name} » declares no aspects (x-options.aspects)`);
+            }
+          }
+        }
       }
+      // Every field speaks both languages, a list or not (« Vos données » showed on the English page): title and helper,
+      // and the example of a free-text field.
       for (const lang of ["en", "fr"]) {
         const words = def["x-i18n"]?.[lang];
         if (!words?.title || !words?.description) {
@@ -44,11 +62,26 @@ export function auditForms(blueprints, models) {
           continue;
         }
         if (words.description.length > HELPER_MAX) findings.push(`${where}: ${lang} helper is ${words.description.length} characters (max ${HELPER_MAX})`);
+        if (isFreeText(def) && !words.placeholder?.trim()) findings.push(`${where}: no ${lang} placeholder (x-i18n.${lang}.placeholder)`);
         for (const value of def.enum ?? []) if (!words.options?.[value]) findings.push(`${where}: no ${lang} label for « ${value} »`);
       }
     }
   }
   return findings;
+}
+
+const isUpload = (def) => typeof def?.format === "string" && def.format.startsWith("asset");
+
+/** A field a person types into: text or a list of typed values — not a choice, a seed, or a file picker. */
+function isFreeText(def) {
+  return (
+    (def.type === "string" || def.type === "array") &&
+    !Array.isArray(def.enum) &&
+    !def["x-options"] &&
+    !def["x-control"] &&
+    !isUpload(def) &&
+    !(def.type === "array" && isUpload(def.items))
+  );
 }
 
 function query(env, db, passwordKey, sql) {
@@ -66,7 +99,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     env,
     "orazaka_studio_db",
     "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB",
-    `select coalesce(json_agg(json_build_object('studioKey', studio_key, 'version', version, 'inputSchema', input_schema)), '[]') from studio_blueprint b
+    `select coalesce(json_agg(json_build_object('studioKey', studio_key, 'version', version, 'inputSchema', input_schema, 'outputs', coalesce(definition->'outputs', '[]'::jsonb))), '[]') from studio_blueprint b
       where status = 'PUBLISHED' and string_to_array(version, '.')::int[] = (select max(string_to_array(c.version, '.')::int[]) from studio_blueprint c where c.studio_key = b.studio_key and c.status = 'PUBLISHED')`,
   );
   const models = query(env, "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", "select coalesce(json_agg(json_build_object('model_name', model_name, 'category', category, 'status', status)), '[]') from orazaka_models");

@@ -5,10 +5,16 @@
 name: orazaka-dev
 region: tor
 domains:
-  - domain: dev.orazaka.com
+  # The public address (epic krizaka/.github#119): www is primary and indexed; the apex answers 308 with www (ingress below).
+  - domain: www.orazaka.com
     type: PRIMARY
-  # The operator console, same `web` component (krizaka/orazaka-web-admin#31): the proxy of orazaka-web-client reads the
-  # Host and serves the console on this one. Replaces the app `orazaka-admin-dev` (docs/DEPLOY_DEV.md § Admin console).
+  - domain: orazaka.com
+    type: ALIAS
+  # The development address: pages go to www (308); the BFF/auth, /.well-known and /edge keep serving (APP_DEV_HOST, noindex).
+  - domain: dev.orazaka.com
+    type: ALIAS
+  # The operator console is served by this same `web` component on `admin.orazaka.com` (krizaka/orazaka-web-admin#31: the
+  # proxy of orazaka-web-client reads the Host): an ALIAS domain of this app, cut over on 2026-10-21 (docs/DEPLOY_DEV.md § Admin console).
   - domain: admin.orazaka.com
     type: ALIAS
 features:
@@ -18,6 +24,13 @@ vpc:
   id: 60296b32-efad-49be-bb41-321b1b6cc328
 ingress:
   rules:
+    # The apex leads to www (308).
+    - match:
+        authority:
+          exact: orazaka.com
+      redirect:
+        authority: www.orazaka.com
+        redirect_code: 308
     # The edge, public for the admin console and the mobile client: /edge/api/v1/... → edge /api/v1/...
     - component:
         name: core
@@ -50,14 +63,16 @@ services:
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
     envs:
-      # Dev is indexed (krizaka-com AGENTS 2.4): robots allows, sitemap, no noindex. The live spec drifted to "off" because this file said so.
+      # www is indexed (krizaka-com AGENTS 2.4): robots allows, sitemap, no noindex; dev. and admin. are closed by host (orazaka-web-client src/core/config/indexing.ts). The live spec drifted to "off" once because this file said so.
       - { key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on" }
       - { key: AUTH_LOGIN_ENABLED, scope: RUN_AND_BUILD_TIME, value: "true" }
       - { key: AUTH_SIGNUP_ENABLED, scope: RUN_AND_BUILD_TIME, value: "false" }
       - { key: APP_COMMIT, scope: BUILD_TIME, value: "${_self.COMMIT_HASH}" }
       - { key: NODE_ENV, scope: RUN_TIME, value: production }
       - { key: ROUTER_URL, scope: RUN_TIME, value: "http://core:8088" }
-      - { key: NEXTAUTH_URL, scope: RUN_TIME, value: "https://dev.orazaka.com" }
+      - { key: NEXTAUTH_URL, scope: RUN_TIME, value: "https://www.orazaka.com" }
+      - { key: APP_PUBLIC_URL, scope: RUN_TIME, value: "https://www.orazaka.com" }
+      - { key: APP_DEV_HOST, scope: RUN_TIME, value: "dev.orazaka.com" }
       # Universal links / App Links (orazaka-web-client app-links.json): served only when set, empty = 404, never a placeholder.
       - { key: APP_IOS_TEAM_ID, scope: RUN_TIME, value: "__APP_IOS_TEAM_ID__" }
       - { key: APP_ANDROID_CERT_SHA256, scope: RUN_TIME, value: "__APP_ANDROID_CERT_SHA256__" }
@@ -73,7 +88,7 @@ services:
 
   # The JVM services in one container (infra/deploy/Dockerfile + run-services.sh): edge :8088 (the
   # only port App Platform routes), users :8083, billing :8095, conversation :8080, studio :8096, job :8090,
-  # knowledge :8084 (the recommender, ADR-078).
+  # knowledge :8084 (the recommender, ADR-078), automation :8091 (webhooks and schedules, ADR-084).
   - name: core
     github:
       repo: krizaka/orazaka
@@ -114,6 +129,18 @@ services:
       - { key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-knowledge?sslmode=require&prepareThreshold=0" }
       - { key: KNOWLEDGE_DB_USERNAME, scope: RUN_TIME, value: orazaka_knowledge_db }
       - { key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__" }
+      # The automation service (ADR-084), the eighth JVM: signed webhooks and schedules that start Studio runs. Its own
+      # database through a pool of ONE connection (budget 22 of 22, docs/DEV_DATABASE.md): the code holds no connection while
+      # it calls another service. Routed by the edge at /api/v1/automations and /hooks/ (AUTOMATION_INTERNAL_URL).
+      - { key: AUTOMATION_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-automation?sslmode=require&prepareThreshold=0" }
+      - { key: AUTOMATION_DB_USERNAME, scope: RUN_TIME, value: orazaka_automation_db }
+      - { key: AUTOMATION_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_AUTOMATION_DB__" }
+      - { key: AUTOMATION_DB_MAX_POOL_SIZE, scope: RUN_TIME, value: "1" }
+      - { key: AUTOMATION_PORT, scope: RUN_TIME, value: "8091" }
+      - { key: AUTOMATION_INTERNAL_URL, scope: RUN_TIME, value: "http://localhost:8091" }
+      - { key: STUDIO_INTERNAL_URL, scope: RUN_TIME, value: "http://localhost:8096" }
+      # The address a sender is shown for a webhook trigger: the edge as the Internet reaches it.
+      - { key: APP_PUBLIC_EDGE_URL, scope: RUN_TIME, value: "https://dev.orazaka.com/edge" }
       # Broker: RabbitMQ on the orazaka-broker-dev Droplet, TLS only, VPC only (`dev-deploy.mjs broker`).
       # The GPU workers reach the same broker over the VPC with their own, narrower user.
       - { key: RABBITMQ_HOST, scope: RUN_TIME, value: broker-dev.orazaka.com }
@@ -144,7 +171,7 @@ services:
       # Sign-in open, sign-up closed — the backend refuses a registration too (403).
       - { key: AUTH_SIGNUP_ENABLED, scope: RUN_TIME, value: "false" }
       - { key: EMAIL_VERIFICATION_ENABLED, scope: RUN_TIME, value: "false" }
-      - { key: CORS_ALLOWED_ORIGINS, scope: RUN_TIME, value: "https://dev.orazaka.com,https://admin.orazaka.com" }
+      - { key: CORS_ALLOWED_ORIGINS, scope: RUN_TIME, value: "https://www.orazaka.com,https://dev.orazaka.com,https://admin.orazaka.com" }
       - { key: ORAZAKA_PACKS_SOURCES, scope: RUN_TIME, value: /app/orazaka-packs }
       # Billing runs as the sixth JVM of this container (billing :8095, reached through the edge at /api/v1/billing).
       # Enforcement stays DRY_RUN (a billing_runtime_config row): it meters, it never blocks chat.
@@ -165,6 +192,8 @@ services:
       # The serverless-inference model access key (`orazaka-dev`). Routing reads it from ai_providers
       # (dev-data.sql); kept here as the deployment's copy of record.
       - { key: AI_INFERENCE_KEY, scope: RUN_TIME, type: SECRET, value: "__AI_INFERENCE_KEY__" }
+      # The all-models key (it lists the hosted Wan): read by the hosted-video worker of this container (run-services.sh).
+      - { key: AI_INFERENCE_KEY_ALL, scope: RUN_TIME, type: SECRET, value: "__AI_INFERENCE_KEY_ALL__" }
       # Spend guards (tokens must not burn): a daily budget for paid providers (chat, embeddings, video), clips per day, requests per service key per day.
       - { key: AI_SPEND_DAILY_BUDGET_USD, scope: RUN_TIME, value: "5" }
       - { key: AI_VIDEO_DAILY_RUNS, scope: RUN_TIME, value: "5" }

@@ -23,7 +23,7 @@ Orazaka on your Mac, or connect to a hosted one, and give Orazaka **access to th
 1. **No filesystem permission in the web layer.** The control panel's capability (`src-tauri/capabilities/main.json`) is
    `core:default` only: no `fs`, no `shell`, no `opener` plugin. The hosted workspace window has **no capability at all**
    (no IPC): the Orazaka page cannot call the app.
-2. **Folder scope** (`src-tauri/src/scope.rs`). The app can read a path only if its *canonical* form lies inside a
+2. **Folder scope** ([`krizaka-tauri-kit`](https://github.com/krizaka/krizaka-tauri-kit) `scope`, shared by every Krizaka Mac app). The app can read a path only if its *canonical* form lies inside a
    folder you granted with the picker. `..` and symlinks that leave a folder are refused; grants are persisted
    (`~/Library/Application Support/com.krizaka.orazaka.desktop/scope.json`), shown in the **Files** tab and revocable
    (revoking also stops the folder watch). Your home folder itself, `/`, `/Users`, `/Volumes`, system folders and

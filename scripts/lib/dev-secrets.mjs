@@ -3,7 +3,8 @@
  * `env/org.env`, resolved by `~/.krizaka-worktrees/tools/secret.sh @dev KEY` through `secrets.map`).
  *
  *   --env-file <path> (or ORAZAKA_DEV_ENV_FILE)   one KEY=value file, read whole
- *   nothing                                        each key asked to `secret.sh @dev KEY` (dev.env, then org.env), on demand
+ *   nothing                                        each key asked to `secret.sh @orazaka KEY`, on demand: env/orazaka.env (the keys that
+ *                                                  differ for Orazaka: its Bunny zone), then env/dev.env, then env/org.env (secrets.map)
  *
  * A value is never printed and never put on a command line: the tool answers on stdout, read here.
  */
@@ -12,6 +13,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
+/** The logical source of this product in secrets.map: its own override file first, then dev.env, then org.env. */
+export const SECRET_SOURCE = "@orazaka";
 export const SECRET_TOOL = join(homedir(), ".krizaka-worktrees/tools/secret.sh");
 
 /** KEY=value lines; comments and blanks skipped, `=` kept in values. */
@@ -39,16 +42,16 @@ export function envFileFromArgs(argv, environ = process.env) {
   return { envFile, args };
 }
 
-function runTool(tool, args) {
-  const r = spawnSync(tool, args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+function runTool(tool, args, environ = process.env) {
+  const r = spawnSync(tool, args, { encoding: "utf8", env: environ, stdio: ["ignore", "pipe", "ignore"] });
   return r.status === 0 ? r.stdout : "";
 }
 
 /**
- * The secrets as an object read by key (`env.DATABASE_HOST`): a file's lines, or `secret.sh @dev <KEY>` per key.
+ * The secrets as an object read by key (`env.DATABASE_HOST`): a file's lines, or `secret.sh @orazaka <KEY>` per key.
  * @param {{ envFile?: string|null, tool?: string, run?: (tool: string, args: string[]) => string, environ?: object, overridable?: string[] }} [options]
  */
-export function devSecrets({ envFile = null, tool = SECRET_TOOL, run = runTool, environ = process.env, overridable = [] } = {}) {
+export function devSecrets({ envFile = null, tool = SECRET_TOOL, source = SECRET_SOURCE, run = runTool, environ = process.env, overridable = [] } = {}) {
   if (envFile) {
     if (!existsSync(envFile)) throw new Error(`no secrets file at ${envFile}`);
     const fromFile = readEnvFile(readFileSync(envFile, "utf8"));
@@ -62,7 +65,7 @@ export function devSecrets({ envFile = null, tool = SECRET_TOOL, run = runTool, 
       if (typeof key !== "string") return undefined;
       if (overridable.includes(key) && environ[key]) return environ[key];
       if (!cache.has(key)) {
-        const value = run(tool, ["@dev", key]).replace(/\r?\n$/, "");
+        const value = run(tool, [source, key], environ).replace(/\r?\n$/, "");
         cache.set(key, value === "" ? undefined : value);
       }
       return cache.get(key);

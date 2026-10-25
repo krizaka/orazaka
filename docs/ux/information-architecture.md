@@ -91,7 +91,7 @@ link; the language as a third control in the header.
 
 ```
 rail (desktop) / drawer (phone web):
-  Home · Studios · Chat · Jobs · Packs · Usage & credits
+  Home · Studios · Chat · Jobs · Plan · Usage & credits
   ───
   Settings · (Admin, admins only)
 header: [≡ phone] [mark] Orazaka  [sovereign]                 theme  bell  [avatar ▾]
@@ -104,7 +104,7 @@ Mac (Tauri): embeds the web client — the same rail and user menu
 ```
 
 - **One list** — `orazaka-web-client/src/core/config/app-sections.ts` — read by the rail, the drawer and the palette;
-  the phone's tabs are the same list without Home, Packs and Usage, in the same order and words.
+  the phone's tabs are the same list without Home, Plan and Usage, in the same order and words.
 - **Where you work on the rail, who you are under the avatar**: nothing appears in both (Settings is on the rail, Sign
   out only in the user menu).
 - **Gallery is not a section**: the results of your runs are in Jobs (its gallery view); one concept, one place.
@@ -117,6 +117,31 @@ Mac (Tauri): embeds the web client — the same rail and user menu
 Tests: `Sidebar.test.tsx` (order snapshot, one section current per route, no Sign out on the rail),
 `Header.test.tsx` (avatar first, the menu's content, nothing the rail holds), `AppCommandPalette.test.tsx`,
 the phone's `app.test.tsx` / `app.fr.test.tsx` (the Settings tab).
+
+### Studios and « Plan & packs » (2026-10-20)
+
+What is true in the code: a **plan** (krizaka-billing) grants monthly credits and `studio.*` entitlements; a **pack**
+(the Studio catalogue, priced by billing) bundles Studios, a toolkit pack is had through the plan, a vertical pack is
+added to the account; a **Studio** is open when billing or an operator grant allows its entitlement key; an
+**installation** exists for vertical Studios only, pinning a version and keeping the Studio's settings. For one person
+a Studio is in one of four states, all decided by the server: Ready, Needs a pack, Not on your plan, Not checked
+(billing down).
+
+```
+/studios  [Free plan · 500 credits a month · 28 Studios ready · 5 more …          Plan & packs]
+          [Search 33 Studios      ] [All 33 | Ready 28 | Get more 5] [All trades ▾]
+          Creative 8
+            Golden hour          Included in your plan · …        Ready          [Run]
+            Creator suggestions  Data & analytics pack, CA$49.00  Needs a pack   [Get pack] → drawer ?pack=
+          General 14 …
+/packs    Plan & packs: Your plan · Your packs · More packs, one line each, Details → the same drawer
+```
+
+- **One list, plan on top**: the three questions in order on one screen (what my plan gives, what runs now, what else
+  exists and how to get it), filters in the address (`?q=`, `?show=`, `?trade=`, `?pack=`).
+- **No Install step**: a vertical Studio is installed by its first run; only a Studio whose blueprint declares settings
+  asks them once (« Set up »). Upgrades stay explicit (ADR-034 §5).
+- Mockups and the option not taken (two tabs, Ready / Get more grouped by pack): the PR orazaka-web-client#192.
 
 ## 4. The home page — one story in six sections
 
@@ -162,6 +187,7 @@ figures nothing measured (« 0.8 ms vs 19 ms », « 18.4 tok/s ») and jargon (�
 | One list of sections for rail, palette and phone | the same place under three names | Consistency and standards (Nielsen 1994); the same word everywhere builds one mental model (Norman, *The Design of Everyday Things*, 2013) | separate per-surface wording | Studios moves before Chat on the web rail (the phone's order) | users of both surfaces look for « Profile » or « Task History » |
 | Six sections in the visitor's order | twelve sections, the same question answered three times | Progressive disclosure (Nielsen 2006); serial position — first and last are remembered (Ebbinghaus; Murdock 1962) | a long page « so everything is there » | Studios, packs and models one click deeper | scroll depth stops before « Where it runs », or visitors look for the models on the home |
 | Account under the avatar, sections on the rail | Sign out on the rail, language as a third header control | Spatial memory — controls in conventional places (Fitts' law on corners; Jakob's law, Nielsen 2000) | a Settings entry in both the rail and the menu | the language is one click deeper in the app | people ask where to sign out or change the language |
+| One Studio list with its state and one action per row, pack in a drawer | a 2-column grid of cards, three per screen; nobody could tell installed from available from « needs a pack » | Visibility of system status and recognition over recall (Nielsen 1994); information scent, each row says what you get and what it costs (Pirolli & Card, *Information Foraging*, 1999) | two tabs Ready / Get more (the same Studio in two places depending on what you own) | the cards' descriptions are one truncated line | people search for a Studio and open the wrong trade, or never open « Get more » |
 
 *Owner: the UX lead session. Change a section here first, then in `site-nav.ts` / `app-sections.ts` and the phone's tab
 bar, in the same pull requests.*
