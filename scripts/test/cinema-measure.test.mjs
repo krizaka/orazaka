@@ -65,3 +65,26 @@ test("the batch is billed by its pod sessions, divided by the minutes of finishe
   const noted = cinemaDataset({ films: [film], sessions: [], measuredOn: "x", gpu: "H100", rate: 4, note: "shared pod" });
   assert.match(mdCinema(noted).join("\n"), /> shared pod/);
 });
+
+test("a film's video models are its shots' own, and a batch can name what ran outside the Studios (orazaka#259)", () => {
+  const planned = {
+    ...production,
+    script: { ...production.script, parsed: { ...production.script.parsed, shots: [{ model: "wan2.2-i2v-a14b-hq" }, { model: "ltx-video-0.9.8-13b-distilled" }, { model: "wan2.2-i2v-a14b-hq" }] } },
+  };
+  const f = filmRecord({ id: "dawn", production: planned, probe: { width: 3840, height: 2160, duration: 62 }, rate: 5.29, gpu: "RunPod H200 141 GB", command: "orazaka cinema plan …", models: { image: "FLUX.2 [klein] 4B on the Mac" } });
+  assert.equal(f.models.video, "Wan 2.2 I2V A14B (40 steps), LTX-Video 0.9.8 13B distilled");
+  assert.equal(f.models.image, "FLUX.2 [klein] 4B on the Mac");
+  assert.deepEqual([f.gpu, f.rate], ["RunPod H200 141 GB", 5.29]);
+  // A production without per-shot models keeps the default it always had.
+  assert.equal(filmRecord({ id: "a", production, probe: { width: 1, height: 1, duration: 1 }, rate: 1, command: "x" }).models.video, "Wan 2.2 I2V A14B (4-step distill)");
+});
+
+test("the page names each film's own video model and GPU", () => {
+  const planned = { ...production, script: { ...production.script, parsed: { ...production.script.parsed, shots: [{ model: "wan2.2-i2v-a14b-hq" }] } } };
+  const a = filmRecord({ id: "a", production, probe: { width: 1080, height: 1920, duration: 40 }, rate: 3.99, gpu: "RunPod H100 80 GB", command: "x" });
+  const b = filmRecord({ id: "b", production: planned, probe: { width: 3840, height: 2160, duration: 62 }, rate: 5.29, gpu: "RunPod H200 141 GB", command: "y" });
+  const md = mdCinema(cinemaDataset({ films: [a, b], sessions: [], measuredOn: "2026-10-20", gpu: "RunPod", rate: 5.29 })).join("\n");
+  assert.match(md, /Wan 2\.2 I2V A14B \(4-step distill\) on RunPod H100 80 GB/);
+  assert.match(md, /Wan 2\.2 I2V A14B \(40 steps\) on RunPod H200 141 GB/);
+  assert.match(md, /3840×2160/);
+});

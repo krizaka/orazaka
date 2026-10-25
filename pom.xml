@@ -331,7 +331,7 @@
                         </goals>
                         <configuration>
                             <!-- Build web targets only: explicit workspace list (ignore flag is deprecated in npm) -->
-                            <arguments>run build --workspace=@krizaka/orazaka-shared --workspace=orazaka-web-client --workspace=orazaka-web-admin --workspace=orazaka-cli --if-present</arguments>
+                            <arguments>run build --workspace=@krizaka/orazaka-shared --workspace=orazaka-web-client --workspace=orazaka-cli --if-present</arguments>
                         </configuration>
                     </execution>
                 </executions>

@@ -58,7 +58,7 @@ When mapping `WorkflowContext` fields into `Context.preferences`, use these name
 | Package | Role | Port |
 |:---|:---|:---:|
 | `orazaka-web-client` | Client-facing Next.js 16 App Router application | 3000 |
-| `orazaka-web-admin` | Isolated SecOps Administration Console | 3001 |
+| `orazaka-web-client` (console, host `admin.*`) | Isolated SecOps Administration Console (the former `orazaka-web-admin`) | same app |
 | `orazaka-mobile-client` | Expo SDK 53 cross-platform mobile app (6-screen SaaS boilerplate) | 8081 |
 | `orazaka-cli` | Developer automation CLI with offline SQLite job queue | — |
 | `orazaka-shared` | Shared TypeScript types + Zod validation schemas | — |

@@ -8,8 +8,6 @@ generated: true
 
 # Interface Contracts (generated)
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 ## `orazaka-core`
 
 **Inbound ports**
@@ -17,8 +15,11 @@ generated: true
 - `AiClient`
 - `CatalogModelService`
 - `ChatSessionService`
+- `CitationVerifier`
+- `ExternalCheckCapability`
 - `JobService`
 - `McpService`
+- `StepRouter`
 
 **Outbound ports**
 
@@ -26,7 +27,13 @@ generated: true
 - `CapabilityProvider`
 - `ChatGeneratorClient`
 - `ChatMemoryStore`
+- `CheckAuditLog`
+- `CheckKeyStore`
+- `CheckMeter`
+- `CheckSubjectPepper`
+- `ConsentRegistry`
 - `EmbeddingClient`
+- `ExternalCheckConnector`
 - `ImageGeneratorClient`
 - `InfrastructureStatusProvider`
 - `KnowledgeService`
@@ -37,6 +44,8 @@ generated: true
 - `PlatformMcpServerProvider`
 - `PlatformToolConfigProvider`
 - `SemanticClassifierPort`
+- `StepModelRecorder`
+- `StepRouteProvider`
 - `TestShaperPort`
 - `ToolRegistry`
 - `UserCredentialsProvider`

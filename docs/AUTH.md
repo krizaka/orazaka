@@ -137,8 +137,8 @@ end
 ---
 
 ## Related Documentation
-- [Developer Onboarding Guide](101.md)
+- [Quickstart](101.md)
 - [Architecture Reference](_generated/ARCHITECTURE.md)
 - [API Reference](_generated/API_REFERENCE.md)
-- [Glossary](GLOSSARY.md)
+- [Concepts](CONCEPTS.md)
 

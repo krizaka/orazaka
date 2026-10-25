@@ -19,7 +19,9 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | — | images, 9:16 video | an hourly GPU droplet, only while started (`scripts/gpu-dev.sh`) | `small` / `big` | 0.76 / 1.57 **per hour** |
 | — | model weights | Volume `orazaka-gpu-models-<region>`, 80 GB, kept between droplets | — | 8 |
 
-**Total: $47/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens). Upgrading `core` to
+**Total: $47/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens).
+
+**Organisation total, measured 2026-10-21 (`doctl`, recurring cloud, GPU apart): about $97/month** — ten web services at $5, the Orazaka core $20, `gpu-relay` $5, the fourth static site $3, the shared PostgreSQL $15, the broker droplet $4 — under the $100 ceiling; about **$87** once `orazaka-admin-dev` (rollback until 2026-10-23) and `orochia-admin-dev` are deleted. There is no RunPod network volume on the account (the earlier « ≈ $14 volume » line was wrong); the GPU is billed by the hour, on use. Dev services run on the smallest instance that fits (`apps-s-1vcpu-0.5gb`; the JVM core cannot go below `basic-s`). Upgrading `core` to
 `basic-m` (4 GB, 2 vCPU, $40) is the first lever if it restarts under load: still $54.
 
 ### The `core` container
@@ -36,18 +38,38 @@ down so App Platform restarts the set.
 | `orazaka-conversation-service` | 8080 | 320 MiB | `orazaka_db` | chat (SSE), models, bootstrap features |
 | `orazaka-studio-service` | 8096 | 160 MiB | `orazaka_studio_db` | Studios, packs (installed at boot), runs |
 | `orazaka-knowledge-service` | 8084 | 128 MiB | `orazaka_knowledge_db` | the products' recommender (ADR-078, pgvector) |
-| `orazaka-edge` | **8088** | 96 MiB | — | the only routed port: `/` → conversation, `/api/v1/auth…` → users, `/api/v1/studios` → studio, `/api/v1/recommendations` → knowledge |
+| `orazaka-automation-service` | 8091 | 128 MiB | `orazaka_automation_db` | cloud automations: signed webhooks and schedules that start Studio runs (ADR-084), run history |
+| `orazaka-edge` | **8088** | 96 MiB | — | the only routed port: `/` → conversation, `/api/v1/auth…` → users, `/api/v1/studios` → studio, `/api/v1/recommendations` → knowledge, `/api/v1/automations` and `/hooks/` → automation |
 
 Measured on 2026-10-14 against the cluster (five JVMs, serial GC, C1 only, virtual threads): **1.3 GB resident**
 idle and after a round of sign-ins and Studio listings — the reason for a 2 GB container.
 
-**Not deployed** (and why): automation (connectors), notifications (no e-mail in dev: no password reset),
+**Not deployed** (and why): the automation service's connector stubs (Jira, Slack… log only; the service runs for ADR-084), notifications (no e-mail in dev: no password reset),
 worker-media (Metal/MLX — Mac only), Redis (only for `orazaka.identity.rate-limit.enabled`, off).
 
 The **document-validation worker** (orazaka-packs, Python, `job.validation.*`) runs in the same container: the image
 builds its venv (`pika`, `pyyaml`, `pypdf`, pinned), `run-services.sh` starts it after the JVMs (`ORAZAKA_WORKERS`,
 default `validation`; empty to skip) with the broker's TLS settings and CA file, its lines prefixed `[validation]`. It
 takes ~40 MB; like a JVM, if it exits the container restarts.
+
+## Automations — webhooks and schedules (ADR-084)
+
+The automation service starts a Studio run **as its owner** from a signed call or a schedule. Set it up once:
+
+```bash
+doctl databases pool create <cluster-id> pool-automation --db orazaka_automation_db --user orazaka_automation_db --size 1 --mode transaction
+node scripts/dev-deploy.mjs automations     # the model, triggers, webhook ledger, runs and rule set v2 (idempotent)
+```
+
+- **A webhook trigger** has its own secret (32 random bytes, `whsec_…`), sealed under the asset keyring
+  (`MEDIA_ENCRYPTION_KEY`), shown once, rotatable with a 24 h grace. `POST /edge/hooks/<triggerId>` with the Standard
+  Webhooks headers (`webhook-id`, `webhook-timestamp`, `webhook-signature: v1,<base64 HMAC-SHA256>`) answers `202` with the
+  run; a bad or stale signature `401`; a reused `webhook-id` `409`; a flood `429` with `Retry-After`; a body over 64 KiB `413`.
+  It is the only anonymous route of the platform (ADR-035 amendment).
+- **A schedule trigger** is « daily at HH:mm in a time zone on these weekdays »; one sweep every 15 s fires the slots that
+  have come. The limits (body cap, tolerance, rates, budgets) are the rule set v2 (`automation_settings`), not configuration.
+- **The pool is one connection**: no transaction is held across the call to the Studio service. The connection budget is
+  22 of 22 with it (docs/DEV_DATABASE.md); the next service needs the plan upgrade or a smaller pool elsewhere.
 
 ## Service accounts — a Krizaka product calling Orazaka
 
@@ -130,7 +152,7 @@ Cut-over (the old app serves the live console until step 3):
 
 ## Deploy
 
-Secrets never enter the repository: `~/Documents/krizaka/orazaka-dev.env` (mode 600) holds the database role
+Secrets never enter the repository: `~/Documents/krizaka/env/dev.env` (mode 600; read through `~/.krizaka-worktrees/tools/secret.sh @dev KEY`, or give it with `--env-file`) holds the database role
 passwords (`DATABASE_PASSWORD_<DB>`, read with `doctl databases user get`), `IDENTITY_JWT_SECRET`, `CRYPTO_KEY`,
 `CRYPTO_SALT` (16 hex), `MEDIA_ENCRYPTION_KEY` (32 bytes, base64 — the asset keyring), `RABBITMQ_PASS`,
 `NEXTAUTH_SECRET_WEB`, `NEXTAUTH_SECRET_ADMIN` and `AI_INFERENCE_KEY` (a **model access key**, created in the control
@@ -141,6 +163,7 @@ node scripts/dev-deploy.mjs apply orazaka-dev --dry-run   # render + validate, n
 node scripts/dev-deploy.mjs apply orazaka-dev             # SECRET values are stored encrypted by App Platform
 node scripts/dev-deploy.mjs data                          # infra/deploy/dev-data.sql: providers + chat default
 node scripts/dev-deploy.mjs seed                          # test accounts → company/QA.md only
+node scripts/dev-deploy.mjs persona                       # Eric, the demo persona for recordings → @dev APP_QA_ORAZAKA_PERSONA_*, never printed
 node scripts/dev-deploy.mjs status
 ```
 
@@ -236,6 +259,16 @@ on it dials **out** to `https://dev.orazaka.com/gpu-relay` (App Platform's TLS, 
 text steps, `llava` for their photo steps — sovereign, Apache-2.0 / open weights, while the GPU runs). The broker stays VPC-only. While no GPU is connected nothing
 listens on `gpu-relay:8086/8188`, which is exactly what greys the image and video capabilities out.
 
+**A model is offered as runnable only while something can run it** (2026-10-20). The video jobs (`job.video.generate`, and the
+sound ones) are drained by an external worker — the media worker, on a GPU or the Mac — and the job service lists in
+`model_category_queue` (data, `infra/deploy/dev-data.sql`) the categories that depend on one. A model of such a category is
+runnable when its engine answers **and** a `HEALTHY` worker of the registry is bound to that queue; otherwise it stays in the
+Studio's list, greyed out with a short reason in the page's language (« GPU offline » for a self-hosted model, « Engine offline »
+for the hosted Wan that the worker routes), is never the default, and a run that still names it — or leaves the model on automatic
+while none can run — is refused at start (« no video model is available right now »), before any credit is held, instead of
+waiting for a machine. The registry is advisory (ADR-038): a database without the table greys nothing out. Nothing starts a GPU on
+demand here: the pod or the Mac is started by hand (`gpu-dev.sh`), and the model comes back a minute after its worker registers.
+
 **Outputs.** The droplet keeps nothing: the worker hands each clip to the job service (`PUT
 /internal/v1/jobs/{id}/output/{file}`, a `SERVICE` token minted by `gpu-dev.sh` from the identity secret — which never
 leaves this machine — and expiring with the droplet), which seals it with the platform's key, adopts the job's row if a
@@ -316,3 +349,14 @@ env by `scripts/gpu-dev.sh mac` — never printed, never in a repository. Select
 | Document validation (compliance-check, document-authenticity) | for a **granted** account | PAID Studios, billing off: an operator grant opens them (`service-account`, below); the worker runs in `core` |
 | Real-estate reels | locked | PAID Studio, billing off |
 | E-mails (verify, reset) | no | notifications not deployed |
+
+## The core journey on dev (Dev preview `journey.core`, `journey.ai-via-orazaka`)
+
+`node scripts/journey-dev.mjs --out <dir>` replays what Orazaka is for, on https://dev.orazaka.com/edge as the demo persona
+Eric (credentials from the environment, read with `secret.sh`, never printed): sign in → ask the chat → make an image with
+the `image-generation` Studio → have the picture read by `image-analysis` →
+make a hosted clip with `video-generation`. Every step goes through the public API (no SQL, no direct model call) and records
+the edge request id; each Studio step also records its run id, the engine's own trace (`GET /api/v1/studios/runs/{id}`, the
+job ids of its steps). It writes the report (`journey-<date>.json`, `.md`) and the clip, and exits 1 unless every step is
+proven. Cost: about 0.70 USD (one hosted image, one 5 s hosted clip). The 9:16 models run on the GPU host, which is up only for
+a batch: pass `--aspect 9:16 --video-model wan2.2-ti2v-5b` while a pod is running. Rules tested first: `scripts/test/journey.test.mjs`.
