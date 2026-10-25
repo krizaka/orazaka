@@ -8,8 +8,6 @@ generated: true
 
 # CLI Reference
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 The `orazaka` CLI is the single orchestrator of the platform: it clones and configures the
 workspace, starts the infrastructure, runs the whole stack, tests it, builds these docs and
 installs packs. No shell script to remember — one command per intent.
@@ -60,7 +58,7 @@ orazaka start — Start Orazaka infrastructure — dev mode (Docker middleware +
   4. Media Generation Worker
   5a. Starting Router (Spring Boot) (--mode full)
   5b. Starting Next.js UI (--mode full)
-orazaka dev — Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile)
+orazaka dev — Launch the full Orazaka application stack in parallel (9 services + Web, Mobile)
   EDGE :8088
   ROUTER :8080
   IDENTITY :8083
@@ -71,7 +69,6 @@ orazaka dev — Launch the full Orazaka application stack in parallel (9 service
   STUDIO :8096
   NOTIFICATIONS :8097
   WEB-CLIENT :3000
-  WEB-ADMIN :3001
   MOBILE :8081
   worker.yaml (Python workers, no HTTP port)
 ```
@@ -98,7 +95,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 ## Commands
 
 ```cli-commands
-33 commands, 30 subcommands — every one in the table below.
+33 commands, 39 subcommands — every one in the table below.
 ```
 
 | Command | Description |
@@ -113,12 +110,21 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka cinema fetch <dir>` | Download the references, keyframes, shots and the film into the production's folder |
 | `orazaka cinema reshoot <dir> <shots>` | Make shots again (a new seed): their video, then the cut and the sound |
 | `orazaka cinema status <dir>` | Where the production is |
+| `orazaka cinema plan <dir>` | Start a production from a treatment (a directed shot list): no language model, every shot as written |
+| `orazaka cinema sheet <dir>` | Make the reference sheet of each character that has a reference render (kept as drawn, never redrawn) |
+| `orazaka cinema jobs <dir>` | The pending shots as jobs for a GPU host that runs the worker's own generator |
+| `orazaka cinema take <dir> <shot> <file>` | Record a take a GPU host made for a shot |
+| `orazaka cinema review <dir> <shot> <file>` | A take's review sheet: a frame every 8 under the cast's reference sheet |
+| `orazaka cinema treat <dir>` | Write the story of a brief (arc, intentions, purposeful shots, directed lines, music cues, sound list) and judge it |
+| `orazaka cinema critique <treatment>` | Judge a treatment against the rubric (arc, purpose, alive, on-topic, continuity, voice, music, sound) |
+| `orazaka cinema timeline <treatment>` | Place every line, music cue and sound of a treatment on the cut, and say which lines do not fit their shots |
+| `orazaka cinema stage <treatment>` | Check a v3 treatment's staging, camera and cut, and write the questions every keyframe and take must answer |
 | `orazaka config` | Interactive configuration wizard — review and update .env variables |
 | `orazaka db` | Database maintenance operations |
 | `orazaka db reseed` | Drop & re-apply infra/initdb/*.sql (schema + seed). Destroys all local dev data. |
 | `orazaka demo` | Demonstration persona on the local stack (never on a deployed one) |
 | `orazaka demo seed` | Create or refresh Eric, the demo persona: account, onboarding, plan, packs and Studios (replayable) |
-| `orazaka dev` | Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile) |
+| `orazaka dev` | Launch the full Orazaka application stack in parallel (9 services + Web, Mobile) |
 | `orazaka docs` | Code-driven documentation: build (generate) \| sync (to the site) |
 | `orazaka docs build` | Regenerate docs/_generated/ from the code |
 | `orazaka docs sync` | Copy docs/ (+ generated) into the Krizaka site content tree |
@@ -246,6 +252,102 @@ Where the production is
 |:---|:---|
 | `<dir>` | The production's folder |
 
+### `orazaka cinema plan <dir>`
+
+Start a production from a treatment (a directed shot list): no language model, every shot as written
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `-r, --references <dir>` | Where the characters' reference renders are (<name>-alpha.png) |
+| `-l, --language <lang>` | en or fr (the captions) (default: `en`) |
+| `--seed <seed>` | Overrides the treatment's seedBase |
+| `--update` | The treatment changed: keep every shot already made, add the new ones |
+
+### `orazaka cinema sheet <dir>`
+
+Make the reference sheet of each character that has a reference render (kept as drawn, never redrawn)
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+
+### `orazaka cinema jobs <dir>`
+
+The pending shots as jobs for a GPU host that runs the worker's own generator
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `-o, --out <file>` | Write them to a file instead of printing them |
+
+### `orazaka cinema take <dir> <shot> <file>`
+
+Record a take a GPU host made for a shot
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `<shot>` | The shot's number |
+| `<file>` | The take (mp4) |
+| `--seconds <s>` | How long the host took to make it |
+
+### `orazaka cinema review <dir> <shot> <file>`
+
+A take's review sheet: a frame every 8 under the cast's reference sheet
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | The production's folder |
+| `<shot>` | The shot's number |
+| `<file>` | The take (mp4) |
+
+### `orazaka cinema treat <dir>`
+
+Write the story of a brief (arc, intentions, purposeful shots, directed lines, music cues, sound list) and judge it
+
+| Argument / option | Description |
+|:---|:---|
+| `<dir>` | Where the treatment and its critique are written |
+| `-l, --language <lang>` | en or fr (default: `en`) |
+| `-d, --duration <s>` | Seconds of film (default: `60`) |
+| `-a, --aspect <aspect>` | 16:9 or 9:16 (default: `16:9`) |
+| `--revisions <n>` | How many times a rejected draft goes back to the writer (default: `2`) |
+| `--no-judge` | The rubric alone decides (no language-model judge) |
+| `--model <name>` | The chat model of the writer and the judge |
+
+### `orazaka cinema critique <treatment>`
+
+Judge a treatment against the rubric (arc, purpose, alive, on-topic, continuity, voice, music, sound)
+
+| Argument / option | Description |
+|:---|:---|
+| `<treatment>` | The treatment (JSON) |
+| `-l, --language <lang>` | en or fr (default: `en`) |
+| `--judge` | Also ask the language-model judge (a cinematic-critique run) |
+| `--model <name>` | The judge's chat model |
+| `-o, --out <file>` | Write the critique (JSON) there |
+
+### `orazaka cinema timeline <treatment>`
+
+Place every line, music cue and sound of a treatment on the cut, and say which lines do not fit their shots
+
+| Argument / option | Description |
+|:---|:---|
+| `<treatment>` | The treatment (JSON) |
+| `-l, --language <lang>` | en or fr (default: `en`) |
+| `--voice <report>` | The voice step's report: [{id, seconds}] measured per line |
+| `--spans <file>` | The cut's own shot spans ([[start, end], …], e.g. the worker's cut.timeline) instead of back to back |
+
+### `orazaka cinema stage <treatment>`
+
+Check a v3 treatment's staging, camera and cut, and write the questions every keyframe and take must answer
+
+| Argument / option | Description |
+|:---|:---|
+| `<treatment>` | The treatment (JSON, with score.bpm, beats, camera, angle, light and staging per shot) |
+| `-o, --out <file>` | Write the frame questions (JSON: per shot, then the take questions) there |
+
 ### `orazaka config`
 
 Interactive configuration wizard — review and update .env variables
@@ -275,11 +377,11 @@ Create or refresh Eric, the demo persona: account, onboarding, plan, packs and S
 
 ### `orazaka dev`
 
-Launch the full Orazaka application stack in parallel (9 services + Web, Admin, Mobile)
+Launch the full Orazaka application stack in parallel (9 services + Web, Mobile)
 
 | Argument / option | Description |
 |:---|:---|
-| `--only <services>` | Launch only these services (comma-separated: edge,router,identity,automation,knowledge,job,billing,studio,notifications,web,admin,mobile) |
+| `--only <services>` | Launch only these services (comma-separated: edge,router,identity,automation,knowledge,job,billing,studio,notifications,web,mobile) |
 | `--skip-edge` | Skip the Edge gateway (strangler facade on :8088) |
 | `--skip-identity` | Skip the Identity service (:8083) |
 | `--skip-router` | Skip the Router (Spring Boot) backend — run RouterApplication from your IDE instead |
@@ -290,7 +392,7 @@ Launch the full Orazaka application stack in parallel (9 services + Web, Admin, 
 | `--skip-billing` | Skip the Billing service (:8095) |
 | `--skip-studio` | Skip the Studio service (:8096) |
 | `--skip-notifications` | Skip the Notification service (:8097) |
-| `--skip-admin` | Skip Admin console |
+| `--skip-admin` | Deprecated no-op: the operator console is served by the web client |
 | `--skip-mobile` | Skip Expo mobile server |
 | `--skip-web` | Skip Web client |
 | `--skip-workers` | Skip the Python workers declared by worker.yaml |

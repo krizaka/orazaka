@@ -86,18 +86,35 @@ jobs:
             printf '%s\n' "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/notary-key"
             echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/notary-key" >> "$GITHUB_ENV"
           fi
+      - name: Is there a usable Developer ID certificate?
+        id: cert
+        env:
+          CERT: ${{ secrets.APPLE_CERTIFICATE }}
+          CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -n "$CERT" ] && printf '%s' "$CERT" | base64 -d > "$RUNNER_TEMP/cert.bin" 2>/dev/null \
+             && security create-keychain -p tmp "$RUNNER_TEMP/probe.keychain" \
+             && security import "$RUNNER_TEMP/cert.bin" -k "$RUNNER_TEMP/probe.keychain" -P "$CERT_PASSWORD" -T /usr/bin/codesign >/dev/null 2>&1; then
+            echo "usable=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::no usable Developer ID certificate: the .dmg is ad-hoc signed (right-click, Open)"
+            echo "usable=no" >> "$GITHUB_OUTPUT"
+          fi
+          security delete-keychain "$RUNNER_TEMP/probe.keychain" >/dev/null 2>&1 || true
       - name: Build the .dmg (Developer ID signed and notarized when the secrets exist, ad-hoc otherwise)
         env:
           # Tauri signs with the Developer ID Application certificate and notarizes with the App Store Connect API key:
           # APPLE_CERTIFICATE (base64 .p12), APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
           # APPLE_API_ISSUER, APPLE_API_KEY (key id), APPLE_API_KEY_P8 (the key file, written above), APPLE_TEAM_ID.
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_CERTIFICATE: ${{ steps.cert.outputs.usable == 'yes' && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ steps.cert.outputs.usable == 'yes' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ steps.cert.outputs.usable == 'yes' && secrets.APPLE_SIGNING_IDENTITY || '' }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: pnpm build:app
+        # An empty variable still counts as set for Tauri: with no usable certificate every APPLE_* signing variable is unset.
+        run: |
+          if [ "${{ steps.cert.outputs.usable }}" = yes ]; then pnpm build:app; else env -u APPLE_CERTIFICATE -u APPLE_CERTIFICATE_PASSWORD -u APPLE_SIGNING_IDENTITY -u APPLE_API_ISSUER -u APPLE_API_KEY -u APPLE_API_KEY_PATH -u APPLE_TEAM_ID pnpm build:app; fi
       - name: Checksum
         run: |
           cd src-tauri/target/aarch64-apple-darwin/release/bundle/dmg

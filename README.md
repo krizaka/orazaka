@@ -18,7 +18,7 @@
 [![Orazaka](https://img.shields.io/badge/part%20of-Orazaka-f67e23)](https://github.com/krizaka/orazaka#repositories)
 [![Website](https://img.shields.io/badge/site-dev.orazaka.com-f67e23)](https://dev.orazaka.com)
 
-[Website](https://dev.orazaka.com) · [Documentation](https://dev.orazaka.com/docs) · [Demos](https://dev.orazaka.com/gallery) · [Krizaka](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
+[Website](https://dev.orazaka.com) · [Documentation](https://dev.orazaka.com/docs) · [Krizaka](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
 
 </div>
 <!-- /krizaka-header -->
@@ -87,7 +87,7 @@ cloned under `krizaka/` so the reactor builds them from source. Documentation: [
 | Repository | What it is |
 |:---|:---|
 | [`orazaka-web-client`](https://github.com/krizaka/orazaka-web-client) | Next.js (App Router) client of the Orazaka platform with its mandatory BFF. |
-| [`orazaka-web-admin`](https://github.com/krizaka/orazaka-web-admin) | Next.js SecOps & administration console of the Orazaka platform. |
+| ~~`orazaka-web-admin`~~ | **Retired** — the operator console is served by [`orazaka-web-client`](https://github.com/krizaka/orazaka-web-client) on `admin.orazaka.com` (host routing). The repository is archived and deleted on 2026-10-23. |
 | [`orazaka-mobile-client`](https://github.com/krizaka/orazaka-mobile-client) | Expo / React Native client of the Orazaka platform (talks to the edge with Bearer tokens). |
 | [`orazaka-cli`](https://github.com/krizaka/orazaka-cli) | The `orazaka` developer CLI: install, start, dev, `demo seed`, test, docs and pack tooling for the Orazaka workspace, with an offline SQLite queue. |
 | [`orazaka-packs`](https://github.com/krizaka/orazaka-packs) | Reference packs for the Orazaka Studio marketplace (document validation, media, prospection, real-estate, wellbeing…) and the pack manifest schema. |
@@ -164,6 +164,20 @@ own machine. `npx orazaka` is [`@krizaka/orazaka-cli`](https://www.npmjs.com/pac
 
 `node scripts/workspace.mjs status` shows the branch and state of every repository;
 `node scripts/workspace.mjs pull` updates them all.
+
+## Follow Studio runs without polling
+
+Studio runs expose per-run and per-key Server-Sent Events streams, and signed `run.completed` /
+`run.failed` webhooks for server-to-server integrations. Webhook endpoints are managed in **Settings →
+Webhooks**; delivery is at-least-once, so receivers should deduplicate on `webhook-id`. See the
+[Studio guide](docs/STUDIO_GUIDE.md#follow-a-run) for event resumption, signatures, retries, and the
+delivery log.
+
+## Grounded research (proposed)
+
+The engine looking things up, reading the source and citing it, instead of answering from memory: [ADR-087](docs/adr/ADR-087-grounded-research.md) and its [design](docs/design/grounded-research.md) (proposed, not built yet).
+
+The compliance checks built from the law, on top of it — identify the document, read the dated articles, propose rules, promote them to dated rulesets: [ADR-089](docs/adr/ADR-089-rules-from-the-law.md) (proposed, not built yet).
 
 ## Workspace layout
 

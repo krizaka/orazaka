@@ -25,3 +25,21 @@ test("no ADD line names a repository the workspace no longer lists", () => {
     assert.ok(names.has(m[1]), `${m[1]} is in orazaka.workspace.json`);
   }
 });
+
+test("the core build leaves nothing for the layer snapshot (jars copied out, target/ and the Maven repository removed): the eighth service made the snapshot run out of memory", () => {
+  const dockerfile = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
+  const build = dockerfile.slice(dockerfile.indexOf('RUN echo "core build'), dockerfile.indexOf("# ── 3. Runtime"));
+  assert.match(build, /\/out\/automation\.jar/);
+  assert.match(build, /find \/workspace -type d -name target -prune -exec rm -rf/);
+  assert.match(build, /rm -rf \/root\/\.m2\/repository/);
+  assert.ok(build.lastIndexOf("/out/orazaka-worker-media") < build.indexOf("rm -rf /root/.m2/repository"), "clean up after the last copy");
+});
+
+test("the clone layer is also keyed by the apply's stamp (CORE_REBUILD): kaniko kept the cached clone although a repository had moved (packs 1.11.0 never reached dev, 2026-10-20)", () => {
+  const clone = dockerfile.indexOf("RUN node scripts/workspace.mjs clone");
+  const stamp = dockerfile.indexOf('RUN echo "sources ${CORE_REBUILD}"');
+  const arg = dockerfile.indexOf("ARG CORE_REBUILD=0");
+  assert.ok(arg > 0 && arg < stamp, "the ARG is declared in the sources stage, before its use");
+  assert.ok(stamp > 0 && stamp < clone, "the stamp layer comes before the clone, so a new CORE_REBUILD invalidates it");
+  assert.ok(arg < dockerfile.indexOf("FROM eclipse-temurin", 1), "declared in the first (sources) stage");
+});

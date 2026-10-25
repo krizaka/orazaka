@@ -105,9 +105,7 @@ function frontmatter(title, description, category, order) {
     "",
     `# ${title}`,
     "",
-    "> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. " +
-      "Run `orazaka docs build` to refresh.",
-    "",
+    // No banner for the reader: `generated: true` above says it to the tools, and the site shows « generated » itself.
   ].join("\n");
 }
 
@@ -2091,7 +2089,7 @@ const mdTools = (t, api, cli) => {
   }
   lines.push(
     "",
-    "`searchWeb` searches the sources the knowledge service holds for the signed-in user. `analyzePoster` and",
+    "`searchKnowledge` searches the sources the knowledge service holds for the signed-in user (not the web). `analyzePoster` and",
     "`analyzeAudioExtract` are reference tools: they demonstrate the contract and return a fixed analysis.",
     "",
     "## When a tool is attached",
@@ -2606,7 +2604,7 @@ const mdPacks = (p, cli, catalog) => {
     "capability rows, a price, catalogue entries — and changes no code.",
     "",
     "> **Packs are not use-cases.** A pack is a business offer — Studios a customer installs and runs. A",
-    "> [use-case](USE_CASES.md) is a technical entry point of the engine (`chat.assistant`, `studio.run`…) declared",
+    "> use-case is a technical entry point of the engine (`chat.assistant`, `studio.run`…) declared",
     "> in Java in `orazaka-business` ([business layer](BUSINESS.md)); every Studio run goes through the `studio.run` one.",
     "",
   );
@@ -2619,14 +2617,11 @@ const mdPacks = (p, cli, catalog) => {
   lines.push(
     `## The reference packs (${code(p.repo)})`,
     "",
-    "| Pack | Version | Tier | Distribution | Regulatory class | Catalogue entry | Studios | Own capabilities |",
-    "|:---|:---|:---|:---|:---|:---|:---|:---|",
+    // Three columns: the cards above carry tier, distribution and class; this is the index of what to install.
+    "| Pack | Version | Studios |",
+    "|:---|:---|:---|",
   );
-  for (const x of p.packs) {
-    lines.push(
-      `| ${code(x.key)} | ${x.version} | ${x.tier} | ${x.distribution} | ${x.regulatoryClass} | ${x.onShelf ? "yes" : "no"} | ${x.studios.map(code).join(", ") || "—"} | ${x.capabilities.length ? x.capabilities.map(code).join(", ") + (x.workers.length ? ` (worker ${x.workers.map(code).join(", ")})` : "") : "—"} |`,
-    );
-  }
+  for (const x of p.packs) lines.push(`| ${code(x.key)} | ${x.version} | ${x.studios.map(code).join(" · ") || "—"} |`);
   const packCli = cli.filter((c) => (c.top === "pack" || c.top === "studio") && !c.isTop);
   if (packCli.length) {
     lines.push("", "## From the terminal", "", "| Command | What it does |", "|:---|:---|");
@@ -2650,15 +2645,18 @@ const mdPacks = (p, cli, catalog) => {
 // ── Administration ──────────────────────────────────────────────────────────
 
 function extractAdmin(api) {
-  const repo = REPOSITORIES.find((r) => r.name === "orazaka-web-admin");
-  const dir = repo ? join(ROOT, repo.path, "src") : null;
+  // The operator console lives in orazaka-web-client (host routing: admin.orazaka.com), not in a repository of its own.
+  const repo = REPOSITORIES.find((r) => r.name === "orazaka-web-client");
+  const src = repo ? join(ROOT, repo.path, "src") : null;
+  const appDir = src ? join(src, "app", "console") : null;
+  const dir = src ? join(src, "console") : null;
   const screens = [];
   const called = new Set();
   let auth = { authority: null, provider: null };
   if (dir && existsSync(dir)) {
-    for (const f of walk(join(dir, "app"), (p) => basename(p) === "page.tsx").sort()) {
+    for (const f of walk(appDir, (p) => basename(p) === "page.tsx").sort()) {
       const s = read(f);
-      const route = screenRoute(relative(join(dir, "app"), join(f, "..")));
+      const route = screenRoute(relative(appDir, join(f, "..")));
       const at = s.search(/export default function/);
       const tabs = [...s.matchAll(/\{\s*id:\s*"(\w+)",\s*label:\s*"([^"]+)"\s*\}/g)].map((m) => m[2]);
       screens.push({ route, summary: firstSentence(javadocAbove(s, at)), tabs });
@@ -2706,9 +2704,9 @@ const mdAdmin = (a) => {
     `administrator is an account holding \`${a.auth.authority ?? "ROLE_ADMIN"}\`, granted by the identity service; every`,
     "administrative endpoint checks it on the server (`@PreAuthorize`), whatever client calls it.",
     "",
-    `## The SecOps console (${code(a.repo ?? "orazaka-web-admin")})`,
+    `## The SecOps console (${code(a.repo ?? "orazaka-web-client")})`,
     "",
-    "A Next.js console (port 3001) started with the rest of the stack by `orazaka dev` (`--skip-admin` to leave it out).",
+    "A Next.js console served by `orazaka-web-client` on the admin host (`admin.orazaka.com`, host routing), started with the web client by `orazaka dev`.",
     "",
     "| Screen | What it is for | Tabs |",
     "|:---|:---|:---|",
@@ -2718,7 +2716,7 @@ const mdAdmin = (a) => {
     "",
     ...ADMIN_CAPTURES.flatMap((c) => [`![${c.caption}](${c.url})`, "", `*${c.caption}.*`, ""]),
     "> The console's screens are in French for now, and it ships no sign-in page yet",
-    "> ([orazaka-web-admin#5](https://github.com/krizaka/orazaka-web-admin/issues/5)): every administrative",
+    "> (tracked in `orazaka-web-client`): every administrative",
     "> action is also an endpoint, listed below.",
     "",
     "### How the console is secured",

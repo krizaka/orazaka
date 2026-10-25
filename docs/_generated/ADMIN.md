@@ -8,26 +8,26 @@ generated: true
 
 # Administration
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 Everything commercial and operational in Orazaka is **data an administrator edits** — models, the
 interceptor pipeline, capabilities, MCP servers, plans, prices, wallets, Studios — never a redeploy. An
 administrator is an account holding `ROLE_ADMIN`, granted by the identity service; every
 administrative endpoint checks it on the server (`@PreAuthorize`), whatever client calls it.
 
-## The SecOps console (`orazaka-web-admin`)
+## The SecOps console (`orazaka-web-client`)
 
-A Next.js console (port 3001) started with the rest of the stack by `orazaka dev` (`--skip-admin` to leave it out).
+A Next.js console served by `orazaka-web-client` on the admin host (`admin.orazaka.com`, host routing), started with the web client by `orazaka dev`.
 
 | Screen | What it is for | Tabs |
 |:---|:---|:---|
 | `/` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
 | `/audit` | `/audit` — the audit trail of account administration. | — |
 | `/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
+| `/law` | `/law` — Law → Proposals (ADR-089 §8): the review queue and promotion of the rules from the law, the corpus, the demand. | — |
 | `/login` | — | — |
 | `/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
 | `/operations` | `/operations` — dependencies, queue depth, recent errors, runs and the deployed version. | — |
 | `/studios` | The Studio Builder console (ADR-034 §12.4). | — |
+| `/tasks` | `/tasks` — what needs an operator: refused or failed actions without a success since, failed jobs (ADR-085). | — |
 | `/users` | `/users` — the platform's accounts: state, role, Law 25 export and erasure. | — |
 
 ![Billing — consumption per capability and model, refusals included](https://krizaka-assets.b-cdn.net/pr-assets/orazaka/admin-console/02-billing-usage.png)
@@ -47,7 +47,7 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 *Studios — the blueprint editor: versions, credits, steps and forms.*
 
 > The console's screens are in French for now, and it ships no sign-in page yet
-> ([orazaka-web-admin#5](https://github.com/krizaka/orazaka-web-admin/issues/5)): every administrative
+> (tracked in `orazaka-web-client`): every administrative
 > action is also an endpoint, listed below.
 
 ### How the console is secured
@@ -64,10 +64,12 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | GET | `/api/v1/features/all` | ADMIN | Admin: all capabilities (enabled or not) from the database. |
 | GET | `/api/v1/jobs` | authenticated | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
 | GET | `/api/v1/jobs/active-connections` | ADMIN | Retrieves the current active SSE connection count. |
+| GET | `/api/v1/models/admin/audit` | ADMIN | — |
 | GET | `/api/v1/models/catalog` | authenticated | Retrieves the complete AI model catalog definitions from the database. |
 | GET | `/api/v1/models/providers` | authenticated | Retrieves all available AI provider names from the database. |
 | GET | `/api/v1/status/health` | public | Returns sovereign readiness health details (public probe). |
 | GET | `/api/v1/status/infrastructure` | authenticated | Returns the current online/offline snapshot of the local inference engines. |
+| GET | `/api/v1/billing/admin/audit` | ADMIN | — |
 | GET | `/api/v1/billing/configuration` | ADMIN | The declared key vocabulary — type, permitted domain and code default per key. |
 | PATCH | `/api/v1/billing/configuration` | ADMIN | Applies one validated configuration change. |
 | GET | `/api/v1/billing/packs` | authenticated | The priced catalogue. |
@@ -102,6 +104,7 @@ A Next.js console (port 3001) started with the rest of the stack by `orazaka dev
 | DELETE | `/api/v1/studios/{studioKey}/blueprints/{version}` | ADMIN | Deprecates a version without deleting it. |
 | PUT | `/api/v1/studios/{studioKey}/blueprints/{version}` | ADMIN | Creates or replaces a draft version. |
 | POST | `/api/v1/studios/{studioKey}/blueprints/{version}/publish` | ADMIN | Publishes a draft, minting it as the Studio's latest version. |
+| GET | `/api/v1/studios/admin/audit` | ADMIN | — |
 
 ## Every ADMIN-only endpoint
 
@@ -122,6 +125,7 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | POST | `/api/v1/models` | Adds a new model definition to the catalog. |
 | DELETE | `/api/v1/models/{id}` | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | Updates an existing model definition in the catalog. |
+| GET | `/api/v1/models/admin/audit` | — |
 | GET | `/api/v1/pipeline/interceptors` | Retrieves all pipeline interceptor configurations ordered by execution order. |
 | PUT | `/api/v1/pipeline/interceptors` | Bulk-updates pipeline interceptor ordering and enabled state. |
 | POST | `/api/v1/pipeline/interceptors/reset` | Resets all pipeline interceptor configurations to hardcoded defaults. |
@@ -132,6 +136,7 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 
 | Method | Path | Summary |
 |:---|:---|:---|
+| GET | `/api/v1/billing/admin/audit` | — |
 | GET | `/api/v1/billing/configuration` | The declared key vocabulary — type, permitted domain and code default per key. |
 | PATCH | `/api/v1/billing/configuration` | Applies one validated configuration change. |
 | GET | `/api/v1/billing/pack-subscriptions` | Every live holder of a pack — what an admin checks before withdrawing one. |
@@ -150,6 +155,7 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | POST | `/api/v1/billing/subscriptions/{actorId}` | Moves an actor onto a plan — upgrade, downgrade or trial. |
 | POST | `/api/v1/billing/subscriptions/{actorId}/rollover` | Rolls a subscription into its next period, honouring a pending cancellation. |
 | GET | `/api/v1/billing/usage/capabilities` | Consumption and refusals per capability × model. |
+| GET | `/api/v1/billing/usage/me` | The caller's own usage and cost for a calendar month. |
 | GET | `/api/v1/billing/usage/top-consumers` | The heaviest consumers. |
 | GET | `/api/v1/billing/wallets/{actorId}` | Reads an actor's balances. |
 | POST | `/api/v1/billing/wallets/{actorId}/adjustments` | Issues a manual credit adjustment — support goodwill, or a claw-back. |
@@ -177,6 +183,10 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | DELETE | `/api/v1/studios/{studioKey}/blueprints/{version}` | Deprecates a version without deleting it. |
 | PUT | `/api/v1/studios/{studioKey}/blueprints/{version}` | Creates or replaces a draft version. |
 | POST | `/api/v1/studios/{studioKey}/blueprints/{version}/publish` | Publishes a draft, minting it as the Studio's latest version. |
+| GET | `/api/v1/studios/admin/audit` | — |
+| GET | `/api/v1/studios/admin/runtime-config` | — |
+| PUT | `/api/v1/studios/admin/runtime-config/{key}` | — |
+| GET | `/api/v1/studios/admin/runtime-config/audit` | — |
 | POST | `/api/v1/studios/packs/bundles` | Installs a bundle. |
 | DELETE | `/api/v1/studios/packs/bundles/{bundleKey}` | Removes a bundle's catalogue rows and withdraws its pack from sale. |
 | POST | `/api/v1/studios/packs/bundles/validation` | Checks a bundle against this platform without writing anything. |

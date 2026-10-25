@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 -- Two invented accounts and everything that hangs off them: their roles, their
 -- profiles, their wallets, a ledger entry and a subscription — plus three RAG
--- documents written to give `searchWeb` something to find.
+-- documents written to give `searchKnowledge` (the corpus search; it was `searchWeb`) something to find.
 --
 -- These are NOT reference data. The catalogue rows in 10/30/40/60/70/80 (models,
 -- providers, capabilities, plans, packs, pricebook, the three launch Studios,
@@ -53,9 +53,9 @@ ON CONFLICT (user_id) DO NOTHING;
 \c orazaka_knowledge_db
 
 INSERT INTO orazaka_tools_rag_source (tool_id, content, metadata) VALUES
-('searchWeb', 'Orazaka Corporation is a powerful mega-corporation specializing in security, banking, and manufacturing.', '{"source":"corp_profile"}'),
-('searchWeb', 'The Orazaka core framework runs on Java 21 with Spring AI 1.1.6.', '{"source":"tech_spec"}'),
-('searchWeb', 'The BFF proxy routes incoming frontend requests from Next.js to the Orazaka Gateway at http://localhost:8080.', '{"source":"bff_proxy"}')
+('searchKnowledge', 'Orazaka Corporation is a powerful mega-corporation specializing in security, banking, and manufacturing.', '{"source":"corp_profile"}'),
+('searchKnowledge', 'The Orazaka core framework runs on Java 21 with Spring AI 1.1.6.', '{"source":"tech_spec"}'),
+('searchKnowledge', 'The BFF proxy routes incoming frontend requests from Next.js to the Orazaka Gateway at http://localhost:8080.', '{"source":"bff_proxy"}')
 ON CONFLICT ON CONSTRAINT unique_tool_content DO NOTHING;
 
 -- ── krizaka_billing_db ─────────────────────────────────────────────────────────────

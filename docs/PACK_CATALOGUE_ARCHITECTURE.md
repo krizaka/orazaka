@@ -88,7 +88,7 @@ Studio clutters their space the day you add it to a pack they already bought.
 | `billing_pack_subscription` (add/remove to space) | ✅ exists | `70-billing.sql`, perpetual or periodic |
 | Browse API | ✅ exists | `PackController` → `/api/v1/billing/packs` |
 | Own/add/remove API, actor from token | ✅ exists | `PackSubscriptionController` → `/me/{packKey}` |
-| Admin editor | ✅ exists | `web-admin` `PacksScreen.tsx`, `PackEditor.tsx` |
+| Admin editor | ✅ exists | the operator console (`orazaka-web-client`) `PacksScreen.tsx`, `PackEditor.tsx` |
 | User marketplace | ✅ exists | `web-client` `/packs`, `PackMarketplace.tsx` |
 | Studio install/configure/run | ✅ exists | studio-service, 3 Studios seeded |
 | **Packs actually seeded** | ⚠️ **one** | `realestate-studio` only — now a `pack` row in `80-studio.sql` |
@@ -436,8 +436,8 @@ MODIFY  infra/initdb/30-jobs-config.sql       (+ orazaka.core.document.validate,
 CREATE  orazaka-libs/orazaka-ai-engine/orazaka-business/src/main/resources/prompts/pack/**    (prompt markdown)
 
 # Phase 4 — admin
-MODIFY  orazaka-apps/ui/orazaka-web-admin/src/features/billing/components/{PacksScreen,PackEditor}.tsx
-CREATE  orazaka-apps/ui/orazaka-web-admin/src/features/catalogue/components/{CategoryEditor,PackStudioPicker,PackI18nEditor}.tsx
+MODIFY  orazaka-apps/ui/orazaka-web-client/src/console/features/billing/components/{PacksScreen,PackEditor}.tsx
+CREATE  orazaka-apps/ui/orazaka-web-client/src/console/features/catalogue/components/{CategoryEditor,PackStudioPicker,PackI18nEditor}.tsx
 
 # Phase 6 — regulatory
 CREATE  orazaka-libs/orazaka-ai-engine/orazaka-interceptors/.../interceptor/validation/SafetyInterceptor.java
