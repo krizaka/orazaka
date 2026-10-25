@@ -17,7 +17,7 @@ What the video and image models Orazaka routes to really did, measured on **2026
 | Local engine | stable-diffusion.cpp master-647-72e512a-1-ga397e03 (sd-server, Metal) |
 | Platform | Orazaka dev (DigitalOcean App Platform, Toronto) — core, relay, broker; the Mac joins through the GPU relay (chisel over TLS) |
 | Hosted provider | DigitalOcean serverless inference (https://inference.do-ai.run) |
-| Orazaka commit | `dbe135b` |
+| Orazaka commit | `ffe8aed` |
 
 Times are **command to file**: from the start of the Studio run to the finished output (queueing, transfer and storage included). The engine's own time, where it is logged, is given beside it.
 
@@ -34,6 +34,8 @@ Times are **command to file**: from the start of the Studio run to the finished 
 | **Wan 2.2 TI2V 5B (image to video, RTX 4000 Ada 20 GB)** (video) | A DigitalOcean GPU droplet, by the hour (through the relay) | 1 / 1 | 1106 s (1106–1106, n=1) | — | $0.76 per GPU hour | $0.23 |
 | **Wan 2.2 T2V A14B (720p, H100 80 GB)** (video) | A DigitalOcean GPU droplet, by the hour (through the relay) | 8 / 8 | 1116 s (1104–1302, n=8) | — | $3.99 per GPU hour | $10.24 |
 | **Wan 2.2 A14B, image to video (720p, H100 80 GB)** (video) | A DigitalOcean GPU droplet, by the hour (through the relay) | 7 / 7 | 1179 s (1117–1350, n=7) | — | $3.99 per GPU hour | $9.16 |
+| **ACE-Step 1.5 XL turbo (music bed)** (sound) | One Mac (Metal), local | 15 / 15 | 9 s (8–23, n=15) | — | none (your own machine) | — |
+| **MMAudio large 44k v2 (foley) — non-commercial** (sound) | One Mac (Metal), local | 1 / 1 | 81 s (81–81, n=1) | — | none (your own machine) | — |
 
 3 runs of Wan 2.2 T2V A14B succeeded but are left out of its time statistics (worker restart during the run).
 
@@ -147,6 +149,32 @@ A DigitalOcean GPU droplet, by the hour (through the relay) · licence Apache-2.
 - **seed:** honoured
 - **GPU:** NVIDIA H100 80 GB (RunPod), two bf16 experts swapped by CPU offload — about 28 s per step, 19 to 22 minutes a clip
 - **checkpoint:** Wan-AI/Wan2.2-I2V-A14B-Diffusers (the image-to-video checkpoint of the family, fetched to the pod's own disk: 118 GB in 2 minutes)
+
+### ACE-Step 1.5 XL turbo (music bed)
+
+One Mac (Metal), local · licence MIT
+
+- **input:** a published 5 s clip (https, the media CDN) and a music prompt
+- **output:** AAC in the mp4 at -14 LUFS (loudnorm, two passes, true peak -1.5 dB); the picture is copied, not re-encoded; the silent original is kept
+- **bed length:** 10 s generated (the model's shortest piece), cut and faded to the clip
+- **steps:** 8
+- **sampleRate:** 48 kHz stereo
+- **dtype:** bfloat16 (MPS)
+- **seed:** honoured (20261015)
+- **weights:** 15.5 GB, pinned revision 200ba99
+- **engine time:** 10 s of music in 9 s after a 10 s load
+
+### MMAudio large 44k v2 (foley) — non-commercial
+
+One Mac (Metal), local · licence CC-BY-NC-4.0
+
+- **input:** the clip (video-to-audio, synchronised to the picture) and a prompt
+- **steps:** 25
+- **cfg:** 4.5
+- **duration:** the clip's own length (5.06 s), 44.1 kHz mono
+- **dtype:** bfloat16 (MPS)
+- **seed:** honoured
+- **weights:** ~6 GB (model + synchformer + vae), CC-BY-NC 4.0: evaluation only, asked for by name
 
 ## Video upscaling
 
