@@ -38,6 +38,8 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| ANY | `/` | authenticated | LawCorpusAdminController | The Corpus tab of the review queue (ADR-089 §8): the instruments, an article by point in time (metadata only, never its text), the imports and the manual import. |
+| ANY | `/` | authenticated | LawReviewController | The review queue of ADR-089 (§5, §8): the proposals and their decisions, the golden cases and the promotion of a kind, the derivations, and the demand. |
 | POST | `/api/v1/agent/report` | authenticated | AgentController | Receives execution reports from the CLI agent after local task completion. |
 | GET | `/api/v1/agent/stream` | authenticated | AgentController | Establishes a persistent SSE stream for the CLI agent. |
 | GET | `/api/v1/assets/{jobId}/{filename}` | ADMIN + USER | AssetController | Streams one asset to its owner, or to an administrator. |
@@ -63,6 +65,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/jobs/active-connections` | ADMIN | JobController | Retrieves the current active SSE connection count. |
 | POST | `/api/v1/jobs/purge` | ADMIN | JobController | Purges jobs, chat sessions and rate-limit cache for the default test accounts. |
 | GET | `/api/v1/jobs/stream` | ADMIN + USER | JobController | Registers a Server-Sent Events stream for real-time job status notifications. |
+| GET | `/api/v1/law/articles` | ADMIN + USER | LawArticleController | Reads an article as it was in force on a day. |
 | GET | `/api/v1/mcp/servers/platform` | ADMIN | McpController |  |
 | POST | `/api/v1/mcp/servers/platform` | ADMIN | McpController |  |
 | DELETE | `/api/v1/mcp/servers/platform/{id}` | ADMIN | McpController |  |
@@ -92,7 +95,20 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/status/infrastructure` | authenticated | StatusController | Returns the current online/offline snapshot of the local inference engines. |
 | GET | `/api/v1/voice/clips/{clipId}` | public | VoiceController | One spoken sentence, by its signed URL — no bearer token, because an <audio> element cannot send one; the signature and its five-minute expiry are the authorisation. |
 | POST | `/api/v1/voice/turns` | ADMIN + USER | VoiceController | Takes a turn: audio (WAV, Ogg/Opus, WebM, MP3; ~30 s at most) or text, answered over SSE — transcript, delta, sentence (text and a signed audio URL valid 300 s), safety.crisis or scope.refused when a guard answers, then done with the turn's usage and timings. |
+| GET | `/articles` | authenticated | LawCorpusAdminController | An article by point in time. |
+| GET | `/demand` | authenticated | LawReviewController | The unsupported and unknown kinds, counted. |
+| POST | `/derivations` | authenticated | LawReviewController | Starts the derivation of a kind. |
+| GET | `/imports` | authenticated | LawCorpusAdminController | The imports. |
+| POST | `/imports` | authenticated | LawCorpusAdminController | The manual import: the consolidated XML an administrator uploads, with where it came from. |
+| GET | `/instruments` | authenticated | LawCorpusAdminController | The instruments. |
 | POST | `/internal/v1/protected-conversations/erase` | SERVICE | ProtectedConversationController | Erases a person's conversations under a pack. |
+| GET | `/kinds/{kindId}/golden` | authenticated | LawReviewController | The golden cases of a kind against the minimum of promotion. |
+| POST | `/kinds/{kindId}/promote` | authenticated | LawReviewController | Opens the packs pull request of approved proposals. |
+| GET | `/proposals` | authenticated | LawReviewController | The queue. |
+| GET | `/proposals/{id}` | authenticated | LawReviewController | One proposal. |
+| PUT | `/proposals/{id}` | authenticated | LawReviewController | Edits a proposal: its next revision, vetted again. |
+| POST | `/proposals/{id}/approve` | authenticated | LawReviewController | Approves a proposal. |
+| POST | `/proposals/{id}/reject` | authenticated | LawReviewController | Rejects a proposal, with its reason. |
 
 ## edge
 

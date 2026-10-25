@@ -2309,6 +2309,21 @@
         "routingKey": "job.text.process"
       },
       {
+        "feature": "orazaka.core.checks.courtrecords",
+        "handler": "check.external",
+        "routingKey": "job.text.process"
+      },
+      {
+        "feature": "orazaka.core.checks.credit",
+        "handler": "check.external",
+        "routingKey": "job.text.process"
+      },
+      {
+        "feature": "orazaka.core.checks.identity",
+        "handler": "check.external",
+        "routingKey": "job.text.process"
+      },
+      {
         "feature": "orazaka.core.media.speech",
         "handler": "speech.synthesize",
         "routingKey": "job.text.process"
@@ -2726,7 +2741,7 @@
       {
         "from": "krizaka-billing-service",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-bom",
@@ -2796,7 +2811,7 @@
       {
         "from": "krizaka-notifications-service",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-notifications-service",
@@ -3021,7 +3036,7 @@
       {
         "from": "krizaka-users-core",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-users-core",
@@ -3051,7 +3066,7 @@
       {
         "from": "krizaka-users-persistence",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-users-service",
@@ -3071,7 +3086,7 @@
       {
         "from": "krizaka-users-service",
         "to": "krizaka-test-support",
-        "kind": "compile"
+        "kind": "test"
       },
       {
         "from": "krizaka-users-service",
@@ -5291,7 +5306,7 @@
     {
       "key": "tenant-screening-qc",
       "dir": "tenant-screening-qc",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -5307,8 +5322,6 @@
         "orazaka.screening.plan",
         "orazaka.screening.consent.check",
         "orazaka.screening.documents.assess",
-        "orazaka.screening.courts.check",
-        "orazaka.screening.credit.check",
         "orazaka.screening.cutoff.decide",
         "orazaka.screening.report.assemble"
       ],

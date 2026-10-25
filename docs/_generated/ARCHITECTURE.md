@@ -265,5 +265,8 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka.core.media.video.analysis` | `video.analyze` | `job.media.generate` |
 | `orazaka.studio.media.sound` | `media.sound` | `job.sound.generate` |
 | `orazaka.core.chat.completion` | `text.generate` | `job.text.process` |
+| `orazaka.core.checks.courtrecords` | `check.external` | `job.text.process` |
+| `orazaka.core.checks.credit` | `check.external` | `job.text.process` |
+| `orazaka.core.checks.identity` | `check.external` | `job.text.process` |
 | `orazaka.core.media.speech` | `speech.synthesize` | `job.text.process` |
 | `orazaka.core.media.video` | `video.generate` | `job.video.generate` |

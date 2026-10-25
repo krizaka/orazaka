@@ -1313,7 +1313,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Tenant screening, Québec",
  "tagline": "A rental applicant check, one stage at a time, stopped by the manager's rules.",
  "description": "Documents, then court records (TAL and plumitifs), then credit. A stage runs and is charged only if the one before it passed its cut-off, and each cut-off is the manager's rule. Consent is checked per purpose before each paid stage. Codes only: the landlord decides.",
- "version": "1.0.0",
+ "version": "2.0.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1434,7 +1434,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | `outbound-prospection` | 1.3.0 | `outbound-prospection` · `lead-research` · `followup-sequences` |
 | `profile-photo-check` | 1.2.0 | `profile-photo-check` |
 | `realestate-studio` | 1.3.0 | `realestate-reels` |
-| `tenant-screening-qc` | 1.0.0 | `tenant-screening-qc` |
+| `tenant-screening-qc` | 2.0.0 | `tenant-screening-qc` |
 | `trade-showcase` | 1.2.0 | `trade-showcase` |
 | `bien-etre` | 1.6.0 | `guided-journaling` · `session-preparation` · `mood-tracking` · `session-summary` |
 
