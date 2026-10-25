@@ -30,6 +30,8 @@ const byName = new Map(REPOS.map((r) => [r.name, r]));
 const isWindows = process.platform === "win32";
 const MVNW = join(ROOT, isWindows ? "mvnw.cmd" : "mvnw");
 const UI = join(ROOT, "orazaka-apps", "ui");
+/** The pnpm the self-contained UI member is installed with (same as apps/desktop in desktop.yml). */
+const PNPM = "pnpm@12.10.1";
 
 function run(cmd, args, opts = {}) {
   console.log(`\n$ ${[cmd, ...args].join(" ")}${opts.cwd ? `   (in ${opts.cwd})` : ""}`);
@@ -155,6 +157,14 @@ function ci(name) {
   if (target.kind === "maven") {
     upstreams(name);
     run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "verify"], { cwd: ROOT });
+    return;
+  }
+
+  if (target.kind === "npm" && target.packageManager === "pnpm") {
+    // Self-contained member: its own pnpm-lock.yaml pins its dependencies (orazaka-apps/ui/package-lock.json does not),
+    // so a bump of @krizaka/ui there never waits for a lock here. Installed from the registry, frozen.
+    run("npm", ["run", "validate:web"], { cwd: UI });
+    run("npx", ["-y", PNPM, "--dir", target.path, "run", "build"], { cwd: ROOT });
     return;
   }
 

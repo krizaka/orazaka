@@ -204,6 +204,7 @@
       "name": "orazaka-web-client",
       "path": "orazaka-apps/ui/orazaka-web-client",
       "kind": "npm",
+      "packageManager": "pnpm",
       "layer": "app",
       "description": "Next.js (App Router) client of the Orazaka platform with its mandatory BFF.",
       "dependsOn": [
