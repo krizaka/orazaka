@@ -22,6 +22,7 @@
     "validate": "npm run validate:cli && npm run validate:ds && npm run validate:web && npm run validate:mobile"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "image-size": "^2.0.4"
