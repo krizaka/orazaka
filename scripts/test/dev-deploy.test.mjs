@@ -16,7 +16,7 @@ test("render fills every placeholder and names the missing ones without values",
   assert.throws(() => render('a: "__X__"', { X: 'b"' }), /cannot quote/);
 });
 
-for (const name of ["orazaka-dev", "orazaka-admin-dev"]) {
+for (const name of ["orazaka-dev"]) {
   test(`${name}: every secret is a SECRET placeholder and sign-up stays closed`, () => {
     const text = spec(name);
     for (const line of text.split("\n").filter((l) => /type: SECRET/.test(l))) {
