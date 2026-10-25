@@ -125,7 +125,7 @@ same arrangement `krizaka-billing-client` already uses for `CreditAuthorizationC
 ```mermaid
 graph LR
   UI["web-client :3000<br/>features/studio"] -->|BFF| EDGE["orazaka-edge :8088"]
-  ADMIN["web-admin :3001<br/>Studio Builder"] -->|BFF| EDGE
+  ADMIN["web-client console<br/>Studio Builder"] -->|BFF| EDGE
   EDGE -->|/api/v1/studios| STU["orazaka-studio-service :8096"]
   EDGE -->|/api/v1/billing| BIL["krizaka-billing-service :8095"]
   STU -->|Tier-1 CreditAuthorizationClient| BIL
@@ -196,7 +196,7 @@ the anti-corruption boundary (ERR-127), and it is why the run path needs no defe
 ```java
 public record BlueprintStep(
     String id,                      // unique within the blueprint
-    StepKind kind,                  // CAPABILITY | KNOWLEDGE | CONNECTOR | APPROVAL | TRANSFORM
+    StepKind kind,                  // CAPABILITY | KNOWLEDGE | CONNECTOR | APPROVAL | TRANSFORM | STUDIO
     String featureKey,              // OPAQUE ref into orazaka_capabilities; required for CAPABILITY
     Set<String> dependsOn,
     Map<String, String> inputs,     // templated: {{inputs.photos}}, {{steps.brief.text}}
@@ -544,6 +544,9 @@ the admin console, validated at publish time, and interpreted at run time.
 | `CONNECTOR` | `job.automation.approved` → `ConnectorDispatcher`, answering on `evt.automation.telemetry` | Reuses `connector_credentials`. The step names a `connectorType`; the Studio service never sees a secret. |
 | `APPROVAL` | No execution — parks the run at `AWAITING_INPUT` | Renders `PlanApprovalCard` |
 | `TRANSFORM` | In-process, pure | Only declarative reshaping (pick/join/format). **No expression evaluation, no scripting.** |
+| `STUDIO` | A child run | Calls another **published** Studio (`studioKey`): a child run with its own id, no hold of its own (settled inside the parent's), its outputs become the step's (`{{steps.<out>.<key>}}`), its failure the step's with its cause — the step's `onError` decides. **One level**: a Studio that calls Studios cannot be called, and none calls itself (orazaka-studio#62). |
+
+**Resume from a step** (orazaka-studio#63): `POST /api/v1/studios/runs/{id}/resume {"fromStep"}` starts a new run (`resumedFrom` names the origin) that keeps the outputs of every step outside the re-run set — the step asked for, every step that did not succeed, and their dependants — copied without consumption, so only the re-run steps are billed.
 
 ### 6.2 Templating — deliberately not Turing-complete
 
@@ -896,7 +899,7 @@ src/services/studio.api.ts
 - Dates via `date-fns` (ERR-108). Input blocked while `isSending || isGenerating` (ERR-126).
 - Run progress reuses `JobStreamContext` / `useJobSSE`. **Do not build a second SSE channel.**
 
-### 12.4 Admin — the Studio Builder (`orazaka-web-admin` :3001)
+### 12.4 Admin — the Studio Builder (the operator console of `orazaka-web-client`)
 
 `src/features/studio/` with a three-pane authoring view: step list (drag to reorder) · step inspector
 (feature-key picker sourced from `GET /api/v1/features/all`, templated inputs with live placeholder
@@ -1132,7 +1135,7 @@ orazaka-apps/ui/orazaka-web-client/src/core/context/translations{,.types}.ts (ed
 orazaka-apps/ui/orazaka-web-client/src/app/(protected)/studios/**            (see §12.2)
 orazaka-apps/ui/orazaka-web-client/src/features/studio/**                    (see §12.2)
 orazaka-apps/ui/orazaka-web-client/src/services/studio.api.ts
-orazaka-apps/ui/orazaka-web-admin/src/features/studio/**                     (Studio Builder)
+orazaka-apps/ui/orazaka-web-client/src/console/features/studio/**                     (Studio Builder)
 orazaka-apps/ui/orazaka-cli/src/commands/studio.command.ts
 orazaka-end2end/src/test/java/.../StudioLifecycleE2ETest.java
 docs/adr/ADR-034-studio-marketplace.md                                       (new)

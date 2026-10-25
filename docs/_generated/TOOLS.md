@@ -8,8 +8,6 @@ generated: true
 
 # Tools & MCP
 
-> 🤖 **Generated from code** by `scripts/generate-docs.mjs` — do not hand-edit. Run `orazaka docs build` to refresh.
-
 In Orazaka a **tool** is a function a model may call during a turn (Spring AI function calling).
 `orazaka-tools` (repository `orazaka-ai-engine`) holds the tool registry, the bridge to external MCP servers, the
 tool result cache and the sandbox that isolates tools which write. Tools are attached to a turn by the
@@ -22,9 +20,8 @@ tools the turn needs.
 |:---|:---|:---|:---|
 | `analyzePoster` | Analyzes a movie poster provided as a base64 encoded string using vision model. | `AnalyzePosterRequest` | `posterBase64`, `prompt` |
 | `analyzeAudioExtract` | Analyzes a film audio extract to check for specific compliance or content criteria. | `AnalyzeAudioExtractRequest` | `clipPath`, `checkType` |
-| `searchWeb` | Queries the corporate RAG database for real-time web search results. | `SearchWebRequest` | `query` |
 
-`searchWeb` searches the sources the knowledge service holds for the signed-in user. `analyzePoster` and
+`searchKnowledge` searches the sources the knowledge service holds for the signed-in user (not the web). `analyzePoster` and
 `analyzeAudioExtract` are reference tools: they demonstrate the contract and return a fixed analysis.
 
 ## When a tool is attached
@@ -64,7 +61,7 @@ Static defaults live under `orazaka.tools` in `application.yml`.
 | `url` | `VARCHAR(1000)` |
 | `command` | `VARCHAR(1000)` |
 | `args` | `VARCHAR(2000)` |
-| `auth_token` | `VARCHAR(1000)` |
+| `auth_token` | `TEXT` |
 | `enabled` | `BOOLEAN DEFAULT TRUE` |
 | `created_at` | `TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP` |
 
@@ -76,7 +73,7 @@ Static defaults live under `orazaka.tools` in `application.yml`.
 | `user_id` | `VARCHAR(255) NOT NULL` |
 | `label` | `VARCHAR(255) NOT NULL` |
 | `url` | `VARCHAR(1000) NOT NULL` |
-| `auth_token` | `VARCHAR(1000)` |
+| `auth_token` | `TEXT` |
 | `enabled` | `BOOLEAN DEFAULT TRUE` |
 | `created_at` | `TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP` |
 
@@ -89,8 +86,6 @@ Static defaults live under `orazaka.tools` in `application.yml`.
 | `cache_value` | `TEXT NOT NULL` |
 | `created_at` | `TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP` |
 | `expires_at` | `TIMESTAMP WITH TIME ZONE NOT NULL` |
-
-Seeded tool configuration: `searchWeb`.
 
 ## MCP servers
 

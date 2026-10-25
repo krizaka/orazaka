@@ -85,7 +85,7 @@ flowchart TB
 
 - **Docker** (*stateful* infra only): PostgreSQL+pgvector, Redis, RabbitMQ. Started by `orazaka start`.
 - **Native macOS** (Metal): Ollama (chat+embeddings), stable-diffusion.cpp (image), worker-media MLX (video). Never in Docker (otherwise CPU fallback = destroyed DevX).
-- **Apps**: the eight JVM services (edge, conversation, identity, knowledge, automation, job, billing, studio), the workers, web-client, web-admin, mobile (Expo) — launched as native processes by `orazaka dev` with color logs.
+- **Apps**: the eight JVM services (edge, conversation, identity, knowledge, automation, job, billing, studio), the workers, web-client (with its operator console), mobile (Expo) — launched as native processes by `orazaka dev` with color logs.
 - 64 GB lets everything run in parallel (Docker infra + 2–3 loaded Ollama models + apps + IDE).
 
 ### 3.2 IDE split

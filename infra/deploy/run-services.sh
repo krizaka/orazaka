@@ -13,15 +13,36 @@ set -euo pipefail
 # Only the JVMs are fatal (below): they are the platform; a worker is one capability.
 supervise() {
   local name="$1"; shift
-  local delay="${ORAZAKA_WORKER_BACKOFF_START:-2}" max="${ORAZAKA_WORKER_BACKOFF_MAX:-300}" started rc
+  local delay="${ORAZAKA_WORKER_BACKOFF_START:-2}" max="${ORAZAKA_WORKER_BACKOFF_MAX:-300}" started rc child="" nap=""
+  # When the container is stopped the supervisor goes with its worker. Without this the container's `wait` hung on the
+  # supervisor until the platform's SIGKILL and the old deployment's worker kept consuming the broker's queue next to the
+  # new deployment's: a stray consumer running old pack code took half the validation jobs of a rolling deploy.
+  trap '[[ -n "$child" ]] && kill -TERM "$child" 2>/dev/null; [[ -n "$nap" ]] && kill "$nap" 2>/dev/null; exit 0' TERM INT
   while true; do
     started=$(date +%s)
-    "$@" && rc=0 || rc=$?
+    "$@" &
+    child=$!
+    wait "$child" && rc=0 || rc=$?
+    child=""
     if (( $(date +%s) - started > max )); then delay="${ORAZAKA_WORKER_BACKOFF_START:-2}"; fi
     echo "[run-services] worker $name exited (status $rc) — restarting in ${delay}s"
-    sleep "$delay"
+    sleep "$delay" &
+    nap=$!
+    wait "$nap" || true
+    nap=""
     delay=$(( delay * 2 > max ? max : delay * 2 ))
   done
+}
+
+# Waits until something listens on host:port (bash's /dev/tcp, no curl in the image), at most `timeout` seconds: 0 when it does, 1 when not.
+wait_port() {
+  local host="$1" port="$2" timeout="${3:-60}" waited=0
+  while (( waited < timeout )); do
+    if (exec 3<>"/dev/tcp/${host}/${port}") 2>/dev/null; then return 0; fi
+    sleep 1
+    waited=$(( waited + 1 ))
+  done
+  return 1
 }
 
 # The library mode of the tests (scripts/test/run-services.test.mjs): define, start nothing.
@@ -49,12 +70,14 @@ fi
 COMMON_OPTS="${ORAZAKA_JAVA_OPTS:--XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=64m -Xss512k -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom}"
 
 # name:jar:default-heap-MiB, in start order (edge last: it is the public port). knowledge serves the
-# recommender (ADR-078) on :8084, reached through the edge's /api/v1/recommendations route.
-SERVICES="${ORAZAKA_SERVICES:-users:users.jar:160 billing:billing.jar:160 job:job.jar:256 conversation:conversation.jar:320 studio:studio.jar:160 knowledge:knowledge.jar:128 edge:edge.jar:96}"
+# recommender (ADR-078) on :8084, reached through the edge's /api/v1/recommendations route; automation serves the
+# signed webhooks and schedules (ADR-084) on :8091, reached through /api/v1/automations and /hooks/.
+SERVICES="${ORAZAKA_SERVICES:-users:users.jar:160 billing:billing.jar:160 job:job.jar:256 conversation:conversation.jar:320 studio:studio.jar:160 knowledge:knowledge.jar:128 automation:automation.jar:128 edge:edge.jar:96}"
 
 pids=()
+workers=()
 stop_all() {
-  for pid in "${pids[@]}"; do kill -TERM "$pid" 2>/dev/null || true; done
+  for pid in "${pids[@]}" "${workers[@]}"; do kill -TERM "$pid" 2>/dev/null || true; done
   wait || true
 }
 trap 'stop_all; exit 143' TERM INT
@@ -69,22 +92,52 @@ for entry in $SERVICES; do
     > >(sed -u "s/^/[$name] /") 2>&1 &
   pids+=("$!")
   sleep "${ORAZAKA_START_STAGGER_SECONDS:-5}"
+  # Studio installs its packs at startup and asks the job service which routes exist: started while the job service was still
+  # booting (eight JVMs and the workers on 2 GB share the CPU), it refused the bundle and the container exited. So the next
+  # services wait for the job service's port (bounded: a job service that never comes up fails the container as before).
+  case "$name" in
+    job) wait_port localhost 8090 "${ORAZAKA_JOB_READY_TIMEOUT:-240}" || echo "[run-services] the job service did not answer in time; continuing" ;;
+  esac
 done
 
+# Runs in the supervisor's own background process (`"$@" &`), so `cd` stays local and `exec` makes the worker that very
+# process: the supervisor's TERM reaches the Python process itself, not a shell around it.
 run_validation_worker() {
-  (cd "${ORAZAKA_APP_DIR:-/app}/orazaka-packs/document-validation/worker" \
-    && SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
-       exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py)
+  cd "${ORAZAKA_APP_DIR:-/app}/orazaka-packs/document-validation/worker" || return 1
+  SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
+    exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u validation_worker.py
+}
+
+# The hosted-video worker: the media worker in hosted-only mode — a CPU consumer that calls the provider's API for the models a
+# provider serves (the hosted Wan 2.2), on a queue of its own (job.hostedvideo.*, which the GPU worker never matches). It needs
+# no GPU and no torch (the validation venv carries its lean dependencies), so hosted video runs on dev while the GPU pod or the Mac
+# is off. Its output goes to the job service next door, which seals it with the platform's key, like a GPU worker's.
+run_hosted_video_worker() {
+  cd "${ORAZAKA_APP_DIR:-/app}/orazaka-worker-media" || return 1
+  MEDIA_WORKER_HOSTED_ONLY=true MEDIA_WORKER_PORT="${ORAZAKA_HOSTED_VIDEO_PORT:-8189}" \
+  MEDIA_ASSET_SINK_URL=http://localhost:8090 JOB_SERVICE_INTERNAL_URL=http://localhost:8090 \
+  UPLOAD_DIR="${ORAZAKA_APP_DIR:-/app}/var/orazaka-uploads" \
+  AI_INFERENCE_KEY="${AI_INFERENCE_KEY_ALL:-${AI_INFERENCE_KEY:-}}" \
+  SPRING_RABBITMQ_HOST="${RABBITMQ_HOST:-}" SPRING_RABBITMQ_PORT="${RABBITMQ_PORT:-}" \
+  SPRING_RABBITMQ_USERNAME="${RABBITMQ_USER:-}" SPRING_RABBITMQ_PASSWORD="${RABBITMQ_PASS:-}" \
+  SPRING_RABBITMQ_SSL_CA_FILE="${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem" \
+    exec "${ORAZAKA_VALIDATION_PYTHON:-/opt/validation-venv/bin/python3}" -u -m app.consumer
 }
 
 # The Python workers of the packs, after the JVMs (the job service declares the topology they bind to). The dev broker
 # is TLS only: the worker reads the same RABBITMQ_* and SPRING_RABBITMQ_SSL_ENABLED as the services, and the CA file
 # written above (orazaka-packs document-validation/worker/broker.py).
-for worker in ${ORAZAKA_WORKERS-validation}; do
+for worker in ${ORAZAKA_WORKERS-validation hosted-video}; do
   case "$worker" in
     validation)
       echo "[run-services] starting the document-validation worker (supervised)"
       supervise validation run_validation_worker > >(sed -u "s/^/[validation] /") 2>&1 &
+      workers+=("$!")
+      ;;
+    hosted-video)
+      echo "[run-services] starting the hosted-video worker (supervised)"
+      supervise hosted-video run_hosted_video_worker > >(sed -u "s/^/[hosted-video] /") 2>&1 &
+      workers+=("$!")
       ;;
     *) echo "[run-services] unknown worker: $worker" >&2 ;;
   esac

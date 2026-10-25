@@ -167,7 +167,8 @@
       "description": "Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry.",
       "dependsOn": [
         "orazaka-build",
-        "krizaka-billing"
+        "krizaka-billing",
+        "orazaka-ai-engine"
       ],
       "initdb": [
         "50-automation.sql"
@@ -205,16 +206,6 @@
       "kind": "npm",
       "layer": "app",
       "description": "Next.js (App Router) client of the Orazaka platform with its mandatory BFF.",
-      "dependsOn": [
-        "orazaka-ui-kit"
-      ]
-    },
-    {
-      "name": "orazaka-web-admin",
-      "path": "orazaka-apps/ui/orazaka-web-admin",
-      "kind": "npm",
-      "layer": "app",
-      "description": "Next.js SecOps & administration console of the Orazaka platform.",
       "dependsOn": [
         "orazaka-ui-kit"
       ]

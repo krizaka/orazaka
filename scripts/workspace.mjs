@@ -10,6 +10,7 @@
  *   node scripts/workspace.mjs status                   branch / dirty / ahead-behind of each
  *   node scripts/workspace.mjs pull                     fast-forward every clean repository
  *   node scripts/workspace.mjs deps <repository>        its upstream repositories, in build order
+ *   node scripts/workspace.mjs upstreams <repository>   install its Maven upstreams, tests skipped (a coding agent's setup)
  *   node scripts/workspace.mjs ci <repository>          build its upstreams, then verify it
  *   node scripts/workspace.mjs publish <repository>     publish it (CI, on a v* tag): Maven → GitHub Packages, npm → npmjs
  *
@@ -134,14 +135,25 @@ function npmWorkspaces(r) {
     : [r.name];
 }
 
+/**
+ * An upstream is built to be installed, not tested: its own CI runs its tests. `-DskipTests` alone still runs the
+ * Failsafe integration tests (Testcontainers: 30-90 s per upstream repository), so both flags are always given together
+ * (scripts/test/workspace-ci.test.mjs).
+ */
+const SKIP_TESTS = ["-DskipTests", "-DskipITs"];
+
+/** Installs a Maven component's upstreams into the local repository, tests skipped: what a component needs before it builds alone. */
+function upstreams(name) {
+  for (const r of upstream(name).filter((x) => x.kind === "maven")) {
+    run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", ...SKIP_TESTS], { cwd: ROOT });
+  }
+}
+
 function ci(name) {
   const target = repo(name);
-  const mavenUpstream = upstream(name).filter((r) => r.kind === "maven");
 
   if (target.kind === "maven") {
-    for (const r of mavenUpstream) {
-      run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", "-DskipTests"], { cwd: ROOT });
-    }
+    upstreams(name);
     run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "verify"], { cwd: ROOT });
     return;
   }
@@ -164,11 +176,14 @@ function ci(name) {
 
   if (target.kind === "python") {
     const dir = join(ROOT, target.path);
-    run("python3", ["-m", "pip", "install", "--quiet", "pytest", "pyyaml", "pika", "Pillow", "psutil", "cryptography"], { cwd: dir });
+    run("python3", ["-m", "pip", "install", "--quiet", "pytest", "pyyaml", "pika", "Pillow", "psutil", "cryptography", "numpy"], { cwd: dir });
     run("python3", ["-m", "pytest", "-q", "test_capability_contract.py"], { cwd: dir });
     // The CUDA host's own suites (ADR-077, ADR-080) — each run once the worker carries it: the GPU runtime, image to
     // video (the I2V A14B of a cinematic short) and the cut. The cut's ffmpeg test skips itself where ffmpeg lacks drawtext.
-    for (const suite of ["test_gpu_runtime.py", "test_image_to_video.py", "test_cut.py"]) {
+    // A film's sound and text (orazaka#289): the foley, the mix and its loudness contract, the titles, the voice direction,
+    // the deliverables.
+    for (const suite of ["test_gpu_runtime.py", "test_image_to_video.py", "test_cut.py", "test_deliver.py", "test_foley.py",
+      "test_mixer.py", "test_titles.py", "test_voice_direction.py"]) {
       if (existsSync(join(dir, suite))) run("python3", ["-m", "pytest", "-q", suite], { cwd: dir });
     }
     return;
@@ -178,7 +193,7 @@ function ci(name) {
     // A pack is judged by the platform that installs it: the pack-bundle and catalogue rules of the
     // studio service, and the document-validation rule engine's own tests.
     for (const r of upstream("orazaka-studio").filter((x) => x.kind === "maven")) {
-      run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", "-DskipTests"], { cwd: ROOT });
+      run(MVNW, ["-B", "-ntp", "-f", join(r.path, "pom.xml"), "install", ...SKIP_TESTS], { cwd: ROOT });
     }
     run(
       MVNW,
@@ -198,7 +213,14 @@ function ci(name) {
     run("python3", ["test_rules.py"], { cwd: validationWorker });
     // The broker connection (TLS to the dev broker) — the worker's one third-party import here is pika.
     run("python3", ["-m", "pip", "install", "--quiet", "pika==1.4.4", "pyyaml==6.0.3"], { cwd: validationWorker });
-    run("python3", ["test_broker.py"], { cwd: validationWorker });
+    // The broker connection is shared by every worker (worker-common/, tested once) and the validation worker's own screening tests;
+    // a packs revision from before that factoring still carries test_broker.py.
+    if (existsSync(join(validationWorker, "test_screening.py"))) {
+      run("python3", ["test_screening.py"], { cwd: validationWorker });
+      run("python3", ["test_worker_broker.py"], { cwd: join(ROOT, target.path, "worker-common") });
+    } else {
+      run("python3", ["test_broker.py"], { cwd: validationWorker });
+    }
     return;
   }
 
@@ -222,7 +244,7 @@ function isPublished(ws) {
 function publish(name) {
   const target = repo(name);
   if (target.kind === "maven") {
-    run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "deploy", "-DskipTests"], { cwd: ROOT });
+    run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "deploy", ...SKIP_TESTS], { cwd: ROOT });
     return;
   }
   if (target.name === "orazaka-ui-kit") {
@@ -272,6 +294,9 @@ switch (command) {
     break;
   case "ci":
     ci(args[0] ?? "");
+    break;
+  case "upstreams":
+    upstreams(args[0] ?? "");
     break;
   case "publish":
     publish(args[0] ?? "");

@@ -482,7 +482,6 @@ orazaka/
 │   │   └── orazaka-worker-media/ #   native macOS (Python/MLX)
 │   └── ui/
 │       ├── orazaka-web-client/
-│       ├── orazaka-web-admin/
 │       ├── orazaka-mobile-client/
 │       ├── orazaka-cli/
 │       ├── orazaka-shared/

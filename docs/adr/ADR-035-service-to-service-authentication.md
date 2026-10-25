@@ -110,6 +110,23 @@ no `permitAll()` for the rule above to catch. It is not in the audit's finding #
 this wave's file manifest. It needs the same treatment and a rule that also fails on a service that
 exposes `/internal/**` with no security on the classpath at all.
 
+## Amendment 2026-10-20 — one narrow `permitAll` for signed inbound webhooks
+
+[ADR-084](ADR-084-automation-triggers.md) adds the first endpoint that a caller without a session or a key must reach:
+`POST /hooks/{triggerId}` of the automation service, called by a third party's system to start an automation. It is the
+**only** exception to « nothing is open by omission », and it is bounded:
+
+- **One verb, one path with one segment**, in the service's `SecurityConfig` (`requestMatchers(HttpMethod.POST,
+  "/hooks/{triggerId}").permitAll()`); no wildcard, never `/internal` or `/uploads` (the fitness function above keeps
+  failing on those). A governance test of the service fails on any other `permitAll` and on a wildcard in this one.
+- **The signature is the authentication**, checked before any work or any write: Standard Webhooks (`webhook-id`,
+  `webhook-timestamp`, `webhook-signature`, HMAC-SHA256 over the raw body, a per-trigger secret sealed at rest), a five-minute
+  tolerance, replay protection on `webhook-id`, a per-trigger rate limit and a body-size cap. Every failure before the
+  signature is good answers the same `401`.
+- **Every other automation endpoint stays behind normal authentication** (session JWT or `oz_` key through the edge) and
+  is scoped by the caller's id; `/internal/v1/**` keeps requiring the `SERVICE` authority.
+- The edge routes `/hooks` to the service and adds nothing: the edge does not authenticate, it forwards.
+
 ## Related
 
 - [Production readiness audit](../PRODUCTION_READINESS_AUDIT.md) §2.1, §2.3, §2.4

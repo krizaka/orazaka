@@ -1,0 +1,45 @@
+# The Orazaka workspace for a GitHub coding agent (Copilot) working in ONE component repository.
+#
+# A component never builds alone: its parent POM and its upstream modules come from the workspace
+# (orazaka.workspace.json), and its integration tests read orazaka-packs from the workspace root. An agent's
+# sandbox holds the component only, so without this it cannot compile, test or format, and its pull request
+# arrives unbuilt. Each Java component calls this from `.github/workflows/copilot-setup-steps.yml`.
+#
+# What it does, exactly as CI does (component.yml): Java 21 and Node 22, the workspace cloned at its default
+# branch, every upstream of the component installed into ~/.m2 (tests skipped), and the workspace root's
+# manifest and packs linked beside the agent's checkout so `Workspace.root()` finds them.
+name: Orazaka workspace for a coding agent
+description: Clones the Orazaka workspace and installs a component's upstreams so the agent can build and test it.
+inputs:
+  component:
+    description: The repository name, as listed in orazaka.workspace.json
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+      with:
+        distribution: temurin
+        java-version: "21"
+        cache: maven
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      with:
+        node-version: "22"
+    - name: Clone the workspace and install the upstreams
+      shell: bash
+      env:
+        COMPONENT: ${{ inputs.component }}
+      run: |
+        set -euo pipefail
+        ws="$RUNNER_TEMP/orazaka-workspace"
+        git clone --depth 1 https://github.com/krizaka/orazaka.git "$ws"
+        cd "$ws"
+        node scripts/workspace.mjs clone --depth 1
+        node scripts/workspace.mjs upstreams "$COMPONENT"
+        # Workspace.root() walks up from the component's directory to orazaka.workspace.json: link the root's
+        # manifest and the packs beside the agent's checkout, and the libraries where the parent's relativePath looks.
+        parent="$(dirname "$GITHUB_WORKSPACE")"
+        ln -sfn "$ws/orazaka.workspace.json" "$parent/orazaka.workspace.json"
+        ln -sfn "$ws/orazaka-packs" "$parent/orazaka-packs"
+        ln -sfn "$ws/infra" "$parent/infra"
+        echo "Workspace ready at $ws; upstreams of $COMPONENT installed."

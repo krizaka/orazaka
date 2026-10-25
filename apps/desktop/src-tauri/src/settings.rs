@@ -3,7 +3,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-use url::Url;
 
 pub const DEFAULT_REMOTE: &str = "https://dev.orazaka.com";
 pub const LOCAL_WORKSPACE_URL: &str = "http://localhost:3000";
@@ -77,34 +76,19 @@ impl Settings {
     }
 }
 
-/// A remote Orazaka must be HTTPS (plain http only for a loopback address), without credentials
-/// in the URL, and is reduced to its origin: the app window may never leave it.
+/// A remote Orazaka must be HTTPS (plain http only for a loopback address), without credentials in the URL, and is
+/// reduced to its origin: the app window may never leave it. The rule is krizaka-tauri-kit's navigation guard.
 pub fn normalize_remote(input: &str) -> Result<String, String> {
-    let url = Url::parse(input.trim()).map_err(|_| "not a valid URL".to_string())?;
-    if !url.username().is_empty() || url.password().is_some() {
-        return Err("no credentials in the URL".into());
-    }
-    let host = url.host_str().ok_or("missing host")?.to_string();
-    let loopback = host == "localhost" || host == "127.0.0.1" || host == "[::1]";
-    match url.scheme() {
-        "https" => {}
-        "http" if loopback => {}
-        _ => return Err("the remote Orazaka must use https".into()),
-    }
-    Ok(url.origin().ascii_serialization())
+    krizaka_tauri_kit::nav_guard::normalize_origin(input)
 }
 
-/// True when `target` is on the same origin as `allowed` — the navigation guard of the workspace
-/// window.
-pub fn same_origin(allowed: &str, target: &Url) -> bool {
-    Url::parse(allowed)
-        .map(|a| a.origin() == target.origin())
-        .unwrap_or(false)
-}
+/// True when `target` is on the same origin as `allowed` — the navigation guard of the workspace window.
+pub use krizaka_tauri_kit::nav_guard::same_origin;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use url::Url;
 
     #[test]
     fn remote_must_be_https_or_loopback_and_is_reduced_to_its_origin() {

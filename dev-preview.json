@@ -13,112 +13,112 @@
       "checked": "2026-10-19"
     },
     "site.qa-signin": {
-      "evidence": null,
-      "gap": "The QA sign-in on the real backend is not yet replayed by a CI run or a recorded request id.",
-      "issue": "https://github.com/krizaka/orazaka/issues/178"
+      "evidence": "https://github.com/krizaka/orazaka-web-client/actions/runs/39539783026",
+      "checked": "2026-10-21",
+      "note": "The \"Dev preview live\" run after the deploy signs the demo persona Eric in on dev.orazaka.com and crawls 8 signed-in screens (UI crawl step green); the journey script also signs in (edge request a4dca31469b328bf-YUL)."
     },
     "journey.core": {
-      "evidence": null,
-      "gap": "No recorded run of chat, document analysis and a 9:16 video on dev with run ids.",
-      "issue": "https://github.com/krizaka/orazaka/issues/178"
+      "evidence": "https://github.com/krizaka/orazaka/pull/305",
+      "checked": "2026-10-21",
+      "note": "journey-dev as persona Eric on dev.orazaka.com: chat, image, analysis, hosted clip; each step with its edge request id; clip and web recording in the PR (Bunny pr-assets/orazaka/devpreview-journey-core/)."
     },
     "journey.ai-via-orazaka": {
-      "evidence": null,
-      "gap": "The run trace of the engine is not linked as evidence.",
-      "issue": "https://github.com/krizaka/orazaka/issues/178"
+      "evidence": "https://github.com/krizaka/orazaka/pull/305",
+      "checked": "2026-10-21",
+      "note": "Engine runs 478005a2-64d1-4f7c-b533-3b8091941f17 (image-generation), af9651df-5dba-4792-be9f-2aa6928ffc9e (image-analysis), ed4a8460-b199-4fe2-85a3-eea47a5c3620 (video-generation), chat request 78403f44-b8cb-4c48-aa54-96fbc1ef1e29."
     },
     "ui.krizaka-ui": {
       "evidence": "https://dev.orazaka.com/",
       "checked": "2026-10-19"
     },
     "ui.themes-devices": {
-      "evidence": null,
-      "gap": "No Playwright crawl in CI proves dark/light and phone/desktop on the key screens.",
-      "issue": "https://github.com/krizaka/orazaka-web-client/issues/124"
+      "evidence": "https://github.com/krizaka/orazaka-web-client/actions/runs/39539783026",
+      "checked": "2026-10-21",
+      "note": "Same run: UI crawl of the sitemap pages + signed-in screens, dark and light, phone and desktop (console errors, horizontal scroll, one family footer, broken pictures, empty tiles, hard-coded colours). First run found two real defects (login nesting, docs e-mail hydration), fixed in orazaka-web-client#197."
     },
     "ux.ia-review": {
-      "evidence": null,
-      "gap": "docs/UX_DECISIONS.md entry and nav shape test for the app rail and the public bar are not final.",
-      "issue": "https://github.com/krizaka/orazaka-web-client/issues/125"
+      "evidence": "https://github.com/krizaka/orazaka/blob/main/docs/UX_DECISIONS.md",
+      "checked": "2026-10-21",
+      "note": "Entries for the public bar, the rail, the Studio list, the wellbeing consent; shape test src/features/landing/utils/__tests__/nav-shape.test.ts; UI crawl captures of the key screens, dark/light, phone/desktop."
     },
     "mobile.build": {
-      "evidence": null,
-      "gap": "No recorded launch of the mobile build against dev.orazaka.com.",
-      "issue": "https://github.com/krizaka/orazaka-mobile-client/issues/36"
+      "evidence": "https://krizaka-assets.b-cdn.net/pr-assets/orazaka-mobile-client/mobile-store/orazaka-android.mp4",
+      "checked": "2026-10-20",
+      "note": "EAS Android preview APK (internal distribution) https://expo.dev/accounts/oussamaabid/projects/orazaka-mobile/builds/79c18b25-bece-4f7e-afc9-f6204fa5bafa installed on an Android 16 emulator, signs in as the persona against the dev edge (https://dev.orazaka.com/edge) (clip: sign-in screen, then Studios, Jobs, Chat; credentials typed off-camera). iOS store build 2 (EAS-managed credentials) https://expo.dev/accounts/oussamaabid/projects/orazaka-mobile/builds/2a3c8bc3-0a2a-40ac-ae81-e3ab472befcc is ready; TestFlight waits for the App Store Connect app record."
     },
     "mobile.ux-review": {
-      "evidence": null,
-      "gap": "No UX/IA review of the mobile app.",
-      "issue": "https://github.com/krizaka/orazaka-mobile-client/issues/37"
+      "evidence": "https://github.com/krizaka/orazaka/blob/main/docs/UX_DECISIONS.md#phone--the-orazaka-app",
+      "checked": "2026-10-21",
+      "note": "Phone entries (four tabs at the thumb, the web journey in the web words); test src/__tests__/nav-shape.test.tsx in orazaka-mobile-client; captures: the 2026-10-12 simulator/emulator screens of docs/MOBILE.md and the Android clip (fresh simulator captures wait for a simulator build)."
     },
     "mobile.app-links": {
-      "evidence": null,
-      "gap": "No app-links config (AASA / assetlinks) for the product yet.",
-      "issue": "https://github.com/krizaka/orazaka-mobile-client/issues/36"
+      "evidence": "https://dev.orazaka.com/.well-known/apple-app-site-association",
+      "checked": "2026-10-20",
+      "note": "2026-10-20: node scripts/check-app-links.mjs --live https://dev.orazaka.com (orazaka-web-client) = ok: AASA and assetlinks.json served 200 application/json, bundle id and package com.krizaka.orazaka, Apple CDN and Google Digital Asset Links agree; CI runs check-app-links (web: npm run validate; mobile: scripts/app-links.test.mjs)."
     },
     "quality.ci-green": {
-      "evidence": null,
-      "gap": "CI on main of krizaka/orazaka is red until the generated docs are re-synced (main is red, orazaka#243).",
-      "issue": "https://github.com/krizaka/orazaka/issues/179"
+      "evidence": "https://github.com/krizaka/orazaka/actions?query=branch%3Amain",
+      "checked": "2026-10-20",
+      "note": "CI on main of krizaka/orazaka: 11 consecutive green runs on 2026-10-20 (the red-main job is skipped by design when the workspace job passes)."
     },
     "quality.tests": {
-      "evidence": null,
-      "gap": "Evidence waits for a green CI on main.",
-      "issue": "https://github.com/krizaka/orazaka/issues/179"
+      "evidence": "https://github.com/krizaka/orazaka-web-client/blob/main/src/app/api/auth/register/__tests__/route.test.ts",
+      "checked": "2026-10-20",
+      "note": "Sign-up closed: this test; the console gate: src/__tests__/host-routing.test.ts and src/console/test/gate.test.mts; indexing policy: src/__tests__/indexing.test.ts; all run by the CI of krizaka/orazaka-web-client."
     },
     "security.alerts": {
-      "evidence": null,
-      "gap": "8 open high CodeQL alerts and 6 high Dependabot alerts over the product repositories.",
-      "issue": "https://github.com/krizaka/orazaka/issues/119"
+      "evidence": "https://github.com/krizaka/orazaka/issues/119",
+      "checked": "2026-10-20",
+      "note": "2026-10-20: probe over the 17 repositories = codeql high 0, dependabot high 0, secrets 0. Dismissed with a written reason: orazaka-mobile-client Dependabot 6-9 (braces, node-forge, image-size x2: Metro/Expo build tooling, no patched release or incompatible with Metro, not in the app bundle); orazaka-ui-kit secret-scanning 1 (a whsec_AAAA placeholder in a test)."
     },
     "docs.current": {
-      "evidence": null,
-      "gap": "README, AGENTS and docs not yet checked against the dev deployment.",
-      "issue": "https://github.com/krizaka/orazaka/issues/180"
+      "evidence": "https://github.com/krizaka/orazaka/pull/313",
+      "checked": "2026-10-21",
+      "note": "DOCS-AUDIT 2026-10-21 of orazaka and orazaka-web-client against dev.orazaka.com v1.0.0: README/AGENTS (console location), MOBILE.md, e-mail in docs code blocks fixed (#304, #310, #313); generated docs in sync (docs-sync fixed in #308); DEPLOY_DEV.md matches the live spec (#312)."
     },
     "seo.family": {
-      "evidence": null,
-      "gap": "check-seo-family not yet run in CI against the container of dev.orazaka.com.",
-      "issue": "https://github.com/krizaka/orazaka-web-client/issues/126"
+      "evidence": "https://github.com/krizaka/orazaka-web-client/actions/runs/39539783026",
+      "checked": "2026-10-21",
+      "note": "Same run: node scripts/check-seo-family.mjs --base/--host https://dev.orazaka.com (indexed policy) green after every deploy."
     },
     "ops.cost": {
-      "evidence": null,
-      "gap": "The dev deployment cost is not yet in the cost table and DEPLOYMENT.md; the core resize waits for Oussama.",
-      "issue": "https://github.com/krizaka/orazaka/issues/215"
+      "evidence": "https://github.com/krizaka/orazaka/blob/main/docs/DEPLOY_DEV.md",
+      "checked": "2026-10-21",
+      "note": "Measured 2026-10-21 with doctl: recurring cloud about 97 USD/month (ceiling 100, GPU apart), about 87 after the two old admin apps are deleted; the RunPod volume line was a phantom (no network volume on the account). Orazaka's dev deployment ($47) is in DEPLOY_DEV.md, the organisation table in the private cost file (\u00a7 6.2); smallest instances throughout, the JVM core at basic-s."
     },
     "admin.gated": {
-      "evidence": null,
-      "gap": "Gate test of the console to be linked.",
-      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/33"
+      "evidence": "https://github.com/krizaka/orazaka-web-client/blob/main/src/__tests__/host-routing.test.ts",
+      "checked": "2026-10-21",
+      "note": "Gate tests (host-routing.test.ts, src/console/test/gate.test.mts, ip-allow.test.mts) + live proof from a GitHub runner, an address that is not allowed: admin.orazaka.com/login and / answer 403, dev.orazaka.com/console 404, healthz 200 (step \u00ab Console gate \u00bb of https://github.com/krizaka/orazaka-web-client/actions/runs/39539783026)."
     },
     "admin.noindex": {
       "evidence": "https://admin.orazaka.com/robots.txt",
       "checked": "2026-10-19"
     },
     "admin.operator-tasks": {
-      "evidence": null,
-      "gap": "Operator tasks not yet proven against the real DB.",
-      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/33"
+      "evidence": "https://krizaka-assets.b-cdn.net/pr-assets/orazaka-web-client/devpreview-admin-audit/tasks.dark.desktop.png",
+      "checked": "2026-10-21",
+      "note": "The operator tasks of Orazaka run against the real DB through the console API on dev: accounts (list, detail, suspend/restore, role, export, erase) with their audit; billing (plans, packs, pricebook, wallets) and Studio blueprints/bundles and the model registry, each write audited; settings as parameters with revision, who, when, why: app-config PUT then rollback proven live (android revision 1 -> 2 -> 3, requests devpreview-config-0005/-0006, both audited). The Tasks tab (Operations -> Tasks, orazaka-web-client#213) is the operator's queue, derived from the services' audit and the job queue (a refused/failed action with no later success, a failed job of the last day), tested first (src/console/test/tasks.test.mts). Not covered: moderation and consent-withdrawal queues (Orazaka has no moderation surface; the wellbeing erase of orazaka#301 is the user's own action) and a one-click retry of a failed job (no retry endpoint yet)."
     },
     "admin.audit-log": {
-      "evidence": null,
-      "gap": "The audit log screen and its test are not yet linked.",
-      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/34"
+      "evidence": "https://github.com/krizaka/orazaka/blob/main/docs/adr/ADR-085-operator-audit-trail.md",
+      "checked": "2026-10-21",
+      "note": "Every operator write leaves an audit line (actor, action, target, request id, ok|refused|failed, ids only) in each service that has an operator surface: identity (krizaka-users#45/#46: account suspend/restore/role/export/erase), billing (krizaka-billing#45: every ADMIN write), Studio (orazaka-studio#43: blueprints, pack bundles), engine (orazaka-conversation-service#45/#46: model registry, app config); the edge keeps/issues the X-Request-Id (orazaka-edge#33). Tests first in each repo (filters, outcome, identity IT). Console: Audit log over the four services, filter by service/outcome/who/action/request, CSV (orazaka-web-client#208/#209/#211/#212). Live on dev as the operator, requests devpreview-suspend-0001 (ok), -self-0003 (refused SELF), -ghost-0004 (failed not_found), -billing-0001, -studio-0002, -engine-0003 (refused), -config-0005/-0006 (app-config publish and rollback, ok). Console crawl 36/36 clean: https://krizaka-assets.b-cdn.net/pr-assets/orazaka-web-client/devpreview-admin-audit/audit.dark.desktop.png"
     },
     "admin.shell": {
-      "evidence": null,
-      "gap": "Screenshots of the admin shell in both themes are not yet captured.",
-      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/35"
+      "evidence": "https://krizaka-assets.b-cdn.net/pr-assets/orazaka-web-client/devpreview-admin-shell/supervision.dark.desktop.png",
+      "checked": "2026-10-21",
+      "note": "Console crawl 32/32 clean (7 screens + sign-in, dark and light, phone and desktop, from an allowed address): DEV badge on every screen incl. phones, no console error, no horizontal scroll. The console uses the NAV-SYS NavBar (private console: environment badge, no family switcher) and the kit's auth-layout sign-in: @krizaka/ui has no AppShell \u00ab console \u00bb variant, so NavBar is the family standard here; the criterion's wording should say so."
     },
     "admin.ux-review": {
-      "evidence": null,
-      "gap": "No UX/IA review of the console.",
-      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/36"
+      "evidence": "https://github.com/krizaka/orazaka/blob/main/docs/UX_DECISIONS.md#console--adminorazakacom",
+      "checked": "2026-10-21",
+      "note": "Console entry (five places, two tabbed groups); shape test src/console/test/sections.test.mts; captures dark/light phone/desktop of every screen: https://krizaka-assets.b-cdn.net/pr-assets/orazaka-web-client/devpreview-admin-shell/"
     },
     "admin.ci": {
-      "evidence": null,
-      "gap": "CI link of the console to be recorded once green.",
-      "issue": "https://github.com/krizaka/orazaka-web-admin/issues/33"
+      "evidence": "https://github.com/krizaka/orazaka-web-client/actions?query=branch%3Amain",
+      "checked": "2026-10-20",
+      "note": "The console lives in orazaka-web-client (host routing, orazaka-web-admin#31): its tests (npm run test:console, host-routing.test.ts) run in that repository CI on every pull request."
     }
   }
 }
