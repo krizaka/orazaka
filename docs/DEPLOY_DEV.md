@@ -89,6 +89,17 @@ node scripts/dev-deploy.mjs pricebook-external-check-research  # krizaka_billing
   `infra/initdb/30-jobs-config.sql`, and `2026-10-25-pricebook-external-check-research.sql` is krizaka-billing's migration of
   the same name, unchanged; `scripts/test/dev-deploy.test.mjs` pins both against their checkouts.
 
+## Semantic cache (orazaka-ai-engine#40)
+
+```bash
+node scripts/dev-deploy.mjs semantic-cache   # orazaka_db: semantic_cache_entry (pgvector, HNSW) and the SemanticCacheInterceptor row, OFF
+```
+
+- **Off on dev**: the interceptor row is disabled, and a pack must also declare `orazaka.pipeline.cache.mode`. An existing
+  row is never overwritten (an operator's choice stays).
+- `infra/migrations/2026-10-22-semantic-cache.sql` carries orazaka-job-service's `semantic_cache_entry` table verbatim;
+  `scripts/test/dev-deploy.test.mjs` pins it against the checkout.
+
 ## Service accounts — a Krizaka product calling Orazaka
 
 Krizaka's products consume AI **only through Orazaka**: Yomizaka runs the document Studios with its own account, never a

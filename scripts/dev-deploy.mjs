@@ -8,6 +8,7 @@
  *   node scripts/dev-deploy.mjs recommendations  # the recommender's tables on orazaka_knowledge_db (ADR-078)
  *   node scripts/dev-deploy.mjs analytics        # the analytics tables, kinds and settings v1 (ADR-081)
  *   node scripts/dev-deploy.mjs external-checks  # the engine's external checks on orazaka_db, fail closed (orazaka-packs#138)
+ *   node scripts/dev-deploy.mjs semantic-cache   # the semantic cache table and its interceptor row, OFF (orazaka-ai-engine#40)
  *   node scripts/dev-deploy.mjs pricebook-external-check-research  # their price book rows on krizaka_billing_db (krizaka-billing#57)
  *   node scripts/dev-deploy.mjs service-tier     # the `service` rate-limit tier, svc_* users moved onto it (ADR-083)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → the QA store (@dev), never printed
@@ -253,6 +254,14 @@ function externalChecks() {
   const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-25-external-checks.sql"), "utf8");
   psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
   console.log("orazaka_db: orazaka.core.checks.* capabilities, EXTERNAL_CHECK billable and external_check_audit in place (no pepper: checks refused)");
+}
+
+/** The semantic cache of orazaka-ai-engine#40 (the table orazaka-job-service's initdb carries) and its interceptor row, OFF — idempotent, additive. */
+function semanticCache() {
+  const env = secrets();
+  const sql = readFileSync(join(ROOT, "infra/migrations/2026-10-22-semantic-cache.sql"), "utf8");
+  psql(env, "orazaka_db", "orazaka_db", "DATABASE_PASSWORD_ORAZAKA_DB", [], sql);
+  console.log("orazaka_db: semantic_cache_entry (+ expiry and HNSW indexes) and the SemanticCacheInterceptor row (OFF) in place");
 }
 
 /** krizaka-billing's own migration (krizaka-billing#57): the per-CALL price book rows of EXTERNAL_CHECK/mock and RESEARCH/law-corpus — idempotent. */
@@ -666,6 +675,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "research-tables") researchTables();
     else if (command === "law-corpus") lawCorpus();
     else if (command === "external-checks") externalChecks();
+    else if (command === "semantic-cache") semanticCache();
     else if (command === "pricebook-external-check-research") pricebookExternalCheckResearch();
     else if (command === "service-tier") serviceTier();
     else if (command === "webhooks") webhooks();
@@ -677,6 +687,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "status") status();
     else {
       console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | models | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | law-corpus | external-checks | pricebook-external-check-research | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
+      console.error("usage: dev-deploy.mjs apply <app> [--dry-run] | data | policy | recommendations | analytics | run-idempotency | run-events | run-result-cache | run-parent | runtime-config-admin | research-tables | law-corpus | external-checks | semantic-cache | pricebook-external-check-research | mcp-token-text | search-knowledge | service-tier | webhooks | automations | seed | persona | service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file> | broker | status");
       process.exit(2);
     }
   } catch (e) {
