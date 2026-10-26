@@ -17,6 +17,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Orazaka](https://img.shields.io/badge/part%20of-Orazaka-f67e23)](https://github.com/krizaka/orazaka#repositories)
 [![Website](https://img.shields.io/badge/site-dev.orazaka.com-f67e23)](https://dev.orazaka.com)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=coverage)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka)
 
 [Website](https://dev.orazaka.com) · [Documentation](https://dev.orazaka.com/docs) · [Krizaka](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
 
