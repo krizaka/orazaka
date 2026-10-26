@@ -37,7 +37,7 @@ export function summarise(dataset) {
   return out;
 }
 
-const where = { mac: "One Mac (Metal), local", digitalocean: "DigitalOcean serverless inference", gpu: "A DigitalOcean GPU droplet, by the hour (through the relay)" };
+const where = { mac: "One Mac (Metal), local", digitalocean: "DigitalOcean serverless inference", gpu: "A rented GPU, by the hour (through the relay; the provider of each session is in « GPU sessions »)" };
 const fmt = (stats, digits = 0) => (stats ? `${stats.median.toFixed(digits)} s (${stats.min.toFixed(digits)}–${stats.max.toFixed(digits)}, n=${stats.n})` : "—");
 const price = (model) =>
   model.gpuUsdPerHour ? `$${model.gpuUsdPerHour.toFixed(2)} per GPU hour` : model.costUsd == null ? "none (your own machine)" : `$${model.costUsd.toFixed(2)} ${model.priceUnit ?? "per output"}`;

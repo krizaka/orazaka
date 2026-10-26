@@ -192,6 +192,55 @@
         "seed": "honoured",
         "weights": "~6 GB (model + synchformer + vae), CC-BY-NC 4.0: evaluation only, asked for by name"
       }
+    },
+    "ltx-video-0.9.8-13b-distilled": {
+      "label": "LTX-Video 0.9.8 13B distilled (720p, H100 80 GB, with the 1080p upscale)",
+      "kind": "video",
+      "where": "gpu",
+      "licence": "LTX-Video Open Weights License 0.X",
+      "gpuUsdPerHour": 3.99,
+      "costUsd": null,
+      "parameters": {
+        "size": "1216×704 (16:9) or 704×1216 (9:16); 1920×1080 after the Studio's upscale step",
+        "frames": 121,
+        "fps": 24,
+        "duration": "5.04 s",
+        "steps / guidance": "8 / 1.0 (distilled)",
+        "seed": "honoured",
+        "GPU": "NVIDIA H100 80 GB (RunPod), resident (39 GB)",
+        "run time": "about 15 s of generation; the run's 200 s include the model's load and the SeedVR2 pass (about 130 s)"
+      }
+    },
+    "wan2.2-i2v-a14b-hq": {
+      "label": "Wan 2.2 I2V A14B (720p, 40 steps, H100 80 GB, with the 1080p upscale)",
+      "kind": "video",
+      "where": "gpu",
+      "licence": "Apache-2.0",
+      "gpuUsdPerHour": 3.99,
+      "costUsd": null,
+      "parameters": {
+        "size": "720×1280 (9:16) or 1280×720 (16:9); 1080×1920 after the upscale",
+        "frames": 81,
+        "fps": 16,
+        "duration": "5.06 s",
+        "steps / guidance": "40 / 3.5 and 3.5",
+        "seed": "honoured",
+        "GPU": "NVIDIA H100 80 GB (RunPod), two bf16 experts swapped by CPU offload (35 GB)"
+      }
+    },
+    "flux-2-klein-4b-h100": {
+      "label": "FLUX.2 [klein] 4B (H100 80 GB, sd-server)",
+      "kind": "image",
+      "where": "gpu",
+      "licence": "Apache-2.0",
+      "gpuUsdPerHour": 3.99,
+      "costUsd": null,
+      "parameters": {
+        "size": "1360×768 (16:9) or 768×1360 (9:16), the video's own aspect",
+        "steps": 4,
+        "seed": "honoured",
+        "engine": "stable-diffusion.cpp sd-server, CUDA"
+      }
     }
   },
   "engineSeconds": {
@@ -2391,6 +2440,136 @@
       "costUsd": null,
       "clip": "tea-pour",
       "loudnessLufs": -13.5
+    },
+    {
+      "kind": "image",
+      "model": "flux-2-klein-4b-h100",
+      "runId": "a686199b-74a7-4248-b8c5-a90d6f7fe49c",
+      "outcome": "succeeded",
+      "seconds": 6,
+      "excludedFromStats": null,
+      "width": 1360,
+      "height": 768,
+      "seed": "4095650755",
+      "costUsd": 0.0067
+    },
+    {
+      "kind": "video",
+      "model": "ltx-video-0.9.8-13b-distilled",
+      "runId": "e8bca125-ada6-4802-a4a9-f123bb6755d6",
+      "outcome": "succeeded",
+      "seconds": 238,
+      "excludedFromStats": null,
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "20261301",
+      "costUsd": 0.2638
+    },
+    {
+      "kind": "image",
+      "model": "flux-2-klein-4b-h100",
+      "runId": "ec7b08ac-c270-4099-84b0-5f4fbae93296",
+      "outcome": "succeeded",
+      "seconds": 5,
+      "excludedFromStats": null,
+      "width": 1360,
+      "height": 768,
+      "seed": "4271044981",
+      "costUsd": 0.0055
+    },
+    {
+      "kind": "video",
+      "model": "ltx-video-0.9.8-13b-distilled",
+      "runId": "fa484aa7-3c52-4468-acbd-c786746e2ebb",
+      "outcome": "succeeded",
+      "seconds": 201,
+      "excludedFromStats": null,
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "20261302",
+      "costUsd": 0.2228
+    },
+    {
+      "kind": "image",
+      "model": "flux-2-klein-4b-h100",
+      "runId": "c3efac13-6c5b-4743-af3b-e856204f3d96",
+      "outcome": "succeeded",
+      "seconds": 5,
+      "excludedFromStats": null,
+      "width": 1360,
+      "height": 768,
+      "seed": "33",
+      "costUsd": 0.0055
+    },
+    {
+      "kind": "video",
+      "model": "ltx-video-0.9.8-13b-distilled",
+      "runId": "fc7ad9bf-0724-4129-94fb-239d062d57ec",
+      "outcome": "succeeded",
+      "seconds": 195,
+      "excludedFromStats": null,
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "20261303",
+      "costUsd": 0.2161
+    },
+    {
+      "kind": "image",
+      "model": "flux-2-klein-4b-h100",
+      "runId": "4848a156-4ad3-43d4-b388-886ac3ecd2ff",
+      "outcome": "succeeded",
+      "seconds": 6,
+      "excludedFromStats": null,
+      "width": 1360,
+      "height": 768,
+      "seed": "61842442",
+      "costUsd": 0.0067
+    },
+    {
+      "kind": "video",
+      "model": "ltx-video-0.9.8-13b-distilled",
+      "runId": "f72d2c40-0c45-4f4e-ba26-a93fdbca5ab4",
+      "outcome": "succeeded",
+      "seconds": 208,
+      "excludedFromStats": null,
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "durationSeconds": 5.04,
+      "seed": "20261304",
+      "costUsd": 0.2305
+    },
+    {
+      "kind": "image",
+      "model": "flux-2-klein-4b-h100",
+      "runId": "12cee392-9a0e-4a18-a496-44bf0d324c8a",
+      "outcome": "succeeded",
+      "seconds": 7,
+      "excludedFromStats": null,
+      "width": 768,
+      "height": 1360,
+      "seed": "33",
+      "costUsd": 0.0078
+    },
+    {
+      "kind": "video",
+      "model": "wan2.2-i2v-a14b-hq",
+      "runId": "586bd6a3-78e3-40f2-a26c-e089eebcd0f9",
+      "outcome": "succeeded",
+      "seconds": 1352,
+      "excludedFromStats": null,
+      "width": 1080,
+      "height": 1920,
+      "fps": 16,
+      "durationSeconds": 5.06,
+      "seed": "20261305",
+      "costUsd": 1.4985
     }
   ],
   "events": [
@@ -2531,6 +2710,16 @@
       "kind": "limit",
       "what": "HunyuanVideo 1.5 720p image-to-video was stopped after 19 of 50 steps",
       "cause": "90 s a step with model offload (75 GB resident), about 75 minutes a clip; its licence also excludes the EU, UK and South Korea"
+    },
+    {
+      "kind": "infrastructure",
+      "what": "every Studio run on dev answered HTTP 500 for about 30 minutes",
+      "cause": "the billing service's connection pool regression (« This connection has been closed »); the pod was kept idle then, and the runs restarted once the fix was live"
+    },
+    {
+      "kind": "configuration",
+      "what": "the first LTX attempts failed in the worker (three causes, one after the other) — before the fix, so they are not among the runs counted above",
+      "cause": "the weights were on the host's own disk and the loader did not look there; the tokenizer needs tiktoken, protobuf and imageio; the upscale asked ffmpeg to crop 1920 pixels from a 1865-pixel-wide picture (LTX makes 1216×704, narrower than 16:9). Fixed in orazaka-worker-media#43"
     }
   ],
   "commit": "ffe8aed",
@@ -2581,6 +2770,12 @@
       "what": "RunPod pod (the image-to-video bake-off: four models, two shots; a first Wan run finished but crashed in the bake script's save step and was run again)",
       "gpu": "H100 80 GB (CA-MTL-1)",
       "hours": 1.77,
+      "usdPerHour": 3.99
+    },
+    {
+      "what": "RunPod pod, profile kit (the five showcase clips through the Studios: FLUX stills, four LTX clips, one Wan 2.2 A14B 40-step clip, the 1080p upscale inside each run; the first attempts failed on a worker cache path, missing tokenizer dependencies and an upscale crop larger than the picture)",
+      "gpu": "H100 80 GB (CA-MTL-1)",
+      "hours": 0.9,
       "usdPerHour": 3.99
     }
   ],
