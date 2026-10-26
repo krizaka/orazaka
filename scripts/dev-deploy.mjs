@@ -10,7 +10,7 @@
  *   node scripts/dev-deploy.mjs external-checks  # the engine's external checks on orazaka_db, fail closed (orazaka-packs#138)
  *   node scripts/dev-deploy.mjs pricebook-external-check-research  # their price book rows on krizaka_billing_db (krizaka-billing#57)
  *   node scripts/dev-deploy.mjs service-tier     # the `service` rate-limit tier, svc_* users moved onto it (ADR-083)
- *   node scripts/dev-deploy.mjs seed        # the two test accounts → company/QA.md, never printed
+ *   node scripts/dev-deploy.mjs seed        # the two test accounts → the QA store (@dev), never printed
  *   node scripts/dev-deploy.mjs persona [eric|mira|krizaka]  # a plain user, free tier: Eric/Mira the demo personas, Krizaka the company as an SME customer → @dev APP_QA_ORAZAKA_<NAME>_*, never printed; sign-up stays closed
  *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
@@ -24,7 +24,7 @@
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,7 +38,6 @@ const PROJECT = "orazaka";
 const COMPANY_DIR = join(homedir(), "Documents/krizaka");
 /** The one secrets file of this run (`--env-file`, ORAZAKA_DEV_ENV_FILE), or null: then every key goes through secret.sh @dev. */
 let ENV_FILE = process.env.ORAZAKA_DEV_ENV_FILE || null;
-const QA_FILE = process.env.ORAZAKA_QA_FILE ?? join(homedir(), "krizaka-com/company/QA.md");
 /** Placeholders that are settings, not secrets, and their defaults. */
 /** CORE_REBUILD busts the image build cache of the core component at every apply (see infra/deploy/Dockerfile). */
 const DEFAULTS = { CORE_REBUILD: new Date().toISOString().replace(/[:.]/g, "-") };
@@ -68,9 +67,24 @@ function secrets() {
 
 /** Stores a generated secret: appended to the explicit file, else set in `@dev` by env-set.sh (value on the environment, never an argument). */
 function storeSecret(key, value) {
-  if (ENV_FILE) return appendFileSync(ENV_FILE, `${key}=${value}\n`);
+  if (ENV_FILE) return writeEnvKeys(ENV_FILE, { [key]: value });
   const r = spawnSync(join(homedir(), ".krizaka-worktrees/tools/env-set.sh"), ["@dev", key], { env: { ...process.env, VALUE: value }, stdio: "ignore" });
   if (r.status !== 0) throw new Error(`could not store ${key} in @dev`);
+}
+
+/**
+ * Sets KEY=value lines in a secrets file: the given keys are replaced in place, every other line is kept. An existing
+ * file is closed to its owner (0600) before a secret is written, and the new text replaces it in one rename, so no
+ * reader ever sees a half-written file or a readable one. Values are written, never returned or printed.
+ */
+export function writeEnvKeys(file, values) {
+  const exists = existsSync(file);
+  if (exists) chmodSync(file, 0o600);
+  else mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
+  const next = upsertEnv(exists ? readFileSync(file, "utf8") : "", values);
+  const tmp = `${file}.${process.pid}.tmp`;
+  writeFileSync(tmp, next, { mode: 0o600 });
+  renameSync(tmp, file);
 }
 
 function doctl(args, input) {
@@ -349,32 +363,12 @@ function seed() {
   });
   psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], seedSql(accounts));
   const [user, admin] = accounts;
-  const today = new Date().toISOString().slice(0, 10);
-  const block = `### Orazaka (ORA-DEPLOY, ${today})
-
-_Injectés dans \`krizaka_users_db\` (cluster \`krizaka-dev-pg\`) par \`node scripts/dev-deploy.mjs seed\` (krizaka/orazaka) ; relancer la commande = nouveaux mots de passe. Inscription fermée (\`AUTH_SIGNUP_ENABLED=false\`, le backend répond 403)._
-
-**Orazaka web — utilisateur** (ROLE_USER)
-- URL : https://dev.orazaka.com/login
-- E-mail : \`${user.email}\`
-- Mot de passe : \`${user.password}\`
-
-**Orazaka admin** (ROLE_ADMIN)
-- URL : https://admin.orazaka.com/login
-- E-mail : \`${admin.email}\`
-- Mot de passe : \`${admin.password}\`
-`;
-  let qa = readFileSync(QA_FILE, "utf8");
-  const start = qa.indexOf("### Orazaka (ORA-DEPLOY");
-  if (start >= 0) {
-    const next = qa.slice(start + 1).search(/\n## |\n### /);
-    qa = qa.slice(0, start) + block + (next >= 0 ? qa.slice(start + 1 + next) : "");
-  } else {
-    const anchor = qa.indexOf("\n## ", qa.indexOf("## Comptes de test") + 1);
-    qa = anchor >= 0 ? `${qa.slice(0, anchor)}\n${block}${qa.slice(anchor)}` : `${qa}\n${block}`;
-  }
-  writeFileSync(QA_FILE, qa);
-  console.log(`seeded ${accounts.map((a) => a.email).join(", ")} — passwords written to ${QA_FILE} only`);
+  // The QA store (@qa reads env/dev.env first), the keys secret.sh resolves; never a document, never printed.
+  storeSecret("ORAZAKA_USER_EMAIL", user.email);
+  storeSecret("ORAZAKA_USER_PASSWORD", user.password);
+  storeSecret("ORAZAKA_ADMIN_EMAIL", admin.email);
+  storeSecret("ORAZAKA_ADMIN_PASSWORD", admin.password);
+  console.log(`seeded ${accounts.map((a) => a.email).join(", ")} — credentials stored in ${ENV_FILE ?? "@dev"} (ORAZAKA_USER_*, ORAZAKA_ADMIN_*), never printed`);
 }
 
 /** Eric on dev: created or refreshed (a re-run gives him a new password), the credentials stored in @dev only. */

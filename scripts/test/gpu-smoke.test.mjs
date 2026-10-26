@@ -27,11 +27,16 @@ test("what dev cannot route is SKIPPED with its reason — never passed", () => 
   assert.equal(CHECKS.find((c) => c.name === "video").inputs.aspect, "9:16");
 });
 
-test("credentials: the environment first, else the QA sheet; never invented", () => {
-  assert.deepEqual(credentials({ ORAZAKA_QA_EMAIL: "a@b", ORAZAKA_QA_PASSWORD: "p" }, ""), { email: "a@b", password: "p" });
-  const qa = "### Orazaka (ORA-DEPLOY, x)\n**Orazaka web — utilisateur**\n- E-mail : `u@x`\n- Mot de passe : `pw`\n";
-  assert.deepEqual(credentials({}, qa), { email: "u@x", password: "pw" });
-  assert.throws(() => credentials({}, "nothing"), /no QA credentials/);
+test("credentials: the environment first, else the QA store; never invented, never a document", () => {
+  const none = () => "";
+  assert.deepEqual(credentials({ ORAZAKA_QA_EMAIL: "a@b", ORAZAKA_QA_PASSWORD: "p" }, none), { email: "a@b", password: "p" });
+  const store = { ORAZAKA_USER_EMAIL: "u@x", ORAZAKA_USER_PASSWORD: "pw" };
+  assert.deepEqual(credentials({}, (k) => store[k] ?? ""), { email: "u@x", password: "pw" });
+  assert.throws(() => credentials({}, (k) => (k === "ORAZAKA_USER_EMAIL" ? "u@x" : "")), /no QA credentials/, "half a pair is no pair");
+  assert.throws(() => credentials({}, none), /no QA credentials/);
+  // The seed writes the same keys the smoke reads.
+  const seed = read("scripts/dev-deploy.mjs");
+  for (const key of ["ORAZAKA_USER_EMAIL", "ORAZAKA_USER_PASSWORD"]) assert.ok(seed.includes(`storeSecret("${key}"`), key);
 });
 
 test("gpu-dev.sh smoke destroys the droplet whatever happens", () => {

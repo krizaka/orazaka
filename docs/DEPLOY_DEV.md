@@ -177,7 +177,7 @@ panel: Agent Platform → Serverless Inference → Model Access Keys — the API
 node scripts/dev-deploy.mjs apply orazaka-dev --dry-run   # render + validate, nothing sent
 node scripts/dev-deploy.mjs apply orazaka-dev             # SECRET values are stored encrypted by App Platform
 node scripts/dev-deploy.mjs data                          # infra/deploy/dev-data.sql: providers + chat default
-node scripts/dev-deploy.mjs seed                          # test accounts → company/QA.md only
+node scripts/dev-deploy.mjs seed                          # test accounts → the QA store (@dev: ORAZAKA_USER_*, ORAZAKA_ADMIN_*), never printed
 node scripts/dev-deploy.mjs persona                       # Eric, the demo persona for recordings → @dev APP_QA_ORAZAKA_PERSONA_*, never printed
 node scripts/dev-deploy.mjs status
 ```
