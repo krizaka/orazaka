@@ -1,0 +1,48 @@
+# Keeps dev.orazaka.com's `core` in step with main (docs/DEPLOY_DEV.md § Redeploy): the image clones every component at
+# build time, so a merge in a component repository never triggers App Platform (`deploy_on_push` cannot see it). Every 15
+# minutes (and by hand) scripts/dev-redeploy.mjs starts `doctl apps create-deployment --force-rebuild` when a repository's
+# main is newer than the last manual rebuild, and does nothing while a deployment is building. Deploys only: it never
+# touches the spec and never applies a database migration (scripts/dev-migrations.mjs lists the pending ones).
+#
+# Needs the repository secret DIGITALOCEAN_ACCESS_TOKEN (the same name gpu-smoke.yml reads; it is not an organisation
+# secret today). Without it the job says so and stops.
+name: Dev redeploy
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-redeploy
+  cancel-in-progress: false
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Configured?
+        id: configured
+        run: |
+          if [ -z "$DIGITALOCEAN_ACCESS_TOKEN" ]; then
+            echo "::notice::DIGITALOCEAN_ACCESS_TOKEN is not set — nothing started."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: steps.configured.outputs.ok == 'true'
+      - uses: digitalocean/action-doctl@3cb3953159719656269e044e0e24ca16dd2a690f # v2
+        if: steps.configured.outputs.ok == 'true'
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Rebuild core when a repository moved
+        if: steps.configured.outputs.ok == 'true'
+        run: node scripts/dev-redeploy.mjs

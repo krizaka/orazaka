@@ -2,7 +2,8 @@
 /**
  * Orazaka dev deployment (App Platform, project `orazaka`) — docs/DEPLOY_DEV.md.
  *
- *   node scripts/dev-deploy.mjs apply <orazaka-dev> [--dry-run] [--drop-attached-db] [--env-file <file>]
+ *   node scripts/dev-deploy.mjs apply <orazaka-dev> [--dry-run] [--drop-attached-db] [--allow-pending-migrations] [--env-file <file>]
+ *                                           # refuses to roll out while a merged infra/migrations file is not recorded as applied on dev (scripts/dev-migrations.mjs)
  *   node scripts/dev-deploy.mjs data        # infra/deploy/dev-data.sql into orazaka_db (routing is data)
  *   node scripts/dev-deploy.mjs policy      # infra/deploy/dev-content-policy.sql into orazaka_studio_db (docs/CONTENT_POLICY.md)
  *   node scripts/dev-deploy.mjs recommendations  # the recommender's tables on orazaka_knowledge_db (ADR-078)
@@ -30,6 +31,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { devSecrets, envFileFromArgs, readEnvFile } from "./lib/dev-secrets.mjs";
+import { pendingOnDev } from "./dev-migrations.mjs";
 
 export { readEnvFile };
 
@@ -137,6 +139,12 @@ function apply(name, flags) {
   if (flags.includes("--dry-run")) {
     console.log(`${name}: spec valid (${id ? `update ${id}` : "create"}) — dry run, nothing sent`);
     return;
+  }
+  if (name === "orazaka-dev" && !flags.includes("--allow-pending-migrations")) {
+    const todo = pendingOnDev(ROOT, secrets());
+    if (todo.length) {
+      throw new Error(`${todo.length} merged migration(s) not recorded as applied on dev (node scripts/dev-migrations.mjs check): ${todo.join(", ")}`);
+    }
   }
   if (id) {
     doctl(["apps", "update", id, "--spec", "-", "--format", "ID,DefaultIngress", "--no-header"], spec);

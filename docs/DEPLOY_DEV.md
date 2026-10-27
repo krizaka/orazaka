@@ -199,6 +199,13 @@ node scripts/dev-deploy.mjs status
 doctl apps create-deployment <orazaka-dev id> --force-rebuild   # --force-rebuild, or the clone layer is cached
 ```
 
+Why: `core` clones every component's `main` while building, so a merge in a component (or in this workspace) changes
+nothing App Platform watches; `deploy_on_push` cannot see it and stays `false`. `.github/workflows/dev-redeploy.yml`
+(every 15 minutes, or by hand) runs `scripts/dev-redeploy.mjs`: when the `main` of the workspace or of a component is newer
+than the last manual deployment, and none is building, it starts the `--force-rebuild` above. It needs the repository
+secret `DIGITALOCEAN_ACCESS_TOKEN` (without it the job says so and stops). It never changes the spec and never
+applies a migration (`scripts/dev-migrations.mjs check`, docs/DEV_DATABASE.md).
+
 Logs: `doctl apps logs <id> core --type run` (each line prefixed by its service: `[users]`, `[conversation]`…).
 
 ## Broker — reachable from the GPU workers, safely

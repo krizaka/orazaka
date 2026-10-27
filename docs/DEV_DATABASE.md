@@ -36,6 +36,22 @@ scripts/dev-db-migrate.sh --apply --only orazaka_db
 
 Passwords live in the maintainer's `CREDENTIALS.local.md`, never in the repository.
 
+## Incremental migrations: the ledger
+
+A merged `infra/migrations/*.sql` (the workspace's and every component repository's) is applied by hand on the dev
+cluster, as the database's owner role, after a dry run in a rolled-back transaction. So that none is forgotten,
+`dev_migration_ledger` (orazaka_db) records the ones applied:
+
+```bash
+node scripts/dev-migrations.mjs check                 # lists the files not recorded; exit 1 if any
+node scripts/dev-migrations.mjs record <file>…        # after applying one (path from the workspace root)
+node scripts/dev-migrations.mjs baseline --before YYYY-MM-DD   # once: older files are taken as applied
+```
+
+`node scripts/dev-deploy.mjs apply orazaka-dev` runs the check and refuses while a file is pending
+(`--allow-pending-migrations` to pass). Nothing applies a migration automatically, CI included. Run `node scripts/workspace.mjs clone`
+(and pull) first so the component repositories are current.
+
 ## Looking at it from DBeaver
 
 New connection → PostgreSQL: host and port of the cluster (25060), the database and its role, SSL tab → *Use SSL*,
