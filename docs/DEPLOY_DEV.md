@@ -327,7 +327,7 @@ asserts each (run SUCCEEDED, output non-empty, latency, the model our job report
 happens** (trap on exit, interrupt and error). TTS, transcription and RAG are reported `SKIPPED` with their reason until
 dev serves them (LocalAI, knowledge) — never passed. The report: `~/Documents/krizaka/orazaka-smoke/last.json`.
 `scripts/gpu-dev.sh smoke mac` runs the same checks against the Mac's engines on the relay, for free. The weekly
-workflow `GPU smoke (sovereign)` runs it on Mondays once its secrets are set (see the workflow's header); a run on a
+workflow `GPU smoke (sovereign)` runs it on Mondays once its secrets are set (see the workflow's header; its DigitalOcean token is the repository secret `OPERATOR_GPU_TOKEN`, droplets and volumes only, separate from `OPERATOR_DEPLOY_TOKEN`, which deploys the apps); a run on a
 warm Volume costs ≈ $0.20 (the first one also builds the image and fetches the weights).
 
 ### Brand-level clips: Wan 2.2 A14B from an image, then SeedVR2 to 1080p/4K
