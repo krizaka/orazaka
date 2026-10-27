@@ -9,9 +9,22 @@
 
 const MAVEN_CENTRAL = "https://repo1.maven.org/maven2";
 
+/** XML without its comments (an unterminated one drops the rest). Scanned, not a regex: a pattern can leave a « <!-- » behind. */
+export function stripComments(xml) {
+  let out = "";
+  let at = 0;
+  for (let open = xml.indexOf("<!--"); open >= 0; open = xml.indexOf("<!--", at)) {
+    out += xml.slice(at, open);
+    const close = xml.indexOf("-->", open + 4);
+    if (close < 0) return out;
+    at = close + 3;
+  }
+  return out + xml.slice(at);
+}
+
 /** The project's own `<artifactId>` and `<version>` (a pom's `<parent>` and comments removed; version falls back to the parent's). */
 export function projectCoordinates(pom) {
-  const bare = pom.replace(/<!--[\s\S]*?-->/g, "");
+  const bare = stripComments(pom);
   const parent = /<parent>([\s\S]*?)<\/parent>/.exec(bare)?.[1] ?? "";
   // Only the project's direct children: nested blocks (dependencies, build, properties…) carry other versions.
   const own = bare.replace(/<(parent|dependencyManagement|dependencies|build|properties|profiles|modules|reporting|licenses|developers|scm|distributionManagement|repositories|pluginRepositories)>[\s\S]*?<\/\1>/g, "");
@@ -21,13 +34,13 @@ export function projectCoordinates(pom) {
 
 /** `<name>value</name>` properties of a pom's `<properties>` block. */
 export function properties(pom) {
-  const block = /<properties>([\s\S]*?)<\/properties>/.exec(pom.replace(/<!--[\s\S]*?-->/g, ""))?.[1] ?? "";
+  const block = /<properties>([\s\S]*?)<\/properties>/.exec(stripComments(pom))?.[1] ?? "";
   return Object.fromEntries([...block.matchAll(/<([\w.-]+)>\s*([^<]*?)\s*<\/\1>/g)].map((m) => [m[1], m[2]]));
 }
 
 /** Every `<dependencyManagement>` entry of a BOM: { group, artifactId, version } with `${…}` resolved from its properties. */
 export function managed(bom) {
-  const bare = bom.replace(/<!--[\s\S]*?-->/g, "");
+  const bare = stripComments(bom);
   const props = { ...properties(bare), "project.version": projectCoordinates(bom).version };
   const resolve = (v) => v.replace(/\$\{([^}]+)\}/g, (_, k) => props[k] ?? "");
   return [...bare.matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)].flatMap((m) => {

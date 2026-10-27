@@ -2,7 +2,7 @@
 // the reactor builds or Maven Central carries.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { claims, explain, managed, onCentral, projectCoordinates, properties, unprovided } from "../lib/krizaka-versions.mjs";
+import { claims, explain, managed, onCentral, projectCoordinates, properties, stripComments, unprovided } from "../lib/krizaka-versions.mjs";
 
 const KIT_POM = `<project><parent><groupId>com.krizaka</groupId><artifactId>krizaka-parent</artifactId><version>0.2.0</version></parent>
   <artifactId>krizaka-platform-kit</artifactId><!-- <version>9.9.9</version> --><version>0.3.0</version>
@@ -60,4 +60,10 @@ test("Central unreachable never fails the build", async () => {
   assert.equal(await onCentral(probe, async () => ({ status: 503 })), null);
   assert.equal(await onCentral(probe, async () => ({ status: 404 })), false);
   assert.deepEqual(await unprovided(claims({ built: new Map(), bom: bom("0.4.0"), parent: parentPom("0.2.0") }), async () => null), []);
+});
+
+test("comments are stripped, an unterminated one drops the rest", () => {
+  assert.equal(stripComments("a<!-- x --><b/><!-- y --><!-- <!-- z -->c"), "a<b/>c");
+  assert.equal(stripComments("a<!-- never closed <version>1</version>"), "a");
+  assert.equal(stripComments("no comment"), "no comment");
 });
