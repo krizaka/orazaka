@@ -149,6 +149,9 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | POST | `/api/v1/billing/pricebook` | — |
 | GET | `/api/v1/billing/pricebook/history` | — |
 | POST | `/api/v1/billing/pricebook/preview` | — |
+| GET | `/api/v1/billing/prices/admin` | Every entry in force, internal ones included. |
+| GET | `/api/v1/billing/prices/admin/{key}/history` | Every version of a key, past and scheduled. |
+| POST | `/api/v1/billing/prices/admin/{key}/schedule` | Schedules a change from a date. |
 | GET | `/api/v1/billing/subscriptions` | Every live subscriber of a plan — what an admin checks before retiring one. |
 | DELETE | `/api/v1/billing/subscriptions/{actorId}` | Ends an actor's subscription. |
 | GET | `/api/v1/billing/subscriptions/{actorId}` | The subscription in force for an actor. |
