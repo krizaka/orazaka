@@ -1,0 +1,61 @@
+# Keeps docs/_generated fresh on pull requests: when the only thing stale is the generated docs
+# (an ADR changed, a contract moved), regenerate them and push the commit onto the PR branch,
+# so the `workspace` check's « docs are stale » gate never needs a human. Same-repository
+# branches only (a fork gets no token); the app token makes the push start CI again.
+name: Docs regenerate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-regen-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  regenerate:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'krizaka-release[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ steps.app.outputs.token }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Clone every repository
+        run: node scripts/workspace.mjs clone --depth 1
+
+      - name: Regenerate docs/_generated
+        run: node scripts/generate-docs.mjs
+
+      - name: Push the regenerated docs when only they are stale
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          if git diff --quiet -- docs/_generated; then
+            echo "docs/_generated is fresh."
+            exit 0
+          fi
+          if [ -n "$(git diff --name-only | grep -v '^docs/_generated/')" ]; then
+            echo "Something besides docs/_generated changed; not pushing."
+            exit 0
+          fi
+          git config user.name "krizaka-release[bot]"
+          git config user.email "krizaka-release[bot]@users.noreply.github.com"
+          git add docs/_generated
+          git commit -m "docs: regenerate docs/_generated"
+          git push origin "HEAD:${HEAD_REF}"
