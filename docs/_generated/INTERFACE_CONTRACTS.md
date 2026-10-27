@@ -36,6 +36,7 @@ generated: true
 - `CodeSandboxPort`
 - `ConsentRegistry`
 - `ControlVerdictRecorder`
+- `ConversationMemory`
 - `EmbeddingClient`
 - `ExternalCheckConnector`
 - `ImageGeneratorClient`
@@ -52,6 +53,7 @@ generated: true
 - `StepRouteProvider`
 - `StructuredOutputClient`
 - `TestShaperPort`
+- `ToolOptions`
 - `ToolRegistry`
 - `ToolResultCache`
 - `UserCredentialsProvider`

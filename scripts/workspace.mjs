@@ -14,6 +14,7 @@
  *   node scripts/workspace.mjs ci <repository>          build its upstreams, then verify it
  *   node scripts/workspace.mjs publish <repository>     publish it (CI, on a v* tag): Maven → GitHub Packages, npm → npmjs
  *
+ * `ci` first runs scripts/check-krizaka-versions.mjs (every com.krizaka version the BOM names is built here or on Central).
  * `ci` is what every repository's GitHub Actions workflow runs (.github/workflows/component.yml):
  * a component is always verified inside the workspace, against its upstreams built from source.
  */
@@ -155,6 +156,8 @@ function ci(name) {
   const target = repo(name);
 
   if (target.kind === "maven") {
+    // Before any build: a com.krizaka version that neither a cloned repository nor Maven Central provides fails here, by name.
+    run("node", [join(ROOT, "scripts", "check-krizaka-versions.mjs")], { cwd: ROOT });
     upstreams(name);
     run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "verify"], { cwd: ROOT });
     return;
