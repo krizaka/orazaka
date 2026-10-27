@@ -1,0 +1,9 @@
+{
+  "$comment": "Dollars per million tokens, read on the DigitalOcean Gradient AI pricing page (https://docs.digitalocean.com/products/gradient-ai-platform/details/pricing/), page verified 2026-10-26. mistral-3-14B is the page's « Ministral 3 14B Instruct » row; gemma-4-31B-it is the page's « Gemma 4 » row (no 31B line). A model absent here is reported without a dollar figure. Local models cost nothing.",
+  "priceDate": "2026-10-26",
+  "models": {
+    "mistral-3-14B": { "inputPerMillion": 0.2, "outputPerMillion": 0.2 },
+    "gemma-4-31B-it": { "inputPerMillion": 0.18, "outputPerMillion": 0.5 },
+    "deepseek-v4-pro": { "inputPerMillion": 1.74, "outputPerMillion": 3.48 }
+  }
+}
