@@ -48,32 +48,32 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-business` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-interceptors` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-tools` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
-| `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AiClient, CatalogModelService, ChatSessionService, CitationVerifier, ExternalCheckCapability, JobService, McpService, StepRouter | AudioGeneratorClient, CapabilityProvider, ChatGeneratorClient, ChatMemoryStore, CheckAuditLog, CheckHttp, CheckKeyStore, CheckMeter, CheckProviderCatalog, CheckSubjectPepper, ConsentRegistry, EmbeddingClient, ExternalCheckConnector, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, SemanticClassifierPort, StepModelRecorder, StepRouteProvider, TestShaperPort, ToolRegistry, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
-| `krizaka-users-core` | domain | `krizaka-users` | 0.2.0 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, PasswordRecoveryService, RateLimitProvider, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, CryptographyPort, OAuth2ProviderVerifier, PasswordEventPublisher, PasswordResetTokenRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
+| `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AiClient, CatalogModelService, ChatSessionService, CitationVerifier, ExternalCheckCapability, JobService, McpService, StepRouter | AudioGeneratorClient, CapabilityProvider, ChatGeneratorClient, ChatMemoryStore, CheckAuditLog, CheckHttp, CheckKeyStore, CheckMeter, CheckProviderCatalog, CheckSubjectPepper, CodeSandboxPort, ConsentRegistry, ControlVerdictRecorder, EmbeddingClient, ExternalCheckConnector, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, SemanticClassifierPort, StepModelRecorder, StepRouteProvider, TestShaperPort, ToolRegistry, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
+| `krizaka-users-core` | domain | `krizaka-users` | 0.2.0 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, OrganizationService, PasswordRecoveryService, RateLimitProvider, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, CryptographyPort, OAuth2ProviderVerifier, OrganizationRepositoryPort, PasswordEventPublisher, PasswordResetTokenRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
 | `orazaka-jobs-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-persistence-app-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | CapabilityManager, CatalogModelManager, ChatMemoryPersistenceProvider, ChatSessionPersistenceProvider, JobPersistenceProvider, OutboxStore, PipelineConfigManager, PlatformMcpServerPersistenceProvider, PlatformToolConfigPersistenceProvider, RuntimeConfigProvider, SpeechVoiceManager, UserMcpServerPersistenceProvider, ValidationPipelineManager | — |
 | `orazaka-studio-api` | contract | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
 | `krizaka-billing-api` | contract | `krizaka-billing` | 0.2.0 | — | — |
 | `krizaka-notifications-api` | contract | `krizaka-notifications` | 0.2.0 | — | — |
 | `krizaka-users-api` | contract | `krizaka-users` | 0.2.0 | — | — |
-| `krizaka-app-config` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-idempotency` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-messaging` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-observability` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-persistence` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-ratelimit` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-security` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-spring-boot-starter-app-config` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-spring-boot-starter-idempotency` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-spring-boot-starter-observability` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-spring-boot-starter-persistence` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-spring-boot-starter-ratelimit` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-spring-boot-starter-security` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-spring-boot-starter-web` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-spring-boot-starter-webhooks` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-web` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
-| `krizaka-webhooks` | platform | `krizaka-platform-kit` | 0.2.0 | — | — |
+| `krizaka-app-config` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-idempotency` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-messaging` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-observability` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-persistence` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-ratelimit` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-security` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-spring-boot-starter-app-config` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-spring-boot-starter-idempotency` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-spring-boot-starter-observability` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-spring-boot-starter-persistence` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-spring-boot-starter-ratelimit` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-spring-boot-starter-security` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-spring-boot-starter-web` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-spring-boot-starter-webhooks` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-web` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-webhooks` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
 
 ## Dependencies
 
@@ -247,6 +247,7 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-job-service` | `orazaka.events` | `job.{…}.done` |
 | `orazaka-job-service` | `orazaka.events` | `job.{…}.error` |
 | `orazaka-job-service` | `orazaka.events` | `job.{…}.progress` |
+| `orazaka-persistence-bridge` | `orazaka.events` | `evt.control.verdict` |
 | `orazaka-studio-service` | `orazaka.jobs` | `(capability route)` |
 | `orazaka-studio-service` | `orazaka.events` | `evt.studio.run.failed` |
 | `orazaka-studio-service` | `orazaka.events` | `evt.studio.run.started` |

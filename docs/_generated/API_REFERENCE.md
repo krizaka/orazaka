@@ -228,6 +228,15 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/credentials/{providerName}` | ADMIN + USER | CredentialController |  |
 | GET | `/api/v1/interceptions/{schemaId}` | authenticated | InterceptionController | Returns the raw interception schema JSON for the given schema id, served as text so the JSON string is not double-encoded by Jackson (the client parses it). |
 | POST | `/api/v1/interceptions/resolve` | authenticated | InterceptionController | Resolves an active interception by merging the user's responses. |
+| GET | `/api/v1/organizations` | authenticated | OrganizationController |  |
+| POST | `/api/v1/organizations` | authenticated | OrganizationController |  |
+| GET | `/api/v1/organizations/{id}` | ADMIN + USER | OrganizationController |  |
+| GET | `/api/v1/organizations/{id}/members` | ADMIN + USER | OrganizationController |  |
+| PUT | `/api/v1/organizations/{id}/members` | ADMIN + USER | OrganizationController |  |
+| DELETE | `/api/v1/organizations/{id}/members/{userId}` | ADMIN + USER | OrganizationController |  |
+| POST | `/api/v1/organizations/{id}/service-accounts` | ADMIN + USER | OrganizationController |  |
+| GET | `/api/v1/organizations/{id}/service-keys` | ADMIN + USER | OrganizationController |  |
+| DELETE | `/api/v1/organizations/{id}/service-keys/{keyId}` | ADMIN + USER | OrganizationController |  |
 | GET | `/api/v1/profile` | authenticated | ProfileController | Returns the authenticated user's profile. |
 | PUT | `/api/v1/profile/preferences` | ADMIN + USER | ProfileController | Updates the authenticated user's preference map and returns the refreshed profile. |
 | GET | `/internal/v1/tiers/{key}` | SERVICE | InternalUserController | Bucket parameters of a rate-limit tier. |
