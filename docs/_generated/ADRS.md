@@ -83,3 +83,4 @@ generated: true
 | ADR-087 | ADR-087 — Grounded research: the engine looks things up, reads the source and cites it | `adr/ADR-087-grounded-research.md` |
 | ADR-088 | ADR-088 — Runs as background tasks | `adr/ADR-088-runs-as-background-tasks.md` |
 | ADR-089 | ADR-089 — Rules from the law | `adr/ADR-089-rules-from-the-law.md` |
+| ADR-090 | ADR-090 — The tools module as the provider gateway | `adr/ADR-090-tools-module-as-provider-gateway.md` |
