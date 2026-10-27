@@ -85,4 +85,4 @@ generated: true
 | ADR-089 | ADR-089 — Rules from the law | `adr/ADR-089-rules-from-the-law.md` |
 | ADR-090 | ADR-090 — The tools module as the provider gateway | `adr/ADR-090-tools-module-as-provider-gateway.md` |
 | ADR-091 | _(cited in code, no dedicated file)_ | — |
-| ADR-092 | _(cited in code, no dedicated file)_ | — |
+| ADR-092 | ADR-092 — Own the core, integrate the edges | `adr/ADR-092-own-the-core-integrate-the-edges.md` |

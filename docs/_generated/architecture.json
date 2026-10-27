@@ -465,6 +465,36 @@
       }
     },
     {
+      "id": "orazaka-adapter-spring-ai",
+      "path": "orazaka-libs/orazaka-ai-engine/orazaka-adapter-spring-ai",
+      "repository": "orazaka-ai-engine",
+      "owner": "orazaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "1.0.0-SNAPSHOT",
+      "description": "The only module that depends on Spring AI: implements the engine's ports (inference, embedding, structured output, tools) on top of it (ADR-092 §4, orazaka-ai-engine#112)",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "orazaka-architecture",
+      "path": "orazaka-libs/orazaka-ai-engine/orazaka-architecture",
+      "repository": "orazaka-ai-engine",
+      "owner": "orazaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "1.0.0-SNAPSHOT",
+      "description": "No main code: the boundary rules of the engine, read over the classes of every module, behind a ratchet (ADR-092 §4, orazaka-ai-engine#112)",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "orazaka-assets",
       "path": "orazaka-libs/orazaka-ai-engine/orazaka-assets",
       "repository": "orazaka-ai-engine",
@@ -678,8 +708,10 @@
           "SemanticClassifierPort",
           "StepModelRecorder",
           "StepRouteProvider",
+          "StructuredOutputClient",
           "TestShaperPort",
           "ToolRegistry",
+          "ToolResultCache",
           "UserCredentialsProvider",
           "UserMcpServerProvider",
           "ValidationPipelineRepository"
@@ -1219,6 +1251,30 @@
       "to": "krizaka-web"
     },
     {
+      "from": "orazaka-adapter-spring-ai",
+      "to": "orazaka-core"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-adapter-spring-ai"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-business"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-core"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-interceptors"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-tools"
+    },
+    {
       "from": "orazaka-assets",
       "to": "orazaka-crypto"
     },
@@ -1333,6 +1389,10 @@
     {
       "from": "orazaka-interceptors",
       "to": "krizaka-billing-api"
+    },
+    {
+      "from": "orazaka-interceptors",
+      "to": "orazaka-adapter-spring-ai"
     },
     {
       "from": "orazaka-interceptors",
@@ -1477,6 +1537,10 @@
     {
       "from": "orazaka-tools",
       "to": "krizaka-billing-api"
+    },
+    {
+      "from": "orazaka-tools",
+      "to": "orazaka-adapter-spring-ai"
     },
     {
       "from": "orazaka-tools",

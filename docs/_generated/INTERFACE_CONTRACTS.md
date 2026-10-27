@@ -50,8 +50,10 @@ generated: true
 - `SemanticClassifierPort`
 - `StepModelRecorder`
 - `StepRouteProvider`
+- `StructuredOutputClient`
 - `TestShaperPort`
 - `ToolRegistry`
+- `ToolResultCache`
 - `UserCredentialsProvider`
 - `UserMcpServerProvider`
 - `ValidationPipelineRepository`

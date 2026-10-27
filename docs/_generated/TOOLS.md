@@ -18,8 +18,6 @@ tools the turn needs.
 
 | Tool | Description | Input | Fields |
 |:---|:---|:---|:---|
-| `analyzePoster` | Analyzes a movie poster provided as a base64 encoded string using vision model. | `AnalyzePosterRequest` | `posterBase64`, `prompt` |
-| `analyzeAudioExtract` | Analyzes a film audio extract to check for specific compliance or content criteria. | `AnalyzeAudioExtractRequest` | `clipPath`, `checkType` |
 
 `searchKnowledge` searches the sources the knowledge service holds for the signed-in user (not the web). `analyzePoster` and
 `analyzeAudioExtract` are reference tools: they demonstrate the contract and return a fixed analysis.
