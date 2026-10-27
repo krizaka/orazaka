@@ -128,6 +128,13 @@ pub fn touches_exec_surface(rel: &str, base_lines: &[String], hunk: &Hunk) -> bo
     false
 }
 
+/// True when an approved hunk changes what a check runs. Recomputed from the file on disk: the flag a hunk carries
+/// comes from the webview and is never trusted for the « ask again » rule.
+pub fn approved_exec_surface(repo: &Repo, file: &FileProposal, approved: &[usize]) -> bool {
+    let base = fs::read_to_string(repo.root().join(&file.path)).map(|t| lines_of(&t)).unwrap_or_default();
+    file.hunks.iter().filter(|h| approved.contains(&h.id)).any(|h| h.exec_surface || touches_exec_surface(&file.path, &base, h))
+}
+
 /// Applies the approved hunks of one file, exactly. Refuses when the file's base changed (re-propose).
 pub fn apply(repo: &Repo, file: &FileProposal, approved: &[usize]) -> Result<Applied, CodeError> {
     // checked at the call …

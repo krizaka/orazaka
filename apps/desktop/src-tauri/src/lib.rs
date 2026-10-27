@@ -68,6 +68,8 @@ pub struct AppState {
     last_probe: Mutex<String>,
     /// The repository open in the Code tab (ADR-093).
     code: Mutex<Option<code::Repo>>,
+    /// The confirmed checks of this device and the Code session's run state (ADR-093 §4.4).
+    code_checks: Mutex<code::checks::Book>,
 }
 
 impl AppState {
@@ -559,7 +561,88 @@ fn code_apply(state: State<'_, AppState>, run_id: String, decisions: Vec<CodeDec
         return Ok(vec![]);
     }
     code::snapshot::create(&repo, &run_id).map_err(|e| e.to_string())?;
-    decisions.iter().map(|d| code::diff::apply(&repo, &d.file, &d.approved).map_err(|e| e.to_string())).collect()
+    let mut applied = Vec::new();
+    for d in &decisions {
+        // a hunk that changes what a check runs makes the next run ask again (computed here, not read from the page)
+        let changes_what_runs = code::diff::approved_exec_surface(&repo, &d.file, &d.approved);
+        let one = code::diff::apply(&repo, &d.file, &d.approved).map_err(|e| e.to_string())?;
+        if one.written && changes_what_runs {
+            state.code_checks.lock().unwrap().session.note_applied(true);
+        }
+        applied.push(one);
+    }
+    Ok(applied)
+}
+
+// ---- checks: the only `exec` (ADR-093 slice 2) ----------------------------------------------------------------
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ChecksOverview {
+    /// Proposed by the repository; nothing here can run.
+    suggested: Vec<code::checks::Check>,
+    /// Confirmed by the user on this device for this repository.
+    confirmed: Vec<code::checks::Grant>,
+    /// The next run needs the user's approval.
+    needs_approval: bool,
+}
+
+fn code_stamp() -> String {
+    chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string()
+}
+
+fn code_audit(state: &State<'_, AppState>, event: &str, data: serde_json::Value) {
+    state.automations.audit_event(event, data);
+}
+
+#[tauri::command]
+fn code_checks_overview(state: State<'_, AppState>) -> Res<ChecksOverview> {
+    let repo = code_repo(&state)?;
+    let book = state.code_checks.lock().unwrap();
+    Ok(ChecksOverview {
+        suggested: code::checks::suggest(&repo),
+        confirmed: book.list(&repo).into_iter().cloned().collect(),
+        needs_approval: book.session.needs_approval(),
+    })
+}
+
+/// The user confirmed a check in the app (an `exec` grant: listed, revocable, audited).
+#[tauri::command]
+fn code_check_confirm(state: State<'_, AppState>, check: code::checks::Check) -> Res<code::checks::Grant> {
+    let repo = code_repo(&state)?;
+    let grant = state.code_checks.lock().unwrap().confirm(&repo, check, &code_stamp()).map_err(|e| e.to_string())?;
+    code_audit(
+        &state,
+        "code.check.confirmed",
+        serde_json::json!({ "grant": grant.id, "repo": grant.repo, "name": grant.check.name, "argvHash": grant.argv_hash, "cwd": grant.check.cwd, "network": grant.check.network }),
+    );
+    Ok(grant)
+}
+
+#[tauri::command]
+fn code_check_revoke(state: State<'_, AppState>, id: String) -> Res<bool> {
+    let revoked = state.code_checks.lock().unwrap().revoke(&id, &code_stamp());
+    if revoked {
+        code_audit(&state, "code.check.revoked", serde_json::json!({ "grant": id }));
+    }
+    Ok(revoked)
+}
+
+/// Runs a confirmed check by name. `approved` is the user's approval of this very run.
+#[tauri::command]
+async fn code_check_run(state: State<'_, AppState>, name: String, approved: bool) -> Res<code::checks::CheckRun> {
+    let repo = code_repo(&state)?;
+    let result = code::checks::run(&repo, &mut state.code_checks.lock().unwrap(), &name, approved, &code::checks::Limits::default());
+    match result {
+        Ok(run) => {
+            code_audit(&state, "code.check.run", run.audit_data());
+            Ok(run)
+        }
+        Err(e) => {
+            code_audit(&state, "code.check.refused", serde_json::json!({ "name": name, "reason": e.to_string() }));
+            Err(e.to_string())
+        }
+    }
 }
 
 /// Undo: puts the touched files back from `refs/orazaka/snapshots/<run-id>`.
@@ -888,6 +971,7 @@ pub fn run() {
                 }),
             );
             spawn_scheduler(automations.clone());
+            let checks_file = data_dir.join("code-checks.json");
             app.manage(AppState {
                 data_dir,
                 settings: Mutex::new(settings),
@@ -900,6 +984,7 @@ pub fn run() {
                 tray: Mutex::new(None),
                 last_probe: Mutex::new("stopped".into()),
                 code: Mutex::new(None),
+                code_checks: Mutex::new(code::checks::Book::open(&checks_file)),
             });
             let handle = app.handle().clone();
             let state = handle.state::<AppState>();
@@ -971,6 +1056,10 @@ pub fn run() {
             code_apply,
             code_undo,
             code_open_in_editor,
+            code_checks_overview,
+            code_check_confirm,
+            code_check_revoke,
+            code_check_run,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Orazaka Desktop");
