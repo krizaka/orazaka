@@ -33,7 +33,9 @@ generated: true
 - `CheckMeter`
 - `CheckProviderCatalog`
 - `CheckSubjectPepper`
+- `CodeSandboxPort`
 - `ConsentRegistry`
+- `ControlVerdictRecorder`
 - `EmbeddingClient`
 - `ExternalCheckConnector`
 - `ImageGeneratorClient`
@@ -62,6 +64,7 @@ generated: true
 - `ApiKeyService`
 - `IdentityReconciliationService`
 - `IdentityService`
+- `OrganizationService`
 - `PasswordRecoveryService`
 - `RateLimitProvider`
 - `TokenService`
@@ -74,6 +77,7 @@ generated: true
 - `AuthorityRepositoryPort`
 - `CryptographyPort`
 - `OAuth2ProviderVerifier`
+- `OrganizationRepositoryPort`
 - `PasswordEventPublisher`
 - `PasswordResetTokenRepositoryPort`
 - `UserCredentialRepositoryPort`
