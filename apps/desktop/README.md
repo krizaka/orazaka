@@ -81,3 +81,7 @@ calls, the catalogues (en/fr parity) and the helpers.
 Tag `desktop-vX.Y.Z[-suffix]` (it must equal `version` in `package.json` and `src-tauri/tauri.conf.json`): the
 `Desktop` workflow builds the `.dmg` on a macOS runner and attaches it, with its SHA-256, to the GitHub Release
 (a pre-release when the tag has a suffix such as `-dev`).
+
+## Code (ADR-093, slice 1)
+
+The **Code** tab grants a git repository (through the folder scope) and gives the agent its read tools (`read_file`, `list_dir`, `search_text`, `outline`) and a review screen for proposed diffs. Gitignored files, `.git/` and secret patterns are invisible to every read, known token shapes are redacted, a diff is a pending object approved per hunk and applied exactly against its base hash, and `refs/orazaka/snapshots/<run-id>` makes undo one click. Code: `src-tauri/src/code/`.

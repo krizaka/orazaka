@@ -135,6 +135,19 @@ export function slotLabel(stamp: string | null, dateLocale: string): string | nu
   return d.toLocaleString(dateLocale, { weekday: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+export type CodeRepoInfo = { root: string; branch: string; status: string[]; visible: number; hidden: number };
+export type CodeHunk = { id: number; oldStart: number; oldLines: string[]; newLines: string[]; execSurface: boolean; addsSecret: boolean };
+export type CodeFileProposal = { path: string; baseHash: string | null; hunks: CodeHunk[] };
+export type CodeDecision = { file: CodeFileProposal; approved: number[] };
+export type CodeApplied = { path: string; written: boolean; hunksApplied: number };
+export const codeApi = {
+  open: (path: string) => invoke<CodeRepoInfo>("code_open", { path }),
+  propose: (path: string, newText: string) => invoke<CodeFileProposal>("code_propose", { path, newText }),
+  apply: (runId: string, decisions: CodeDecision[]) => invoke<CodeApplied[]>("code_apply", { runId, decisions }),
+  undo: (runId: string, paths: string[]) => invoke<string[]>("code_undo", { runId, paths }),
+  openInEditor: (editor: "vs-code" | "xcode", path: string, line: number) => invoke<void>("code_open_in_editor", { editor, path, line }),
+};
+
 export const api = {
   snapshot: () => invoke<Snapshot>("get_snapshot"),
   probe: () => invoke<Probe>("probe_stack"),
