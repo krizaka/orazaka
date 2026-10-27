@@ -88,6 +88,14 @@ Every component is its **own GitHub repository** so that any Krizaka application
 `krizaka/` holds the Krizaka repositories the platform is built on, cloned like every other repository; they are not
 Orazaka's and follow their own `AGENTS.md`.
 
+**Their versions come from the reactor, not from Central.** The reactor builds `krizaka/*` from source at each
+repository's `main`, whatever Maven Central carries (the release can be late: the kit's `v0.3.0` tag was never published
+while Central's quota was out). The BOM of `krizaka-build` names the release of each repository, and
+`scripts/check-krizaka-versions.mjs` (run by the `workspace` job and by `workspace.mjs ci`, tested by
+`scripts/test/krizaka-versions.test.mjs`) fails, artifact by artifact, when it names a `com.krizaka` version that neither
+a cloned repository builds nor Maven Central carries. A repository that adds an artifact bumps the BOM's property in the
+same change. No `-SNAPSHOT` is involved: each repository carries a release version, built and installed locally.
+
 
 The workspace places repositories on **one axis: you *run* apps, you *import* libs.** A lib is `packaging jar`, has no entrypoint, and exists only compiled into an app; an app has a `main()` + a port and is deployed. Nothing else distinguishes the two roots.
 

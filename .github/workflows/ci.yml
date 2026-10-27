@@ -59,6 +59,11 @@ jobs:
       - name: Workspace scripts
         run: node --test 'scripts/test/*.test.mjs'
 
+      - name: Krizaka versions are provided
+        # The BOM may only name a com.krizaka release that a cloned repository builds or Maven Central carries
+        # (Central's free quota can be out, a tag unpublished): fails here, by artifact, not deep in the reactor.
+        run: node scripts/check-krizaka-versions.mjs
+
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"

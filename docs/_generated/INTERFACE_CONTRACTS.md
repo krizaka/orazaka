@@ -36,6 +36,7 @@ generated: true
 - `CodeSandboxPort`
 - `ConsentRegistry`
 - `ControlVerdictRecorder`
+- `ConversationMemory`
 - `EmbeddingClient`
 - `ExternalCheckConnector`
 - `ImageGeneratorClient`
