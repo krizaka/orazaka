@@ -60,6 +60,7 @@ generated: true
 - `ToolOptions`
 - `ToolPermissionProvider`
 - `ToolRegistry`
+- `ToolResolution`
 - `ToolResultCache`
 - `UserCredentialsProvider`
 - `UserMcpServerProvider`
