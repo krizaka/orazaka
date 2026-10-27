@@ -175,6 +175,10 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/billing/pricebook/estimate` | authenticated | PricebookController | What an action would cost the signed-in user, and whether they can cover it. |
 | GET | `/api/v1/billing/pricebook/history` | ADMIN | PricebookController |  |
 | POST | `/api/v1/billing/pricebook/preview` | ADMIN | PricebookController |  |
+| GET | `/api/v1/billing/prices` | authenticated | PriceController | The public catalogue now. |
+| GET | `/api/v1/billing/prices/admin` | ADMIN | PriceController | Every entry in force, internal ones included. |
+| GET | `/api/v1/billing/prices/admin/{key}/history` | ADMIN | PriceController | Every version of a key, past and scheduled. |
+| POST | `/api/v1/billing/prices/admin/{key}/schedule` | ADMIN | PriceController | Schedules a change from a date. |
 | GET | `/api/v1/billing/subscriptions` | ADMIN | SubscriptionController | Every live subscriber of a plan — what an admin checks before retiring one. |
 | DELETE | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | SubscriptionController | Ends an actor's subscription. |
 | GET | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | SubscriptionController | The subscription in force for an actor. |

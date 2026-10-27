@@ -347,3 +347,24 @@ See also: [Supported models](MODELS.md) for the registry, and the comparison ima
 | pod 3 (resumed for the reel's music and the news shots; stopped by the coordinator for the GPU queue before a run could start: dev's runs were refused by a saturated billing pool) | H100 80 GB | 0.40 | $3.99/h | $1.60 |
 | « l'aube »: H200 141 GB, secure cloud, 03:47–09:47 UTC (stopped by the spend guard at 6 h) | H200 141 GB | 6.00 | $5.29/h | $31.74 |
 | « l'aube »: the same pod resumed for one reshoot and three 4K upscales, then terminated | H200 141 GB | 0.50 | $5.29/h | $2.65 |
+
+## Law retrieval bake-off
+
+Step 1 of the law chain (ADR-089 cut 7: the grounded legal claims of the retrieval), measured on **2026-10-27** by `scripts/law-bakeoff.mjs` on 6 golden cases (2 runs each, prompt `law-retrieval.v1`, temperature 0, seed 20261026). Every claim is checked by a port of the engine's deterministic verifier; the cases name articles and hold no article text. Wording is a fixed mechanical rubric (right language, plain text, a complete sentence, a length that reads), not a judge model.
+
+| Model | Where | Wrong accepted | Verified claims | Quotes found | Articles recalled | Facts stated | French wording | Latency p50 / p95 | Cost per document | Same verdicts twice |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **qwen2.5:7b** | local (Ollama) | **0** | 24 / 24 (100 %) | 100 % | 57 % | 58 % | 100 % | 25.9 s / 32.8 s | $0 (local) | 100 % |
+| **llama3:8b** | local (Ollama) | **0** | 20 / 20 (100 %) | 100 % | 48 % | 50 % | 100 % | 15.9 s / 28.3 s | $0 (local) | 100 % |
+| **mistral-3-14B** | DigitalOcean serverless | **0** | 20 / 20 (100 %) | 100 % | 48 % | 50 % | 100 % | 4.9 s / 11.6 s | $0.0003 | 100 % |
+
+**Verdict:** `qwen2.5:7b` (ranking: `qwen2.5:7b`, `llama3:8b`, `mistral-3-14B`). A model with one wrong citation accepted is disqualified (none was). Among the safe ones the best accuracy wins; on a tie, the cheapest, local first. The winner is set by a routing row for the step (DB), never in code.
+
+Spent: **$0.0039** of the $5.00 cap (prices of 2026-10-26). Run ids: 36 runs, recorded in `docs/measurements/law-bakeoff.json`.
+
+Steps not measured yet:
+
+- classify fallback of identify (cut 5): identify is deterministic today; no model call exists to measure
+- rule-derivation (cut 8): the service has a model port but no model adapter yet
+- lecture for unsupported kinds (cut 10): orazaka-packs#130 is not merged
+- gemma-4-31B-it: the dev inference key answers HTTP 403 for it
