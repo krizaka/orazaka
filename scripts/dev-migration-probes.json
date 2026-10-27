@@ -1,0 +1,106 @@
+{
+  "_": "What a migration file leaves behind when its statements do not say it (scripts/lib/migration-probes.mjs): the database of a file without \\c, and extra probes (SQL expressions that are true when the effect is there). Read only.",
+  "databases": {
+    "infra/migrations/2026-09-03-billing-credit-scale-10x.sql": "krizaka_billing_db",
+    "infra/migrations/2026-09-22-media-toolkit-grants.sql": "krizaka_billing_db",
+    "infra/migrations/2026-09-24-free-packs-granted.sql": "krizaka_billing_db",
+    "infra/migrations/2026-10-11-billing-currency-cad.sql": "krizaka_billing_db",
+    "infra/migrations/2026-10-15-embeddings-and-key-scopes.sql": "krizaka_users_db",
+    "infra/migrations/2026-10-15-recommendations.sql": "orazaka_knowledge_db",
+    "infra/migrations/2026-10-15-sound-for-video-entitlements.sql": "krizaka_billing_db",
+    "infra/migrations/2026-10-17-analytics.sql": "orazaka_knowledge_db",
+    "infra/migrations/2026-10-17-profile-photo-check-grants.sql": "krizaka_billing_db",
+    "infra/migrations/2026-10-20-automations.sql": "orazaka_automation_db",
+    "infra/migrations/2026-10-20-run-events.sql": "orazaka_studio_db",
+    "infra/migrations/2026-10-20-service-rate-tier.sql": "krizaka_users_db",
+    "infra/migrations/2026-10-20-studio-webhooks.sql": "orazaka_studio_db",
+    "infra/migrations/2026-10-22-semantic-cache.sql": "orazaka_db",
+    "infra/migrations/2026-10-22-yororis-plan.sql": "krizaka_billing_db",
+    "infra/migrations/2026-10-25-pricebook-external-check-research.sql": "krizaka_billing_db",
+    "krizaka/krizaka-billing/infra/migrations/2026-10-26-free-studios-granted.sql": "krizaka_billing_db"
+  },
+  "probes": {
+    "infra/migrations/2026-09-04-capability-uri-path-nullable.sql": [
+      {
+        "db": "orazaka_db",
+        "label": "uri_path is nullable, or the column is gone (the capability table dropped the HTTP endpoint)",
+        "sql": "NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'orazaka_capabilities' AND column_name = 'uri_path') OR (SELECT is_nullable FROM information_schema.columns WHERE table_name = 'orazaka_capabilities' AND column_name = 'uri_path') = 'YES'"
+      }
+    ],
+    "infra/migrations/2026-09-16-media-billable-units.sql": [
+      {
+        "db": "orazaka_db",
+        "label": "audio, speech, vision and video analysis carry their media billable unit",
+        "sql": "(SELECT count(*) FROM orazaka_capabilities WHERE (feature_key, billable_unit) IN (('orazaka.core.media.audio','AUDIO_MINUTE'),('orazaka.core.chat.speech','KILOCHAR'),('orazaka.core.media.vision','KILOTOKEN'),('orazaka.core.media.video.analysis','AUDIO_MINUTE'))) = (SELECT count(*) FROM orazaka_capabilities WHERE feature_key IN ('orazaka.core.media.audio','orazaka.core.chat.speech','orazaka.core.media.vision','orazaka.core.media.video.analysis'))"
+      },
+      {
+        "db": "krizaka_billing_db",
+        "label": "pricebook row VIDEO / orazaka-video-analysis",
+        "sql": "EXISTS (SELECT 1 FROM credit_pricebook WHERE capability = 'VIDEO' AND model_name = 'orazaka-video-analysis')"
+      }
+    ],
+    "infra/migrations/2026-10-11-art-direction-grants.sql": [
+      {
+        "db": "krizaka_billing_db",
+        "label": "studio entitlements art-golden-hour,art-miniature,art-still-life,art-montreal-night on free, premium, ultimate",
+        "sql": "(SELECT count(*) FROM billing_plan_entitlement WHERE plan_key IN ('free','premium','ultimate') AND entitlement_key IN ('studio.art-golden-hour','studio.art-miniature','studio.art-still-life','studio.art-montreal-night')) = 12"
+      }
+    ],
+    "krizaka/krizaka-billing/infra/migrations/2026-10-26-free-studios-granted.sql": [
+      {
+        "db": "krizaka_billing_db",
+        "label": "studio entitlements invitation-writer,identity-document-check on free, premium, ultimate",
+        "sql": "(SELECT count(*) FROM billing_plan_entitlement WHERE plan_key IN ('free','premium','ultimate') AND entitlement_key IN ('studio.invitation-writer','studio.identity-document-check')) = 6"
+      }
+    ],
+    "infra/migrations/2026-10-23-mcp-token-text.sql": [
+      {
+        "db": "orazaka_db",
+        "label": "user_mcp_servers.auth_token is TEXT",
+        "sql": "(SELECT data_type FROM information_schema.columns WHERE table_name = 'user_mcp_servers' AND column_name = 'auth_token') = 'text'"
+      },
+      {
+        "db": "orazaka_db",
+        "label": "platform_mcp_servers.auth_token is TEXT",
+        "sql": "(SELECT data_type FROM information_schema.columns WHERE table_name = 'platform_mcp_servers' AND column_name = 'auth_token') = 'text'"
+      }
+    ],
+    "infra/migrations/2026-10-23-search-knowledge-sources.sql": [
+      {
+        "db": "orazaka_knowledge_db",
+        "label": "every searchWeb source has its searchKnowledge copy",
+        "sql": "NOT EXISTS (SELECT 1 FROM orazaka_tools_rag_source w WHERE w.tool_id = 'searchWeb' AND NOT EXISTS (SELECT 1 FROM orazaka_tools_rag_source k WHERE k.tool_id = 'searchKnowledge' AND k.content = w.content))"
+      }
+    ],
+    "infra/migrations/2026-10-23-search-knowledge-tool.sql": [
+      {
+        "db": "orazaka_db",
+        "label": "platform_tool_configs row searchKnowledge",
+        "sql": "EXISTS (SELECT 1 FROM platform_tool_configs WHERE tool_id = 'searchKnowledge')"
+      }
+    ],
+    "orazaka-apps/services/orazaka-studio/infra/migrations/2026-10-21-webhook-secrets-sealed.sql": [
+      {
+        "db": "orazaka_studio_db",
+        "label": "studio_webhook_endpoint.secret is TEXT",
+        "sql": "(SELECT data_type FROM information_schema.columns WHERE table_name = 'studio_webhook_endpoint' AND column_name = 'secret') = 'text'"
+      },
+      {
+        "db": "orazaka_studio_db",
+        "label": "studio_webhook_endpoint.previous_secret is TEXT",
+        "sql": "(SELECT data_type FROM information_schema.columns WHERE table_name = 'studio_webhook_endpoint' AND column_name = 'previous_secret') = 'text'"
+      }
+    ],
+    "infra/migrations/2026-09-09-broker-routed-capability.sql": [
+      {
+        "db": "orazaka_db",
+        "label": "uri_path/http_method pair is checked, or the columns are gone",
+        "sql": "NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'orazaka_capabilities' AND column_name = 'http_method') OR EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ck_orazaka_capabilities_endpoint')"
+      }
+    ]
+  },
+  "declaredOnly": [
+    "infra/migrations/2026-09-04-capability-uri-path-nullable.sql",
+    "infra/migrations/2026-09-09-broker-routed-capability.sql"
+  ]
+}

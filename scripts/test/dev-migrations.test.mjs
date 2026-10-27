@@ -51,3 +51,63 @@ test("a migration spanning several databases is recorded only once applied on al
   assert.deepEqual(databasesToRecord("m.sql", TWO, ["orazaka_db", "orazaka_knowledge_db"]), ["orazaka_db", "orazaka_knowledge_db"]);
   assert.deepEqual(databasesToRecord("m.sql", "SELECT 1;", []), []);
 });
+
+// ── verify: a migration is never taken as applied without something that proves it (krizaka/orazaka#442)
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defaultDatabase, deriveProbes, judge, probesOf, sections } from "../lib/migration-probes.mjs";
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+
+test("probes: tables, columns, named constraints, indexes, triggers, functions and inserted rows are derived", () => {
+  const labels = deriveProbes(`
+    -- CREATE TABLE ignored_in_comment (a int);
+    CREATE TABLE IF NOT EXISTS audit (id int);
+    ALTER TABLE audit ADD COLUMN IF NOT EXISTS note text, ADD CONSTRAINT ck_note CHECK (true);
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_audit ON audit (id);
+    CREATE OR REPLACE FUNCTION f() RETURNS trigger LANGUAGE plpgsql AS $x$ BEGIN CREATE TABLE inner_body (a int); END $x$;
+    CREATE TRIGGER trg BEFORE UPDATE ON audit FOR EACH ROW EXECUTE FUNCTION f();
+    INSERT INTO caps (feature_key, v) VALUES ('a.b', '(x)'), ('c.d', 'y') ON CONFLICT (feature_key) DO NOTHING;
+  `).map((p) => p.label);
+  assert.deepEqual(labels, ["table audit", "table inner_body", "column audit.note", "constraint ck_note", "index uq_audit", "trigger trg", "function f", "row caps feature_key=a.b", "row caps feature_key=c.d"]);
+});
+
+test("probes: an inserted row is keyed by its ON CONFLICT columns, else by its string values only", () => {
+  const [keyed] = deriveProbes("INSERT INTO e (plan_key, entitlement_key, value) VALUES ('free','studio.x','true') ON CONFLICT (plan_key, entitlement_key) DO NOTHING;");
+  assert.equal(keyed.sql, "EXISTS (SELECT 1 FROM e WHERE plan_key::text = 'free' AND entitlement_key::text = 'studio.x')");
+  const [loose] = deriveProbes("INSERT INTO p (version, capability, credits) VALUES (2, 'AUDIO', 40) ON CONFLICT DO NOTHING;");
+  assert.equal(loose.sql, "EXISTS (SELECT 1 FROM p WHERE capability::text = 'AUDIO')");
+  const [dated] = deriveProbes("INSERT INTO b (price_key, effective_from) VALUES ('k', '1970-01-01') ON CONFLICT (price_key, effective_from) DO NOTHING;");
+  assert.match(dated.sql, /effective_from::text LIKE '1970-01-01%'/);
+});
+
+test("sections: \\c cuts the file, a renamed database keeps its new name, the default comes from the note, the config, the repository", () => {
+  assert.deepEqual(sections("SELECT 1;\n\\c orazaka_billing_db\nSELECT 2;").map((s) => s.db), [null, "krizaka_billing_db"]);
+  assert.equal(defaultDatabase("infra/migrations/x.sql", "-- Runs in orazaka_knowledge_db."), "orazaka_knowledge_db");
+  assert.equal(defaultDatabase("krizaka/krizaka-billing/infra/migrations/x.sql", "SELECT 1"), "krizaka_billing_db");
+  assert.equal(defaultDatabase("infra/migrations/x.sql", "SELECT 1", { "infra/migrations/x.sql": "krizaka_users_db" }), "krizaka_users_db");
+  assert.equal(defaultDatabase("infra/migrations/x.sql", "SELECT 1"), "orazaka_db");
+});
+
+test("a file with nothing derivable has a declared probe, and a declared-only file ignores its statements", () => {
+  const f = "infra/migrations/y.sql";
+  assert.equal(probesOf(f, "UPDATE t SET a = 1;").length, 0);
+  assert.equal(judge(probesOf(f, "UPDATE t SET a = 1;")), "unprobed");
+  const config = { probes: { [f]: [{ label: "a is 1", sql: "true" }] } };
+  assert.deepEqual(probesOf(f, "UPDATE t SET a = 1;", config).map((p) => p.source), ["declared"]);
+  assert.deepEqual(probesOf(f, "CREATE TABLE t (a int);", { ...config, declaredOnly: [f] }).map((p) => p.label), ["a is 1"]);
+});
+
+test("judge: present, partial, missing, unprobed", () => {
+  assert.equal(judge([{ ok: true }, { ok: true }]), "present");
+  assert.equal(judge([{ ok: true }, { ok: false }]), "partial");
+  assert.equal(judge([{ ok: false }]), "missing");
+  assert.equal(judge([]), "unprobed");
+});
+
+test("every migration of this repository has a probe: verify cannot be blind to one", () => {
+  const config = JSON.parse(readFileSync(join(ROOT, "scripts/dev-migration-probes.json"), "utf8"));
+  const blind = migrationFiles(ROOT).filter((f) => !probesOf(f, readFileSync(join(ROOT, f), "utf8"), config).length);
+  assert.deepEqual(blind, [], "add a probe to scripts/dev-migration-probes.json");
+});
