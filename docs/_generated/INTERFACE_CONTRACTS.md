@@ -28,8 +28,10 @@ generated: true
 - `ChatGeneratorClient`
 - `ChatMemoryStore`
 - `CheckAuditLog`
+- `CheckHttp`
 - `CheckKeyStore`
 - `CheckMeter`
+- `CheckProviderCatalog`
 - `CheckSubjectPepper`
 - `ConsentRegistry`
 - `EmbeddingClient`
