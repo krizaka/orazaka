@@ -12,7 +12,7 @@ order: 2
 self-host it for any purpose except a Competing Use (offering it to others as a commercial service that substitutes for
 Orazaka), and each version becomes Apache-2.0 two years after its release. Every earlier commit remains Apache-2.0
 ([`LICENSE-APACHE`](../LICENSE-APACHE)). The organisation decision is
-[ADR-011](https://github.com/krizaka/.github/blob/main/docs/adr/ADR-011-licensing-libraries-open-products-fair-source.md);
+[ADR-012](https://github.com/krizaka/.github/blob/main/docs/adr/ADR-012-licensing-libraries-open-products-fair-source.md);
 it updates ADR-049 on the licence of the engine and keeps its boundary between public and private repositories.
 
 The pieces an integrator needs stay Apache-2.0 in their own repositories: `orazaka-packs` (the pack format and reference
