@@ -23,6 +23,7 @@ generated: true
 
 **Outbound ports**
 
+- `AccessAudit`
 - `AudioGeneratorClient`
 - `CapabilityProvider`
 - `ChatGeneratorClient`
@@ -54,6 +55,7 @@ generated: true
 - `StructuredOutputClient`
 - `TestShaperPort`
 - `ToolOptions`
+- `ToolPermissionProvider`
 - `ToolRegistry`
 - `ToolResultCache`
 - `UserCredentialsProvider`

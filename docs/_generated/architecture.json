@@ -182,6 +182,7 @@
       "layer": "ai",
       "description": "Knowledge & RAG retrieval service (pgvector) with asynchronous indexing.",
       "dependsOn": [
+        "krizaka-platform-kit",
         "orazaka-build"
       ]
     },
@@ -206,6 +207,7 @@
       "layer": "foundation",
       "description": "Transparent HTTP edge in front of every Orazaka service: routing, API-key → JWT exchange, CORS and tracing. Spring MVC + virtual threads.",
       "dependsOn": [
+        "krizaka-platform-kit",
         "orazaka-build"
       ]
     },
@@ -681,6 +683,7 @@
           "StepRouter"
         ],
         "outbound": [
+          "AccessAudit",
           "AudioGeneratorClient",
           "CapabilityProvider",
           "ChatGeneratorClient",
@@ -712,6 +715,7 @@
           "StructuredOutputClient",
           "TestShaperPort",
           "ToolOptions",
+          "ToolPermissionProvider",
           "ToolRegistry",
           "ToolResultCache",
           "UserCredentialsProvider",
