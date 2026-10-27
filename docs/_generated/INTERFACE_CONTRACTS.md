@@ -27,6 +27,7 @@ generated: true
 - `AudioGeneratorClient`
 - `CapabilityProvider`
 - `ChatGeneratorClient`
+- `ChatInvocation`
 - `ChatMemoryStore`
 - `CheckAuditLog`
 - `CheckHttp`
@@ -49,6 +50,8 @@ generated: true
 - `PipelineConfigProvider`
 - `PlatformMcpServerProvider`
 - `PlatformToolConfigProvider`
+- `PromptAssembly`
+- `ProviderChatClient`
 - `SemanticClassifierPort`
 - `StepModelRecorder`
 - `StepRouteProvider`
