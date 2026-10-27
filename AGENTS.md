@@ -382,3 +382,5 @@ These are the defects code review found most often on 2026-10-23. Check them you
 7. **Naming:** environment variables follow `<CONTEXT>_<THING>` (`APP_`, `DATABASE_`, `AUTH_`, `MEDIA_`, `MAIL_`, `PAYMENTS_`, `AI_`…) and are declared once.
 8. **Words:** every user-facing string is in the FR and EN messages, and no colour is hard-coded.
 9. **Review threads:** answer every one. Fix it test-first, or reply with the reason, then resolve it.
+
+- **A bug means a missing guard** ([standard](https://github.com/krizaka/.github/blob/main/docs/standards/bug-means-missing-guard.md)): the fix PR first adds a guard that fails on `main`, then fixes the bug; the bug issue says why the guards missed it.
