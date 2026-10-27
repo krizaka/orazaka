@@ -13,6 +13,10 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
+/// Both journeys start the filesystem server through `npx`. Started together on a cold npm cache (CI), the two
+/// installs race on the same cache folder and one server exits at once; so the journeys take turns.
+static ONE_NPX_AT_A_TIME: Mutex<()> = Mutex::new(());
+
 /// An OpenAI-compatible `chat/completions` endpoint that answers a fixed summary and counts the calls.
 fn model_server() -> (String, Arc<AtomicUsize>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -57,6 +61,7 @@ fn at(s: &str) -> NaiveDateTime {
 
 #[test]
 fn every_morning_the_new_pdfs_of_inbox_get_a_summary_note_after_one_approval() {
+    let _turn = ONE_NPX_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
     let home = tempfile::tempdir().unwrap();
     let inbox = home.path().join("Inbox");
     std::fs::create_dir_all(&inbox).unwrap();
@@ -152,6 +157,7 @@ fn every_morning_the_new_pdfs_of_inbox_get_a_summary_note_after_one_approval() {
 
 #[test]
 fn the_filesystem_server_cannot_be_used_outside_the_folder() {
+    let _turn = ONE_NPX_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
     use automation::mcp::{Catalogue, FsTools, McpFilesystem};
     let home = tempfile::tempdir().unwrap();
     let inbox = home.path().join("Inbox");
