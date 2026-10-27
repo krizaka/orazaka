@@ -711,6 +711,7 @@
           "StepRouteProvider",
           "StructuredOutputClient",
           "TestShaperPort",
+          "ToolOptions",
           "ToolRegistry",
           "ToolResultCache",
           "UserCredentialsProvider",
@@ -1950,7 +1951,7 @@
       "phase": "dynamic",
       "implemented": true,
       "concern": "tooling",
-      "summary": "Tool execution interceptor — analyzes prompt content to selectively attach relevant `ToolCallback` definitions to the chat options."
+      "summary": "Tool execution interceptor — analyzes prompt content to selectively attach relevant `EngineTool` definitions to the chat options."
     },
     {
       "interceptor": "MediaInterceptor",

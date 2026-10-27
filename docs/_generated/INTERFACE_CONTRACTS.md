@@ -53,6 +53,7 @@ generated: true
 - `StepRouteProvider`
 - `StructuredOutputClient`
 - `TestShaperPort`
+- `ToolOptions`
 - `ToolRegistry`
 - `ToolResultCache`
 - `UserCredentialsProvider`
