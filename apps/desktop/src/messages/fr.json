@@ -8,7 +8,8 @@
     "stack": "Panneau de contrôle",
     "files": "Fichiers",
     "settings": "Réglages",
-    "automations": "Automatisations"
+    "automations": "Automatisations",
+    "code": "Code"
   },
   "common": {
     "theme": "Thème : {mode}",
@@ -205,6 +206,34 @@
       "verified": "Chaîne vérifiée · {count} entrées",
       "broken": "Chaîne rompue à l'entrée {seq}",
       "none": "Rien pour l'instant."
+    }
+  },
+  "code": {
+    "title": "Code",
+    "lead": "Orazaka lit le dépôt que vous choisissez et propose des changements. Rien n'est écrit tant que vous n'avez pas approuvé chaque changement, et un clic annule une exécution.",
+    "choose": "Choisir un dépôt",
+    "repo": "{branch} · {visible} fichiers visibles, {hidden} masqués (ignorés ou secrets)",
+    "clean": "Arbre de travail propre",
+    "noneTitle": "Aucun dépôt pour l'instant",
+    "noneLead": "Choisissez un dossier qui contient un dépôt git. Les fichiers ignorés et les secrets restent invisibles pour Orazaka.",
+    "review": {
+      "title": "Relecture",
+      "hunk": "Changement {n} sur {total}, à partir de la ligne {line}",
+      "approve": "Approuver",
+      "reject": "Refuser",
+      "approved": "Approuvé",
+      "rejected": "Refusé",
+      "execSurface": "Change ce qui s'exécute",
+      "addsSecret": "Contient une chaîne en forme de jeton",
+      "removed": "Retiré",
+      "added": "Ajouté",
+      "apply": "Écrire les changements approuvés",
+      "summary": "{approved} changements approuvés sur {total}",
+      "undo": "Annuler cette exécution",
+      "openVsCode": "Ouvrir dans VS Code",
+      "openXcode": "Ouvrir dans Xcode",
+      "newFile": "Nouveau fichier",
+      "written": "Écrit : {count} fichier(s)"
     }
   }
 }
