@@ -14,7 +14,7 @@ import { scoreCase, aggregate, stability, decide } from "./lib/bakeoff/score.mjs
 
 const ENDPOINTS = { ollama: "http://localhost:11434/v1", do: "https://inference.do-ai.run/v1" };
 
-export async function runBakeoff({ golden, prices, models, repeat, maxUsd, passagesFor, chatFor, now = new Date() }) {
+export async function runBakeoff({ golden, prices, models, repeat, maxUsd, passagesFor, chatFor, onModel = () => {}, now = new Date() }) {
   let spent = 0;
   const out = [];
   const runIds = [];
@@ -29,7 +29,13 @@ export async function runBakeoff({ golden, prices, models, repeat, maxUsd, passa
           stoppedAt.push(`${id}/${goldenCase.id}/${n}`);
           continue;
         }
-        const answer = await chat({ model: id, messages: messagesFor(goldenCase.question, goldenCase.language, passages) });
+        let answer;
+        try {
+          answer = await chat({ model: id, messages: messagesFor(goldenCase.question, goldenCase.language, passages) });
+        } catch (failure) {
+          stoppedAt.push(`${id}/${goldenCase.id}/${n}: ${failure.message}`);
+          continue;
+        }
         const cost = where === "ollama" ? 0 : costUsd(answer.usage, prices.models[id]);
         spent += cost ?? 0;
         const score = scoreCase(goldenCase, passages, answer.text);
@@ -41,6 +47,7 @@ export async function runBakeoff({ golden, prices, models, repeat, maxUsd, passa
     if (!runs.length) continue;
     const agg = aggregate(runs);
     out.push({ id, local: where === "ollama", aggregate: agg, stability: stability(runs), costPerRunUsd: agg.costUsd == null ? null : agg.costUsd / runs.length, runs });
+    onModel(out.at(-1), spent);
   }
   const decision = decide(Object.fromEntries(out.map((m) => [m.id, m])));
   return {
@@ -83,7 +90,9 @@ async function main() {
   const key = process.env.AI_INFERENCE_KEY;
   const chatFor = (where) => chatClient({ base: ENDPOINTS[where], apiKey: where === "do" ? key : undefined });
   if (models.some((m) => m.where === "do") && !key) throw new Error("AI_INFERENCE_KEY is not set (read it with tools/secret.sh, never print it)");
-  const result = await runBakeoff({ golden, prices, models, repeat: Number(v.repeat), maxUsd: Number(v["max-usd"]), passagesFor, chatFor });
+  mkdirSync(v["raw-dir"], { recursive: true });
+  const onModel = (m, spent) => writeFileSync(`${v["raw-dir"]}/law-retrieval-partial-${m.id.replace(/[^\w.-]/gu, "_")}.json`, JSON.stringify({ model: m, spentUsd: spent }, null, 1));
+  const result = await runBakeoff({ onModel, golden, prices, models, repeat: Number(v.repeat), maxUsd: Number(v["max-usd"]), passagesFor, chatFor });
   mkdirSync(v["raw-dir"], { recursive: true });
   writeFileSync(`${v["raw-dir"]}/law-retrieval-${result.measuredOn}.json`, JSON.stringify(result, null, 1));
   for (const m of result.models) for (const r of m.runs) delete r.text;
