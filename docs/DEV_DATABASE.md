@@ -46,8 +46,19 @@ cluster, as the database's owner role, after a dry run in a rolled-back transact
 node scripts/dev-migrations.mjs check                 # lists the files not recorded; exit 1 if any
 node scripts/dev-migrations.mjs record <file>…        # after applying one (path from the workspace root)
 node scripts/dev-migrations.mjs record <file> --on orazaka_knowledge_db,orazaka_db   # a file with several `\c <db>` parts: once applied on each
-node scripts/dev-migrations.mjs baseline --before YYYY-MM-DD   # once: older files are taken as applied
+node scripts/dev-migrations.mjs unrecord <file>…      # take a wrong row out
+node scripts/dev-migrations.mjs verify                # read only: probe the effect of every file on dev
+node scripts/dev-migrations.mjs baseline --before YYYY-MM-DD   # record older files, only if verify finds each of them
 ```
+
+**The ledger is never written on faith.** `verify` runs the probes of each file (`scripts/lib/migration-probes.mjs`): the
+tables, columns, named constraints, indexes, triggers, functions and inserted rows its statements create are derived, and
+what the statements cannot say (an `UPDATE`, a column type, a `DO` block, a file without `\c` whose database is not named in a
+"Runs in" note) is declared in `scripts/dev-migration-probes.json`. Each file comes out *present*, *partial*, *missing* or
+*unprobed*; `record` and `baseline` refuse anything but *present*, a recorded file whose effect is not there makes
+`verify` exit 1, and a new migration with no probe fails `node --test scripts/test`. (The one-off baseline of 2026-10-26 took
+every file before that day as applied; `verify` found 8 that were not — external checks, research and law tables, the semantic
+cache, three price/grant seeds — krizaka/orazaka#442.) Run `verify` after each manual application and before trusting the ledger.
 
 `node scripts/dev-deploy.mjs apply orazaka-dev` runs the check and refuses while a file is pending
 (`--allow-pending-migrations` to pass). A file that switches database (`\c`) is recorded once, only with `--on` naming every database it touches; the ledger keeps them in its `databases` column. Nothing applies a migration automatically, CI included. Run `node scripts/workspace.mjs clone`

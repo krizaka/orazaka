@@ -3,8 +3,10 @@
  * Which merged `infra/migrations/*.sql` are not yet applied on the dev cluster (docs/DEV_DATABASE.md).
  *
  *   node scripts/dev-migrations.mjs check [--root <workspace>] [--env-file <f>]   # exit 1 and list the pending files
- *   node scripts/dev-migrations.mjs record <file> [<file>…] [--on db1,db2]        # after applying one by hand: write it in the ledger
- *   node scripts/dev-migrations.mjs baseline --before YYYY-MM-DD                  # once: files dated before are taken as applied
+ *   node scripts/dev-migrations.mjs record <file> [<file>…] [--on db1,db2]        # after applying one by hand: write it in the ledger (refused unless verify finds its effect)
+ *   node scripts/dev-migrations.mjs unrecord <file> [<file>…]                     # take a wrong row out
+ *   node scripts/dev-migrations.mjs baseline --before YYYY-MM-DD                  # files dated before are recorded, only if verify finds every one of them
+ *   node scripts/dev-migrations.mjs verify [--only <text>]                        # probe each file's effect on dev (read only); exit 1 if a recorded file is missing / partial, or a file has no probe
  *
  * The ledger is one table, `dev_migration_ledger`, in orazaka_db (created on first use, never anything else written).
  * A file is keyed `<path from the workspace root>`, e.g. `krizaka/krizaka-billing/infra/migrations/2026-10-26-price-catalogue.sql`.
@@ -19,6 +21,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { devSecrets, envFileFromArgs } from "./lib/dev-secrets.mjs";
+import { judge, probesOf } from "./lib/migration-probes.mjs";
 
 const HERE = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const LEDGER_DB = "orazaka_db";
@@ -78,15 +81,38 @@ function psqlBinary() {
   throw new Error("psql not found (set PSQL)");
 }
 
-function psql(env, sql) {
-  const conn = `host=${env.DATABASE_HOST} port=${env.DATABASE_PORT || 25060} dbname=${LEDGER_DB} user=${LEDGER_DB} sslmode=require`;
-  const r = spawnSync(psqlBinary(), [conn, "-v", "ON_ERROR_STOP=1", "-X", "-q", "-At"], {
+/** Runs `sql` as the owner role of `db` (role and database share a name; the key is DATABASE_PASSWORD_<DB>). `strict: false` keeps going after an error. */
+function psql(env, sql, db = LEDGER_DB, strict = true) {
+  const conn = `host=${env.DATABASE_HOST} port=${env.DATABASE_PORT || 25060} dbname=${db} user=${db} sslmode=require`;
+  const r = spawnSync(psqlBinary(), [conn, "-v", `ON_ERROR_STOP=${strict ? 1 : 0}`, "-X", "-q", "-At"], {
     input: sql,
     encoding: "utf8",
-    env: { ...process.env, PGPASSWORD: env.DATABASE_PASSWORD_ORAZAKA_DB },
+    env: { ...process.env, PGPASSWORD: env[`DATABASE_PASSWORD_${db.toUpperCase()}`] },
   });
-  if (r.status !== 0) throw new Error(`psql on ${LEDGER_DB} failed: ${r.stderr.replaceAll(env.DATABASE_HOST ?? "\0", "<host>").trim()}`);
+  if (r.status !== 0) throw new Error(`psql on ${db} failed: ${r.stderr.replaceAll(env.DATABASE_HOST ?? "\0", "<host>").trim()}`);
   return r.stdout;
+}
+
+/** Declared probes for what the statements cannot tell (UPDATE, column types, DO blocks): scripts/dev-migration-probes.json, keyed by file. */
+function probeConfig() {
+  const f = join(HERE, "scripts/dev-migration-probes.json");
+  return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : {};
+}
+
+/**
+ * Runs the probes of `files` on dev, read only: [{ file, status, probes: [{ db, label, ok }] }].
+ * A probe that errors (a table that is not there) counts as not satisfied.
+ */
+export function verifyFiles(root, files, env, config = probeConfig()) {
+  const perFile = files.map((file) => ({ file, probes: probesOf(file, readFileSync(join(root, file), "utf8"), config) }));
+  const byDb = new Map();
+  for (const f of perFile) for (const p of f.probes) byDb.set(p.db, [...(byDb.get(p.db) ?? []), p]);
+  for (const [db, items] of byDb) {
+    const out = psql(env, items.map((p, n) => `SELECT ${n}, (${p.sql});`).join("\n"), db, false);
+    const seen = new Map(out.split("\n").filter(Boolean).map((l) => l.split("|")));
+    items.forEach((p, n) => (p.ok = seen.get(String(n)) === "t"));
+  }
+  return perFile.map(({ file, probes }) => ({ file, status: judge(probes), probes }));
 }
 
 const ENSURE = "CREATE TABLE IF NOT EXISTS dev_migration_ledger (file TEXT PRIMARY KEY, recorded_at TIMESTAMPTZ NOT NULL DEFAULT now());\nALTER TABLE dev_migration_ledger ADD COLUMN IF NOT EXISTS databases TEXT NOT NULL DEFAULT '';";
@@ -102,6 +128,18 @@ function record(env, entries) {
   const rows = entries.map((e) => (typeof e === "string" ? { file: e, databases: [] } : e));
   const values = rows.map((r) => `(${quote(r.file)},${quote((r.databases ?? []).join(","))})`).join(",");
   psql(env, `${ENSURE}\nINSERT INTO dev_migration_ledger (file, databases) VALUES ${values} ON CONFLICT (file) DO UPDATE SET databases = EXCLUDED.databases WHERE EXCLUDED.databases <> '';`);
+}
+
+/**
+ * Nothing is written in the ledger on faith (the one-off baseline of 2026-10-26 took 8 files that were not there as applied):
+ * a file is recorded only when its probes find its effect on dev, and a file without any probe cannot be recorded.
+ */
+export function requireApplied(root, files, env) {
+  const bad = verifyFiles(root, files, env).filter((r) => r.status !== "present");
+  if (bad.length) {
+    const why = bad.map((r) => `  ${r.status.padEnd(8)} ${r.file}${r.status === "unprobed" ? " (add a probe to scripts/dev-migration-probes.json)" : `: ${r.probes.filter((p) => !p.ok).map((p) => p.label).slice(0, 3).join("; ")}`}`);
+    throw new Error(`not recorded, the effect is not on dev:\n${why.join("\n")}\nApply it (dry run in a rolled-back transaction first), then record.`);
+  }
 }
 
 /** The pending files on dev, for a given workspace root. */
@@ -132,15 +170,36 @@ function main(argv) {
   } else if (command === "record") {
     const known = new Set(migrationFiles(root));
     for (const f of rest) if (!known.has(f)) throw new Error(`not a migration of this workspace: ${f}`);
+    requireApplied(root, rest, env);
     record(env, rest.map((file) => ({ file, databases: databasesToRecord(file, readFileSync(join(root, file), "utf8"), on) })));
     console.log(`recorded ${rest.length}`);
   } else if (command === "baseline") {
     if (!before || !/^\d{4}-\d{2}-\d{2}$/.test(before)) throw new Error("baseline needs --before YYYY-MM-DD");
     const files = datedBefore(migrationFiles(root), before);
+    requireApplied(root, files, env);
     record(env, files);
     console.log(`baseline: ${files.length} files dated before ${before} recorded as applied`);
+  } else if (command === "unrecord") {
+    const known = new Set(ledger(env));
+    for (const f of rest) if (!known.has(f)) throw new Error(`not in the ledger: ${f}`);
+    psql(env, `DELETE FROM dev_migration_ledger WHERE file IN (${rest.map(quote).join(",")});`);
+    console.log(`unrecorded ${rest.length}`);
+  } else if (command === "verify") {
+    const only = take("--only");
+    const known = new Set(ledger(env));
+    const files = migrationFiles(root).filter((f) => !only || f.includes(only));
+    const rows = verifyFiles(root, files, env);
+    for (const r of rows) {
+      const bad = r.probes.filter((p) => !p.ok);
+      console.log(`${r.status.padEnd(8)} ${known.has(r.file) ? "recorded" : "pending "} ${r.file}${bad.length && r.status !== "present" ? `\n           not found: ${bad.map((p) => `${p.db}:${p.label}`).join("; ")}` : ""}`);
+    }
+    const count = (s) => rows.filter((r) => r.status === s).length;
+    console.log(`verify: ${count("present")} present, ${count("partial")} partial, ${count("missing")} missing, ${count("unprobed")} unprobed of ${rows.length}`);
+    const wrong = rows.filter((r) => known.has(r.file) && r.status !== "present");
+    if (wrong.length) console.error(`${wrong.length} recorded as applied without their effect on dev: apply them (docs/DEV_DATABASE.md), then correct the ledger.`);
+    if (wrong.length || count("unprobed")) process.exitCode = 1;
   } else {
-    console.error("usage: dev-migrations.mjs check | record <file>… [--on db1,db2] | baseline --before YYYY-MM-DD   [--root <workspace>] [--env-file <f>]");
+    console.error("usage: dev-migrations.mjs check | record <file>… [--on db1,db2] | unrecord <file>… | baseline --before YYYY-MM-DD | verify [--only <text>]   [--root <workspace>] [--env-file <f>]");
     process.exitCode = 2;
   }
 }
