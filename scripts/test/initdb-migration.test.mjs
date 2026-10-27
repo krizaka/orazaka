@@ -62,10 +62,10 @@ for (const file of ["2026-10-26-knowledge-access.sql"]) {
     const initdb = initdbText();
     const added = Object.values(objectsAdded(sql)).flat();
     assert.ok(added.length >= 8, "the migration was not parsed");
-    // Until the components' DDL (orazaka-ai-engine#108, orazaka-knowledge-service#30) is on their main, the clones
-    // predate ADR-091 and carry none of it: the check waits for it, then holds (remove this skip once they merged).
-    if (!/knowledge_access_audit/.test(initdb) && !/platform_tool_permissions/.test(initdb)) {
-      t.skip("components' initdb predates ADR-091");
+    // Until the DDL of both components (orazaka-ai-engine#108, orazaka-knowledge-service#30) is on their main, a
+    // clone predates ADR-091 and lacks its half: the check waits for both, then holds (remove this skip once merged).
+    if (!/knowledge_access_audit/.test(initdb) || !/platform_tool_permissions/.test(initdb)) {
+      t.skip("a component's initdb predates ADR-091");
       return;
     }
     const missing = [];
