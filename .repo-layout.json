@@ -1,0 +1,7 @@
+{
+  "kind": "workspace",
+  "allow": [
+    { "path": ".agent", "why": "agent rules and workflows read by the coding agents (Antigravity), not documentation" },
+    { "path": "orazaka-apps", "why": "the npm workspace of the three Orazaka apps (ui/package.json), kept at the name the apps' tooling expects" }
+  ]
+}
