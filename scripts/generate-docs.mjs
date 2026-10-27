@@ -38,6 +38,7 @@ import { mdCell, stripTags, xmlDecode } from "./lib/doc-text.mjs";
 import { packsSection } from "./lib/pack-blocks.mjs";
 import { mdMeasuredRuns } from "./lib/measured-runs.mjs";
 import { mdCinema } from "./lib/cinema-measure.mjs";
+import { missingRepositories, notClonedMessage } from "./lib/workspace-cloned.mjs";
 import { mdLawBakeoff } from "./lib/bakeoff/report.mjs";
 
 const ROOT = process.cwd();
@@ -2751,6 +2752,14 @@ const mdAdmin = (a) => {
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN
 // ════════════════════════════════════════════════════════════════════════════
+
+// The docs read the code of every repository: stop first, and say what is missing, rather than die inside the model
+// registry (its INSERTs are in the siblings' infra/initdb).
+const notCloned = missingRepositories(ROOT, REPOSITORIES);
+if (notCloned.length) {
+  console.error(notClonedMessage(notCloned));
+  process.exit(1);
+}
 
 const api = extractApi();
 const cli = extractCli();
