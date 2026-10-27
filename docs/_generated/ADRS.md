@@ -84,5 +84,5 @@ generated: true
 | ADR-088 | ADR-088 — Runs as background tasks | `adr/ADR-088-runs-as-background-tasks.md` |
 | ADR-089 | ADR-089 — Rules from the law | `adr/ADR-089-rules-from-the-law.md` |
 | ADR-090 | ADR-090 — The tools module as the provider gateway | `adr/ADR-090-tools-module-as-provider-gateway.md` |
-| ADR-091 | _(cited in code, no dedicated file)_ | — |
+| ADR-091 | ADR-091 — Access is enforced at retrieval and at the tool | `adr/ADR-091-access-at-retrieval-and-at-the-tool.md` |
 | ADR-092 | ADR-092 — Own the core, integrate the edges | `adr/ADR-092-own-the-core-integrate-the-edges.md` |
