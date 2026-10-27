@@ -21,6 +21,15 @@
     <name>orazaka-workspace</name>
     <description>Orazaka platform workspace — reactor over every Orazaka repository</description>
     <url>https://github.com/krizaka/orazaka</url>
+    <licenses>
+        <license>
+            <name>FSL-1.1-ALv2</name>
+            <url>https://fsl.software/FSL-1.1-ALv2.template.md</url>
+            <distribution>repo</distribution>
+            <comments>Functional Source License 1.1, Apache-2.0 future licence (ADR-011). Earlier commits: Apache-2.0.</comments>
+        </license>
+    </licenses>
+
 
     <properties>
         <orazaka.repository>orazaka</orazaka.repository>

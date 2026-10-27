@@ -4,7 +4,7 @@ version = "0.2.0"
 description = "Orazaka Desktop — control panel and file bridge for the Orazaka sovereign AI platform"
 authors = ["Krizaka"]
 edition = "2021"
-license = "Apache-2.0"
+license = "FSL-1.1-ALv2"
 rust-version = "1.80"
 
 [lib]
