@@ -448,7 +448,10 @@ test("the external checks (orazaka-packs#138) are additive, idempotent, fail clo
     ? readFileSync(jobService, "utf8").match(/-- =+\n-- EXTERNAL CHECKS \(orazaka-packs#138[\s\S]*?ON CONFLICT \(feature_key\) DO NOTHING;/)
     : null;
   if (block) {
-    assert.ok(sql.includes(block[0]), "the migration carries the job-service block verbatim");
+    // Statements only (comments are history), and the billable capabilities as this migration wrote them: NONE was added
+    // by 2026-10-27-capability-billable-none.sql (orazaka-packs#162), which the initdb carries from the start.
+    const statements = (text) => text.replace(/--.*$/gm, "").replace("'EXTERNAL_CHECK','NONE'", "'EXTERNAL_CHECK'").replace(/\s+/g, " ");
+    assert.ok(statements(sql).includes(statements(block[0])), "the migration carries the job-service block verbatim");
   }
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "external-checks"\) externalChecks\(\)/);
 });
