@@ -52,10 +52,12 @@ ON CONFLICT (user_id) DO NOTHING;
 -- ── orazaka_knowledge_db ─────────────────────────────────────────────────────────────
 \c orazaka_knowledge_db
 
-INSERT INTO orazaka_tools_rag_source (tool_id, content, metadata) VALUES
-('searchKnowledge', 'Orazaka Corporation is a powerful mega-corporation specializing in security, banking, and manufacturing.', '{"source":"corp_profile"}'),
-('searchKnowledge', 'The Orazaka core framework runs on Java 21 with Spring AI 1.1.6.', '{"source":"tech_spec"}'),
-('searchKnowledge', 'The BFF proxy routes incoming frontend requests from Next.js to the Orazaka Gateway at http://localhost:8080.', '{"source":"bff_proxy"}')
+-- The platform's own content ('*'), readable by any signed-in user; a tenant's documents carry that tenant and
+-- the roles/groups that may read them (ADR-091). A row without a tenant does not insert.
+INSERT INTO orazaka_tools_rag_source (tool_id, content, metadata, tenant_id, acl_principals) VALUES
+('searchKnowledge', 'Orazaka Corporation is a powerful mega-corporation specializing in security, banking, and manufacturing.', '{"source":"corp_profile"}', '*', '{role:ROLE_USER}'),
+('searchKnowledge', 'The Orazaka core framework runs on Java 21 with Spring AI 1.1.6.', '{"source":"tech_spec"}', '*', '{role:ROLE_USER}'),
+('searchKnowledge', 'The BFF proxy routes incoming frontend requests from Next.js to the Orazaka Gateway at http://localhost:8080.', '{"source":"bff_proxy"}', '*', '{role:ROLE_USER}')
 ON CONFLICT ON CONSTRAINT unique_tool_content DO NOTHING;
 
 -- ── krizaka_billing_db ─────────────────────────────────────────────────────────────
