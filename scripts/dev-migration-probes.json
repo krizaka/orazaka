@@ -97,6 +97,13 @@
         "label": "uri_path/http_method pair is checked, or the columns are gone",
         "sql": "NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'orazaka_capabilities' AND column_name = 'http_method') OR EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ck_orazaka_capabilities_endpoint')"
       }
+    ],
+    "infra/migrations/2026-10-27-capability-billable-none.sql": [
+      {
+        "db": "orazaka_db",
+        "label": "the billable_capability check accepts NONE",
+        "sql": "EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ck_orazaka_capabilities_billable_capability' AND pg_get_constraintdef(oid) LIKE '%NONE%')"
+      }
     ]
   },
   "declaredOnly": [

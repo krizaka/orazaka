@@ -76,3 +76,17 @@ for (const file of ["2026-10-26-knowledge-access.sql"]) {
     assert.deepEqual(missing, [], "in the migration but not in infra/initdb");
   });
 }
+
+test("2026-10-27-capability-billable-none.sql: the CHECK list is the one of the job service's initdb (NONE included)", (t) => {
+  const listOf = (sql) => [...sql.replace(/--[^\n]*/g, "").matchAll(/CHECK \(billable_capability IN \(([^)]*)\)\)/g)].map((m) => m[1].replace(/\s/g, ""));
+  const migration = listOf(readFileSync(join(root, "infra", "migrations", "2026-10-27-capability-billable-none.sql"), "utf8"));
+  assert.equal(migration.length, 1, "the migration widens the check once");
+  assert.match(migration[0], /'NONE'/);
+  const initdb = initdbText();
+  if (initdb.trim() === "") {
+    t.skip("the components' initdb is not cloned");
+    return;
+  }
+  // The same constraint is declared twice in a fresh database (the column, then the external checks block): both equal.
+  assert.deepEqual([...new Set(listOf(initdb))], migration);
+});
