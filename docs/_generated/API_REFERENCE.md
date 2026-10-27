@@ -146,8 +146,9 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/recommendations/insights` | authenticated | RecommendationController | A creator's analytics. |
 | POST | `/api/v1/recommendations/items` | authenticated | RecommendationController | Upserts eligible items; the ones whose text changed are embedded. |
 | GET | `/api/v1/recommendations/similar` | authenticated | RecommendationController | Items like an item. |
-| POST | `/internal/v1/knowledge/retrieve` | SERVICE | KnowledgeController | Semantic RAG retrieval over the vector store. |
-| POST | `/internal/v1/knowledge/sources/search` | SERVICE | KnowledgeController | Substring search over a tool's registered RAG sources. |
+| POST | `/internal/v1/knowledge/retrieve` | SERVICE | KnowledgeController | Semantic RAG retrieval over the vector store, among the passages the principal may read. |
+| PUT | `/internal/v1/knowledge/sources/{id}/acl` | SERVICE | KnowledgeController | Replaces who may read a source; an administrator of the source's tenant only. |
+| POST | `/internal/v1/knowledge/sources/search` | SERVICE | KnowledgeController | Substring search over a tool's registered RAG sources the principal may read. |
 
 ## krizaka-billing-service
 
