@@ -382,3 +382,5 @@ These are the defects code review found most often on 2026-10-23. Check them you
 7. **Naming:** environment variables follow `<CONTEXT>_<THING>` (`APP_`, `DATABASE_`, `AUTH_`, `MEDIA_`, `MAIL_`, `PAYMENTS_`, `AI_`…) and are declared once.
 8. **Words:** every user-facing string is in the FR and EN messages, and no colour is hard-coded.
 9. **Review threads:** answer every one. Fix it test-first, or reply with the reason, then resolve it.
+
+- **React effects**: `useEffect` is for subscriptions and object URLs only; data is `useQuery`/`useMutation` from `@krizaka/query`, derived state is computed in render. [Standard](https://github.com/krizaka/.github/blob/main/docs/standards/react-effects.md).
