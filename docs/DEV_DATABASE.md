@@ -45,11 +45,12 @@ cluster, as the database's owner role, after a dry run in a rolled-back transact
 ```bash
 node scripts/dev-migrations.mjs check                 # lists the files not recorded; exit 1 if any
 node scripts/dev-migrations.mjs record <file>…        # after applying one (path from the workspace root)
+node scripts/dev-migrations.mjs record <file> --on orazaka_knowledge_db,orazaka_db   # a file with several `\c <db>` parts: once applied on each
 node scripts/dev-migrations.mjs baseline --before YYYY-MM-DD   # once: older files are taken as applied
 ```
 
 `node scripts/dev-deploy.mjs apply orazaka-dev` runs the check and refuses while a file is pending
-(`--allow-pending-migrations` to pass). Nothing applies a migration automatically, CI included. Run `node scripts/workspace.mjs clone`
+(`--allow-pending-migrations` to pass). A file that switches database (`\c`) is recorded once, only with `--on` naming every database it touches; the ledger keeps them in its `databases` column. Nothing applies a migration automatically, CI included. Run `node scripts/workspace.mjs clone`
 (and pull) first so the component repositories are current.
 
 ## Looking at it from DBeaver

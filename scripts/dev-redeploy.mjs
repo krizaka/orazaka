@@ -7,7 +7,7 @@
  * script (run by .github/workflows/dev-redeploy.yml every 15 minutes, or by hand) compares the newest commit on main of the
  * workspace and of every component with the last manual deployment, and starts `--force-rebuild` when one is newer.
  *
- *   node scripts/dev-redeploy.mjs [--dry-run]     # needs doctl (DIGITALOCEAN_ACCESS_TOKEN) and gh (GH_TOKEN, public reads)
+ *   node scripts/dev-redeploy.mjs [--dry-run]     # needs an authenticated doctl (the workflow logs it in with OPERATOR_DEPLOY_TOKEN) and gh (GH_TOKEN, public reads)
  *
  * It only starts a deployment, never changes the spec, and does nothing while a deployment is building.
  */

@@ -4,8 +4,9 @@
 # main is newer than the last manual rebuild, and does nothing while a deployment is building. Deploys only: it never
 # touches the spec and never applies a database migration (scripts/dev-migrations.mjs lists the pending ones).
 #
-# Needs the repository secret DIGITALOCEAN_ACCESS_TOKEN (the same name gpu-smoke.yml reads; it is not an organisation
-# secret today). Without it the job says so and stops.
+# Needs the repository secret OPERATOR_DEPLOY_TOKEN (named by its context, not its vendor: krizaka/.github#46; its value is
+# a DigitalOcean API token able to create deployments on orazaka-dev). Add it under Settings > Secrets and variables >
+# Actions. Without it the job says so and stops.
 name: Dev redeploy
 
 on:
@@ -25,14 +26,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      OPERATOR_DEPLOY_TOKEN: ${{ secrets.OPERATOR_DEPLOY_TOKEN }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Configured?
         id: configured
         run: |
-          if [ -z "$DIGITALOCEAN_ACCESS_TOKEN" ]; then
-            echo "::notice::DIGITALOCEAN_ACCESS_TOKEN is not set — nothing started."
+          if [ -z "$OPERATOR_DEPLOY_TOKEN" ]; then
+            echo "::notice::The repository secret OPERATOR_DEPLOY_TOKEN is not set (a DigitalOcean API token; Settings > Secrets and variables > Actions) — nothing started."
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
@@ -42,7 +43,7 @@ jobs:
       - uses: digitalocean/action-doctl@3cb3953159719656269e044e0e24ca16dd2a690f # v2
         if: steps.configured.outputs.ok == 'true'
         with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          token: ${{ secrets.OPERATOR_DEPLOY_TOKEN }}
       - name: Rebuild core when a repository moved
         if: steps.configured.outputs.ok == 'true'
         run: node scripts/dev-redeploy.mjs

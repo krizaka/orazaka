@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { datedBefore, migrationFiles, pending } from "../dev-migrations.mjs";
+import { databasesOf, databasesToRecord, datedBefore, migrationFiles, pending } from "../dev-migrations.mjs";
 
 function workspace() {
   const root = mkdtempSync(join(tmpdir(), "devmig-"));
@@ -36,4 +36,18 @@ test("pending: exactly the files the ledger lacks", () => {
 test("baseline selects the files dated strictly before the day, and never an undated one", () => {
   const files = ["x/infra/migrations/2026-10-25-a.sql", "x/infra/migrations/2026-10-26-b.sql", "x/infra/migrations/notes.sql"];
   assert.deepEqual(datedBefore(files, "2026-10-26"), ["x/infra/migrations/2026-10-25-a.sql"]);
+});
+
+const TWO = "\\c orazaka_knowledge_db\nALTER TABLE x;\n\\c orazaka_db\nCREATE TABLE y();\n\\c orazaka_knowledge_db\n";
+
+test("databasesOf: each database a file switches to, once, in order", () => {
+  assert.deepEqual(databasesOf(TWO), ["orazaka_knowledge_db", "orazaka_db"]);
+  assert.deepEqual(databasesOf("-- no switch\nSELECT 1;"), []);
+});
+
+test("a migration spanning several databases is recorded only once applied on all of them", () => {
+  assert.throws(() => databasesToRecord("m.sql", TWO, []), /spans orazaka_knowledge_db, orazaka_db/);
+  assert.throws(() => databasesToRecord("m.sql", TWO, ["orazaka_db"]), /not applied on orazaka_knowledge_db/);
+  assert.deepEqual(databasesToRecord("m.sql", TWO, ["orazaka_db", "orazaka_knowledge_db"]), ["orazaka_db", "orazaka_knowledge_db"]);
+  assert.deepEqual(databasesToRecord("m.sql", "SELECT 1;", []), []);
 });
