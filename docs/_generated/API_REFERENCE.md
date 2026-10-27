@@ -72,10 +72,10 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/mcp/servers/user` | authenticated | McpController |  |
 | POST | `/api/v1/mcp/servers/user` | authenticated | McpController |  |
 | DELETE | `/api/v1/mcp/servers/user/{id}` | authenticated | McpController |  |
-| GET | `/api/v1/mcp/tools` | authenticated | McpController | Retrieves all registered tools and their schemas. |
-| POST | `/api/v1/mcp/tools/{name}/execute` | authenticated | McpController | Executes a tool by name with the provided arguments. |
+| GET | `/api/v1/mcp/tools` | authenticated | McpController | Retrieves the registered tools the caller may use, with their schemas. |
+| POST | `/api/v1/mcp/tools/{name}/execute` | authenticated | McpController | Executes a tool by name with the provided arguments, for the authenticated caller: a tool the caller may not use answers 403 and leaves an audit line (ADR-091). |
 | DELETE | `/api/v1/media/assets/{assetId}` | authenticated | MediaAnalysisController | Deletes one of the caller's own uploads (the sealed file in <uploads>/<user>/temp). |
-| GET | `/api/v1/media/search` | authenticated | MediaAnalysisController | Performs a passive RAG context search against the semantic index. |
+| GET | `/api/v1/media/search` | authenticated | MediaAnalysisController | Performs a passive RAG context search against the semantic index, among what the caller may read: the actor is built from the session, and a caller without one gets 401 (ADR-091). |
 | POST | `/api/v1/media/upload` | authenticated | MediaAnalysisController | Securely uploads a raw binary asset, isolated per authenticated user. |
 | GET | `/api/v1/models` | ADMIN + USER | ModelController | Retrieves the local catalog of Ollama models. |
 | POST | `/api/v1/models` | ADMIN | ModelController | Adds a new model definition to the catalog. |
