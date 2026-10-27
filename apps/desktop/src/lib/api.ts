@@ -140,11 +140,19 @@ export type CodeHunk = { id: number; oldStart: number; oldLines: string[]; newLi
 export type CodeFileProposal = { path: string; baseHash: string | null; hunks: CodeHunk[] };
 export type CodeDecision = { file: CodeFileProposal; approved: number[] };
 export type CodeApplied = { path: string; written: boolean; hunksApplied: number };
+export type CodeCheck = { name: string; argv: string[]; cwd: string; timeoutSecs: number; network: boolean; env: string[] };
+export type CodeCheckGrant = { id: string; repo: string; check: CodeCheck; argvHash: string; createdAt: string; revokedAt: string | null };
+export type CodeChecksOverview = { suggested: CodeCheck[]; confirmed: CodeCheckGrant[]; needsApproval: boolean };
+export type CodeCheckRun = { name: string; exitCode: number | null; durationMs: number; timedOut: boolean; argvHash: string; output: string; truncated: boolean };
 export const codeApi = {
   open: (path: string) => invoke<CodeRepoInfo>("code_open", { path }),
   propose: (path: string, newText: string) => invoke<CodeFileProposal>("code_propose", { path, newText }),
   apply: (runId: string, decisions: CodeDecision[]) => invoke<CodeApplied[]>("code_apply", { runId, decisions }),
   undo: (runId: string, paths: string[]) => invoke<string[]>("code_undo", { runId, paths }),
+  checks: () => invoke<CodeChecksOverview>("code_checks_overview"),
+  confirmCheck: (check: CodeCheck) => invoke<CodeCheckGrant>("code_check_confirm", { check }),
+  revokeCheck: (id: string) => invoke<boolean>("code_check_revoke", { id }),
+  runCheck: (name: string, approved: boolean) => invoke<CodeCheckRun>("code_check_run", { name, approved }),
   openInEditor: (editor: "vs-code" | "xcode", path: string, line: number) => invoke<void>("code_open_in_editor", { editor, path, line }),
 };
 
