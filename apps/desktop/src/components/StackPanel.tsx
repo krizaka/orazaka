@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@krizaka/query";
 import { Badge } from "@krizaka/ui/badge";
 import { Button } from "@krizaka/ui/button";
 import { Alert } from "@krizaka/ui/alert";
@@ -9,12 +10,15 @@ import { useI18n } from "../lib/i18n";
 const LOG_SERVICES = ["router", "ollama", "media-worker", "image-worker", "ui"];
 const tone = { running: "success", partial: "warning", stopped: "neutral" } as const;
 
+const STATUS_KEY = ["stack", "status"] as const;
+const VERSION_KEY = ["stack", "version"] as const;
+const START = { label: "start", call: { command: "start", mode: "dev" } } as const satisfies { label: string; call: CliCall };
+const STOP = { label: "stop", call: { command: "stop" } } as const satisfies { label: string; call: CliCall };
+
 export function StackPanel({ snap, goSettings }: { snap: Snapshot; goSettings: () => void }) {
   const { t, format } = useI18n();
-  const [busy, setBusy] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [lines, setLines] = useState<string[]>([]);
-  const [services, setServices] = useState<ServiceStatus[]>([]);
-  const [cliVersion, setCliVersion] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [service, setService] = useState("");
   const logRef = useRef<HTMLPreElement>(null);
@@ -28,52 +32,61 @@ export function StackPanel({ snap, goSettings }: { snap: Snapshot; goSettings: (
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [lines]);
 
-  const run = useCallback(
-    async (label: string, call: CliCall): Promise<CliResult | null> => {
-      setBusy(label);
-      setNote(null);
-      quiet.current = call.command === "status" || call.command === "version";
-      try {
-        const r = await api.cli(call);
-        if (r.timedOut) setNote(t("stack.timedOut"));
-        else if (!r.ok) setNote(format(t("stack.exit"), { code: String(r.code ?? "?") }));
-        return r;
-      } catch (e) {
-        setNote(errorMessage(e));
-        return null;
-      } finally {
-        quiet.current = false;
-        setBusy(null);
-      }
+  /** One command of the CLI, its outcome worded in the note. The backend refuses overlap, so callers never run two at once. */
+  const execute = async (call: CliCall): Promise<CliResult | null> => {
+    setNote(null);
+    quiet.current = call.command === "status" || call.command === "version";
+    try {
+      const r = await api.cli(call);
+      if (r.timedOut) setNote(t("stack.timedOut"));
+      else if (!r.ok) setNote(format(t("stack.exit"), { code: String(r.code ?? "?") }));
+      return r;
+    } catch (e) {
+      setNote(errorMessage(e));
+      return null;
+    } finally {
+      quiet.current = false;
+    }
+  };
+
+  // Reads: the CLI's version, then the status of the stack — one at a time, once the sidecar is there.
+  const version = useQuery({
+    queryKey: VERSION_KEY,
+    enabled: Boolean(snap.sidecar),
+    retry: false,
+    staleTime: Infinity,
+    queryFn: async () => {
+      const r = await execute({ command: "version" });
+      return r?.ok ? (r.lines.join(" ").trim().split(/\s+/).pop() ?? null) : null;
     },
-    [t, format],
-  );
+  });
+  const status = useQuery({
+    queryKey: STATUS_KEY,
+    enabled: Boolean(snap.sidecar) && version.isFetched,
+    retry: false,
+    queryFn: async () => {
+      const r = await execute({ command: "status" });
+      return r?.ok ? parseServices(r.lines) : null;
+    },
+  });
+  const services: ServiceStatus[] = status.data ?? [];
+  const cliVersion = version.data ?? null;
 
-  const refreshStatus = useCallback(async () => {
-    const r = await run("status", { command: "status" });
-    if (r?.ok) setServices(parseServices(r.lines));
-  }, [run]);
-
-  const started = useRef(false);
-  useEffect(() => {
-    if (!snap.sidecar || started.current) return;
-    started.current = true;
-    // One command at a time (the backend refuses overlap): the version, then the status.
-    void (async () => {
-      const v = await run("version", { command: "version" });
-      if (v?.ok) setCliVersion(v.lines.join(" ").trim().split(/\s+/).pop() ?? null);
-      await refreshStatus();
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [snap.sidecar]);
-
+  // Writes: start and stop, then the status is read again.
+  const act = useMutation({
+    mutationFn: ({ call }: { label: string; call: CliCall }) => execute(call),
+    onSettled: (_result, _error, { label }) => (label === "start" || label === "stop" ? queryClient.invalidateQueries({ queryKey: STATUS_KEY }) : undefined),
+  });
+  const { mutate: runAction } = act;
   useEffect(() => {
     const off = on<string>("tray-action", (a) => {
-      if (a === "start") void run("start", { command: "start", mode: "dev" }).then(refreshStatus);
-      if (a === "stop") void run("stop", { command: "stop" }).then(refreshStatus);
+      if (a === "start") runAction(START);
+      if (a === "stop") runAction(STOP);
     });
     return () => void off.then((f) => f());
-  }, [run, refreshStatus]);
+  }, [runAction]);
+
+  const busy = act.isPending ? act.variables.label : status.isFetching ? "status" : version.isFetching ? "version" : null;
 
   const state = stackState(services, snap.probe.state);
   const remote = snap.settings.mode === "remote";
@@ -97,16 +110,16 @@ export function StackPanel({ snap, goSettings }: { snap: Snapshot; goSettings: (
           </Alert>
         )}
         <div className="flex flex-wrap gap-2">
-          <Button disabled={disabled || needsWorkspace} loading={busy === "start"} onClick={() => void run("start", { command: "start", mode: "dev" }).then(refreshStatus)}>
+          <Button disabled={disabled || needsWorkspace} loading={busy === "start"} onClick={() => runAction(START)}>
             {t("stack.start")}
           </Button>
-          <Button variant="secondary" disabled={disabled || needsWorkspace} loading={busy === "stop"} onClick={() => void run("stop", { command: "stop" }).then(refreshStatus)}>
+          <Button variant="secondary" disabled={disabled || needsWorkspace} loading={busy === "stop"} onClick={() => runAction(STOP)}>
             {t("stack.stop")}
           </Button>
-          <Button variant="outline" disabled={disabled} loading={busy === "doctor"} onClick={() => void run("doctor", { command: "doctor" })}>
+          <Button variant="outline" disabled={disabled} loading={busy === "doctor"} onClick={() => runAction({ label: "doctor", call: { command: "doctor" } })}>
             {t("stack.doctor")}
           </Button>
-          <Button variant="ghost" disabled={disabled} loading={busy === "status"} onClick={() => void refreshStatus()}>
+          <Button variant="ghost" disabled={disabled} loading={busy === "status"} onClick={() => void status.refetch()}>
             {t("common.refresh")}
           </Button>
         </div>
@@ -135,7 +148,7 @@ export function StackPanel({ snap, goSettings }: { snap: Snapshot; goSettings: (
             <option value="">{t("stack.allServices")}</option>
             {LOG_SERVICES.map((s) => <option key={s} value={s}>{s}</option>)}
           </Select>
-          <Button size="sm" variant="secondary" disabled={disabled || !service} onClick={() => { setLines([]); void run("logs", { command: "logs", service, tail: 120 }); }}>
+          <Button size="sm" variant="secondary" disabled={disabled || !service} onClick={() => { setLines([]); runAction({ label: "logs", call: { command: "logs", service, tail: 120 } }); }}>
             {t("stack.fetchLogs")}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setLines([])}>{t("stack.clearLogs")}</Button>

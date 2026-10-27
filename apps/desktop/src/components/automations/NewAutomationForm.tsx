@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@krizaka/query";
 import { Alert } from "@krizaka/ui/alert";
 import { Button } from "@krizaka/ui/button";
 import { Card } from "@krizaka/ui/card";
@@ -18,13 +19,12 @@ export function NewAutomationForm({ roots, defaults, onCancel, onCreated }: { ro
   const [weekdays, setWeekdays] = useState(false);
   const [baseUrl, setBaseUrl] = useState(defaults.model.baseUrl);
   const [model, setModel] = useState(defaults.model.model);
-  const [models, setModels] = useState<string[]>([]);
   const [dryRun, setDryRun] = useState(defaults.dryRun);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    void automationsApi.models(baseUrl).then(setModels).catch(() => setModels([]));
-  }, [baseUrl]);
+  // The models of the server typed in the field: keyed by its address, so an answer for an address since replaced never shows.
+  const modelsQuery = useQuery({ queryKey: ["automations", "models", baseUrl], queryFn: () => automationsApi.models(baseUrl), retry: false });
+  const models: string[] = modelsQuery.data ?? [];
 
   async function create() {
     setError(null);
