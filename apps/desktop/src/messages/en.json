@@ -234,6 +234,24 @@
       "openXcode": "Open in Xcode",
       "newFile": "New file",
       "written": "Written: {count} file(s)"
+    },
+    "checks": {
+      "title": "Checks",
+      "lead": "Commands Orazaka may run to test a change. Each one is yours to confirm, and runs without a shell, in a sandbox that can write only to the repository.",
+      "suggested": "Suggested by the repository",
+      "confirmed": "Confirmed",
+      "none": "No command is confirmed yet. A suggestion is only a proposal.",
+      "confirm": "Confirm this command",
+      "revoke": "Revoke",
+      "run": "Run",
+      "approveRun": "Approve and run",
+      "needsApproval": "A change since the last check altered what runs",
+      "network": "Network allowed",
+      "noNetwork": "No network",
+      "timeout": "Stops after {secs} s",
+      "output": "Output",
+      "exit": "Exit {code} in {ms} ms",
+      "timedOut": "Timed out"
     }
   }
 }

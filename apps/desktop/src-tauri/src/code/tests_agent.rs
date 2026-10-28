@@ -329,3 +329,24 @@ fn the_budgets_and_limits_read_the_rule_set_and_are_bounded() {
     let b = Budgets::bounded(0, 10_000_000_000, 0, 0);
     assert!(b.turns >= 1 && b.turns <= MAX_TURNS && b.tokens <= MAX_TOKENS && b.files_read >= 1 && b.hunks >= 1);
 }
+
+// ---- a turn is a Studio run: the answer is read from the run's outputs --------------------------------------------
+
+#[test]
+fn a_succeeded_run_is_a_turn_reply() {
+    let run = json!({"status": "SUCCEEDED", "outputs": [
+        {"key": "text", "value": "I will read it."},
+        {"key": "calls", "value": "[{\"id\":\"c1\",\"name\":\"read_file\",\"args\":{\"path\":\"README.md\"}}]"},
+        {"key": "usage", "value": "{\"promptTokens\":120,\"completionTokens\":30,\"creditsMicro\":7}"}]});
+    let reply = reply_from_run(&run).unwrap();
+    assert_eq!(reply.text, "I will read it.");
+    assert_eq!(reply.calls[0].name, "read_file");
+    assert_eq!(reply.usage, Usage { prompt_tokens: 120, completion_tokens: 30, credits_micro: 7 });
+}
+
+#[test]
+fn a_failed_or_malformed_run_is_unavailable_never_a_made_up_reply() {
+    assert!(matches!(reply_from_run(&json!({"status": "FAILED", "errorMessage": "x"})), Err(EngineError::Unavailable(_))));
+    assert!(matches!(reply_from_run(&json!({"status": "SUCCEEDED", "outputs": [{"key": "calls", "value": "not json"}]})), Err(EngineError::Unavailable(_))));
+    assert!(matches!(reply_from_run(&json!({"status": "SUCCEEDED", "outputs": []})), Err(EngineError::Unavailable(_))));
+}

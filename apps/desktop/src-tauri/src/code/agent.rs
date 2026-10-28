@@ -140,23 +140,70 @@ pub trait Engine {
     fn turn(&mut self, req: &TurnRequest) -> Result<TurnReply, EngineError>;
 }
 
-/// The engine over HTTP: `POST {base}/api/v1/studio-runs/{runId}/turns` with the user's bearer. The engine routes the
-/// feature key to a model; a remote engine must be https (the excerpts leave the Mac).
+/// A turn is a run of a Contributor Studio (`POST /api/v1/studios/{studioKey}/runs`, then the run is read): the engine
+/// gates it like any run (entitlement, consent, credits) and routes `agent.code.issue-to-pr` to a model. A remote engine
+/// must be https (the excerpts leave the Mac).
 pub struct StudioRunEngine {
     pub base_url: String,
     pub bearer: String,
+    /// `code-issue-to-pr` or `code-read-write`.
+    pub studio_key: String,
     pub timeout: Duration,
+}
+
+/// The reply of a finished run: its outputs `text`, `calls` (a JSON array as a string) and, when the engine reports it, `usage`.
+pub fn reply_from_run(run: &Value) -> Result<TurnReply, EngineError> {
+    let bad = |m: &str| Err(EngineError::Unavailable(m.to_string()));
+    if run["status"].as_str() != Some("SUCCEEDED") {
+        return bad(&format!("the turn ended {}", run["status"].as_str().unwrap_or("unknown")));
+    }
+    let output = |key: &str| run["outputs"].as_array().into_iter().flatten().find(|o| o["key"] == key).and_then(|o| o["value"].as_str()).map(String::from);
+    let Some(text) = output("text") else { return bad("the turn has no text") };
+    let calls: Vec<ToolCall> = match output("calls") {
+        None => vec![],
+        Some(c) => match serde_json::from_str(&c) {
+            Ok(v) => v,
+            Err(_) => return bad("the tool calls are not valid"),
+        },
+    };
+    let usage = output("usage").and_then(|u| serde_json::from_str::<Usage>(&u).ok()).unwrap_or_default();
+    Ok(TurnReply { text, calls, usage })
+}
+
+impl StudioRunEngine {
+    fn get_json(&self, url: &str, started: std::time::Instant) -> Result<Value, EngineError> {
+        let left = self.timeout.checked_sub(started.elapsed()).unwrap_or_default().max(Duration::from_secs(1));
+        match ureq::get(url).timeout(left).set("Authorization", &format!("Bearer {}", self.bearer)).call() {
+            Ok(r) => r.into_json::<Value>().map_err(|e| EngineError::Unavailable(e.to_string())),
+            Err(ureq::Error::Status(code, resp)) => Err(engine_error_from(code, &resp.into_string().unwrap_or_default())),
+            Err(e) => Err(EngineError::Unavailable(e.to_string())),
+        }
+    }
 }
 
 impl Engine for StudioRunEngine {
     fn turn(&mut self, req: &TurnRequest) -> Result<TurnReply, EngineError> {
         crate::automation::model::OpenAiCompatible::validate_base_url(&self.base_url).map_err(EngineError::Unavailable)?;
-        let url = format!("{}/api/v1/studio-runs/{}/turns", self.base_url.trim_end_matches('/'), req.run_id);
-        let body = json!({ "featureKey": req.feature_key, "system": req.system, "messages": req.messages, "tools": req.tools });
-        match ureq::post(&url).timeout(self.timeout).set("Authorization", &format!("Bearer {}", self.bearer)).send_json(body) {
-            Ok(resp) => resp.into_json::<TurnReply>().map_err(|e| EngineError::Unavailable(e.to_string())),
-            Err(ureq::Error::Status(code, resp)) => Err(engine_error_from(code, &resp.into_string().unwrap_or_default())),
-            Err(e) => Err(EngineError::Unavailable(e.to_string())),
+        let base = self.base_url.trim_end_matches('/');
+        let started = std::time::Instant::now();
+        let body = json!({ "inputs": { "messages": req.messages, "tools": req.tools } });
+        let url = format!("{base}/api/v1/studios/{}/runs", self.studio_key);
+        // A refusal (`studio_not_entitled`, `consent_required`, `insufficient_credits`) answers the POST itself.
+        let accepted: Value = match ureq::post(&url).timeout(self.timeout).set("Authorization", &format!("Bearer {}", self.bearer)).set("Idempotency-Key", &uuid::Uuid::new_v4().to_string()).send_json(body) {
+            Ok(r) => r.into_json().map_err(|e| EngineError::Unavailable(e.to_string()))?,
+            Err(ureq::Error::Status(code, resp)) => return Err(engine_error_from(code, &resp.into_string().unwrap_or_default())),
+            Err(e) => return Err(EngineError::Unavailable(e.to_string())),
+        };
+        let id = accepted["id"].as_str().ok_or_else(|| EngineError::Unavailable("no run id".into()))?.to_string();
+        loop {
+            let run = self.get_json(&format!("{base}/api/v1/studios/runs/{id}"), started)?;
+            if matches!(run["status"].as_str(), Some("SUCCEEDED" | "FAILED" | "CANCELLED")) {
+                return reply_from_run(&run);
+            }
+            if started.elapsed() >= self.timeout {
+                return Err(EngineError::Unavailable("the turn timed out".into()));
+            }
+            std::thread::sleep(Duration::from_millis(500));
         }
     }
 }
