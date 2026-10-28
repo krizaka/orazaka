@@ -718,6 +718,7 @@
       "description": "Orazaka AI Orchestration Engine",
       "ports": {
         "inbound": [
+          "AgentTurns",
           "AiClient",
           "CatalogModelService",
           "ChatSessionService",
@@ -746,6 +747,7 @@
           "ConversationMemory",
           "EmbeddingClient",
           "ExternalCheckConnector",
+          "FeatureModelRoutes",
           "ImageGeneratorClient",
           "InfrastructureStatusProvider",
           "KnowledgeService",
@@ -758,10 +760,12 @@
           "PromptAssembly",
           "ProviderChatClient",
           "SemanticClassifierPort",
+          "SpeechSynthesis",
           "StepModelRecorder",
           "StepRouteProvider",
           "StructuredOutputClient",
           "TestShaperPort",
+          "ToolAnswerCodec",
           "ToolOptions",
           "ToolPermissionProvider",
           "ToolRegistry",
@@ -844,6 +848,7 @@
           "CatalogModelManager",
           "ChatMemoryPersistenceProvider",
           "ChatSessionPersistenceProvider",
+          "FeatureRouteManager",
           "JobPersistenceProvider",
           "OutboxStore",
           "PipelineConfigManager",
@@ -4473,6 +4478,145 @@
               "label": "Séquences de Relance",
               "tagline": "Vos premiers contacts deviennent des relances qui partent.",
               "description": "Une relance en plusieurs temps par prospect, uniformisée en un seul ton, validée par vous, puis postée dans votre canal."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "code-contributor",
+      "dir": "code-contributor",
+      "version": "1.0.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "STANDARD",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "developer-tools",
+      "categorySortWeight": 120,
+      "iconKey": "code",
+      "sortWeight": 50,
+      "pricing": {
+        "priceCents": 0,
+        "includedCredits": 0
+      },
+      "capabilities": [
+        "orazaka.code.agent.turn"
+      ],
+      "workers": [],
+      "scopeGuard": false,
+      "consent": true,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Contributor",
+          "tagline": "The model turn behind Orazaka's code agent on your Mac.",
+          "description": "Carries the model turns of the Orazaka app's code agent, so that access, consent and credits are checked on every turn. The tools, the approvals, git and the audit stay on your Mac."
+        },
+        "fr": {
+          "label": "Contributeur",
+          "tagline": "Le tour de modèle derrière l'agent de code d'Orazaka sur votre Mac.",
+          "description": "Porte les tours de modèle de l'agent de code de l'app Orazaka, pour que l'accès, le consentement et les crédits soient vérifiés à chaque tour. Les outils, les approbations, git et le journal restent sur votre Mac."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Developer tools",
+          "description": "Packs that work on code with you: read it, change it, carry an issue to a pull request."
+        },
+        "fr": {
+          "label": "Outils de développement",
+          "description": "Des packs qui travaillent sur le code avec vous : le lire, le modifier, mener une issue jusqu'à une pull request."
+        }
+      },
+      "studios": [
+        {
+          "key": "code-issue-to-pr",
+          "profession": "developer",
+          "iconKey": "code",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "messages",
+              "title": "Messages"
+            },
+            {
+              "key": "tools",
+              "title": "Outils"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "text",
+              "type": "TEXT"
+            },
+            {
+              "key": "calls",
+              "type": "JSON"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "From an issue to a pull request",
+              "tagline": "Reads a GitHub issue and your repository, proposes changes you approve, and opens a draft pull request.",
+              "description": "The model turn for the issue-to-pull-request flow. Every write and every push is approved on your Mac."
+            },
+            "fr": {
+              "label": "D'une issue à une pull request",
+              "tagline": "Lit une issue GitHub et votre dépôt, propose des changements que vous approuvez et ouvre une pull request en brouillon.",
+              "description": "Le tour de modèle du parcours issue vers pull request. Chaque écriture et chaque envoi est approuvé sur votre Mac."
+            }
+          }
+        },
+        {
+          "key": "code-read-write",
+          "profession": "developer",
+          "iconKey": "code",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "messages",
+              "title": "Messages"
+            },
+            {
+              "key": "tools",
+              "title": "Outils"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "text",
+              "type": "TEXT"
+            },
+            {
+              "key": "calls",
+              "type": "JSON"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Read and change code",
+              "tagline": "Reads a repository you grant and proposes changes, hunk by hunk.",
+              "description": "The model turn for reading and changing files in a repository you grant. Nothing is written without your approval."
+            },
+            "fr": {
+              "label": "Lire et modifier du code",
+              "tagline": "Lit un dépôt que vous accordez et propose des changements, bloc par bloc.",
+              "description": "Le tour de modèle pour lire et modifier des fichiers d'un dépôt que vous accordez. Rien n'est écrit sans votre approbation."
             }
           }
         }

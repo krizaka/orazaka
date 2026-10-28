@@ -138,26 +138,80 @@ pub fn engine_error_from(http: u16, body: &str) -> EngineError {
 /// One model turn as a step of a Studio run. The gate lives behind it.
 pub trait Engine {
     fn turn(&mut self, req: &TurnRequest) -> Result<TurnReply, EngineError>;
+    /// The run the turns belong to, once the engine has one (the task's id for the audit, the proof and the billing).
+    fn run_id(&self) -> Option<String> {
+        None
+    }
 }
 
-/// The engine over HTTP: `POST {base}/api/v1/studio-runs/{runId}/turns` with the user's bearer. The engine routes the
-/// feature key to a model; a remote engine must be https (the excerpts leave the Mac).
-pub struct StudioRunEngine {
+/// One session = one Studio run per task (ADR-086, ADR-093 §6: one run id for the audit, the proof and the billing), then
+/// `POST /api/v1/studio-runs/{runId}/turns` for every model turn. The server re-checks the entitlement, the consent and
+/// the credits on every turn, picks the routing key from the Studio (a key sent by the app is ignored) and passes the
+/// engine's refusals on in its own words. A remote engine must be https (the excerpts leave the Mac).
+pub struct SessionEngine {
     pub base_url: String,
     pub bearer: String,
+    /// `code-issue-to-pr` or `code-read-write`.
+    pub studio_key: String,
+    /// The task's run, started by the first turn and kept for all the others.
+    pub run_id: Option<String>,
     pub timeout: Duration,
 }
 
-impl Engine for StudioRunEngine {
-    fn turn(&mut self, req: &TurnRequest) -> Result<TurnReply, EngineError> {
-        crate::automation::model::OpenAiCompatible::validate_base_url(&self.base_url).map_err(EngineError::Unavailable)?;
-        let url = format!("{}/api/v1/studio-runs/{}/turns", self.base_url.trim_end_matches('/'), req.run_id);
-        let body = json!({ "featureKey": req.feature_key, "system": req.system, "messages": req.messages, "tools": req.tools });
-        match ureq::post(&url).timeout(self.timeout).set("Authorization", &format!("Bearer {}", self.bearer)).send_json(body) {
-            Ok(resp) => resp.into_json::<TurnReply>().map_err(|e| EngineError::Unavailable(e.to_string())),
+/// `POST {base}/api/v1/studios/{studio}/runs`: starts the task's run.
+pub fn start_run_url(base: &str, studio_key: &str) -> String {
+    format!("{}/api/v1/studios/{studio_key}/runs", base.trim_end_matches('/'))
+}
+
+/// `POST {base}/api/v1/studio-runs/{runId}/turns`: one model turn of that run.
+pub fn turns_url(base: &str, run_id: &str) -> String {
+    format!("{}/api/v1/studio-runs/{run_id}/turns", base.trim_end_matches('/'))
+}
+
+/// The wire of a turn: the system prompt, the messages and the closed tool list. No feature key: it is the server's.
+pub fn turn_body(req: &TurnRequest) -> Value {
+    json!({ "system": req.system, "messages": req.messages, "tools": req.tools })
+}
+
+impl SessionEngine {
+    pub fn new(base_url: String, bearer: String, studio_key: String, timeout: Duration) -> SessionEngine {
+        SessionEngine { base_url, bearer, studio_key, run_id: None, timeout }
+    }
+
+    fn post(&self, url: &str, body: Value, idempotency_key: Option<&str>) -> Result<Value, EngineError> {
+        let mut request = ureq::post(url).timeout(self.timeout).set("Authorization", &format!("Bearer {}", self.bearer));
+        if let Some(key) = idempotency_key {
+            request = request.set("Idempotency-Key", key);
+        }
+        match request.send_json(body) {
+            Ok(r) => r.into_json::<Value>().map_err(|e| EngineError::Unavailable(e.to_string())),
             Err(ureq::Error::Status(code, resp)) => Err(engine_error_from(code, &resp.into_string().unwrap_or_default())),
             Err(e) => Err(EngineError::Unavailable(e.to_string())),
         }
+    }
+
+    /// The task's run: started once (a refusal such as `studio_not_entitled` answers here), then reused.
+    fn ensure_run(&mut self) -> Result<String, EngineError> {
+        if let Some(id) = &self.run_id {
+            return Ok(id.clone());
+        }
+        let accepted = self.post(&start_run_url(&self.base_url, &self.studio_key), json!({ "inputs": { "messages": [], "tools": [] } }), Some(&uuid::Uuid::new_v4().to_string()))?;
+        let id = accepted["id"].as_str().ok_or_else(|| EngineError::Unavailable("no run id".into()))?.to_string();
+        self.run_id = Some(id.clone());
+        Ok(id)
+    }
+}
+
+impl Engine for SessionEngine {
+    fn turn(&mut self, req: &TurnRequest) -> Result<TurnReply, EngineError> {
+        crate::automation::model::OpenAiCompatible::validate_base_url(&self.base_url).map_err(EngineError::Unavailable)?;
+        let run_id = self.ensure_run()?;
+        let reply = self.post(&turns_url(&self.base_url, &run_id), turn_body(req), None)?;
+        serde_json::from_value::<TurnReply>(reply).map_err(|e| EngineError::Unavailable(e.to_string()))
+    }
+
+    fn run_id(&self) -> Option<String> {
+        self.run_id.clone()
     }
 }
 
@@ -363,7 +417,11 @@ pub fn run_agent(repo: &Repo, book: &mut Book, engine: &mut dyn Engine, approver
         }
         let messages = redacted(&history);
         let req = TurnRequest { run_id: &input.run_id, feature_key: FEATURE_KEY, system: SYSTEM_PROMPT, messages: &messages, tools: &tools_json };
-        let reply = match engine.turn(&req) {
+        let answer = engine.turn(&req);
+        if let Some(id) = engine.run_id() {
+            report.run_id = id;
+        }
+        let reply = match answer {
             Ok(r) => r,
             Err(e) => {
                 report.stop = Stop::Refused(e.code());

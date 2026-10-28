@@ -329,3 +329,87 @@ fn the_budgets_and_limits_read_the_rule_set_and_are_bounded() {
     let b = Budgets::bounded(0, 10_000_000_000, 0, 0);
     assert!(b.turns >= 1 && b.turns <= MAX_TURNS && b.tokens <= MAX_TOKENS && b.files_read >= 1 && b.hunks >= 1);
 }
+
+// ---- one run per task, then a turn per model call ----------------------------------------------------------------
+
+#[test]
+fn the_wire_is_one_start_then_turns_of_that_run() {
+    assert_eq!(start_run_url("https://engine.example/", "code-issue-to-pr"), "https://engine.example/api/v1/studios/code-issue-to-pr/runs");
+    assert_eq!(turns_url("https://engine.example/", "run-1"), "https://engine.example/api/v1/studio-runs/run-1/turns");
+    let tools = tool_defs();
+    let body = turn_body(&TurnRequest { run_id: "run-1", feature_key: "agent.code.issue-to-pr", system: "sys", messages: &[], tools: &tools });
+    assert_eq!(body["system"], "sys");
+    assert!(body["messages"].is_array() && body["tools"].is_array());
+    assert!(body.get("featureKey").is_none(), "the routing key is the server's, never the app's");
+}
+
+/// A one-thread HTTP server that answers each request in `answers` and keeps what it received.
+fn serve(answers: Vec<(u16, String)>) -> (String, std::thread::JoinHandle<Vec<String>>) {
+    use std::io::{Read, Write};
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    let handle = std::thread::spawn(move || {
+        let mut seen = vec![];
+        for (code, body) in answers {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut buf = vec![0u8; 65536];
+            let mut got = 0;
+            loop {
+                let n = stream.read(&mut buf[got..]).unwrap();
+                got += n;
+                let text = String::from_utf8_lossy(&buf[..got]).to_string();
+                if let Some(split) = text.find("\r\n\r\n") {
+                    let length = text[..split].to_lowercase().split("content-length:").nth(1).and_then(|r| r.lines().next()).and_then(|v| v.trim().parse::<usize>().ok()).unwrap_or(0);
+                    if got >= split + 4 + length {
+                        break;
+                    }
+                }
+                if n == 0 {
+                    break;
+                }
+            }
+            seen.push(String::from_utf8_lossy(&buf[..got]).to_string());
+            let reply = format!("HTTP/1.1 {code} X\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\n{body}", body.len());
+            let _ = stream.write_all(reply.as_bytes());
+        }
+        seen
+    });
+    (base, handle)
+}
+
+#[test]
+fn a_task_starts_one_run_and_every_turn_goes_to_it() {
+    let turn = json!({"text": "", "calls": [{"id": "c1", "name": "read_file", "args": {"path": "README.md"}}], "usage": {"promptTokens": 10, "completionTokens": 2, "creditsMicro": 1}}).to_string();
+    let end = json!({"text": "done", "calls": [], "usage": {"promptTokens": 12, "completionTokens": 3, "creditsMicro": 1}}).to_string();
+    let (base, server) = serve(vec![(202, json!({"id": "run-42"}).to_string()), (200, turn), (200, end)]);
+    let mut engine = SessionEngine::new(base, "bearer-x".into(), "code-issue-to-pr".into(), std::time::Duration::from_secs(5));
+    let tmp = tempfile::tempdir().unwrap();
+    let repo = repo_in(tmp.path());
+    let report = run_agent(&repo, &mut Book::in_memory(), &mut engine, &mut Answer(false, 0), &input("x"), &Budgets::default(), &Limits::bounded(10, 30, 64 * 1024));
+    assert_eq!(report.stop, Stop::Done);
+    assert_eq!(report.turns, 2);
+    assert_eq!(report.run_id, "run-42", "the report carries the server's run id");
+    let seen = server.join().unwrap();
+    assert_eq!(seen.len(), 3, "one start, two turns");
+    assert!(seen[0].starts_with("POST /api/v1/studios/code-issue-to-pr/runs"));
+    assert!(seen[1].starts_with("POST /api/v1/studio-runs/run-42/turns"));
+    assert!(seen[2].starts_with("POST /api/v1/studio-runs/run-42/turns"));
+    assert!(seen.iter().all(|r| r.to_lowercase().contains("authorization: bearer bearer-x")));
+    assert!(!seen[1].contains("featureKey"));
+}
+
+#[test]
+fn a_refusal_on_the_start_or_on_a_later_turn_is_the_servers_own_word() {
+    let (base, server) = serve(vec![(409, json!({"status": "studio_not_entitled"}).to_string())]);
+    let mut engine = SessionEngine::new(base, "b".into(), "code-issue-to-pr".into(), std::time::Duration::from_secs(5));
+    let req = TurnRequest { run_id: "x", feature_key: "k", system: "s", messages: &[], tools: &[] };
+    assert_eq!(engine.turn(&req), Err(EngineError::NotEntitled));
+    assert!(engine.run_id().is_none(), "no run was started");
+    server.join().unwrap();
+
+    let (base, server) = serve(vec![(202, json!({"id": "run-7"}).to_string()), (409, json!({"status": "consent_required"}).to_string())]);
+    let mut engine = SessionEngine::new(base, "b".into(), "code-issue-to-pr".into(), std::time::Duration::from_secs(5));
+    assert_eq!(engine.turn(&req), Err(EngineError::ConsentRequired));
+    assert_eq!(engine.run_id().as_deref(), Some("run-7"));
+    server.join().unwrap();
+}

@@ -1,5 +1,5 @@
 import { defineKeys, keepPreviousData, queryOptions } from "@krizaka/query";
-import { api } from "./api";
+import { api, codeApi } from "./api";
 
 /** Keys of the snapshot (settings, shared folders, probe) and of the file browser. */
 export const snapshotKeys = defineKeys("snapshot", {});
@@ -33,3 +33,8 @@ export const previewQuery = (path: string | null) =>
     retry: false,
     throwOnError: false,
   });
+
+/** The checks of the open repository: suggestions, confirmations, and whether the next run needs an approval. */
+export const codeKeys = defineKeys("code", { checks: () => ["checks"] });
+export const checksQuery = () =>
+  queryOptions({ queryKey: codeKeys.checks(), queryFn: () => codeApi.checks(), staleTime: 0, retry: false, throwOnError: false });
