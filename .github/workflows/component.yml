@@ -34,6 +34,28 @@ on:
         default: '^\.changeset/|^(LICENSE|NOTICE|SECURITY|CODE_OF_CONDUCT|SUPPORT)(\.md)?$|^\.github/(ISSUE_TEMPLATE/|pull_request_template\.md$|FUNDING\.yml$|dependabot\.yml$)'
         type: string
 
+      sonar:
+        description: "Run the SonarCloud CI analysis after verify (jobs `sonar` / `sonar-light`, project settings in the repository's sonar-project.properties). Turn off the project's automatic analysis once it is green."
+        required: false
+        default: false
+        type: boolean
+      sonar-coverage-paths:
+        description: "Newline-separated files verify uploads for the analysis, relative to the component (JaCoCo report and compiled classes for a Maven repository, coverage/lcov.info for a UI one). Globs allowed."
+        required: false
+        default: |
+          **/target/site/jacoco/jacoco.xml
+          **/target/classes
+        type: string
+      sonar-args:
+        description: "Extra scanner arguments."
+        required: false
+        default: ""
+        type: string
+    secrets:
+      SONAR_TOKEN:
+        description: "SonarCloud token (the org secret). Required when `sonar` is true; never printed."
+        required: false
+
 permissions:
   contents: read
 
@@ -44,7 +66,7 @@ jobs:
   changes:
     permissions:
       contents: read
-    uses: krizaka/.github/.github/workflows/changes.yml@ccd224612f5bb9db815335654f359a595a597fbb # main
+    uses: krizaka/.github/.github/workflows/changes.yml@52867e939aae51e061389109d52b1e463f8fe72f # main
     with:
       ignore: ${{ inputs.ignore }}
 
@@ -129,6 +151,39 @@ jobs:
           target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='${{ inputs.component }}').path)")
           cd "$target" && ./mvnw -B -ntp rewrite:dryRun
 
+      - name: Collect the coverage for SonarCloud
+        if: ${{ inputs.sonar }}
+        working-directory: workspace
+        env:
+          PATHS: ${{ inputs.sonar-coverage-paths }}
+          OUT: ${{ runner.temp }}/sonar-coverage.tar
+        run: |
+          target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='${{ inputs.component }}').path)")
+          cd "$target"
+          shopt -s globstar nullglob
+          files=()
+          while IFS= read -r pattern; do
+            [ -z "$pattern" ] && continue
+            # shellcheck disable=SC2206  # the pattern is a glob on purpose
+            matches=($pattern)
+            files+=("${matches[@]}")
+          done <<< "$PATHS"
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "::warning::no coverage report found ($PATHS): the analysis runs without coverage and the new-code coverage condition will fail"
+            tar -cf "$OUT" --files-from /dev/null
+          else
+            tar -cf "$OUT" "${files[@]}"
+            echo "collected: ${files[*]}"
+          fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ inputs.sonar }}
+        with:
+          name: sonar-coverage
+          path: ${{ runner.temp }}/sonar-coverage.tar
+          retention-days: 1
+          if-no-files-found: error
+
       - name: npm with trusted publishing
         if: startsWith(github.ref, 'refs/tags/v')
         run: npm install -g npm@11
@@ -139,3 +194,120 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/workspace.mjs publish "${{ inputs.component }}"
+
+  # A docs-only change skips the heavy jobs, yet the required « SonarCloud Code Analysis » must still be posted by the SonarCloud app:
+  # a light scan (checkout, no build, no tests, no coverage) does it, and its quality gate is real on the changed files (.github#330).
+  # Never a synthetic status: that would forge a check which belongs to another app.
+  sonar-light:
+    name: SonarCloud (docs only)
+    needs: changes
+    if: ${{ inputs.sonar && !cancelled() && needs.changes.outputs.code == 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - name: The token is there
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then echo "::error::SONAR_TOKEN is empty: pass the org secret to the workflow (secrets: SONAR_TOKEN) and, for Dependabot, add it as a Dependabot secret"; exit 1; fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0  # blame and new-code detection need the history
+          persist-credentials: false
+
+      - uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        env:
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          projectBaseDir: .
+          args: -Dsonar.qualitygate.wait=true -Dsonar.java.binaries=. ${{ inputs.sonar-args }}
+
+  sonar:
+    name: SonarCloud
+    needs: [changes, verify]
+    if: ${{ inputs.sonar && !cancelled() && needs.changes.outputs.code != 'false' && needs.verify.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - name: The token is there
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then echo "::error::SONAR_TOKEN is empty: pass the org secret to the workflow (secrets: SONAR_TOKEN) and, for Dependabot, add it as a Dependabot secret"; exit 1; fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0  # blame and new-code detection need the history
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: sonar-coverage
+          path: ${{ runner.temp }}/sonar-coverage
+
+      - name: Restore the reports
+        env:
+          TAR: ${{ runner.temp }}/sonar-coverage/sonar-coverage.tar
+        run: tar -xf "$TAR"
+
+      # CI analysis: the SonarCloud app still decorates the pull request and posts « SonarCloud Code Analysis »; the quality gate is awaited
+      # here so the CI gate carries its verdict too.
+      - uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        env:
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          projectBaseDir: .
+          args: -Dsonar.qualitygate.wait=true ${{ inputs.sonar-args }}
+
+  # ALWAYS reports (see java-ci.yml): green when verify succeeded or the changes gate legitimately skipped it; the merge queue
+  # and branch protection can require this one name whatever the change.
+  gate:
+    name: CI gate
+    needs: [changes, verify, sonar, sonar-light]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    outputs:
+      result: ${{ steps.verdict.outputs.result }}
+    steps:
+      - id: verdict
+        env:
+          CODE: ${{ needs.changes.outputs.code }}
+          CHANGES: ${{ needs.changes.result }}
+          VERIFY: ${{ needs.verify.result }}
+          SONAR: ${{ needs.sonar.result }}
+          SONAR_WANTED: ${{ inputs.sonar }}
+          SONAR_LIGHT: ${{ needs.sonar-light.result }}
+        run: |
+          fail=0
+          echo "gate: code=${CODE:-unknown} changes=$CHANGES verify=$VERIFY"
+          [ "$CHANGES" = success ] || echo "::warning::the changes gate did not succeed ($CHANGES): the job ran in full"
+          case "$VERIFY" in success|skipped) ;; *) echo "::error::verify $VERIFY"; fail=1 ;; esac
+          case "${SONAR:-skipped}" in success|skipped) ;; *) echo "::error::sonar $SONAR"; fail=1 ;; esac
+          if [ "$CODE" != "false" ] && [ "$VERIFY" != success ]; then
+            echo "::error::verify must run when the gate did not answer false"; fail=1
+          fi
+          if [ "$CODE" != "false" ] && [ "${SONAR_WANTED:-false}" = "true" ] && [ "$VERIFY" = success ] && [ "${SONAR:-skipped}" != success ]; then
+            echo "::error::sonar must run and succeed when the gate did not answer false"; fail=1
+          fi
+          if [ "$CODE" = "false" ] && [ "${SONAR_WANTED:-false}" = "true" ] && [ "${SONAR_LIGHT:-skipped}" != success ]; then
+            echo "::error::sonar-light must run and succeed on a docs-only change"; fail=1
+          fi
+          case "${SONAR_LIGHT:-skipped}" in success|skipped) ;; *) echo "::error::sonar-light $SONAR_LIGHT"; fail=1 ;; esac
+          if [ "$fail" = 0 ]; then echo "result=success" >> "$GITHUB_OUTPUT"; else echo "result=failure" >> "$GITHUB_OUTPUT"; fi
+          {
+            echo "### CI gate"
+            echo "| job | result |"
+            echo "| --- | --- |"
+            echo "| changes | $CHANGES (code=${CODE:-unknown}) |"
+            echo "| verify | $VERIFY |"
+            echo "| sonar | ${SONAR:-skipped} |"
+            echo "| sonar-light | ${SONAR_LIGHT:-skipped} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$fail"

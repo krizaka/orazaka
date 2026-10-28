@@ -79,3 +79,11 @@ test("no workflow repeats a key inside a job (a merge once left two `permissions
   assert.deepEqual(bad, []);
   assert.equal(duplicateJobKeys("t.yml", "jobs:\n  a:\n    permissions:\n      contents: read\n    runs-on: x\n    permissions:\n      contents: write\n").length, 1);
 });
+
+test("component.yml carries the SonarCloud CI legs and an always-reporting gate; the changes gate reads the merge queue", () => {
+  const src = readFileSync(new URL("component.yml", dir), "utf8");
+  for (const job of ["sonar", "sonar-light", "gate"]) assert.match(src, new RegExp(`^  ${job}:`, "m"), `job ${job}`);
+  assert.match(src, /^  gate:[\s\S]*?if: \$\{\{ always\(\) \}\}/m);
+  assert.match(src, /changes\.yml@52867e9/);
+  assert.match(src, /startsWith\(github\.ref, 'refs\/tags\/v'\)/);
+});
