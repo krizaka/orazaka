@@ -109,6 +109,7 @@ generated: true
 - `CatalogModelManager`
 - `ChatMemoryPersistenceProvider`
 - `ChatSessionPersistenceProvider`
+- `FeatureRouteManager`
 - `JobPersistenceProvider`
 - `OutboxStore`
 - `PipelineConfigManager`

@@ -848,6 +848,7 @@
           "CatalogModelManager",
           "ChatMemoryPersistenceProvider",
           "ChatSessionPersistenceProvider",
+          "FeatureRouteManager",
           "JobPersistenceProvider",
           "OutboxStore",
           "PipelineConfigManager",
