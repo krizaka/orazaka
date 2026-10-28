@@ -254,6 +254,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| POST | `/api/v1/studio-runs/{runId}/turns` | authenticated | StudioTurnController | Runs one model turn of a session. |
 | GET | `/api/v1/studios` | authenticated | StudioController | The catalogue, optionally narrowed to one profession. |
 | GET | `/api/v1/studios/{studioKey}` | authenticated | StudioController | One Studio's detail, including the schemas its forms are generated from. |
 | GET | `/api/v1/studios/{studioKey}/blueprints` | ADMIN | StudioBlueprintController | Every version of a Studio, drafts included — the Builder's version list. |
