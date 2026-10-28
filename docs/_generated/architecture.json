@@ -4486,7 +4486,7 @@
     {
       "key": "code-contributor",
       "dir": "code-contributor",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tier": "DATA",
       "kind": null,
       "distribution": "CLOUD",
@@ -4541,26 +4541,18 @@
           "estimatedCredits": 40,
           "steps": 1,
           "stepKinds": [
-            "CAPABILITY"
+            "SESSION"
           ],
           "inputs": [
             {
-              "key": "messages",
-              "title": "Messages"
-            },
-            {
-              "key": "tools",
-              "title": "Outils"
+              "key": "task",
+              "title": "Tâche"
             }
           ],
           "outputs": [
             {
-              "key": "text",
+              "key": "closedBy",
               "type": "TEXT"
-            },
-            {
-              "key": "calls",
-              "type": "JSON"
             }
           ],
           "text": {
@@ -4585,26 +4577,18 @@
           "estimatedCredits": 40,
           "steps": 1,
           "stepKinds": [
-            "CAPABILITY"
+            "SESSION"
           ],
           "inputs": [
             {
-              "key": "messages",
-              "title": "Messages"
-            },
-            {
-              "key": "tools",
-              "title": "Outils"
+              "key": "task",
+              "title": "Tâche"
             }
           ],
           "outputs": [
             {
-              "key": "text",
+              "key": "closedBy",
               "type": "TEXT"
-            },
-            {
-              "key": "calls",
-              "type": "JSON"
             }
           ],
           "text": {

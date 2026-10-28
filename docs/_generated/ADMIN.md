@@ -22,6 +22,7 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | `/` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
 | `/audit` | `/audit` — the audit trail of account administration. | — |
 | `/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
+| `/engine` | — | — |
 | `/law` | `/law` — Law → Proposals (ADR-089 §8): the review queue and promotion of the rules from the law, the corpus, the demand. | — |
 | `/login` | — | — |
 | `/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
@@ -105,6 +106,7 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | PUT | `/api/v1/studios/{studioKey}/blueprints/{version}` | ADMIN | Creates or replaces a draft version. |
 | POST | `/api/v1/studios/{studioKey}/blueprints/{version}/publish` | ADMIN | Publishes a draft, minting it as the Studio's latest version. |
 | GET | `/api/v1/studios/admin/audit` | ADMIN | — |
+| GET | `/api/v1/studios/admin/runtime-config` | ADMIN | — |
 
 ## Every ADMIN-only endpoint
 
