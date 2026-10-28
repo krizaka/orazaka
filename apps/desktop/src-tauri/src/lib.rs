@@ -70,6 +70,8 @@ pub struct AppState {
     code: Mutex<Option<code::Repo>>,
     /// The confirmed checks of this device and the Code session's run state (ADR-093 §4.4).
     code_checks: Mutex<code::checks::Book>,
+    /// The settings rule set for code runs (`code-rules.json`): check limits and the agent's budgets.
+    code_rules: code::rules::CodeRules,
 }
 
 impl AppState {
@@ -632,7 +634,7 @@ fn code_check_revoke(state: State<'_, AppState>, id: String) -> Res<bool> {
 #[tauri::command]
 async fn code_check_run(state: State<'_, AppState>, name: String, approved: bool) -> Res<code::checks::CheckRun> {
     let repo = code_repo(&state)?;
-    let result = code::checks::run(&repo, &mut state.code_checks.lock().unwrap(), &name, approved, &code::checks::Limits::default());
+    let result = code::checks::run(&repo, &mut state.code_checks.lock().unwrap(), &name, approved, &state.code_rules.limits());
     match result {
         Ok(run) => {
             code_audit(&state, "code.check.run", run.audit_data());
@@ -972,6 +974,7 @@ pub fn run() {
             );
             spawn_scheduler(automations.clone());
             let checks_file = data_dir.join("code-checks.json");
+            let code_rules = code::rules::CodeRules::load(&data_dir.join("code-rules.json"));
             app.manage(AppState {
                 data_dir,
                 settings: Mutex::new(settings),
@@ -985,6 +988,7 @@ pub fn run() {
                 last_probe: Mutex::new("stopped".into()),
                 code: Mutex::new(None),
                 code_checks: Mutex::new(code::checks::Book::open(&checks_file)),
+                code_rules: code_rules.clone(),
             });
             let handle = app.handle().clone();
             let state = handle.state::<AppState>();

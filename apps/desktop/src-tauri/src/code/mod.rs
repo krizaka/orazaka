@@ -8,11 +8,17 @@
 //! * `checks`     — slice 2: user-confirmed argv commands (the only `exec`), run in a Seatbelt sandbox.
 //! * `editor`     — « Open in VS Code / Xcode » at a line.
 //!
-//! No GitHub and no model loop here: this slice builds the tools and the review a human uses.
+//! * `data`       — slice 3: the data channel (untrusted text, fenced, capped, redacted).
+//! * `agent`      — slice 3: the closed tool list and the loop; the engine owns each model turn.
+//!
+//! No GitHub here (slice 4).
 
+pub mod agent;
 pub mod checks;
+pub mod data;
 pub mod diff;
 pub mod editor;
+pub mod rules;
 pub mod scope;
 pub mod snapshot;
 pub mod tools;
@@ -25,3 +31,6 @@ mod tests;
 
 #[cfg(test)]
 mod tests_checks;
+
+#[cfg(test)]
+mod tests_agent;

@@ -199,6 +199,11 @@ impl Book {
         Book { path: None, grants: vec![], session: Session::default() }
     }
 
+    /// A new run is a new session: tainted from its first untrusted byte, nothing pending, no runs counted.
+    pub fn begin_run(&mut self) {
+        self.session = Session::default();
+    }
+
     pub fn open(path: &Path) -> Book {
         let grants = fs::read_to_string(path).ok().and_then(|s| serde_json::from_str::<BookFile>(&s).ok()).unwrap_or_default().grants;
         Book { path: Some(path.to_path_buf()), grants, session: Session::default() }
