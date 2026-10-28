@@ -1,0 +1,9 @@
+{
+  "name": "orazaka-workspace-scripts",
+  "private": true,
+  "type": "module",
+  "description": "The dependencies of the workspace scripts: the demo cast (@krizaka/org) that names the seeded accounts. CI and the Mac run `npm ci --prefix scripts`.",
+  "dependencies": {
+    "@krizaka/org": "^0.4.0"
+  }
+}

@@ -57,7 +57,9 @@ jobs:
           node-version: "22"
 
       - name: Workspace scripts
-        run: node --test 'scripts/test/*.test.mjs'
+        run: |
+          npm install --prefix scripts --no-audit --no-fund
+          node --test 'scripts/test/*.test.mjs'
 
       - name: Krizaka versions are provided
         # The BOM may only name a com.krizaka release that a cloned repository builds or Maven Central carries

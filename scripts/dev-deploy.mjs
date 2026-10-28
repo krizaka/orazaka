@@ -13,6 +13,7 @@
  *   node scripts/dev-deploy.mjs pricebook-external-check-research  # their price book rows on krizaka_billing_db (krizaka-billing#57)
  *   node scripts/dev-deploy.mjs service-tier     # the `service` rate-limit tier, svc_* users moved onto it (ADR-083)
  *   node scripts/dev-deploy.mjs seed        # the two test accounts → the QA store (@dev), never printed
+ *   node scripts/dev-deploy.mjs names       # the seeded accounts carry the cast's names (renamed in place, passwords untouched), prints the usernames only
  *   node scripts/dev-deploy.mjs persona [eric|mira|krizaka]  # a plain user, free tier: Eric/Mira the demo personas, Krizaka the company as an SME customer → @dev APP_QA_ORAZAKA_<NAME>_*, never printed; sign-up stays closed
  *   node scripts/dev-deploy.mjs service-account <product> [--studios a,b] [--scopes ai:embed] [--prefix AI_ENGINE] --out <file>
  *                                           # a product's service account: user, oz_ API key, Studio grants
@@ -31,6 +32,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { devSecrets, envFileFromArgs, readEnvFile } from "./lib/dev-secrets.mjs";
+import { persona as castPersona } from "@krizaka/org";
 import { pendingOnDev } from "./dev-migrations.mjs";
 
 export { readEnvFile };
@@ -330,9 +332,14 @@ function bcrypt(secret) {
   return r.stdout.trim().split(":")[1];
 }
 
-const ACCOUNTS = [
-  { key: "user", username: "qa_user", email: "qa+user@orazaka.com", tier: "free", roles: ["ROLE_USER"] },
-  { key: "admin", username: "qa_admin", email: "qa+admin@orazaka.com", tier: "admin", roles: ["ROLE_USER", "ROLE_ADMIN"] },
+/**
+ * The two QA accounts (ORAZAKA_USER_*, ORAZAKA_ADMIN_*). The greeting of the app reads the users service `username`, so the
+ * username IS the name a screen shows: it comes from the cast of @krizaka/org (krizaka/.github#356), never « qa_user ».
+ * `legacy` names the usernames they had before, renamed in place by seedSql (a re-run finds nothing to rename).
+ */
+export const ACCOUNTS = [
+  { key: "user", username: castPersona("orazaka", "eric").displayName, legacy: ["qa_user"], email: "qa+user@orazaka.com", tier: "free", roles: ["ROLE_USER"] },
+  { key: "admin", username: castPersona("orazaka", "mira").displayName, legacy: ["qa_admin"], email: "qa+admin@orazaka.com", tier: "admin", roles: ["ROLE_USER", "ROLE_ADMIN"] },
 ];
 
 /**
@@ -342,12 +349,13 @@ const ACCOUNTS = [
  */
 export function personaAccount(name = "eric") {
   const personas = {
-    eric: { username: "Eric", email: "eric.morel@example.com", secret: "PERSONA" },
-    mira: { username: "Mira", email: "mira.tremblay@orazaka.test", secret: "MIRA" },
+    // The username is the first name of the cast (@krizaka/org), the one the greeting shows; `legacy` is what it was called before.
+    eric: { username: castPersona("orazaka", "eric").firstName, legacy: ["Eric"], email: "eric.morel@example.com", secret: "PERSONA" },
+    mira: { username: castPersona("orazaka", "mira").firstName, email: "mira.tremblay@orazaka.test", secret: "MIRA" },
     // The company itself as a customer (Oussama, 2026-10-22): Krizaka is an SME, it uses Orazaka the way an SME would —
     // a plain user on the free plan, in French — to see its own products from the inside. Not a demo persona, not a
     // service account: the products keep their own svc_<product> keys (one key, one plan, one usage per product).
-    krizaka: { username: "Krizaka", email: "orazaka@krizaka.com", secret: "KRIZAKA", language: "fr" },
+    krizaka: { username: castPersona("orazaka", "krizaka").firstName, email: "orazaka@krizaka.com", secret: "KRIZAKA", language: "fr" },
   };
   const p = personas[name];
   if (!p) throw new Error(`unknown persona: ${name} (eric | mira | krizaka)`);
@@ -358,7 +366,10 @@ export function seedSql(accounts) {
   const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
   const rows = accounts.map(
     (a) =>
-      `INSERT INTO users (id, username, password_hash, email, enabled, preferences, rate_limit_tier)
+      `${(a.legacy ?? [])
+        .map((l) => `UPDATE users SET username = ${q(a.username)} WHERE username = ${q(l)} AND NOT EXISTS (SELECT 1 FROM users WHERE username = ${q(a.username)});`)
+        .join("\n")}
+       INSERT INTO users (id, username, password_hash, email, enabled, preferences, rate_limit_tier)
        VALUES (gen_random_uuid()::text, ${q(a.username)}, ${q(a.hash)}, ${q(a.email)}, true, ${q(JSON.stringify({ language: a.language === "fr" ? "fr" : "en" }))}, ${q(a.tier)})
        ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash, enabled = true,
          email = EXCLUDED.email, rate_limit_tier = EXCLUDED.rate_limit_tier;
@@ -370,6 +381,24 @@ export function seedSql(accounts) {
          .join("\n")}`,
   );
   return `BEGIN;\n${rows.join("\n")}\nCOMMIT;\n`;
+}
+
+/** The names of the cast on the accounts that exist, nothing else: no password, no e-mail, no role is touched. Idempotent. */
+export function namesSql(accounts) {
+  const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
+  const renames = accounts.flatMap((a) =>
+    (a.legacy ?? []).map((l) => `UPDATE users SET username = ${q(a.username)} WHERE username = ${q(l)} AND NOT EXISTS (SELECT 1 FROM users WHERE username = ${q(a.username)});`),
+  );
+  return `BEGIN;\n${renames.join("\n")}\nCOMMIT;\n`;
+}
+
+/** Applies the cast's names to the deployed accounts, then lists the usernames (never a secret). */
+function names() {
+  const env = secrets();
+  const accounts = [...ACCOUNTS, personaAccount(), personaAccount("mira"), personaAccount("krizaka")];
+  psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], namesSql(accounts));
+  const out = psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", ["-At", "-c", `SELECT username FROM users WHERE username IN (${accounts.map((a) => `'${a.username.replace(/'/g, "''")}'`).join(",")}) ORDER BY username`], "");
+  console.log(`usernames on dev: ${out.trim().split("\n").join(" · ")}`);
 }
 
 function seed() {
@@ -690,6 +719,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (command === "automations") automations();
     else if (command === "seed") seed();
     else if (command === "persona") seedPersona(rest[0]);
+    else if (command === "names") names();
     else if (command === "service-account") await createServiceAccount(rest[0], rest.slice(1));
     else if (command === "broker") broker();
     else if (command === "status") status();

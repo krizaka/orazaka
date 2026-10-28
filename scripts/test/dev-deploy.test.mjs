@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFile
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
-import { connectionVars, grantSql, parseScopes, password, personaAccount, readEnvFile, render, seedSql, serviceAccount, upsertEnv, writeEnvKeys } from "../dev-deploy.mjs";
+import { ACCOUNTS, namesSql, connectionVars, grantSql, parseScopes, password, personaAccount, readEnvFile, render, seedSql, serviceAccount, upsertEnv, writeEnvKeys } from "../dev-deploy.mjs";
 
 const spec = (name) => readFileSync(new URL(`../../infra/deploy/${name}.app.yaml`, import.meta.url), "utf8");
 
@@ -121,7 +121,7 @@ test("seedSql gives the admin ROLE_ADMIN, the user only ROLE_USER, and quotes va
 
 test("the demo persona on dev is a first name on a reserved e-mail domain, a plain user, never a QA account", () => {
   const p = personaAccount();
-  assert.equal(p.username, "Eric");
+  assert.equal(p.username, "Éric");
   assert.match(p.email, /@example\.com$/);
   assert.deepEqual(p.roles, ["ROLE_USER"]);
   assert.equal(p.tier, "free");
@@ -527,7 +527,7 @@ test("the dev persona Mira: a fictional plain user on a reserved .test domain, n
   assert.match(m.email, /@orazaka\.test$/);
   assert.deepEqual(m.roles, ["ROLE_USER"]);
   assert.equal(m.secret, "MIRA");
-  assert.equal(personaAccount().username, "Eric");
+  assert.equal(personaAccount().username, "Éric");
   assert.throws(() => personaAccount("admin"), /unknown persona/);
 });
 
@@ -608,4 +608,21 @@ test("the semantic cache (orazaka-ai-engine#40) is additive, idempotent, OFF on 
     : null;
   if (table) assert.ok(sql.includes(table[0]), "the migration carries the job-service table verbatim");
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "semantic-cache"\) semanticCache\(\)/);
+});
+
+test("the QA accounts carry the cast's names, never « qa »: renamed in place, idempotently (krizaka/orazaka#473)", () => {
+  assert.deepEqual(ACCOUNTS.map((a) => a.username), ["Éric Tremblay", "Mira Haddad"]);
+  for (const a of [...ACCOUNTS, personaAccount(), personaAccount("mira"), personaAccount("krizaka")]) assert.doesNotMatch(a.username, /\bqa[_\s-]|qa_user|\bqa\b/i, a.username);
+  const sql = seedSql(ACCOUNTS.map((a) => ({ ...a, hash: "$2y$10$h" })));
+  assert.match(sql, /UPDATE users SET username = 'Éric Tremblay' WHERE username = 'qa_user' AND NOT EXISTS/);
+  assert.match(sql, /UPDATE users SET username = 'Mira Haddad' WHERE username = 'qa_admin' AND NOT EXISTS/);
+  assert.ok(sql.indexOf("UPDATE users SET username = 'Éric Tremblay'") < sql.indexOf("INSERT INTO users"), "rename first, so the upsert finds the row");
+  assert.match(sql, /ON CONFLICT \(username\) DO UPDATE/, "a second run only refreshes");
+});
+
+test("`names` only renames: no password, e-mail or role in its SQL, and a second run changes nothing", () => {
+  const sql = namesSql([...ACCOUNTS, personaAccount()]);
+  assert.match(sql, /'qa_user'/);
+  assert.match(sql, /WHERE username = 'Eric' AND NOT EXISTS/);
+  assert.doesNotMatch(sql, /password_hash|INSERT|authorities|email/);
 });
