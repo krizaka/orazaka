@@ -142,6 +142,9 @@ pub trait Engine {
     fn run_id(&self) -> Option<String> {
         None
     }
+    /// The task is over: the engine closes its session so the server stops waiting for turns and settles the run. Best
+    /// effort and idempotent; if it fails, the server's idle TTL closes the session anyway.
+    fn finish(&mut self) {}
 }
 
 /// One session = one Studio run per task (ADR-086, ADR-093 §6: one run id for the audit, the proof and the billing), then
@@ -161,6 +164,11 @@ pub struct SessionEngine {
 /// `POST {base}/api/v1/studios/{studio}/runs`: starts the task's run.
 pub fn start_run_url(base: &str, studio_key: &str) -> String {
     format!("{}/api/v1/studios/{studio_key}/runs", base.trim_end_matches('/'))
+}
+
+/// `POST {base}/api/v1/studio-runs/{runId}/finish`: the task is over, close the session.
+pub fn finish_url(base: &str, run_id: &str) -> String {
+    format!("{}/api/v1/studio-runs/{run_id}/finish", base.trim_end_matches('/'))
 }
 
 /// `POST {base}/api/v1/studio-runs/{runId}/turns`: one model turn of that run.
@@ -195,7 +203,7 @@ impl SessionEngine {
         if let Some(id) = &self.run_id {
             return Ok(id.clone());
         }
-        let accepted = self.post(&start_run_url(&self.base_url, &self.studio_key), json!({ "inputs": { "messages": [], "tools": [] } }), Some(&uuid::Uuid::new_v4().to_string()))?;
+        let accepted = self.post(&start_run_url(&self.base_url, &self.studio_key), json!({ "inputs": {} }), Some(&uuid::Uuid::new_v4().to_string()))?;
         let id = accepted["id"].as_str().ok_or_else(|| EngineError::Unavailable("no run id".into()))?.to_string();
         self.run_id = Some(id.clone());
         Ok(id)
@@ -212,6 +220,13 @@ impl Engine for SessionEngine {
 
     fn run_id(&self) -> Option<String> {
         self.run_id.clone()
+    }
+
+    fn finish(&mut self) {
+        // A session that never started has nothing to close; a failure is left to the server's idle TTL.
+        if let Some(id) = self.run_id.take() {
+            let _ = self.post(&finish_url(&self.base_url, &id), json!({}), None);
+        }
     }
 }
 
@@ -394,9 +409,16 @@ fn execute(cx: &Ctx, book: &mut Book, approver: &mut dyn Approver, report: &mut 
     Outcome::Result(text)
 }
 
-/// Runs the loop. The caller starts a run with `Book::begin_run` (a new session, tainted from the first untrusted byte);
+/// Runs the loop, then says « finish » to the engine: the end of a task closes the server's session (whatever the stop).
+/// The caller starts a run with `Book::begin_run` (a new session, tainted from the first untrusted byte);
 /// a loop resumed after the person applied hunks keeps its session, so a « changes what runs » hunk still asks.
 pub fn run_agent(repo: &Repo, book: &mut Book, engine: &mut dyn Engine, approver: &mut dyn Approver, input: &AgentInput, budgets: &Budgets, limits: &Limits) -> RunReport {
+    let report = run_loop(repo, book, engine, approver, input, budgets, limits);
+    engine.finish();
+    report
+}
+
+fn run_loop(repo: &Repo, book: &mut Book, engine: &mut dyn Engine, approver: &mut dyn Approver, input: &AgentInput, budgets: &Budgets, limits: &Limits) -> RunReport {
     let tools_json = tool_defs();
     let cx = Ctx { repo, limits, budgets };
     let mut report = RunReport { run_id: input.run_id.clone(), stop: Stop::Done, turns: 0, usage: Usage::default(), files_read: 0, proposals: vec![], checks: vec![], rejected: vec![], final_text: String::new() };

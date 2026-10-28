@@ -336,6 +336,7 @@ fn the_budgets_and_limits_read_the_rule_set_and_are_bounded() {
 fn the_wire_is_one_start_then_turns_of_that_run() {
     assert_eq!(start_run_url("https://engine.example/", "code-issue-to-pr"), "https://engine.example/api/v1/studios/code-issue-to-pr/runs");
     assert_eq!(turns_url("https://engine.example/", "run-1"), "https://engine.example/api/v1/studio-runs/run-1/turns");
+    assert_eq!(finish_url("https://engine.example/", "run-1"), "https://engine.example/api/v1/studio-runs/run-1/finish");
     let tools = tool_defs();
     let body = turn_body(&TurnRequest { run_id: "run-1", feature_key: "agent.code.issue-to-pr", system: "sys", messages: &[], tools: &tools });
     assert_eq!(body["system"], "sys");
@@ -381,7 +382,7 @@ fn serve(answers: Vec<(u16, String)>) -> (String, std::thread::JoinHandle<Vec<St
 fn a_task_starts_one_run_and_every_turn_goes_to_it() {
     let turn = json!({"text": "", "calls": [{"id": "c1", "name": "read_file", "args": {"path": "README.md"}}], "usage": {"promptTokens": 10, "completionTokens": 2, "creditsMicro": 1}}).to_string();
     let end = json!({"text": "done", "calls": [], "usage": {"promptTokens": 12, "completionTokens": 3, "creditsMicro": 1}}).to_string();
-    let (base, server) = serve(vec![(202, json!({"id": "run-42"}).to_string()), (200, turn), (200, end)]);
+    let (base, server) = serve(vec![(202, json!({"id": "run-42"}).to_string()), (200, turn), (200, end), (204, "{}".to_string())]);
     let mut engine = SessionEngine::new(base, "bearer-x".into(), "code-issue-to-pr".into(), std::time::Duration::from_secs(5));
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
@@ -390,12 +391,26 @@ fn a_task_starts_one_run_and_every_turn_goes_to_it() {
     assert_eq!(report.turns, 2);
     assert_eq!(report.run_id, "run-42", "the report carries the server's run id");
     let seen = server.join().unwrap();
-    assert_eq!(seen.len(), 3, "one start, two turns");
+    assert_eq!(seen.len(), 4, "one start, two turns, then « finish »");
     assert!(seen[0].starts_with("POST /api/v1/studios/code-issue-to-pr/runs"));
     assert!(seen[1].starts_with("POST /api/v1/studio-runs/run-42/turns"));
     assert!(seen[2].starts_with("POST /api/v1/studio-runs/run-42/turns"));
+    assert!(seen[3].starts_with("POST /api/v1/studio-runs/run-42/finish"), "the end of the task closes the session");
     assert!(seen.iter().all(|r| r.to_lowercase().contains("authorization: bearer bearer-x")));
     assert!(!seen[1].contains("featureKey"));
+}
+
+#[test]
+fn a_refused_task_still_closes_its_session() {
+    let (base, server) = serve(vec![(202, json!({"id": "run-9"}).to_string()), (409, json!({"status": "consent_required"}).to_string()), (204, "{}".to_string())]);
+    let mut engine = SessionEngine::new(base, "b".into(), "code-issue-to-pr".into(), std::time::Duration::from_secs(5));
+    let tmp = tempfile::tempdir().unwrap();
+    let repo = repo_in(tmp.path());
+    let report = run_agent(&repo, &mut Book::in_memory(), &mut engine, &mut Answer(false, 0), &input("x"), &Budgets::default(), &Limits::bounded(10, 30, 64 * 1024));
+    assert_eq!(report.stop, Stop::Refused("consent_required".into()));
+    let seen = server.join().unwrap();
+    assert_eq!(seen.len(), 3, "start, the refused turn, then « finish »");
+    assert!(seen[2].starts_with("POST /api/v1/studio-runs/run-9/finish"));
 }
 
 #[test]
