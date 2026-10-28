@@ -223,18 +223,24 @@ function ci(name) {
       ],
       { cwd: ROOT },
     );
-    const validationWorker = join(ROOT, target.path, "document-validation", "worker");
-    run("python3", ["test_rules.py"], { cwd: validationWorker });
+    const packsDir = join(ROOT, target.path);
+    const validationWorker = join(packsDir, "document-validation", "worker");
+    // The packs' coverage (krizaka/.github#377): every worker suite below runs under `coverage run -a` into ONE data file at the
+    // repository root, then `coverage.xml` is written there for the SonarCloud step (sonar.python.coverage.reportPaths).
+    const COVERAGE = ["-m", "coverage", "run", "-a", `--data-file=${join(packsDir, ".coverage")}`, `--source=${packsDir}`, "--omit=*/test_*.py"];
+    run("python3", ["-m", "pip", "install", "--quiet", "coverage==7.17.0"], { cwd: validationWorker });
+    run("python3", [...COVERAGE, "test_rules.py"], { cwd: validationWorker });
     // The broker connection (TLS to the dev broker) — the worker's one third-party import here is pika.
     run("python3", ["-m", "pip", "install", "--quiet", "pika==1.4.4", "pyyaml==6.0.3"], { cwd: validationWorker });
     // The broker connection is shared by every worker (worker-common/, tested once) and the validation worker's own screening tests;
     // a packs revision from before that factoring still carries test_broker.py.
     if (existsSync(join(validationWorker, "test_screening.py"))) {
-      run("python3", ["test_screening.py"], { cwd: validationWorker });
-      run("python3", ["test_worker_broker.py"], { cwd: join(ROOT, target.path, "worker-common") });
+      run("python3", [...COVERAGE, "test_screening.py"], { cwd: validationWorker });
+      run("python3", [...COVERAGE, "test_worker_broker.py"], { cwd: join(packsDir, "worker-common") });
     } else {
-      run("python3", ["test_broker.py"], { cwd: validationWorker });
+      run("python3", [...COVERAGE, "test_broker.py"], { cwd: validationWorker });
     }
+    run("python3", ["-m", "coverage", "xml", `--data-file=${join(packsDir, ".coverage")}`, "-o", join(packsDir, "coverage.xml")], { cwd: packsDir });
     return;
   }
 

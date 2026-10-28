@@ -21,3 +21,11 @@ test("no bare -DskipTests is left in the workspace script", () => {
     .filter((l) => l.includes("-DskipTests") && !l.includes("const SKIP_TESTS"));
   assert.deepEqual(bare, []);
 });
+
+test("the packs recipe writes coverage.xml at the repository root (krizaka/.github#377): every worker suite runs under coverage, then one report", () => {
+  const packs = source.slice(source.indexOf('target.kind === "packs"'));
+  const suites = [...packs.matchAll(/run\("python3", \[\.\.\.COVERAGE, "(test_\w+\.py)"\]/g)].map((m) => m[1]);
+  assert.ok(suites.includes("test_rules.py") && suites.includes("test_screening.py") && suites.includes("test_worker_broker.py"));
+  assert.doesNotMatch(packs, /run\("python3", \["test_/, "no suite runs outside coverage");
+  assert.match(packs, /"coverage", "xml"[\s\S]*"coverage\.xml"/);
+});
