@@ -28,6 +28,11 @@ on:
         required: false
         default: false
         type: boolean
+      sonar:
+        description: "Run the SonarCloud CI analysis of the component after its verification (needs the SONAR_TOKEN secret, e.g. secrets: inherit), with the coverage the verification wrote (project settings in the component's sonar-project.properties). Turn off the project's automatic analysis once it is green."
+        required: false
+        default: false
+        type: boolean
       ignore:
         description: "changes.yml: JavaScript RegExp, a changed file matching it never needs the build. Keep out of it every file the governance rules read (AGENTS.md, docs, READMEs): the default only skips files no build can read."
         required: false
@@ -85,6 +90,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: incoming
+          fetch-depth: ${{ inputs.sonar && 0 || 1 }}   # the analysis blames and diffs against the base branch
 
       - name: Place the component at its workspace path
         working-directory: workspace
@@ -119,6 +125,26 @@ jobs:
       - name: Verify ${{ inputs.component }} against its upstreams
         working-directory: workspace
         run: node scripts/workspace.mjs ci "${{ inputs.component }}"
+
+      # The analysis runs from the component's own folder in the workspace: its sonar-project.properties names the sources,
+      # the coverage reports (lcov, JaCoCo XML) and the compiled classes that the verification just produced.
+      - name: Where the component sits in the workspace
+        id: where
+        if: ${{ inputs.sonar }}
+        working-directory: workspace
+        run: |
+          target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='${{ inputs.component }}').path)")
+          echo "dir=workspace/$target" >> "$GITHUB_OUTPUT"
+
+      - name: SonarCloud — analysis with the coverage of the verification
+        if: ${{ inputs.sonar }}
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          projectBaseDir: ${{ steps.where.outputs.dir }}
+          args: -Dsonar.projectVersion=ci-${{ github.run_number }} -Dsonar.qualitygate.wait=true
 
       # The recipes live in krizaka-parent (every repository inherits them). A change a recipe would make is
       # debt: `./mvnw rewrite:run` then `./mvnw spotless:apply` (twice until clean), run the tests, commit.
