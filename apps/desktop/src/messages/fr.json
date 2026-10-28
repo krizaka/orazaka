@@ -234,6 +234,24 @@
       "openXcode": "Ouvrir dans Xcode",
       "newFile": "Nouveau fichier",
       "written": "Écrit : {count} fichier(s)"
+    },
+    "checks": {
+      "title": "Vérifications",
+      "lead": "Les commandes qu'Orazaka peut lancer pour tester un changement. Vous confirmez chacune ; elle s'exécute sans shell, dans un bac à sable qui n'écrit que dans le dépôt.",
+      "suggested": "Suggérées par le dépôt",
+      "confirmed": "Confirmées",
+      "none": "Aucune commande confirmée pour l'instant. Une suggestion n'est qu'une proposition.",
+      "confirm": "Confirmer cette commande",
+      "revoke": "Révoquer",
+      "run": "Lancer",
+      "approveRun": "Approuver et lancer",
+      "needsApproval": "Un changement depuis la dernière vérification a modifié ce qui s'exécute",
+      "network": "Réseau autorisé",
+      "noNetwork": "Pas de réseau",
+      "timeout": "S'arrête après {secs} s",
+      "output": "Sortie",
+      "exit": "Code {code} en {ms} ms",
+      "timedOut": "Délai dépassé"
     }
   }
 }
