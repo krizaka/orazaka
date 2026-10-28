@@ -160,6 +160,8 @@ function ci(name) {
     run("node", [join(ROOT, "scripts", "check-krizaka-versions.mjs")], { cwd: ROOT });
     upstreams(name);
     run(MVNW, ["-B", "-ntp", "-f", join(target.path, "pom.xml"), "verify"], { cwd: ROOT });
+    // A skipped integration test is green in Failsafe: fail it here, and print the count (orazaka-studio#98).
+    run("node", [join(ROOT, "scripts", "check-skipped-tests.mjs"), join(ROOT, target.path), name], { cwd: ROOT });
     return;
   }
 
