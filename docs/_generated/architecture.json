@@ -718,6 +718,7 @@
       "description": "Orazaka AI Orchestration Engine",
       "ports": {
         "inbound": [
+          "AgentTurns",
           "AiClient",
           "CatalogModelService",
           "ChatSessionService",
@@ -746,6 +747,7 @@
           "ConversationMemory",
           "EmbeddingClient",
           "ExternalCheckConnector",
+          "FeatureModelRoutes",
           "ImageGeneratorClient",
           "InfrastructureStatusProvider",
           "KnowledgeService",
@@ -758,10 +760,12 @@
           "PromptAssembly",
           "ProviderChatClient",
           "SemanticClassifierPort",
+          "SpeechSynthesis",
           "StepModelRecorder",
           "StepRouteProvider",
           "StructuredOutputClient",
           "TestShaperPort",
+          "ToolAnswerCodec",
           "ToolOptions",
           "ToolPermissionProvider",
           "ToolRegistry",

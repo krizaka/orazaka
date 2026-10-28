@@ -102,6 +102,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/imports` | authenticated | LawCorpusAdminController | The imports. |
 | POST | `/imports` | authenticated | LawCorpusAdminController | The manual import: the consolidated XML an administrator uploads, with where it came from. |
 | GET | `/instruments` | authenticated | LawCorpusAdminController | The instruments. |
+| POST | `/internal/v1/agent-turns` | SERVICE | AgentTurnsController | Runs one model turn. |
 | POST | `/internal/v1/protected-conversations/erase` | SERVICE | ProtectedConversationController | Erases a person's conversations under a pack. |
 | GET | `/kinds/{kindId}/golden` | authenticated | LawReviewController | The golden cases of a kind against the minimum of promotion. |
 | POST | `/kinds/{kindId}/promote` | authenticated | LawReviewController | Opens the packs pull request of approved proposals. |

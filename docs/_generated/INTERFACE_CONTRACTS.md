@@ -12,6 +12,7 @@ generated: true
 
 **Inbound ports**
 
+- `AgentTurns`
 - `AiClient`
 - `CatalogModelService`
 - `ChatSessionService`
@@ -41,6 +42,7 @@ generated: true
 - `ConversationMemory`
 - `EmbeddingClient`
 - `ExternalCheckConnector`
+- `FeatureModelRoutes`
 - `ImageGeneratorClient`
 - `InfrastructureStatusProvider`
 - `KnowledgeService`
@@ -53,10 +55,12 @@ generated: true
 - `PromptAssembly`
 - `ProviderChatClient`
 - `SemanticClassifierPort`
+- `SpeechSynthesis`
 - `StepModelRecorder`
 - `StepRouteProvider`
 - `StructuredOutputClient`
 - `TestShaperPort`
+- `ToolAnswerCodec`
 - `ToolOptions`
 - `ToolPermissionProvider`
 - `ToolRegistry`
