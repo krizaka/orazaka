@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const { packs } = JSON.parse(fs.readFileSync(path.join(root, "docs", "_generated", "architecture.json"), "utf8"));
-const CATEGORIES = ["business-compliance", "creativity-media", "wellbeing", "data-analytics"];
+const CATEGORIES = ["business-compliance", "creativity-media", "wellbeing", "data-analytics", "developer-tools"];
 const onShelf = packs.filter((p) => p.status === "PUBLISHED" && p.showcase);
 
 test("every pack on the shelf has a category of the closed list, its weight and its words in both languages", () => {
