@@ -627,3 +627,24 @@ test("personaActorSql finds the persona by e-mail, so the Studio grant lands on 
   const { personaActorSql } = await import("../dev-deploy.mjs");
   assert.match(personaActorSql(personaAccount()), /WHERE lower\(email\) = lower\('eric\.morel@example\.com'\)/);
 });
+
+test("re-running `persona eric` keeps his password: the secret is reused, the hash is replaced only when absent or not matching", async () => {
+  const { planPersonaPassword } = await import("../dev-deploy.mjs");
+  const matches = (pw, hash) => hash === `h(${pw})`;
+  // first run: no secret, no account → a new password and its hash, both stored
+  const first = planPersonaPassword({ stored: "", hash: "", matches, generate: () => "new-pw" });
+  assert.deepEqual({ ...first }, { password: "new-pw", setHash: true, storeSecret: true });
+  // re-run: the secret is there and the stored hash matches → nothing changes
+  assert.deepEqual({ ...planPersonaPassword({ stored: "kept", hash: "h(kept)", matches, generate: () => "other" }) }, { password: "kept", setHash: false, storeSecret: false });
+  // drift: the account holds another password → the hash follows the secret (the secret never moves)
+  assert.deepEqual({ ...planPersonaPassword({ stored: "kept", hash: "h(old)", matches, generate: () => "other" }) }, { password: "kept", setHash: true, storeSecret: false });
+  // account created by hand, secret lost → a new password for both
+  assert.deepEqual({ ...planPersonaPassword({ stored: "", hash: "h(x)", matches, generate: () => "new-pw" }) }, { password: "new-pw", setHash: true, storeSecret: true });
+});
+
+test("seedSql without a hash leaves the stored password alone (update and conflict), with one it sets it", () => {
+  const keep = seedSql([{ ...personaAccount(), hash: undefined }]);
+  assert.doesNotMatch(keep.split("INSERT")[0], /password_hash/, "the UPDATE does not touch password_hash");
+  assert.doesNotMatch(keep.split("ON CONFLICT (username)")[1].split(";")[0], /password_hash/, "nor does the username conflict branch");
+  assert.match(seedSql([{ ...personaAccount(), hash: "$2y$10$h" }]), /UPDATE users SET password_hash = '\$2y\$10\$h'/);
+});
