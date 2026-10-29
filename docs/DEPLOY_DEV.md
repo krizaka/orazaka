@@ -43,6 +43,26 @@ down so App Platform restarts the set.
 Measured on 2026-10-14 against the cluster (five JVMs, serial GC, C1 only, virtual threads): **1.3 GB resident**
 idle and after a round of sign-ins and Studio listings — the reason for a 2 GB container.
 
+### Core memory (orazaka#499)
+
+Eight JVMs and two Python workers ran `basic-s` (2 GiB) at 93-99 % and restarted several times an hour (the OOM, orazaka#498).
+Cost comes before size: the first answer is the JVM footprint, measured with `docker --memory=2g` on the image's jars
+(`infra/deploy/core-memory-measured.json`, guarded by `scripts/test/core-memory-budget.test.mjs`).
+
+| | Before | After |
+|---|---|---|
+| Container, eight JVMs, steady | 2042 MiB (at the limit) | 1502 MiB |
+| Largest JVMs (job / conversation / users) | 390 / 341 / 324 MiB | 299 / 315 / 256 MiB |
+| Heap ceilings (sum) | 1408 MiB | 1040 MiB |
+| Time until the eight ports answer | 80 s | 55 s |
+
+What moved it: `MALLOC_ARENA_MAX=2` and `-XX:ActiveProcessorCount=2` / `-XX:CICompilerCount=1` (the container sees the host's 8 CPUs: every
+pool and arena was sized from it), a heap that gives back what it does not hold (`-Xms16m`, free ratios 10-30 %), no perf-data file, heap
+ceilings from the measured live set (18-49 MiB at idle). The rest of a JVM (about 100-250 MiB) is class metadata of the Spring and
+ai-engine stacks: only fewer JVMs, or fewer loaded libraries, reduces it. With the two workers (68 + 74 MiB) the steady set is about
+1.65 GiB, 80 % of the container. Not done: AppCDS (the archive must be trained against live databases at image build), lazy bean
+initialisation (RabbitMQ listeners would not start), dropping automation (-143 MiB; a paused feature is the founder's call).
+
 **Not deployed** (and why): the automation service's connector stubs (Jira, Slack… log only; the service runs for ADR-084), notifications (no e-mail in dev: no password reset),
 worker-media (Metal/MLX — Mac only), Redis (only for `orazaka.identity.rate-limit.enabled`, off).
 
