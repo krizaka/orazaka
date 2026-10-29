@@ -356,18 +356,26 @@ export function personaAccount(name = "eric") {
   return { key: "persona", ...p, tier: "free", roles: ["ROLE_USER"] };
 }
 
+/** The id of a persona's account, found by e-mail (the display name may have been changed by `names`: « Éric »). */
+export function personaActorSql(persona) {
+  return `SELECT id FROM users WHERE lower(email) = lower('${String(persona.email).replace(/'/g, "''")}') LIMIT 1`;
+}
+
 export function seedSql(accounts) {
   const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
   const rows = accounts.map(
     (a) =>
-      `INSERT INTO users (id, username, password_hash, email, enabled, preferences, rate_limit_tier)
-       VALUES (gen_random_uuid()::text, ${q(a.username)}, ${q(a.hash)}, ${q(a.email)}, true, ${q(JSON.stringify({ language: a.language === "fr" ? "fr" : "en" }))}, ${q(a.tier)})
+      `UPDATE users SET password_hash = ${q(a.hash)}, enabled = true, rate_limit_tier = ${q(a.tier)}
+         WHERE lower(email) = lower(${q(a.email)});
+       INSERT INTO users (id, username, password_hash, email, enabled, preferences, rate_limit_tier)
+       SELECT gen_random_uuid()::text, ${q(a.username)}, ${q(a.hash)}, ${q(a.email)}, true, ${q(JSON.stringify({ language: a.language === "fr" ? "fr" : "en" }))}, ${q(a.tier)}
+         WHERE NOT EXISTS (SELECT 1 FROM users WHERE lower(email) = lower(${q(a.email)}))
        ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash, enabled = true,
          email = EXCLUDED.email, rate_limit_tier = EXCLUDED.rate_limit_tier;
        ${a.roles
          .map(
            (r) => `INSERT INTO authorities (user_id, authority_name)
-       SELECT id, ${q(r)} FROM users WHERE username = ${q(a.username)} ON CONFLICT ON CONSTRAINT unique_user_authority DO NOTHING;`,
+       SELECT id, ${q(r)} FROM users WHERE lower(email) = lower(${q(a.email)}) ON CONFLICT ON CONSTRAINT unique_user_authority DO NOTHING;`,
          )
          .join("\n")}`,
   );
@@ -400,7 +408,7 @@ function seedPersona(name) {
   storeSecret(`APP_QA_ORAZAKA_${persona.secret}_PASSWORD`, pw);
   if (persona.studios?.length) {
     const actorId = psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB",
-      ["-t", "-A", "-c", `SELECT id FROM users WHERE username = '${persona.username}'`]).trim();
+      ["-t", "-A", "-c", personaActorSql(persona)]).trim();
     psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], grantSql(actorId, persona.studios, `persona ${persona.username}`));
   }
   console.log(`seeded the persona ${persona.username} (${persona.email}) — credentials stored in @dev (APP_QA_ORAZAKA_${persona.secret}_*), never printed`);

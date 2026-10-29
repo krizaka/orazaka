@@ -1,0 +1,35 @@
+# Persona sign-in smoke (docs/DEPLOY_DEV.md): the demo persona is the face of every recording; his login answered 500 on dev
+# (two accounts with his e-mail) and nothing noticed. After each Dev redeploy and every 30 minutes, he must sign in.
+# Needs the repository secrets APP_QA_ORAZAKA_PERSONA_EMAIL and APP_QA_ORAZAKA_PERSONA_PASSWORD (same values as @dev);
+# without them the job says so and stops.
+name: Dev persona smoke
+
+on:
+  workflow_run:
+    workflows: ["Dev redeploy"]
+    types: [completed]
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      APP_QA_ORAZAKA_PERSONA_EMAIL: ${{ secrets.APP_QA_ORAZAKA_PERSONA_EMAIL }}
+      APP_QA_ORAZAKA_PERSONA_PASSWORD: ${{ secrets.APP_QA_ORAZAKA_PERSONA_PASSWORD }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: The persona signs in
+        run: |
+          if [ -z "$APP_QA_ORAZAKA_PERSONA_EMAIL" ]; then
+            echo "::notice::The repository secrets APP_QA_ORAZAKA_PERSONA_* are not set — nothing checked."
+          else
+            node scripts/dev-persona-smoke.mjs eric
+          fi

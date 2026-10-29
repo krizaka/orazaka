@@ -615,3 +615,15 @@ test("the Eric persona carries the Studio grants the product shows (compliance-c
   assert.equal(personaAccount("mira").studios, undefined);
   assert.match(grantSql("id-1", personaAccount().studios, "persona Eric"), /'studio\.compliance-check'/);
 });
+
+test("seedSql never creates a second account for an e-mail that already signs in (eric.morel login 500: two rows, « Éric » renamed by `names` and a new « Eric »)", () => {
+  const sql = seedSql([{ ...personaAccount(), hash: "$2y$10$h" }]);
+  assert.match(sql, /UPDATE users SET[^;]*WHERE lower\(email\) = lower\('eric\.morel@example\.com'\)/, "an existing account is refreshed by e-mail, whatever its display name");
+  assert.match(sql, /WHERE NOT EXISTS \(SELECT 1 FROM users WHERE lower\(email\) = lower\('eric\.morel@example\.com'\)\)/, "the insert is skipped when the e-mail exists");
+  assert.match(sql, /FROM users WHERE lower\(email\) = lower\('eric\.morel@example\.com'\) ON CONFLICT/, "authorities follow the e-mail, not the username");
+});
+
+test("personaActorSql finds the persona by e-mail, so the Studio grant lands on the account that signs in", async () => {
+  const { personaActorSql } = await import("../dev-deploy.mjs");
+  assert.match(personaActorSql(personaAccount()), /WHERE lower\(email\) = lower\('eric\.morel@example\.com'\)/);
+});
