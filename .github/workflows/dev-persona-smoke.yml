@@ -5,7 +5,7 @@
 name: Dev persona smoke
 
 on:
-  workflow_run:
+  workflow_run: # zizmor: ignore[dangerous-triggers] runs this repository's own main script after Dev redeploy; checks out no PR code, read-only token
     workflows: ["Dev redeploy"]
     types: [completed]
   schedule:

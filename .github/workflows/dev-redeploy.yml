@@ -49,3 +49,6 @@ jobs:
       - name: Rebuild core when a repository moved
         if: steps.configured.outputs.ok == 'true'
         run: node scripts/dev-redeploy.mjs
+      - name: A rollback never goes unnoticed (the active deployment must not be an automated rollback)
+        if: steps.configured.outputs.ok == 'true'
+        run: node scripts/dev-redeploy.mjs --check
