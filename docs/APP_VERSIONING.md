@@ -39,7 +39,7 @@ hosts it; the edge routes `/api/v1/app-config` and `/api/v1/admin/app-config` th
   store button opens `storeUrl`.
 - **Mac app** (Tauri 2, the system WebView): the same package and the web screens (`@krizaka/ui/force-update-screen`…),
   `visibilityResume(document)` for the resume check, `platform: "macos"`.
-- A backend that is not Java (Orochia, Yomizaka…) uses `@krizaka/app-config/server` (`createAppConfigHandler`,
+- A backend that is not Java (Yomizaka…) uses `@krizaka/app-config/server` (`createAppConfigHandler`,
   `checkClientVersion` in its `proxy.ts`), the same tables (`schemaSql`) and the same fixture.
 
 ## OTA — auto-resolve, and a store update only when the runtime changes

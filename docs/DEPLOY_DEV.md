@@ -20,7 +20,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 
 **Total: $47/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens).
 
-**Organisation total, measured 2026-10-21 (`doctl`, recurring cloud, GPU apart): about $97/month** — ten web services at $5, the Orazaka core $20, `gpu-relay` $5, the fourth static site $3, the shared PostgreSQL $15, the broker droplet $4 — under the $100 ceiling; about **$87** once `orazaka-admin-dev` (rollback until 2026-10-23) and `orochia-admin-dev` are deleted. There is no RunPod network volume on the account (the earlier « ≈ $14 volume » line was wrong); the GPU is billed by the hour, on use. Dev services run on the smallest instance that fits (`apps-s-1vcpu-0.5gb`; the JVM core cannot go below `basic-s`). Upgrading `core` to
+**Organisation total, measured 2026-10-21 (`doctl`, recurring cloud, GPU apart): about $97/month** — ten web services at $5, the Orazaka core $20, `gpu-relay` $5, the fourth static site $3, the shared PostgreSQL $15, the broker droplet $4 — under the $100 ceiling; about **$87** once `orazaka-admin-dev` (rollback until 2026-10-23) is deleted. There is no RunPod network volume on the account (the earlier « ≈ $14 volume » line was wrong); the GPU is billed by the hour, on use. Dev services run on the smallest instance that fits (`apps-s-1vcpu-0.5gb`; the JVM core cannot go below `basic-s`). Upgrading `core` to
 `basic-m` (4 GB, 2 vCPU, $40) is the first lever if it restarts under load: still $54.
 
 ### The `core` container
@@ -125,8 +125,8 @@ edge answers 403 anywhere else; an unscoped key keeps its account's rights). `--
 `AI_ENGINE_URL` / `AI_ENGINE_API_KEY` instead of the Studio callers' `AI_PROVIDER` / `AI_API_URL` / `AI_API_KEY`:
 
 ```bash
-node scripts/dev-deploy.mjs service-account orochia-explorer --scopes ai:embed --prefix AI_ENGINE \
-  --out ~/Documents/krizaka/orochia-dev.env
+node scripts/dev-deploy.mjs service-account product-explorer --scopes ai:embed --prefix AI_ENGINE \
+  --out ~/Documents/krizaka/product-dev.env
 ```
 
 Embeddings: `POST /api/v1/embeddings` `{ "input": ["…"], "model"?: "gte-large-en-v1.5" }` → `{ runId, model, dimensions, data:[{index, embedding}],
@@ -138,7 +138,7 @@ runId=…` in the core's logs (user, model, counts — never a text or a vector)
 
 ## Recommendations — a product's feed, served by Orazaka (ADR-078)
 
-The knowledge service serves the products' recommender (krizaka/orochia#226; decision:
+The knowledge service serves the products' recommender (ADR-078); decision:
 [ADR-078](https://github.com/krizaka/orazaka-packs/blob/main/docs/adr/ADR-078-recommendations.md)). A product feeds it
 with its service key — events, eligible items, erasures (scope `reco:sync`) — and reads its feeds (scope `reco:read`):
 `POST /api/v1/recommendations/{events,items,erasures}`, `GET /api/v1/recommendations/{for-you,similar,insights}`. Users
@@ -148,8 +148,8 @@ The parameters are rows of `reco_settings` (versioned; v1 seeded), never configu
 
 ```bash
 node scripts/dev-deploy.mjs recommendations      # the tables and settings v1 on orazaka_knowledge_db (idempotent)
-node scripts/dev-deploy.mjs service-account orochia-explorer --scopes ai:embed,reco:sync,reco:read --prefix AI_ENGINE \
-  --out ~/Documents/krizaka/orochia-dev.env   # rotates the product's key: update its App Platform secret
+node scripts/dev-deploy.mjs service-account product-explorer --scopes ai:embed,reco:sync,reco:read --prefix AI_ENGINE \
+  --out ~/Documents/krizaka/product-dev.env   # rotates the product's key: update its App Platform secret
 ```
 
 ## Admin console (host routing)
