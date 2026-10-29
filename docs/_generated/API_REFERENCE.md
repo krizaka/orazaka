@@ -210,6 +210,10 @@ no matcher covers the path — the service has no security on it whatsoever.
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
 | GET | `/.well-known/jwks.json` | public | JwksController |  |
+| GET | `/api/v1/admin/lockout-policy` | ADMIN | LockoutPolicyController |  |
+| PUT | `/api/v1/admin/lockout-policy` | ADMIN | LockoutPolicyController |  |
+| GET | `/api/v1/admin/social-connections` | ADMIN | SocialConnectionController |  |
+| POST | `/api/v1/admin/social-connections/rewrap` | ADMIN | SocialConnectionController | Re-wraps every secret under the current vault key (after a key change). |
 | GET | `/api/v1/admin/users` | ADMIN | AdminUserController |  |
 | DELETE | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |
 | GET | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |

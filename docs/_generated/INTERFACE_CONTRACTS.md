@@ -80,9 +80,12 @@ generated: true
 - `ApiKeyService`
 - `IdentityReconciliationService`
 - `IdentityService`
+- `LoginLockoutService`
 - `OrganizationService`
+- `PasswordPolicyService`
 - `PasswordRecoveryService`
 - `RateLimitProvider`
+- `SocialConnectionService`
 - `TokenService`
 - `UserProfileProvider`
 
@@ -91,11 +94,15 @@ generated: true
 - `AdminUserRepositoryPort`
 - `ApiKeyRepositoryPort`
 - `AuthorityRepositoryPort`
+- `BreachedPasswordPort`
 - `CryptographyPort`
+- `LockoutRepositoryPort`
 - `OAuth2ProviderVerifier`
 - `OrganizationRepositoryPort`
 - `PasswordEventPublisher`
 - `PasswordResetTokenRepositoryPort`
+- `SecretSealPort`
+- `SocialConnectionRepositoryPort`
 - `UserCredentialRepositoryPort`
 - `UserEventPublisher`
 - `UserInterceptionRepositoryPort`
