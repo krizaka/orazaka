@@ -183,7 +183,7 @@ test("CA_EXTENSIONS: a CA strict verification accepts (key usage present)", asyn
 test("connectionVars: the default pair for Studio callers, AI_<NAME>_URL / _API_KEY for an engine client", () => {
   assert.deepEqual(connectionVars(undefined, "https://e/edge", "oz_k"), { AI_PROVIDER: "orazaka", AI_API_URL: "https://e/edge", AI_API_KEY: "oz_k" });
   assert.deepEqual(connectionVars("AI_ENGINE", "https://e/edge", "oz_k"), { AI_ENGINE_URL: "https://e/edge", AI_ENGINE_API_KEY: "oz_k" });
-  assert.throws(() => connectionVars("OROCHIA_AI", "u", "k"), /not an AI_ prefix/);
+  assert.throws(() => connectionVars("PRODUCT_AI", "u", "k"), /not an AI_ prefix/);
   assert.throws(() => connectionVars("AI_X; rm", "u", "k"), /not an AI_ prefix/);
 });
 
@@ -249,7 +249,7 @@ test("connection budget: every JVM of the core goes through its PgBouncer pool (
 });
 
 test("service accounts sit on the `service` rate-limit tier, whose migration is idempotent and moves the existing svc_* users", () => {
-  assert.equal(serviceAccount("orochia").tier, "service");
+  assert.equal(serviceAccount("explorer").tier, "service");
   const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-service-rate-tier.sql", import.meta.url), "utf8");
   assert.match(sql, /VALUES \('service', 1000, 20, FALSE\)\s*ON CONFLICT \(tier_key\) DO NOTHING/);
   assert.match(sql, /INSERT INTO rate_limit_tiers \(id, capacity, refill_tokens, refill_seconds\)\s*VALUES \('service', 1000, 1000, 60\)/, "users.rate_limit_tier has a foreign key to rate_limit_tiers");

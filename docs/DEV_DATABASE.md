@@ -3,10 +3,10 @@
 `krizaka-dev-pg` (DigitalOcean managed PostgreSQL 16, `db-s-1vcpu-1gb`, one node, Toronto, project `krizaka`) is the
 **one** dev cluster (decision 2026-10-14): one database **and one role of the same name** per bounded context —
 Orazaka: `orazaka_db`, `krizaka_users_db`, `krizaka_billing_db`, `orazaka_studio_db`, `orazaka_knowledge_db`,
-`orazaka_automation_db`; Orochia: `orochia_db`, `orochia_admin_db`. It replaces the App Platform dev databases (which a
+`orazaka_automation_db`. It replaces the App Platform dev databases (which a
 laptop could not reach and which forbid `CREATE SCHEMA`). Never a second cluster, never production on it.
 
-Access: **trusted sources** are the dev apps (`orochia-dev`, `orazaka-dev`) and the maintainer's
+Access: **trusted sources** are the dev apps (`orazaka-dev`) and the maintainer's
 IP, so `psql` and DBeaver work from there with `sslmode=require` (`verify-full` with the cluster CA). pgvector is
 available (`CREATE EXTENSION vector` in `orazaka_knowledge_db`, done).
 
@@ -82,16 +82,15 @@ a ceiling per service (what it may hold at once), kept under 22 with room for a 
 | core: knowledge | `pool-knowledge` | 2 | |
 | core: automation | `pool-automation` | 1 | no transaction is held across a remote call (ADR-084 §6) |
 | core: billing | `pool-billing` | 3 | outbox relay + requests: 1 starved it (`query_wait_timeout`, 2026-10-17) |
-| orochia-dev web | direct | 3 | pool 2 + 1 LISTEN (session by nature) |
-| yasakia-dev, yomizaka-dev | `pool-yasakia` / `pool-yomizaka` (or direct) | 1 + 1 | `DATABASE_MAX_CONNECTIONS=2`; migrations on `DATABASE_DIRECT_URL` (a deploy-time job) |
-| kachizaka-dev, akinaza-dev | `pool-kachizaka`, `pool-akinaza` | 1 + 1 | `DATABASE_MAX_CONNECTIONS=1` |
+| yomizaka-dev | `pool-yomizaka` (or direct) | 1 + 1 | `DATABASE_MAX_CONNECTIONS=2`; migrations on `DATABASE_DIRECT_URL` (a deploy-time job) |
+| akinaza-dev | `pool-akinaza` | 1 + 1 | `DATABASE_MAX_CONNECTIONS=1` |
 | accounts, newsletter (next services) | `pool-accounts`, `pool-newsletter` | 1 + 1 | reserved |
 | maintainer / `doadmin` | direct | 1 | |
 | **Ceiling** | | **22 of 22** | none left: the maintainer's `doadmin` connection is the one a migration uses (accounts/newsletter pools are not counted until they deploy, and cannot until the plan or a pool changes — ADR-083 slice 9) |
 
 Rules: a transaction pool must be at least as large as the service's real concurrent transactions (Hikari holds a connection for a whole transaction, including calls to other services): size 1 starves. JVM services go through a **transaction** pool on port 25061 with `prepareThreshold=0` (Flyway is off, so no
 session lock sits behind the pooler); a service that needs `LISTEN`/`NOTIFY` or session state keeps one direct connection,
-sized for it. Node apps keep `DATABASE_MAX_CONNECTIONS` ≤ 2 (their idle connections close after 10 s); Orochia and its console use
+sized for it. Node apps keep `DATABASE_MAX_CONNECTIONS` ≤ 2 (their idle connections close after 10 s); the other dev apps use
 App Platform's bindable `DATABASE_URL`, which is the direct address. A new service takes its pool before it deploys.
 
 DigitalOcean monitoring has no connection-count metric, so the alarm is a read-only query:

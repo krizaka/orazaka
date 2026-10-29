@@ -15,7 +15,6 @@
     "infra/migrations/2026-10-20-service-rate-tier.sql": "krizaka_users_db",
     "infra/migrations/2026-10-20-studio-webhooks.sql": "orazaka_studio_db",
     "infra/migrations/2026-10-22-semantic-cache.sql": "orazaka_db",
-    "infra/migrations/2026-10-22-yororis-plan.sql": "krizaka_billing_db",
     "infra/migrations/2026-10-25-pricebook-external-check-research.sql": "krizaka_billing_db",
     "krizaka/krizaka-billing/infra/migrations/2026-10-26-free-studios-granted.sql": "krizaka_billing_db"
   },

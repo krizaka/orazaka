@@ -1,4 +1,4 @@
--- Recommendations (ADR-078, krizaka/orochia#226) on orazaka_knowledge_db. Idempotent.
+-- Recommendations (ADR-078, (ADR-078) on orazaka_knowledge_db. Idempotent.
 -- The same DDL as orazaka-knowledge-service infra/initdb/40-knowledge.sql (fresh databases);
 -- this script brings an existing one up to it: `node scripts/dev-deploy.mjs recommendations`.
 -- pgvector must already be installed in the database (CREATE EXTENSION needs the cluster admin).

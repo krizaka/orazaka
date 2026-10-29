@@ -14,7 +14,7 @@
 | :--- | :--- | :--- | :--- |
 | **Evaluator** — a developer or an ops lead at a firm judging a self-hosted, sovereign AI engine | the public site, from a referral, LinkedIn or GitHub | *What does it do? Does it run on our hardware? Which models? Is it real?* | Product ▾ (How it works, Models, Demo) · Platforms ▾ (Self-host) · Docs |
 | **Business user** — a firm that runs Studios and packs (contract review, Loi 25, image and video) | the public site, then the app | *What can it do for my trade? What does a run cost?* then *run it, follow it, get the result* | Product ▾ (Studios, Packs) → the app: Studios, Jobs, Usage & credits |
-| **Krizaka's own products** — Yomizaka, Orochia, Yasakia using Orazaka as a service | the docs (API, packs, CLI) | *How do I call it, with which pack, under which limits?* | Docs |
+| **Krizaka's own products** — Yomizaka and Akinaza using Orazaka as a service | the docs (API, packs, CLI) | *How do I call it, with which pack, under which limits?* | Docs |
 | **Signed-in user** (today: QA accounts only, sign-up closed) | the app | chat, run a Studio, follow jobs, install packs, watch usage and credits, change settings | the rail: Home · Studios · Chat · Jobs · Packs · Usage & credits · Settings |
 
 Sources: the landing and docs issues of `orazaka-web-client` (#72, #74, #75, #85, #88, #89, #90), the pack catalogue work
