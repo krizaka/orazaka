@@ -85,19 +85,23 @@ jobs:
         with:
           repository: krizaka/orazaka
           path: workspace
+          persist-credentials: false
 
       - name: Check out ${{ inputs.component }} at the commit under test
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: incoming
           fetch-depth: ${{ inputs.sonar && 0 || 1 }}   # the analysis blames and diffs against the base branch
+          persist-credentials: false
 
       - name: Place the component at its workspace path
         working-directory: workspace
         run: |
-          target=$(node -e "const m=require('./orazaka.workspace.json');const r=m.repositories.find(x=>x.name==='${{ inputs.component }}');if(!r){process.exit(2)}console.log(r.path)")
+          target=$(node -e "const m=require('./orazaka.workspace.json');const r=m.repositories.find(x=>x.name==='${INPUTS_COMPONENT}');if(!r){process.exit(2)}console.log(r.path)")
           mkdir -p "$(dirname "$target")"
           mv ../incoming "$target"
+        env:
+          INPUTS_COMPONENT: ${{ inputs.component }}
 
       - name: Clone every other repository
         working-directory: workspace
@@ -129,7 +133,9 @@ jobs:
 
       - name: Verify ${{ inputs.component }} against its upstreams
         working-directory: workspace
-        run: node scripts/workspace.mjs ci "${{ inputs.component }}"
+        run: node scripts/workspace.mjs ci "${INPUTS_COMPONENT}"
+        env:
+          INPUTS_COMPONENT: ${{ inputs.component }}
 
       # The analysis runs from the component's own folder in the workspace: its sonar-project.properties names the sources,
       # the coverage reports (lcov, JaCoCo XML) and the compiled classes that the verification just produced.
@@ -138,8 +144,10 @@ jobs:
         if: ${{ inputs.sonar }}
         working-directory: workspace
         run: |
-          target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='${{ inputs.component }}').path)")
+          target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='${INPUTS_COMPONENT}').path)")
           echo "dir=workspace/$target" >> "$GITHUB_OUTPUT"
+        env:
+          INPUTS_COMPONENT: ${{ inputs.component }}
 
       - name: SonarCloud — analysis with the coverage of the verification
         if: ${{ inputs.sonar }}
@@ -155,8 +163,10 @@ jobs:
         if: inputs.rewrite
         working-directory: workspace
         run: |
-          target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='${{ inputs.component }}').path)")
+          target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='${INPUTS_COMPONENT}').path)")
           cd "$target" && ./mvnw -B -ntp rewrite:dryRun
+        env:
+          INPUTS_COMPONENT: ${{ inputs.component }}
 
       - name: npm with trusted publishing
         if: startsWith(github.ref, 'refs/tags/v')
@@ -167,4 +177,5 @@ jobs:
         working-directory: workspace
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/workspace.mjs publish "${{ inputs.component }}"
+          INPUTS_COMPONENT: ${{ inputs.component }}
+        run: node scripts/workspace.mjs publish "${INPUTS_COMPONENT}"
