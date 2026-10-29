@@ -21,6 +21,7 @@ generated: true
 | ADR-012 | _(cited in code, no dedicated file)_ | — |
 | ADR-013 | _(cited in code, no dedicated file)_ | — |
 | ADR-015 | _(cited in code, no dedicated file)_ | — |
+| ADR-016 | _(cited in code, no dedicated file)_ | — |
 | ADR-017 | _(cited in code, no dedicated file)_ | — |
 | ADR-027 | ADR-027 — Single-source `application.yaml`: domain config lives in the database | `adr/ADR-027-db-driven-configuration.md` |
 | ADR-028 | ADR-028 — Transport selection: when an operation is REST vs GraphQL vs AMQP | `adr/ADR-028-transport-selection-rest-graphql-amqp.md` |
