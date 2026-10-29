@@ -85,3 +85,13 @@ test("the glossary and the core page are folded into Concepts: nothing published
 test("Quickstart, Concepts and the Studio guide exist and name the next step", () => {
   for (const f of ["docs/101.md", "docs/CONCEPTS.md", "docs/STUDIO_GUIDE.md"]) assert.ok(/\n## Next/.test(read(f)), `${f} ends on a « Next » section`);
 });
+
+// The Mac build is an unsigned test build, not distributed (founder, 2026-10-29): no published doc claims it is signed,
+// notarized or downloadable until it really is (a release signed with the Apple certificate flips this guard).
+test("no published doc claims the Mac build is signed, notarized or ready to download", () => {
+  for (const f of [...PUBLISHED, "README.md"]) {
+    const md = read(f);
+    assert.ok(!/signed and notarized|notarized by Apple/i.test(md), `${f} says the Mac build is signed or notarized`);
+    assert.ok(!/Download `?Orazaka\.dmg/i.test(md), `${f} sends readers to a .dmg download`);
+  }
+});
