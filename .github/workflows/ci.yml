@@ -39,6 +39,9 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: read   # the Krizaka releases not yet on Central resolve from GitHub Packages
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -51,6 +54,12 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+
+      # A Krizaka release waits for a human to press Publish on Central; development builds resolve it from GitHub Packages.
+      - uses: krizaka/.github/actions/maven-github-packages@3c292cf3b28502eda1041c817eec266490d5d8fd # main
+        if: ${{ needs.maven-changes.outputs.code != 'false' }}
+        with:
+          token: ${{ github.token }}
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
