@@ -1,5 +1,6 @@
 # Persona sign-in smoke (docs/DEPLOY_DEV.md): the demo persona is the face of every recording; his login answered 500 on dev
-# (two accounts with his e-mail) and nothing noticed. After each Dev redeploy and every 30 minutes, he must sign in.
+# (two accounts with his e-mail) and nothing noticed. After each Dev redeploy and every 30 minutes, he must sign in, on the edge API
+# AND on the web (NextAuth through ROUTER_URL = http://core:8088: the web login failed while the edge API answered, 2026-10-29).
 # Needs the repository secrets APP_QA_ORAZAKA_PERSONA_EMAIL and APP_QA_ORAZAKA_PERSONA_PASSWORD (same values as @dev);
 # without them the job says so and stops.
 name: Dev persona smoke
