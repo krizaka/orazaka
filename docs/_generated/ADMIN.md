@@ -23,6 +23,7 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | `/audit` | `/audit` — the audit trail of account administration. | — |
 | `/billing` | The billing console. | Consommation · Clés des produits · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
 | `/engine` | — | — |
+| `/engine/tools` | — | — |
 | `/law` | `/law` — Law → Proposals (ADR-089 §8): the review queue and promotion of the rules from the law, the corpus, the demand. | — |
 | `/login` | — | — |
 | `/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
@@ -131,6 +132,10 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | DELETE | `/api/v1/models/{id}` | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | Updates an existing model definition in the catalog. |
 | GET | `/api/v1/models/admin/audit` | — |
+| GET | `/api/v1/models/admin/feature-routes` | The feature routes, read only. |
+| GET | `/api/v1/models/admin/feature-tool-bounds` | Every bound, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | Removes a feature's own bound so it falls back to the default row. |
+| PUT | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | Sets the bound of a feature (* is the default row). |
 | GET | `/api/v1/pipeline/interceptors` | Retrieves all pipeline interceptor configurations ordered by execution order. |
 | PUT | `/api/v1/pipeline/interceptors` | Bulk-updates pipeline interceptor ordering and enabled state. |
 | POST | `/api/v1/pipeline/interceptors/reset` | Resets all pipeline interceptor configurations to hardcoded defaults. |

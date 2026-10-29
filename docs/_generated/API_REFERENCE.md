@@ -83,6 +83,10 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/models/{id}` | ADMIN | ModelController | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | ADMIN | ModelController | Updates an existing model definition in the catalog. |
 | GET | `/api/v1/models/admin/audit` | ADMIN | OperatorAuditController |  |
+| GET | `/api/v1/models/admin/feature-routes` | ADMIN | FeatureAdminController | The feature routes, read only. |
+| GET | `/api/v1/models/admin/feature-tool-bounds` | ADMIN | FeatureAdminController | Every bound, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | ADMIN | FeatureAdminController | Removes a feature's own bound so it falls back to the default row. |
+| PUT | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | ADMIN | FeatureAdminController | Sets the bound of a feature (* is the default row). |
 | GET | `/api/v1/models/catalog` | authenticated | ModelController | Retrieves the complete AI model catalog definitions from the database. |
 | GET | `/api/v1/models/providers` | authenticated | ModelController | Retrieves all available AI provider names from the database. |
 | GET | `/api/v1/models/supported` | authenticated | ModelController | Retrieves the list of supported model names grouped by media type. |
@@ -288,6 +292,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/studios/packs/bundles/{bundleKey}` | ADMIN | PackBundleController | Removes a bundle's catalogue rows and withdraws its pack from sale. |
 | POST | `/api/v1/studios/packs/bundles/validation` | ADMIN | PackBundleController | Checks a bundle against this platform without writing anything. |
 | GET | `/api/v1/studios/packs/categories` | authenticated | PackCatalogController | The shelves themselves, so the client renders headings it did not have to invent. |
+| GET | `/api/v1/studios/public/downloads` | authenticated | PublicSettingsController |  |
 | GET | `/api/v1/studios/runs` | authenticated | StudioRunController | This actor's run history. |
 | DELETE | `/api/v1/studios/runs/{runId}` | authenticated | ProtectedDataController | Erases one entry of the caller's: a run of a protected pack, with its inputs, outputs and files. |
 | GET | `/api/v1/studios/runs/{runId}` | authenticated | StudioRunController | One run with its per-step states and outputs. |
