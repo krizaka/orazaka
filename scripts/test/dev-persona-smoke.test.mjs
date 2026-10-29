@@ -1,7 +1,15 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { verdict } from "../dev-persona-smoke.mjs";
+import { verdict, webVerdict } from "../dev-persona-smoke.mjs";
+
+test("the web sign-in is checked too: a session without the persona's e-mail (the web cannot reach the router) fails", () => {
+  assert.equal(webVerdict(200, { user: { email: "eric@example.com" } }, "eric@example.com").ok, true);
+  assert.equal(webVerdict(200, {}, "eric@example.com").ok, false);
+  assert.equal(webVerdict(200, null, "eric@example.com").ok, false);
+  assert.match(webVerdict(200, {}, "eric@example.com").message, /router/);
+  assert.equal(webVerdict(502, { user: { email: "eric@example.com" } }, "eric@example.com").ok, false);
+});
 
 test("the smoke fails on the 500 of the duplicated persona and on a tokenless 200", () => {
   assert.equal(verdict(500, false).ok, false);
