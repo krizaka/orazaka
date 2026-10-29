@@ -26,6 +26,7 @@ generated: true
 
 - `AccessAudit`
 - `AudioGeneratorClient`
+- `AudioTranscriber`
 - `CapabilityProvider`
 - `ChatGeneratorClient`
 - `ChatInvocation`
@@ -40,6 +41,7 @@ generated: true
 - `ConsentRegistry`
 - `ControlVerdictRecorder`
 - `ConversationMemory`
+- `DomainEventPublisher`
 - `EmbeddingClient`
 - `ExternalCheckConnector`
 - `FeatureModelRoutes`

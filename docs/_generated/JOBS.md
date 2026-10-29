@@ -36,6 +36,7 @@ and **which code** runs it (`handler_key`). Both are data: a pack adds a capabil
 | `orazaka.core.checks.credit` | `check.external` | `job.text.process` | `ExternalCheckStrategy` (in process) |
 | `orazaka.core.checks.identity` | `check.external` | `job.text.process` | `ExternalCheckStrategy` (in process) |
 | `orazaka.core.media.speech` | `speech.synthesize` | `job.text.process` | `SpeechSynthesisStrategy` (in process) |
+| `orazaka.core.research.grounded` | `research.grounded` | `job.text.process` | `GroundedResearchStrategy` (in process) |
 | `orazaka.core.media.video` | `video.generate` | `job.video.generate` | a worker (see the [worker protocol](../WORKER_PROTOCOL.md)) |
 
 ### In-process executors
@@ -48,6 +49,7 @@ One capability's execution, in process.
 | `check.external` | `ExternalCheckStrategy` | `orazaka-job-service` | Runs the engine's external checks as job steps (orazaka-packs#138): the capabilities `orazaka.core.checks.courtrecords`, `.credit` and `.identity`, whose rows all name the handler `check.external`. |
 | `image.analyze` | `VisionAnalysisStrategy` | `orazaka-job-service` | Executes vision/image analysis jobs using the AI chat client with vision models. |
 | `image.generate` | `ImageGenerationStrategy` | `orazaka-job-service` | Executes image generation jobs via the AI client's image endpoint. |
+| `research.grounded` | `GroundedResearchStrategy` | `orazaka-job-service` | Runs grounded research as a job step (ADR-087 slice 5): the capability `orazaka.core.research.grounded`, whose row names the handler `research.grounded`. |
 | `speech.synthesize` | `SpeechSynthesisStrategy` | `orazaka-job-service` | Executes text-to-speech synthesis jobs via the AI client's audio endpoint. |
 | `text.generate` | `ChatGenerationStrategy` | `orazaka-job-service` | Default fallback strategy for text/chat generation jobs. |
 | `video.analyze` | `VideoAnalysisStrategy` | `orazaka-job-service` | Executes video analysis jobs by delegating to the `VideoPreProcessor`. |
