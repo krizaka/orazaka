@@ -63,6 +63,7 @@ generated: true
 - `StructuredOutputClient`
 - `TestShaperPort`
 - `ToolAnswerCodec`
+- `ToolLoopBounds`
 - `ToolOptions`
 - `ToolPermissionProvider`
 - `ToolRegistry`
