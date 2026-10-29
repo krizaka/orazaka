@@ -731,6 +731,7 @@
         "outbound": [
           "AccessAudit",
           "AudioGeneratorClient",
+          "AudioTranscriber",
           "CapabilityProvider",
           "ChatGeneratorClient",
           "ChatInvocation",
@@ -745,6 +746,7 @@
           "ConsentRegistry",
           "ControlVerdictRecorder",
           "ConversationMemory",
+          "DomainEventPublisher",
           "EmbeddingClient",
           "ExternalCheckConnector",
           "FeatureModelRoutes",
@@ -1312,6 +1314,10 @@
     },
     {
       "from": "orazaka-adapter-spring-ai",
+      "to": "orazaka-business"
+    },
+    {
+      "from": "orazaka-adapter-spring-ai",
       "to": "orazaka-core"
     },
     {
@@ -1831,6 +1837,12 @@
       "to": "krizaka-users-service",
       "kind": "http",
       "via": "route /api/v1/interceptions"
+    },
+    {
+      "from": "orazaka-edge",
+      "to": "krizaka-users-service",
+      "kind": "http",
+      "via": "route /api/v1/organizations"
     },
     {
       "from": "orazaka-edge",
@@ -2461,6 +2473,11 @@
       {
         "feature": "orazaka.core.media.speech",
         "handler": "speech.synthesize",
+        "routingKey": "job.text.process"
+      },
+      {
+        "feature": "orazaka.core.research.grounded",
+        "handler": "research.grounded",
         "routingKey": "job.text.process"
       },
       {

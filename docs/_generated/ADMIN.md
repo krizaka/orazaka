@@ -21,7 +21,7 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 |:---|:---|:---|
 | `/` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
 | `/audit` | `/audit` — the audit trail of account administration. | — |
-| `/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
+| `/billing` | The billing console. | Consommation · Clés des produits · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
 | `/engine` | — | — |
 | `/law` | `/law` — Law → Proposals (ADR-089 §8): the review queue and promotion of the rules from the law, the corpus, the demand. | — |
 | `/login` | — | — |
@@ -99,6 +99,9 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | POST | `/api/v1/admin/users/{id}/restore` | ADMIN | — |
 | POST | `/api/v1/admin/users/{id}/suspend` | ADMIN | — |
 | GET | `/api/v1/admin/users/audit` | ADMIN | — |
+| GET | `/api/v1/organizations` | authenticated | — |
+| POST | `/api/v1/organizations` | authenticated | — |
+| GET | `/api/v1/organizations/{id}/service-keys` | ADMIN + USER | — |
 | GET | `/api/v1/studios` | authenticated | The catalogue, optionally narrowed to one profession. |
 | GET | `/api/v1/studios/{studioKey}` | authenticated | One Studio's detail, including the schemas its forms are generated from. |
 | GET | `/api/v1/studios/{studioKey}/blueprints` | ADMIN | Every version of a Studio, drafts included — the Builder's version list. |
