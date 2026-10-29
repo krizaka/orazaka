@@ -17,8 +17,8 @@ build fails when it is violated. Treat an empty cell as a defect, not as a gap.
 
 | Rule | Enforced by | Summary |
 |:---|:---|:---|
-| `assertConfigurationBindsUnambiguously` | `AutomationServiceGovernanceTest`<br/>`EdgeGovernanceTest`<br/>`GovernanceTest`<br/>`JobServiceGovernanceTest`<br/>`KnowledgeServiceGovernanceTest`<br/>`RouterGovernanceTest`<br/>`StudioServiceGovernanceTest` | [CFG-001] over the Orazaka and Krizaka classes on this module's classpath — krizaka-test-support's com.krizaka.test.architecture.ConfigBindingRules#assertConfigurationBindsUnambiguously. |
-| `assertInjectableComponentsHaveOneConstructor` | `AutomationServiceGovernanceTest`<br/>`EdgeGovernanceTest`<br/>`GovernanceTest`<br/>`JobServiceGovernanceTest`<br/>`KnowledgeServiceGovernanceTest`<br/>`RouterGovernanceTest`<br/>`StudioServiceGovernanceTest` | [CFG-001] every Spring bean on this module's classpath has a constructor it can be built with. |
+| `assertConfigurationBindsUnambiguously` | `AutomationServiceGovernanceTest`<br/>`ConfigBindingGuardTest`<br/>`EdgeGovernanceTest`<br/>`JobServiceGovernanceTest`<br/>`KnowledgeServiceGovernanceTest`<br/>`RouterGovernanceTest`<br/>`StudioServiceGovernanceTest` | [CFG-001] over the Orazaka and Krizaka classes on this module's classpath — krizaka-test-support's com.krizaka.test.architecture.ConfigBindingRules#assertConfigurationBindsUnambiguously. |
+| `assertInjectableComponentsHaveOneConstructor` | `AutomationServiceGovernanceTest`<br/>`EdgeGovernanceTest`<br/>`JobServiceGovernanceTest`<br/>`KnowledgeServiceGovernanceTest`<br/>`RouterGovernanceTest`<br/>`StudioServiceGovernanceTest` | [CFG-001] every Spring bean on this module's classpath has a constructor it can be built with. |
 
 ## ExecutorCoherenceRules
 

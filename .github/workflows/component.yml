@@ -138,12 +138,10 @@ jobs:
 
       - name: SonarCloud — analysis with the coverage of the verification
         if: ${{ inputs.sonar }}
-        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
+        uses: krizaka/.github/actions/sonar-scan@b75b62ecb19b835c8f32fd186c913419e2ae4da6 # main
         with:
-          projectBaseDir: ${{ steps.where.outputs.dir }}
+          token: ${{ secrets.SONAR_TOKEN }}
+          project-base-dir: ${{ steps.where.outputs.dir }}
           args: -Dsonar.projectVersion=ci-${{ github.run_number }} -Dsonar.qualitygate.wait=true
 
       # The recipes live in krizaka-parent (every repository inherits them). A change a recipe would make is
