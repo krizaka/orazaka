@@ -174,6 +174,10 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 
 | Method | Path | Summary |
 |:---|:---|:---|
+| GET | `/api/v1/admin/lockout-policy` | — |
+| PUT | `/api/v1/admin/lockout-policy` | — |
+| GET | `/api/v1/admin/social-connections` | — |
+| POST | `/api/v1/admin/social-connections/rewrap` | Re-wraps every secret under the current vault key (after a key change). |
 | GET | `/api/v1/admin/users` | — |
 | DELETE | `/api/v1/admin/users/{id}` | — |
 | GET | `/api/v1/admin/users/{id}` | — |
