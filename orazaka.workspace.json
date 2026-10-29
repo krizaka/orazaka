@@ -215,7 +215,6 @@
     },
     {
       "name": "orazaka-mobile-client",
-      "ref": "fix/96-xcode26",
       "path": "orazaka-apps/ui/orazaka-mobile-client",
       "kind": "npm",
       "layer": "app",
