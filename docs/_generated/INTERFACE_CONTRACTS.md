@@ -63,6 +63,7 @@ generated: true
 - `StructuredOutputClient`
 - `TestShaperPort`
 - `ToolAnswerCodec`
+- `ToolLoopBounds`
 - `ToolOptions`
 - `ToolPermissionProvider`
 - `ToolRegistry`
@@ -119,6 +120,7 @@ generated: true
 - `ChatMemoryPersistenceProvider`
 - `ChatSessionPersistenceProvider`
 - `FeatureRouteManager`
+- `FeatureToolBoundManager`
 - `JobPersistenceProvider`
 - `OutboxStore`
 - `PipelineConfigManager`
