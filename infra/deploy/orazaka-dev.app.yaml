@@ -102,7 +102,7 @@ services:
     # The job service, for the GPU relay only (worker registry, output hand-over); never routed.
     internal_ports: [8090]
     instance_count: 1
-    instance_size_slug: basic-s
+    instance_size_slug: basic-m
     health_check:
       http_path: /actuator/health
       initial_delay_seconds: 240

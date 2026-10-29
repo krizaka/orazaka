@@ -9,7 +9,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 | App (DO) | Component | What | Size | $/month |
 |---|---|---|---|---|
 | `orazaka-dev` | `web` | `krizaka/orazaka-web-client` (Next.js + BFF), `dev.orazaka.com/` | `apps-s-1vcpu-0.5gb` | 5 |
-| `orazaka-dev` | `core` | one image, seven JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
+| `orazaka-dev` | `core` | one image, seven JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-m` (4 GB) | 40 |
 | Droplet | `orazaka-broker-dev` | RabbitMQ 4.2, **TLS only** (5671), bound to its private IP, cloud firewall: VPC `10.118.0.0/20` only | `s-1vcpu-512mb-10gb` | 4 |
 | `orazaka-dev` | `web` (same component) | the operator console, `admin.orazaka.com` = an alias of `dev.orazaka.com`, served by host routing (§ Admin console), BFF → `http://core:8088` | — | 0 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
@@ -20,7 +20,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 
 **Total: $47/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens).
 
-**Organisation total, measured 2026-10-21 (`doctl`, recurring cloud, GPU apart): about $97/month** — ten web services at $5, the Orazaka core $20, `gpu-relay` $5, the fourth static site $3, the shared PostgreSQL $15, the broker droplet $4 — under the $100 ceiling; about **$87** once `orazaka-admin-dev` (rollback until 2026-10-23) is deleted. There is no RunPod network volume on the account (the earlier « ≈ $14 volume » line was wrong); the GPU is billed by the hour, on use. Dev services run on the smallest instance that fits (`apps-s-1vcpu-0.5gb`; the JVM core cannot go below `basic-s`). Upgrading `core` to
+**Organisation total, measured 2026-10-21 (`doctl`, recurring cloud, GPU apart): about $97/month** — ten web services at $5, the Orazaka core $20, `gpu-relay` $5, the fourth static site $3, the shared PostgreSQL $15, the broker droplet $4 — under the $100 ceiling; about **$87** once `orazaka-admin-dev` (rollback until 2026-10-23) is deleted. There is no RunPod network volume on the account (the earlier « ≈ $14 volume » line was wrong); the GPU is billed by the hour, on use. Dev services run on the smallest instance that fits (`apps-s-1vcpu-0.5gb`; the JVM core cannot go below `basic-m` since eight JVMs and two workers run in it (2026-10-29)). Upgrading `core` to
 `basic-m` (4 GB, 2 vCPU, $40) is the first lever if it restarts under load: still $54.
 
 ### The `core` container
@@ -41,7 +41,7 @@ down so App Platform restarts the set.
 | `orazaka-edge` | **8088** | 96 MiB | — | the only routed port: `/` → conversation, `/api/v1/auth…` → users, `/api/v1/studios` → studio, `/api/v1/recommendations` → knowledge, `/api/v1/automations` and `/hooks/` → automation |
 
 Measured on 2026-10-14 against the cluster (five JVMs, serial GC, C1 only, virtual threads): **1.3 GB resident**
-idle and after a round of sign-ins and Studio listings — the reason for a 2 GB container.
+idle and after a round of sign-ins and Studio listings — the reason for a 2 GB container. With eight JVMs and two workers (2026-10-29) the container ran at 96-99 % memory and restarted several times an hour (DO metrics `memory_percentage`, `restart_count`), so it is `basic-m` (4 GB, +$20/month: about $117, over the $100 ceiling, Oussama's call); `scripts/test/core-memory-budget.test.mjs` fails when the heaps do not fit the size.
 
 **Not deployed** (and why): the automation service's connector stubs (Jira, Slack… log only; the service runs for ADR-084), notifications (no e-mail in dev: no password reset),
 worker-media (Metal/MLX — Mac only), Redis (only for `orazaka.identity.rate-limit.enabled`, off).
