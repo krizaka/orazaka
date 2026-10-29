@@ -342,7 +342,9 @@ const ACCOUNTS = [
  */
 export function personaAccount(name = "eric") {
   const personas = {
-    eric: { username: "Eric", email: "eric.morel@example.com", secret: "PERSONA" },
+    // `studios`: what the operator grants the demo persona (studio_entitlement_grant), so a recording or a check runs the
+    // Studios the product shows (« not entitled to studio compliance-check » otherwise, orazaka-packs#171). Seed = deployed.
+    eric: { username: "Eric", email: "eric.morel@example.com", secret: "PERSONA", studios: ["compliance-check"] },
     mira: { username: "Mira", email: "mira.tremblay@orazaka.test", secret: "MIRA" },
     // The company itself as a customer (Oussama, 2026-10-22): Krizaka is an SME, it uses Orazaka the way an SME would —
     // a plain user on the free plan, in French — to see its own products from the inside. Not a demo persona, not a
@@ -396,6 +398,11 @@ function seedPersona(name) {
   psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], seedSql([{ ...persona, hash: bcrypt(pw) }]));
   storeSecret(`APP_QA_ORAZAKA_${persona.secret}_EMAIL`, persona.email);
   storeSecret(`APP_QA_ORAZAKA_${persona.secret}_PASSWORD`, pw);
+  if (persona.studios?.length) {
+    const actorId = psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB",
+      ["-t", "-A", "-c", `SELECT id FROM users WHERE username = '${persona.username}'`]).trim();
+    psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], grantSql(actorId, persona.studios, `persona ${persona.username}`));
+  }
   console.log(`seeded the persona ${persona.username} (${persona.email}) — credentials stored in @dev (APP_QA_ORAZAKA_${persona.secret}_*), never printed`);
 }
 

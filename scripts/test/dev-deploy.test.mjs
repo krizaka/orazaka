@@ -609,3 +609,9 @@ test("the semantic cache (orazaka-ai-engine#40) is additive, idempotent, OFF on 
   if (table) assert.ok(sql.includes(table[0]), "the migration carries the job-service table verbatim");
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "semantic-cache"\) semanticCache\(\)/);
 });
+
+test("the Eric persona carries the Studio grants the product shows (compliance-check), the others none", () => {
+  assert.deepEqual(personaAccount().studios, ["compliance-check"]);
+  assert.equal(personaAccount("mira").studios, undefined);
+  assert.match(grantSql("id-1", personaAccount().studios, "persona Eric"), /'studio\.compliance-check'/);
+});
