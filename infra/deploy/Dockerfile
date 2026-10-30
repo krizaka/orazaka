@@ -21,7 +21,6 @@ COPY . .
 ADD https://github.com/krizaka/krizaka-build.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-build
 ADD https://github.com/krizaka/krizaka-platform-kit.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-platform-kit
 ADD https://github.com/krizaka/krizaka-users.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-users
-ADD https://github.com/krizaka/krizaka-notifications.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-notifications
 ADD https://github.com/krizaka/krizaka-billing.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-billing
 ADD https://github.com/krizaka/orazaka-build.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-build
 ADD https://github.com/krizaka/orazaka-contracts.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-contracts
