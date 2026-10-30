@@ -72,18 +72,6 @@
       ]
     },
     {
-      "name": "krizaka-notifications",
-      "url": "https://github.com/krizaka/krizaka-notifications",
-      "path": "krizaka/krizaka-notifications",
-      "kind": "maven",
-      "layer": "krizaka",
-      "description": "Channel-based notification delivery for any application: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events (user registered, password reset) or explicit notification requests over AMQP.",
-      "dependsOn": [
-        "krizaka-build",
-        "krizaka-platform-kit"
-      ]
-    },
-    {
       "name": "krizaka-billing",
       "url": "https://github.com/krizaka/krizaka-billing",
       "path": "krizaka/krizaka-billing",
@@ -431,21 +419,6 @@
       "runtime": "jvm",
       "version": "0.2.0",
       "description": "Billing service — credit ledger, hold/settle authorisation, versioned pricebook and entitlements over its own database (ADR-033)",
-      "ports": {
-        "inbound": [],
-        "outbound": []
-      }
-    },
-    {
-      "id": "krizaka-notifications-service",
-      "path": "krizaka/krizaka-notifications/krizaka-notifications-service",
-      "repository": "krizaka-notifications",
-      "owner": "krizaka",
-      "role": "service",
-      "layer": "app",
-      "runtime": "jvm",
-      "version": "0.2.0",
-      "description": "Notification service — renders templates and delivers them through the channel each request names (e-mail, SMS, webhook); stateless, AMQP-driven",
       "ports": {
         "inbound": [],
         "outbound": []
@@ -924,21 +897,6 @@
       }
     },
     {
-      "id": "krizaka-notifications-api",
-      "path": "krizaka/krizaka-notifications/krizaka-notifications-api",
-      "repository": "krizaka-notifications",
-      "owner": "krizaka",
-      "role": "contract",
-      "layer": "framework",
-      "runtime": "jvm",
-      "version": "0.2.0",
-      "description": "Notification contract — the request a producer publishes, the delivery channels and the AMQP routing it travels on; pure JDK, no dependencies",
-      "ports": {
-        "inbound": [],
-        "outbound": []
-      }
-    },
-    {
       "id": "krizaka-users-api",
       "path": "krizaka/krizaka-users/krizaka-users-api",
       "repository": "krizaka-users",
@@ -1248,14 +1206,6 @@
     {
       "from": "krizaka-idempotency",
       "to": "krizaka-web"
-    },
-    {
-      "from": "krizaka-notifications-service",
-      "to": "krizaka-messaging"
-    },
-    {
-      "from": "krizaka-notifications-service",
-      "to": "krizaka-notifications-api"
     },
     {
       "from": "krizaka-ratelimit",
@@ -1644,22 +1594,6 @@
   ],
   "flows": [
     {
-      "from": "krizaka-users-service",
-      "to": "krizaka-notifications-service",
-      "kind": "amqp",
-      "via": "krizaka.notifications.password-events",
-      "exchange": "orazaka.events",
-      "routingKey": "evt.password.reset"
-    },
-    {
-      "from": "krizaka-users-service",
-      "to": "krizaka-notifications-service",
-      "kind": "amqp",
-      "via": "krizaka.notifications.user-events",
-      "exchange": "orazaka.events",
-      "routingKey": "evt.user.registered"
-    },
-    {
       "from": "orazaka-automation-service",
       "to": "orazaka-studio-service",
       "kind": "amqp",
@@ -1702,14 +1636,6 @@
     {
       "from": "orazaka-job-service",
       "to": "krizaka-billing-service",
-      "kind": "amqp",
-      "via": "krizaka.billing.settlements",
-      "exchange": "orazaka.events",
-      "routingKey": "job.{…}.done"
-    },
-    {
-      "from": "orazaka-job-service",
-      "to": "krizaka-notifications-service",
       "kind": "amqp",
       "via": "krizaka.billing.settlements",
       "exchange": "orazaka.events",
@@ -2141,27 +2067,6 @@
         "declaredBy": "krizaka-billing-service"
       },
       {
-        "name": "krizaka.notifications.password-events",
-        "exchange": "orazaka.events",
-        "binding": "evt.password.*",
-        "dlq": "krizaka.notifications.password-events.dlq",
-        "declaredBy": "krizaka-notifications-service"
-      },
-      {
-        "name": "krizaka.notifications.requests",
-        "exchange": "orazaka.events",
-        "binding": "evt.notification.requested",
-        "dlq": "krizaka.notifications.requests.dlq",
-        "declaredBy": "krizaka-notifications-service"
-      },
-      {
-        "name": "krizaka.notifications.user-events",
-        "exchange": "orazaka.events",
-        "binding": "evt.user.*",
-        "dlq": "krizaka.notifications.user-events.dlq",
-        "declaredBy": "krizaka-notifications-service"
-      },
-      {
         "name": "orazaka.automation.studio-runs",
         "exchange": "orazaka.events",
         "binding": null,
@@ -2373,21 +2278,6 @@
         "retry": "kit"
       },
       {
-        "module": "krizaka-notifications-service",
-        "queue": "krizaka.notifications.password-events",
-        "retry": "kit"
-      },
-      {
-        "module": "krizaka-notifications-service",
-        "queue": "krizaka.notifications.requests",
-        "retry": "kit"
-      },
-      {
-        "module": "krizaka-notifications-service",
-        "queue": "krizaka.notifications.user-events",
-        "retry": "kit"
-      },
-      {
         "module": "orazaka-automation-service",
         "queue": "orazaka.automation.studio-runs",
         "retry": "kit"
@@ -2573,15 +2463,6 @@
         "description": "Billing service — credit ledger, hold/settle authorisation, versioned pricebook and entitlements over its own database (ADR-033)"
       },
       {
-        "id": "krizaka-notifications-service",
-        "path": "krizaka/krizaka-notifications/krizaka-notifications-service",
-        "repository": "krizaka-notifications",
-        "role": "service",
-        "packaging": "jar",
-        "version": "0.2.0",
-        "description": "Notification service — renders templates and delivers them through the channel each request names (e-mail, SMS, webhook); stateless, AMQP-driven"
-      },
-      {
         "id": "krizaka-users-service",
         "path": "krizaka/krizaka-users/krizaka-users-service",
         "repository": "krizaka-users",
@@ -2634,15 +2515,6 @@
         "packaging": "jar",
         "version": "0.2.0",
         "description": "Billing and entitlements contract (ADR-033) — the credit hold/settle ports and DTOs every producer on the hot path depends on; pure JDK, no dependencies"
-      },
-      {
-        "id": "krizaka-notifications-api",
-        "path": "krizaka/krizaka-notifications/krizaka-notifications-api",
-        "repository": "krizaka-notifications",
-        "role": "contract",
-        "packaging": "jar",
-        "version": "0.2.0",
-        "description": "Notification contract — the request a producer publishes, the delivery channels and the AMQP routing it travels on; pure JDK, no dependencies"
       },
       {
         "id": "krizaka-users-api",
@@ -2979,51 +2851,6 @@
       {
         "from": "krizaka-messaging",
         "to": "krizaka-test-support",
-        "kind": "test"
-      },
-      {
-        "from": "krizaka-notifications-api",
-        "to": "krizaka-bom",
-        "kind": "import"
-      },
-      {
-        "from": "krizaka-notifications-api",
-        "to": "krizaka-parent",
-        "kind": "parent"
-      },
-      {
-        "from": "krizaka-notifications-api",
-        "to": "krizaka-test-support",
-        "kind": "test"
-      },
-      {
-        "from": "krizaka-notifications-service",
-        "to": "krizaka-bom",
-        "kind": "import"
-      },
-      {
-        "from": "krizaka-notifications-service",
-        "to": "krizaka-messaging",
-        "kind": "compile"
-      },
-      {
-        "from": "krizaka-notifications-service",
-        "to": "krizaka-notifications-api",
-        "kind": "compile"
-      },
-      {
-        "from": "krizaka-notifications-service",
-        "to": "krizaka-parent",
-        "kind": "parent"
-      },
-      {
-        "from": "krizaka-notifications-service",
-        "to": "krizaka-test-support",
-        "kind": "test"
-      },
-      {
-        "from": "krizaka-notifications-service",
-        "to": "krizaka-users-api",
         "kind": "test"
       },
       {
