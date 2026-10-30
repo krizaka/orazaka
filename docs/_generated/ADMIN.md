@@ -134,6 +134,9 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | PUT | `/api/v1/models/{id}` | Updates an existing model definition in the catalog. |
 | GET | `/api/v1/models/admin/audit` | — |
 | GET | `/api/v1/models/admin/feature-routes` | The feature routes, read only. |
+| GET | `/api/v1/models/admin/feature-structured-bounds` | Every bound, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | Removes the structured-output bound a feature set for itself; the default row then applies. |
+| PUT | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | Sets the bound of a feature (* is the default row). |
 | GET | `/api/v1/models/admin/feature-tool-bounds` | Every bound, the default row first. |
 | DELETE | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | Removes a feature's own bound so it falls back to the default row. |
 | PUT | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | Sets the bound of a feature (* is the default row). |

@@ -120,6 +120,7 @@ generated: true
 - `ChatMemoryPersistenceProvider`
 - `ChatSessionPersistenceProvider`
 - `FeatureRouteManager`
+- `FeatureStructuredBoundManager`
 - `FeatureToolBoundManager`
 - `JobPersistenceProvider`
 - `OutboxStore`
