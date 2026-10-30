@@ -955,7 +955,11 @@ fn on_panel_drop(app: &AppHandle, paths: &[PathBuf]) {
 // ───────────────────────────── run ─────────────────────────────
 
 pub fn run() {
-    let app = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // The Mac journey's embedded WebDriver (127.0.0.1:4445): a debug build with `--features webdriver`, never a release.
+    #[cfg(all(debug_assertions, feature = "webdriver"))]
+    let builder = builder.plugin(tauri_plugin_webdriver::init());
+    let app = builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
         .setup(|app| {

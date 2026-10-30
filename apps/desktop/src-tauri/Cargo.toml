@@ -36,6 +36,12 @@ similar = "3"
 # checks (ADR-093 slice 2): kill the whole process group of a timed-out run
 libc = "0.2"
 
+# The embedded W3C WebDriver of the Mac journey (krizaka-internal#230): debug builds with `--features webdriver` only, never a release.
+tauri-plugin-webdriver = { version = "0.2.3", optional = true }
+
+[features]
+webdriver = ["dep:tauri-plugin-webdriver"]
+
 [dev-dependencies]
 tempfile = "3"
 

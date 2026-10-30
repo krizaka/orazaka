@@ -1,0 +1,82 @@
+# The Mac app filmed by its journey (krizaka-internal#230): on main (nightly and on demand) the journey of apps/desktop runs on a macOS
+# runner against a debug build with the embedded WebDriver; the frames of the window (WebDriver screenshots, no screen recording, no
+# permission) are collapsed and joined by the shared tooling of krizaka-tauri-kit (film/), then the org's app-videos workflow
+# transcodes, uploads to Bunny and opens one PR with apps/desktop/content/app-videos.json, which the Download page of dev.orazaka.com
+# reads. Never required; no credential at all (the model is a stand-in on loopback); no pull_request trigger, so nothing here runs on a PR.
+name: Desktop film
+
+on:
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mac:
+    name: Mac journey film
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-15
+    timeout-minutes: 50
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: main
+      - uses: krizaka/krizaka-tauri-kit/.github/actions/film@8ecaad06d45019ddc9612f615bcc0f3c12bd5203 # feat/film-tooling (krizaka-tauri-kit#21): re-pin to the merged commit
+        id: film
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          package-manager-cache: false
+          node-version: "22"
+      - run: npm install -g pnpm@12.10.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - name: Build the app with its test driver
+        working-directory: apps/desktop
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm sidecar
+          pnpm exec tauri build --debug --no-bundle --features webdriver
+      - name: Run the journey, filmed
+        env:
+          KRIZAKA_FILM_DIR: ${{ steps.film.outputs.dir }}
+        run: |
+          mkdir -p showcase-mac
+          node apps/desktop/scripts/desktop-journey.mjs --app apps/desktop/src-tauri/target/debug/orazaka-desktop --out showcase-mac --film
+      - name: The film as mp4 (the app-videos workflow names files <platform>-<flow>)
+        run: |
+          node "${{ steps.film.outputs.dir }}/join-cli.mjs" showcase-mac showcase-mac/mac-control-panel.mp4
+          rm -r showcase-mac/frames showcase-mac/film-frames.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: showcase-mac
+          path: showcase-mac/mac-control-panel.mp4
+          retention-days: 7
+
+  app-videos:
+    name: Download page videos
+    needs: [mac]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: krizaka/.github/.github/workflows/app-videos.yml@eabaefb885a73d7f670b5537cf8b56d8247978e3 # main
+    with:
+      product: orazaka
+      manifest: apps/desktop/content/app-videos.json
+      artifacts: |
+        showcase-mac
+    secrets:
+      MEDIA_STORAGE_API_KEY: ${{ secrets.MEDIA_STORAGE_API_KEY }}
+      MEDIA_STORAGE_ZONE: ${{ secrets.MEDIA_STORAGE_ZONE }}
+      MEDIA_STORAGE_ENDPOINT: ${{ secrets.MEDIA_STORAGE_ENDPOINT }}
+      MEDIA_CDN_HOSTNAME: ${{ secrets.MEDIA_CDN_HOSTNAME }}
+      RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
