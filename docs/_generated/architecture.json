@@ -602,6 +602,21 @@
       }
     },
     {
+      "id": "krizaka-payments",
+      "path": "krizaka/krizaka-build/krizaka-payments",
+      "repository": "krizaka-build",
+      "owner": "krizaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "Payments for Java: the same port as @krizaka/payments (products and prices synced by lookup key, Checkout, customer portal, one verified and idempotent webhook), vendor-free; the Stripe adapter over the official stripe-java SDK is the only code that names the vendor. Money in long cents, clock injected, configuration passed in.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "krizaka-quality",
       "path": "krizaka/krizaka-build/krizaka-quality",
       "repository": "krizaka-build",
@@ -2819,6 +2834,15 @@
         "description": "Parent POM of every Krizaka JVM artifact: Maven Central metadata, Java 21 build conventions (formatting, tests, coverage, enforcer) and the signed release to Maven Central."
       },
       {
+        "id": "krizaka-payments",
+        "path": "krizaka/krizaka-build/krizaka-payments",
+        "repository": "krizaka-build",
+        "role": "build",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "Payments for Java: the same port as @krizaka/payments (products and prices synced by lookup key, Checkout, customer portal, one verified and idempotent webhook), vendor-free; the Stripe adapter over the official stripe-java SDK is the only code that names the vendor. Money in long cents, clock injected, configuration passed in."
+      },
+      {
         "id": "krizaka-quality",
         "path": "krizaka/krizaka-build/krizaka-quality",
         "repository": "krizaka-build",
@@ -3009,6 +3033,16 @@
       },
       {
         "from": "krizaka-observability",
+        "to": "krizaka-test-support",
+        "kind": "test"
+      },
+      {
+        "from": "krizaka-payments",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
+        "from": "krizaka-payments",
         "to": "krizaka-test-support",
         "kind": "test"
       },
