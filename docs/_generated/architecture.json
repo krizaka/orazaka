@@ -5560,7 +5560,7 @@
     {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.11.0",
+      "version": "1.12.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -5733,7 +5733,7 @@
           "pricing": "PAID",
           "status": "PUBLISHED",
           "estimatedCredits": 120,
-          "steps": 6,
+          "steps": 7,
           "stepKinds": [
             "CAPABILITY"
           ],
@@ -5757,6 +5757,10 @@
             {
               "key": "ruleset",
               "title": "Corpus nommé"
+            },
+            {
+              "key": "lecture",
+              "title": "Lecture du droit proche"
             }
           ],
           "outputs": [
