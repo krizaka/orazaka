@@ -62,6 +62,9 @@ function Shell({ snap, error, refresh, setSnap }: { snap: Snapshot | null; error
         <div className="min-w-0">
           <h1 className="text-base font-semibold leading-tight">{t("app.name")}</h1>
           <p className="truncate text-xs text-fg-secondary">{t("app.tagline")}</p>
+          <p className="truncate text-xs text-fg-secondary" data-testid="development-status">
+            {t("app.development")}
+          </p>
         </div>
         {snap && (
           <Badge tone={snap.settings.mode === "remote" ? "accent" : "neutral"} dot>
