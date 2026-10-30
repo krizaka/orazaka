@@ -115,16 +115,13 @@ mod tests {
     fn settings_round_trip_and_validate() {
         let d = tempfile::tempdir().unwrap();
         let f = d.path().join("settings.json");
-        let mut s = Settings::default();
-        s.mode = "local".into();
+        let s = Settings { mode: "local".into(), ..Default::default() };
         s.save(&f).unwrap();
         assert_eq!(Settings::load(&f).mode, "local");
-        let mut bad = Settings::default();
-        bad.mode = "root".into();
+        let bad = Settings { mode: "root".into(), ..Default::default() };
         assert!(bad.validated().is_err());
         assert_eq!(Settings::default().validated().unwrap().workspace_url(), DEFAULT_REMOTE);
-        let mut loc = Settings::default();
-        loc.mode = "local".into();
+        let loc = Settings { mode: "local".into(), ..Default::default() };
         assert_eq!(loc.workspace_url(), LOCAL_WORKSPACE_URL);
     }
 }

@@ -221,7 +221,7 @@ The same clips, taken from 720p (or 480p) to 1080p or 4K by each candidate, on o
 | --- | --- | --- | --- | --- | --- | --- |
 | Real-ESRGAN x4plus (per frame, ffmpeg) | BSD-3-Clause | yes | 1280×704 → 1920×1080 | 104.3 s | $0.12 | sharper than Lanczos but gritty, with a painterly texture on fine detail |
 | Real-ESRGAN x4plus (per frame, ffmpeg) | BSD-3-Clause | yes | 1280×704 → 3840×2160 | 127 s | $0.14 | fastest, but the 4K keeps the grain: not chosen |
-| SeedVR2 3B (video diffusion) | Apache-2.0 | yes | 832×480 → 1872×1080 | 58 s | $0.06 | winner — clean detail without grain, temporally stable; 480p sources (the Orochia feed) become convincing HD |
+| SeedVR2 3B (video diffusion) | Apache-2.0 | yes | 832×480 → 1872×1080 | 58 s | $0.06 | winner — clean detail without grain, temporally stable; 480p sources (the product feed) become convincing HD |
 | SeedVR2 3B (video diffusion) | Apache-2.0 | yes | 1280×720 → 1920×1080 | 107.4 s | $0.12 | winner — the default of the Studio's `upscale: 1080p` step |
 | SeedVR2 3B (video diffusion) | Apache-2.0 | yes | 1280×720 → 3840×2160 | 280.3 s | $0.31 | winner — 4K holds (tiled VAE, 31 GB): `upscale: 2160p`, for a hero |
 | LTX-2 19B (native high resolution) | LTX-2 Community License | conditions (free under $10M annual revenue) | — | not run | — | not run: weights larger than the pod's free disk; licence conditions to read first |
@@ -305,7 +305,7 @@ The same FLUX.2 [klein] still made at the video's own aspect through the image-g
 | DigitalOcean droplet 4 (idle while the driver slept) | RTX 4000 Ada 20 GB | 1.20 | $0.76/h | $0.91 |
 | RunPod pod (image-to-video pairs, 10 s chains, 720p A14B heroes; it ran ~2 h past its last job because the in-pod watchdog had no key to destroy itself — the local guard loop ended it) | H100 80 GB (CA-MTL-1) | 5.01 | $3.99/h | $19.99 |
 | RunPod pod (the 5B image-to-video batch of the home page, the 720p heroes, the first upscaler tests; ended by the spend guard once idle) | H100 80 GB (CA-MTL-1) | 2.50 | $3.99/h | $9.98 |
-| RunPod pod (six directed image-to-video clips with Wan 2.2 A14B, one retried, the 1080p/4K passes, the Orochia hero; stopped by id when done) | H100 80 GB (CA-MTL-1) | 2.72 | $3.99/h | $10.85 |
+| RunPod pod (six directed image-to-video clips with Wan 2.2 A14B, one retried, the 1080p/4K passes, the product hero; stopped by id when done) | H100 80 GB (CA-MTL-1) | 2.72 | $3.99/h | $10.85 |
 | RunPod pod (the image-to-video bake-off: four models, two shots; a first Wan run finished but crashed in the bake script's save step and was run again) | H100 80 GB (CA-MTL-1) | 1.77 | $3.99/h | $7.06 |
 | RunPod pod, profile kit (the five showcase clips through the Studios: FLUX stills, four LTX clips, one Wan 2.2 A14B 40-step clip, the 1080p upscale inside each run; the first attempts failed on a worker cache path, missing tokenizer dependencies and an upscale crop larger than the picture) | H100 80 GB (CA-MTL-1) | 0.90 | $3.99/h | $3.59 |
 | **Total billed** |  |  |  | **$54.71** |

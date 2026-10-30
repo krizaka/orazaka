@@ -19,6 +19,9 @@ generated: true
 | ADR-009 | _(cited in code, no dedicated file)_ | — |
 | ADR-011 | _(cited in code, no dedicated file)_ | — |
 | ADR-012 | _(cited in code, no dedicated file)_ | — |
+| ADR-013 | _(cited in code, no dedicated file)_ | — |
+| ADR-015 | _(cited in code, no dedicated file)_ | — |
+| ADR-016 | _(cited in code, no dedicated file)_ | — |
 | ADR-017 | _(cited in code, no dedicated file)_ | — |
 | ADR-027 | ADR-027 — Single-source `application.yaml`: domain config lives in the database | `adr/ADR-027-db-driven-configuration.md` |
 | ADR-028 | ADR-028 — Transport selection: when an operation is REST vs GraphQL vs AMQP | `adr/ADR-028-transport-selection-rest-graphql-amqp.md` |
@@ -84,5 +87,7 @@ generated: true
 | ADR-088 | ADR-088 — Runs as background tasks | `adr/ADR-088-runs-as-background-tasks.md` |
 | ADR-089 | ADR-089 — Rules from the law | `adr/ADR-089-rules-from-the-law.md` |
 | ADR-090 | ADR-090 — The tools module as the provider gateway | `adr/ADR-090-tools-module-as-provider-gateway.md` |
-| ADR-091 | _(cited in code, no dedicated file)_ | — |
+| ADR-091 | ADR-091 — Access is enforced at retrieval and at the tool | `adr/ADR-091-access-at-retrieval-and-at-the-tool.md` |
 | ADR-092 | ADR-092 — Own the core, integrate the edges | `adr/ADR-092-own-the-core-integrate-the-edges.md` |
+| ADR-093 | ADR-093 — Code on the Mac: from a GitHub issue to a pull request | `adr/ADR-093-code-on-the-mac.md` |
+| ADR-094 | ADR-094 — Use Spring AI 2 to the maximum, behind our ports | `adr/ADR-094-spring-ai-2-to-the-maximum-behind-our-ports.md` |

@@ -12,6 +12,7 @@ generated: true
 
 **Inbound ports**
 
+- `AgentTurns`
 - `AiClient`
 - `CatalogModelService`
 - `ChatSessionService`
@@ -23,9 +24,12 @@ generated: true
 
 **Outbound ports**
 
+- `AccessAudit`
 - `AudioGeneratorClient`
+- `AudioTranscriber`
 - `CapabilityProvider`
 - `ChatGeneratorClient`
+- `ChatInvocation`
 - `ChatMemoryStore`
 - `CheckAuditLog`
 - `CheckHttp`
@@ -36,23 +40,37 @@ generated: true
 - `CodeSandboxPort`
 - `ConsentRegistry`
 - `ControlVerdictRecorder`
+- `ConversationMemory`
+- `DomainEventPublisher`
 - `EmbeddingClient`
 - `ExternalCheckConnector`
+- `FeatureModelRoutes`
 - `ImageGeneratorClient`
 - `InfrastructureStatusProvider`
 - `KnowledgeService`
 - `McpOrchestrator`
 - `ModelCatalogProvider`
 - `ModelEndpointResolver`
+- `OutputJudge`
 - `PipelineConfigProvider`
 - `PlatformMcpServerProvider`
 - `PlatformToolConfigProvider`
+- `PromptAssembly`
+- `PromptCachePolicy`
+- `ProviderChatClient`
 - `SemanticClassifierPort`
+- `SpeechSynthesis`
 - `StepModelRecorder`
 - `StepRouteProvider`
+- `StructuredOutputBounds`
 - `StructuredOutputClient`
 - `TestShaperPort`
+- `ToolAnswerCodec`
+- `ToolLoopBounds`
+- `ToolOptions`
+- `ToolPermissionProvider`
 - `ToolRegistry`
+- `ToolResolution`
 - `ToolResultCache`
 - `UserCredentialsProvider`
 - `UserMcpServerProvider`
@@ -66,9 +84,12 @@ generated: true
 - `ApiKeyService`
 - `IdentityReconciliationService`
 - `IdentityService`
+- `LoginLockoutService`
 - `OrganizationService`
+- `PasswordPolicyService`
 - `PasswordRecoveryService`
 - `RateLimitProvider`
+- `SocialConnectionService`
 - `TokenService`
 - `UserProfileProvider`
 
@@ -77,11 +98,15 @@ generated: true
 - `AdminUserRepositoryPort`
 - `ApiKeyRepositoryPort`
 - `AuthorityRepositoryPort`
+- `BreachedPasswordPort`
 - `CryptographyPort`
+- `LockoutRepositoryPort`
 - `OAuth2ProviderVerifier`
 - `OrganizationRepositoryPort`
 - `PasswordEventPublisher`
 - `PasswordResetTokenRepositoryPort`
+- `SecretSealPort`
+- `SocialConnectionRepositoryPort`
 - `UserCredentialRepositoryPort`
 - `UserEventPublisher`
 - `UserInterceptionRepositoryPort`
@@ -97,6 +122,10 @@ generated: true
 - `CatalogModelManager`
 - `ChatMemoryPersistenceProvider`
 - `ChatSessionPersistenceProvider`
+- `FeatureCachePolicyManager`
+- `FeatureRouteManager`
+- `FeatureStructuredBoundManager`
+- `FeatureToolBoundManager`
 - `JobPersistenceProvider`
 - `OutboxStore`
 - `PipelineConfigManager`

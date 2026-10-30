@@ -42,12 +42,14 @@ jobs:
         with:
           repository: krizaka/orazaka
           path: workspace
+          persist-credentials: false
 
       - name: Check out ${{ inputs.component }} at the commit under test
         if: github.repository != 'krizaka/orazaka'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: incoming
+          persist-credentials: false
 
       - name: Place the edge at its workspace path
         if: github.repository != 'krizaka/orazaka'

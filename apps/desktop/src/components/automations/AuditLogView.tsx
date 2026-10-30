@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@krizaka/query";
 import { ActivityFeed } from "@krizaka/ui/activity-feed";
 import { Badge } from "@krizaka/ui/badge";
 import { automationsApi, type AuditView } from "../../lib/api";
@@ -7,11 +7,8 @@ import { useI18n } from "../../lib/i18n";
 /** The append-only, hash-chained audit log of this Mac, and whether its chain verifies. */
 export function AuditLogView({ refreshKey }: { refreshKey: number }) {
   const { t, format } = useI18n();
-  const [audit, setAudit] = useState<AuditView | null>(null);
-
-  useEffect(() => {
-    void automationsApi.audit(200).then(setAudit).catch(() => setAudit(null));
-  }, [refreshKey]);
+  const auditQuery = useQuery({ queryKey: ["automations", "audit", refreshKey], queryFn: () => automationsApi.audit(200), placeholderData: keepPreviousData, retry: false });
+  const audit: AuditView | null = auditQuery.data ?? null;
 
   const v = audit?.verification;
   return (

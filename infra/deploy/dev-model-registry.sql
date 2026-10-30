@@ -41,7 +41,7 @@ ON CONFLICT (model_name) DO NOTHING;
 UPDATE orazaka_models SET vendor = 'NVIDIA', family = 'Nemotron Nano v2 VL', capabilities = 'vision,chat', runs_on = 'provider', runtime = 'DigitalOcean serverless inference', open_weights = TRUE, licence = 'NVIDIA Open Model License', licence_url = 'https://huggingface.co/nvidia/NVIDIA-Nemotron-Nano-12B-v2-VL-BF16', commercial_use = 'yes', status = 'available' WHERE model_name = 'nemotron-nano-12b-v2-vl';
 
 -- The embedding model of dev (POST /api/v1/embeddings resolves the default of the `embedding` category, never a model the caller
--- names). GTE Large (en) v1.5 is the one the dev inference key may call (1024 dimensions, the size Orochia's Explorer stores in
+-- names). GTE Large (en) v1.5 is the one the dev inference key may call (1024 dimensions, the size a product's Explorer stores in
 -- pgvector); BGE-M3, multilingual (English and French), answers 403 on that key today and replaces it as the default the day the
 -- model is enabled on the key (`UPDATE orazaka_models SET status = 'available'` for it, then the default line below).
 UPDATE orazaka_models SET status = 'available' WHERE model_name = 'gte-large-en-v1.5';

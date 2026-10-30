@@ -100,8 +100,8 @@ Platform servers are declared by an administrator; each user may add private one
 | GET | `/api/v1/mcp/servers/user` | authenticated | — |
 | POST | `/api/v1/mcp/servers/user` | authenticated | — |
 | DELETE | `/api/v1/mcp/servers/user/{id}` | authenticated | — |
-| GET | `/api/v1/mcp/tools` | authenticated | Retrieves all registered tools and their schemas. |
-| POST | `/api/v1/mcp/tools/{name}/execute` | authenticated | Executes a tool by name with the provided arguments. |
+| GET | `/api/v1/mcp/tools` | authenticated | Retrieves the registered tools the caller may use, with their schemas. |
+| POST | `/api/v1/mcp/tools/{name}/execute` | authenticated | Executes a tool by name with the provided arguments, for the authenticated caller: a tool the caller may not use answers 403 and leaves an audit line (ADR-091). |
 
 From the terminal ([CLI reference](CLI.md)):
 

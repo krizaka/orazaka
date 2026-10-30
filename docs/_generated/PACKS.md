@@ -46,6 +46,14 @@ capability rows, a price, catalogue entries — and changes no code.
   "studios": 3
  },
  {
+  "key": "code-contributor",
+  "title": "Contributor",
+  "tagline": "The model turn behind Orazaka's code agent on your Mac.",
+  "tier": "DATA",
+  "category": "Developer tools",
+  "studios": 2
+ },
+ {
   "key": "bill96-french-first",
   "title": "French-first documents (Bill 96)",
   "tagline": "French versions, bilingual checks and French-first copy, on your own machine.",
@@ -800,6 +808,67 @@ capability rows, a price, catalogue entries — and changes no code.
     "CONNECTOR"
    ],
    "credits": 510
+  }
+ ]
+}
+```
+
+### Contributor
+
+```pack
+{
+ "key": "code-contributor",
+ "title": "Contributor",
+ "tagline": "The model turn behind Orazaka's code agent on your Mac.",
+ "description": "Carries the model turns of the Orazaka app's code agent, so that access, consent and credits are checked on every turn. The tools, the approvals, git and the audit stay on your Mac.",
+ "version": "1.1.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "STANDARD",
+ "category": "Developer tools",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": true,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "code-issue-to-pr",
+   "label": "From an issue to a pull request",
+   "summary": "Reads a GitHub issue and your repository, proposes changes you approve, and opens a draft pull request.",
+   "description": "The model turn for the issue-to-pull-request flow. Every write and every push is approved on your Mac.",
+   "inputs": [
+    {
+     "key": "task",
+     "title": "Tâche"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "SESSION"
+   ],
+   "credits": 40
+  },
+  {
+   "key": "code-read-write",
+   "label": "Read and change code",
+   "summary": "Reads a repository you grant and proposes changes, hunk by hunk.",
+   "description": "The model turn for reading and changing files in a repository you grant. Nothing is written without your approval.",
+   "inputs": [
+    {
+     "key": "task",
+     "title": "Tâche"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "SESSION"
+   ],
+   "credits": 40
   }
  ]
 }
@@ -1887,6 +1956,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 |:---|:---|:---|
 | `bill96-french-first` | 1.0.0 | `french-version` · `bilingual-consistency-check` · `french-first-copy` · `firm-glossary` |
 | `business-brief` | 1.0.0 | `invitation-writer` |
+| `code-contributor` | 1.1.0 | `code-issue-to-pr` · `code-read-write` |
 | `data-analytics` | 1.6.0 | `data-driven-ui` · `video-understanding` · `creator-suggestions` |
 | `document-validation` | 1.11.0 | `document-authenticity` · `compliance-check` |
 | `echo-toolkit` | 1.2.0 | `echo-reverse` |
@@ -2084,7 +2154,7 @@ not a filter, and the engine never adds terms of its own.
 > on the first run, not at install.
 
 **Step kinds**: `CAPABILITY` (runs a model), `TRANSFORM` (reshapes values), `APPROVAL` (parks for a
-human), `CONNECTOR` (calls out), `KNOWLEDGE`. **`onError`**: `FAIL` | `SKIP` | `RETRY` — and a
+human), `CONNECTOR` (calls out), `KNOWLEDGE`, `SESSION` (stays open while a client posts its turns; closes on « finish » or an idle TTL). **`onError`**: `FAIL` | `SKIP` | `RETRY` — and a
 `SKIP` needs a written `skipRationale`, which a fitness function checks.
 
 **Templates.** `{{inputs.x}}`, `{{config.x}}`, `{{steps.<out>}}`, `{{item}}` inside a `forEach`. A

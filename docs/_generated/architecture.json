@@ -182,6 +182,7 @@
       "layer": "ai",
       "description": "Knowledge & RAG retrieval service (pgvector) with asynchronous indexing.",
       "dependsOn": [
+        "krizaka-platform-kit",
         "orazaka-build"
       ]
     },
@@ -206,6 +207,7 @@
       "layer": "foundation",
       "description": "Transparent HTTP edge in front of every Orazaka service: routing, API-key → JWT exchange, CORS and tracing. Spring MVC + virtual threads.",
       "dependsOn": [
+        "krizaka-platform-kit",
         "orazaka-build"
       ]
     },
@@ -555,6 +557,21 @@
       }
     },
     {
+      "id": "orazaka-rewrite-style",
+      "path": "orazaka-libs/orazaka-build/orazaka-rewrite-style",
+      "repository": "orazaka-build",
+      "owner": "orazaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "1.0.0-SNAPSHOT",
+      "description": "The explicit OpenRewrite import layout of the Orazaka repositories (same as krizaka-rewrite-style of krizaka-build, which is not yet on Central): no star import, static imports first.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "orazaka-studio-client",
       "path": "orazaka-apps/services/orazaka-studio/orazaka-studio-client",
       "repository": "orazaka-studio",
@@ -579,6 +596,36 @@
       "runtime": "jvm",
       "version": "0.2.0",
       "description": "Tier-2 SDK — the producer side of the billing contract: a NoOp and an HTTP adapter for CreditAuthorizationClient, selected at bootstrap so no call site ever branches on whether billing exists",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "krizaka-quality",
+      "path": "krizaka/krizaka-build/krizaka-quality",
+      "repository": "krizaka-build",
+      "owner": "krizaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "The PMD ruleset and the SpotBugs filter every Krizaka Java build applies in verify: the local twin of the Sonar Java findings we actually have (ADR-013).",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "krizaka-rewrite-style",
+      "path": "krizaka/krizaka-build/krizaka-rewrite-style",
+      "repository": "krizaka-build",
+      "owner": "krizaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "The Java code style OpenRewrite applies in every Krizaka repository, so that it never autodetects one: imports are never folded into a star import, static imports first (the layout google-java-format writes).",
       "ports": {
         "inbound": [],
         "outbound": []
@@ -671,6 +718,7 @@
       "description": "Orazaka AI Orchestration Engine",
       "ports": {
         "inbound": [
+          "AgentTurns",
           "AiClient",
           "CatalogModelService",
           "ChatSessionService",
@@ -681,9 +729,12 @@
           "StepRouter"
         ],
         "outbound": [
+          "AccessAudit",
           "AudioGeneratorClient",
+          "AudioTranscriber",
           "CapabilityProvider",
           "ChatGeneratorClient",
+          "ChatInvocation",
           "ChatMemoryStore",
           "CheckAuditLog",
           "CheckHttp",
@@ -694,23 +745,37 @@
           "CodeSandboxPort",
           "ConsentRegistry",
           "ControlVerdictRecorder",
+          "ConversationMemory",
+          "DomainEventPublisher",
           "EmbeddingClient",
           "ExternalCheckConnector",
+          "FeatureModelRoutes",
           "ImageGeneratorClient",
           "InfrastructureStatusProvider",
           "KnowledgeService",
           "McpOrchestrator",
           "ModelCatalogProvider",
           "ModelEndpointResolver",
+          "OutputJudge",
           "PipelineConfigProvider",
           "PlatformMcpServerProvider",
           "PlatformToolConfigProvider",
+          "PromptAssembly",
+          "PromptCachePolicy",
+          "ProviderChatClient",
           "SemanticClassifierPort",
+          "SpeechSynthesis",
           "StepModelRecorder",
           "StepRouteProvider",
+          "StructuredOutputBounds",
           "StructuredOutputClient",
           "TestShaperPort",
+          "ToolAnswerCodec",
+          "ToolLoopBounds",
+          "ToolOptions",
+          "ToolPermissionProvider",
           "ToolRegistry",
+          "ToolResolution",
           "ToolResultCache",
           "UserCredentialsProvider",
           "UserMcpServerProvider",
@@ -734,9 +799,12 @@
           "ApiKeyService",
           "IdentityReconciliationService",
           "IdentityService",
+          "LoginLockoutService",
           "OrganizationService",
+          "PasswordPolicyService",
           "PasswordRecoveryService",
           "RateLimitProvider",
+          "SocialConnectionService",
           "TokenService",
           "UserProfileProvider"
         ],
@@ -744,11 +812,15 @@
           "AdminUserRepositoryPort",
           "ApiKeyRepositoryPort",
           "AuthorityRepositoryPort",
+          "BreachedPasswordPort",
           "CryptographyPort",
+          "LockoutRepositoryPort",
           "OAuth2ProviderVerifier",
           "OrganizationRepositoryPort",
           "PasswordEventPublisher",
           "PasswordResetTokenRepositoryPort",
+          "SecretSealPort",
+          "SocialConnectionRepositoryPort",
           "UserCredentialRepositoryPort",
           "UserEventPublisher",
           "UserInterceptionRepositoryPort",
@@ -789,6 +861,10 @@
           "CatalogModelManager",
           "ChatMemoryPersistenceProvider",
           "ChatSessionPersistenceProvider",
+          "FeatureCachePolicyManager",
+          "FeatureRouteManager",
+          "FeatureStructuredBoundManager",
+          "FeatureToolBoundManager",
           "JobPersistenceProvider",
           "OutboxStore",
           "PipelineConfigManager",
@@ -1249,6 +1325,10 @@
     {
       "from": "krizaka-webhooks",
       "to": "krizaka-web"
+    },
+    {
+      "from": "orazaka-adapter-spring-ai",
+      "to": "orazaka-business"
     },
     {
       "from": "orazaka-adapter-spring-ai",
@@ -1776,6 +1856,12 @@
       "from": "orazaka-edge",
       "to": "krizaka-users-service",
       "kind": "http",
+      "via": "route /api/v1/organizations"
+    },
+    {
+      "from": "orazaka-edge",
+      "to": "krizaka-users-service",
+      "kind": "http",
       "via": "route /api/v1/profile"
     },
     {
@@ -1949,7 +2035,7 @@
       "phase": "dynamic",
       "implemented": true,
       "concern": "tooling",
-      "summary": "Tool execution interceptor — analyzes prompt content to selectively attach relevant `ToolCallback` definitions to the chat options."
+      "summary": "Tool execution interceptor — analyzes prompt content to selectively attach relevant `EngineTool` definitions to the chat options."
     },
     {
       "interceptor": "MediaInterceptor",
@@ -2404,6 +2490,11 @@
         "routingKey": "job.text.process"
       },
       {
+        "feature": "orazaka.core.research.grounded",
+        "handler": "research.grounded",
+        "routingKey": "job.text.process"
+      },
+      {
         "feature": "orazaka.core.media.video",
         "handler": "video.generate",
         "routingKey": "job.video.generate"
@@ -2728,6 +2819,24 @@
         "description": "Parent POM of every Krizaka JVM artifact: Maven Central metadata, Java 21 build conventions (formatting, tests, coverage, enforcer) and the signed release to Maven Central."
       },
       {
+        "id": "krizaka-quality",
+        "path": "krizaka/krizaka-build/krizaka-quality",
+        "repository": "krizaka-build",
+        "role": "build",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "The PMD ruleset and the SpotBugs filter every Krizaka Java build applies in verify: the local twin of the Sonar Java findings we actually have (ADR-013)."
+      },
+      {
+        "id": "krizaka-rewrite-style",
+        "path": "krizaka/krizaka-build/krizaka-rewrite-style",
+        "repository": "krizaka-build",
+        "role": "build",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "The Java code style OpenRewrite applies in every Krizaka repository, so that it never autodetects one: imports are never folded into a star import, static imports first (the layout google-java-format writes)."
+      },
+      {
         "id": "krizaka-test-support",
         "path": "krizaka/krizaka-build/krizaka-test-support",
         "repository": "krizaka-build",
@@ -2929,6 +3038,11 @@
         "kind": "test"
       },
       {
+        "from": "krizaka-quality",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
         "from": "krizaka-ratelimit",
         "to": "krizaka-parent",
         "kind": "parent"
@@ -2942,6 +3056,11 @@
         "from": "krizaka-ratelimit",
         "to": "krizaka-web",
         "kind": "compile"
+      },
+      {
+        "from": "krizaka-rewrite-style",
+        "to": "krizaka-parent",
+        "kind": "parent"
       },
       {
         "from": "krizaka-security",
@@ -4390,6 +4509,129 @@
               "label": "Séquences de Relance",
               "tagline": "Vos premiers contacts deviennent des relances qui partent.",
               "description": "Une relance en plusieurs temps par prospect, uniformisée en un seul ton, validée par vous, puis postée dans votre canal."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "code-contributor",
+      "dir": "code-contributor",
+      "version": "1.1.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "STANDARD",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "developer-tools",
+      "categorySortWeight": 120,
+      "iconKey": "code",
+      "sortWeight": 50,
+      "pricing": {
+        "priceCents": 0,
+        "includedCredits": 0
+      },
+      "capabilities": [
+        "orazaka.code.agent.turn"
+      ],
+      "workers": [],
+      "scopeGuard": false,
+      "consent": true,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Contributor",
+          "tagline": "The model turn behind Orazaka's code agent on your Mac.",
+          "description": "Carries the model turns of the Orazaka app's code agent, so that access, consent and credits are checked on every turn. The tools, the approvals, git and the audit stay on your Mac."
+        },
+        "fr": {
+          "label": "Contributeur",
+          "tagline": "Le tour de modèle derrière l'agent de code d'Orazaka sur votre Mac.",
+          "description": "Porte les tours de modèle de l'agent de code de l'app Orazaka, pour que l'accès, le consentement et les crédits soient vérifiés à chaque tour. Les outils, les approbations, git et le journal restent sur votre Mac."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Developer tools",
+          "description": "Packs that work on code with you: read it, change it, carry an issue to a pull request."
+        },
+        "fr": {
+          "label": "Outils de développement",
+          "description": "Des packs qui travaillent sur le code avec vous : le lire, le modifier, mener une issue jusqu'à une pull request."
+        }
+      },
+      "studios": [
+        {
+          "key": "code-issue-to-pr",
+          "profession": "developer",
+          "iconKey": "code",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "SESSION"
+          ],
+          "inputs": [
+            {
+              "key": "task",
+              "title": "Tâche"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "closedBy",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "From an issue to a pull request",
+              "tagline": "Reads a GitHub issue and your repository, proposes changes you approve, and opens a draft pull request.",
+              "description": "The model turn for the issue-to-pull-request flow. Every write and every push is approved on your Mac."
+            },
+            "fr": {
+              "label": "D'une issue à une pull request",
+              "tagline": "Lit une issue GitHub et votre dépôt, propose des changements que vous approuvez et ouvre une pull request en brouillon.",
+              "description": "Le tour de modèle du parcours issue vers pull request. Chaque écriture et chaque envoi est approuvé sur votre Mac."
+            }
+          }
+        },
+        {
+          "key": "code-read-write",
+          "profession": "developer",
+          "iconKey": "code",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "SESSION"
+          ],
+          "inputs": [
+            {
+              "key": "task",
+              "title": "Tâche"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "closedBy",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Read and change code",
+              "tagline": "Reads a repository you grant and proposes changes, hunk by hunk.",
+              "description": "The model turn for reading and changing files in a repository you grant. Nothing is written without your approval."
+            },
+            "fr": {
+              "label": "Lire et modifier du code",
+              "tagline": "Lit un dépôt que vous accordez et propose des changements, bloc par bloc.",
+              "description": "Le tour de modèle pour lire et modifier des fichiers d'un dépôt que vous accordez. Rien n'est écrit sans votre approbation."
             }
           }
         }
@@ -6546,6 +6788,28 @@
       "licence": {
         "name": "Apache-2.0",
         "url": "https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "flux-1-schnell",
+      "name": "FLUX.1 [schnell] (Q8_0)",
+      "vendor": "Black Forest Labs",
+      "family": "FLUX.1 schnell",
+      "category": "image",
+      "capabilities": [
+        "image"
+      ],
+      "runsOn": "local",
+      "runtime": "stable-diffusion.cpp · CUDA (24 GB)",
+      "provider": "localai-image",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell"
       },
       "commercialUse": "yes",
       "contextWindow": null,

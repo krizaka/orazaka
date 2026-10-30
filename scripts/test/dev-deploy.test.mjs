@@ -183,7 +183,7 @@ test("CA_EXTENSIONS: a CA strict verification accepts (key usage present)", asyn
 test("connectionVars: the default pair for Studio callers, AI_<NAME>_URL / _API_KEY for an engine client", () => {
   assert.deepEqual(connectionVars(undefined, "https://e/edge", "oz_k"), { AI_PROVIDER: "orazaka", AI_API_URL: "https://e/edge", AI_API_KEY: "oz_k" });
   assert.deepEqual(connectionVars("AI_ENGINE", "https://e/edge", "oz_k"), { AI_ENGINE_URL: "https://e/edge", AI_ENGINE_API_KEY: "oz_k" });
-  assert.throws(() => connectionVars("OROCHIA_AI", "u", "k"), /not an AI_ prefix/);
+  assert.throws(() => connectionVars("PRODUCT_AI", "u", "k"), /not an AI_ prefix/);
   assert.throws(() => connectionVars("AI_X; rm", "u", "k"), /not an AI_ prefix/);
 });
 
@@ -249,7 +249,7 @@ test("connection budget: every JVM of the core goes through its PgBouncer pool (
 });
 
 test("service accounts sit on the `service` rate-limit tier, whose migration is idempotent and moves the existing svc_* users", () => {
-  assert.equal(serviceAccount("orochia").tier, "service");
+  assert.equal(serviceAccount("explorer").tier, "service");
   const sql = readFileSync(new URL("../../infra/migrations/2026-10-20-service-rate-tier.sql", import.meta.url), "utf8");
   assert.match(sql, /VALUES \('service', 1000, 20, FALSE\)\s*ON CONFLICT \(tier_key\) DO NOTHING/);
   assert.match(sql, /INSERT INTO rate_limit_tiers \(id, capacity, refill_tokens, refill_seconds\)\s*VALUES \('service', 1000, 1000, 60\)/, "users.rate_limit_tier has a foreign key to rate_limit_tiers");
@@ -448,7 +448,10 @@ test("the external checks (orazaka-packs#138) are additive, idempotent, fail clo
     ? readFileSync(jobService, "utf8").match(/-- =+\n-- EXTERNAL CHECKS \(orazaka-packs#138[\s\S]*?ON CONFLICT \(feature_key\) DO NOTHING;/)
     : null;
   if (block) {
-    assert.ok(sql.includes(block[0]), "the migration carries the job-service block verbatim");
+    // Statements only (comments are history), and the billable capabilities as this migration wrote them: NONE was added
+    // by 2026-10-27-capability-billable-none.sql (orazaka-packs#162), which the initdb carries from the start.
+    const statements = (text) => text.replace(/--.*$/gm, "").replace("'EXTERNAL_CHECK','NONE'", "'EXTERNAL_CHECK'").replace(/\s+/g, " ");
+    assert.ok(statements(sql).includes(statements(block[0])), "the migration carries the job-service block verbatim");
   }
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "external-checks"\) externalChecks\(\)/);
 });
@@ -605,4 +608,43 @@ test("the semantic cache (orazaka-ai-engine#40) is additive, idempotent, OFF on 
     : null;
   if (table) assert.ok(sql.includes(table[0]), "the migration carries the job-service table verbatim");
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "semantic-cache"\) semanticCache\(\)/);
+});
+
+test("the Eric persona carries the Studio grants the product shows (compliance-check), the others none", () => {
+  assert.deepEqual(personaAccount().studios, ["compliance-check"]);
+  assert.equal(personaAccount("mira").studios, undefined);
+  assert.match(grantSql("id-1", personaAccount().studios, "persona Eric"), /'studio\.compliance-check'/);
+});
+
+test("seedSql never creates a second account for an e-mail that already signs in (eric.morel login 500: two rows, « Éric » renamed by `names` and a new « Eric »)", () => {
+  const sql = seedSql([{ ...personaAccount(), hash: "$2y$10$h" }]);
+  assert.match(sql, /UPDATE users SET[^;]*WHERE lower\(email\) = lower\('eric\.morel@example\.com'\)/, "an existing account is refreshed by e-mail, whatever its display name");
+  assert.match(sql, /WHERE NOT EXISTS \(SELECT 1 FROM users WHERE lower\(email\) = lower\('eric\.morel@example\.com'\)\)/, "the insert is skipped when the e-mail exists");
+  assert.match(sql, /FROM users WHERE lower\(email\) = lower\('eric\.morel@example\.com'\) ON CONFLICT/, "authorities follow the e-mail, not the username");
+});
+
+test("personaActorSql finds the persona by e-mail, so the Studio grant lands on the account that signs in", async () => {
+  const { personaActorSql } = await import("../dev-deploy.mjs");
+  assert.match(personaActorSql(personaAccount()), /WHERE lower\(email\) = lower\('eric\.morel@example\.com'\)/);
+});
+
+test("re-running `persona eric` keeps his password: the secret is reused, the hash is replaced only when absent or not matching", async () => {
+  const { planPersonaPassword } = await import("../dev-deploy.mjs");
+  const matches = (pw, hash) => hash === `h(${pw})`;
+  // first run: no secret, no account → a new password and its hash, both stored
+  const first = planPersonaPassword({ stored: "", hash: "", matches, generate: () => "new-pw" });
+  assert.deepEqual({ ...first }, { password: "new-pw", setHash: true, storeSecret: true });
+  // re-run: the secret is there and the stored hash matches → nothing changes
+  assert.deepEqual({ ...planPersonaPassword({ stored: "kept", hash: "h(kept)", matches, generate: () => "other" }) }, { password: "kept", setHash: false, storeSecret: false });
+  // drift: the account holds another password → the hash follows the secret (the secret never moves)
+  assert.deepEqual({ ...planPersonaPassword({ stored: "kept", hash: "h(old)", matches, generate: () => "other" }) }, { password: "kept", setHash: true, storeSecret: false });
+  // account created by hand, secret lost → a new password for both
+  assert.deepEqual({ ...planPersonaPassword({ stored: "", hash: "h(x)", matches, generate: () => "new-pw" }) }, { password: "new-pw", setHash: true, storeSecret: true });
+});
+
+test("seedSql without a hash leaves the stored password alone (update and conflict), with one it sets it", () => {
+  const keep = seedSql([{ ...personaAccount(), hash: undefined }]);
+  assert.doesNotMatch(keep.split("INSERT")[0], /password_hash/, "the UPDATE does not touch password_hash");
+  assert.doesNotMatch(keep.split("ON CONFLICT (username)")[1].split(";")[0], /password_hash/, "nor does the username conflict branch");
+  assert.match(seedSql([{ ...personaAccount(), hash: "$2y$10$h" }]), /UPDATE users SET password_hash = '\$2y\$10\$h'/);
 });
