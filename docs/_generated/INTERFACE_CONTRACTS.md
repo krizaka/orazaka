@@ -51,6 +51,7 @@ generated: true
 - `McpOrchestrator`
 - `ModelCatalogProvider`
 - `ModelEndpointResolver`
+- `OutputJudge`
 - `PipelineConfigProvider`
 - `PlatformMcpServerProvider`
 - `PlatformToolConfigProvider`
@@ -119,7 +120,9 @@ generated: true
 - `CatalogModelManager`
 - `ChatMemoryPersistenceProvider`
 - `ChatSessionPersistenceProvider`
+- `FeatureCachePolicyManager`
 - `FeatureRouteManager`
+- `FeatureStructuredBoundManager`
 - `FeatureToolBoundManager`
 - `JobPersistenceProvider`
 - `OutboxStore`
