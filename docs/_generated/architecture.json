@@ -756,15 +756,18 @@
           "McpOrchestrator",
           "ModelCatalogProvider",
           "ModelEndpointResolver",
+          "OutputJudge",
           "PipelineConfigProvider",
           "PlatformMcpServerProvider",
           "PlatformToolConfigProvider",
           "PromptAssembly",
+          "PromptCachePolicy",
           "ProviderChatClient",
           "SemanticClassifierPort",
           "SpeechSynthesis",
           "StepModelRecorder",
           "StepRouteProvider",
+          "StructuredOutputBounds",
           "StructuredOutputClient",
           "TestShaperPort",
           "ToolAnswerCodec",
@@ -858,7 +861,9 @@
           "CatalogModelManager",
           "ChatMemoryPersistenceProvider",
           "ChatSessionPersistenceProvider",
+          "FeatureCachePolicyManager",
           "FeatureRouteManager",
+          "FeatureStructuredBoundManager",
           "FeatureToolBoundManager",
           "JobPersistenceProvider",
           "OutboxStore",
@@ -6783,6 +6788,28 @@
       "licence": {
         "name": "Apache-2.0",
         "url": "https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "flux-1-schnell",
+      "name": "FLUX.1 [schnell] (Q8_0)",
+      "vendor": "Black Forest Labs",
+      "family": "FLUX.1 schnell",
+      "category": "image",
+      "capabilities": [
+        "image"
+      ],
+      "runsOn": "local",
+      "runtime": "stable-diffusion.cpp · CUDA (24 GB)",
+      "provider": "localai-image",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell"
       },
       "commercialUse": "yes",
       "contextWindow": null,

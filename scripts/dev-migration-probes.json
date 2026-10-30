@@ -19,6 +19,8 @@
     "infra/migrations/2026-10-27-code-agent-routing.sql": "orazaka_db",
     "infra/migrations/2026-10-27-pricebook-code-agent.sql": "krizaka_billing_db",
     "infra/migrations/2026-10-29-feature-tool-bounds.sql": "orazaka_db",
+    "infra/migrations/2026-10-30-feature-structured-bounds.sql": "orazaka_db",
+    "infra/migrations/2026-10-30-feature-cache-policy.sql": "orazaka_db",
     "krizaka/krizaka-billing/infra/migrations/2026-10-26-free-studios-granted.sql": "krizaka_billing_db"
   },
   "probes": {

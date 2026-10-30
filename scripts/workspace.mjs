@@ -160,6 +160,18 @@ function upstreams(name) {
   }
 }
 
+/**
+ * The formatter rule (krizaka/.github#427): a component repository that carries a `format:check` script (Prettier with
+ * `@krizaka/config/prettier`) is checked here too, so an unformatted change cannot reach the workspace through a member.
+ */
+function formatCheck(target) {
+  const dir = join(ROOT, target.path);
+  const file = join(dir, "package.json");
+  if (!existsSync(file) || !JSON.parse(readFileSync(file, "utf8")).scripts?.["format:check"]) return;
+  if (target.packageManager === "pnpm") run("npx", ["-y", PNPM, "--dir", dir, "run", "format:check"], { cwd: ROOT });
+  else run("npm", ["run", "format:check"], { cwd: dir });
+}
+
 function ci(name) {
   const target = repo(name);
 
@@ -177,6 +189,7 @@ function ci(name) {
     // The member's own tests (incl. krizaka-deps) run here, in ITS pull requests; the workspace job only builds it (check:web).
     run("npm", ["run", "validate:web"], { cwd: UI });
     run("npx", ["-y", PNPM, "--dir", target.path, "run", "build"], { cwd: ROOT });
+    formatCheck(target);
     return;
   }
 
@@ -193,6 +206,7 @@ function ci(name) {
         run("npm", ["run", "build", `--workspace=${ws}`], { cwd: UI });
       }
     }
+    formatCheck(target);
     return;
   }
 
