@@ -391,6 +391,10 @@ These are the defects code review found most often on 2026-10-23. Check them you
 8. **Words:** every user-facing string is in the FR and EN messages, and no colour is hard-coded.
 9. **Review threads:** answer every one. Fix it test-first, or reply with the reason, then resolve it.
 
+- **A bug means a missing guard** ([standard](https://github.com/krizaka/.github/blob/main/docs/standards/bug-means-missing-guard.md)): the fix PR first adds a guard that fails on `main`, then fixes the bug; the bug issue says why the guards missed it.
+
+**Repository layout:** the root follows [krizaka/.github `docs/standards/repo-layout.md`](https://github.com/krizaka/.github/blob/main/docs/standards/repo-layout.md); the CI guard `check-repo-layout` fails on a stray root file, and a justified extra is declared in `.repo-layout.json` with its why.
+
 - **React effects**: `useEffect` is for subscriptions and object URLs only; data is `useQuery`/`useMutation` from `@krizaka/query`, derived state is computed in render. [Standard](https://github.com/krizaka/.github/blob/main/docs/standards/react-effects.md).
 
 ## 9. Anti-slop (ADR-015)

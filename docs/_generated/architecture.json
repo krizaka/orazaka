@@ -8510,6 +8510,62 @@
         "options": []
       },
       {
+        "name": "runs",
+        "top": "runs",
+        "isTop": true,
+        "description": "Runs as background tasks: list and inspect them by name or id",
+        "args": [],
+        "aliases": [],
+        "options": []
+      },
+      {
+        "name": "runs ls",
+        "top": "runs",
+        "isTop": false,
+        "description": "List the runs: name, status, current step, elapsed time, cost against the budget",
+        "args": [],
+        "aliases": [
+          "list"
+        ],
+        "options": [
+          {
+            "flag": "--watch",
+            "desc": "Refresh the list every few seconds",
+            "default": null
+          },
+          {
+            "flag": "--json",
+            "desc": "Output the rows as JSON",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "runs show",
+        "top": "runs",
+        "isTop": false,
+        "description": "Show one run, by name or id",
+        "args": [
+          {
+            "name": "<ref>",
+            "desc": "The run name or id"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--steps",
+            "desc": "Show the folded timeline, one line per step",
+            "default": null
+          },
+          {
+            "flag": "--json",
+            "desc": "Output the run as JSON",
+            "default": null
+          }
+        ]
+      },
+      {
         "name": "settings",
         "top": "settings",
         "isTop": true,

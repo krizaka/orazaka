@@ -14,7 +14,7 @@
 
 [![CI](https://github.com/krizaka/orazaka/actions/workflows/ci.yml/badge.svg)](https://github.com/krizaka/orazaka/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/krizaka/orazaka/badge)](https://scorecard.dev/viewer/?uri=github.com/krizaka/orazaka)
-[![License: FSL-1.1-ALv2](https://img.shields.io/badge/license-FSL--1.1--ALv2-blue.svg)](LICENSE.md)
+[![License: FSL-1.1-ALv2](https://img.shields.io/badge/license-FSL--1.1--ALv2-blue.svg)](LICENSE)
 [![Orazaka](https://img.shields.io/badge/part%20of-Orazaka-f67e23)](https://github.com/krizaka/orazaka#repositories)
 [![Website](https://img.shields.io/badge/site-dev.orazaka.com-f67e23)](https://dev.orazaka.com)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=coverage)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka)
@@ -232,7 +232,7 @@ Cloned directories are ignored by this repository's git; each is its own reposit
 
 ## License
 
-[FSL-1.1-ALv2](LICENSE.md) (Functional Source License, Apache-2.0 future licence) © Technologies Krizaka Inc. — read,
+[FSL-1.1-ALv2](LICENSE) (Functional Source License, Apache-2.0 future licence) © Technologies Krizaka Inc. — read,
 run, modify and self-host it for any purpose except offering a competing service; each version becomes Apache-2.0 two
 years after its release. Commits before the licence change remain [Apache-2.0](LICENSE-APACHE) — see [NOTICE](NOTICE)
 and [ADR-012](https://github.com/krizaka/.github/blob/main/docs/adr/ADR-012-licensing-libraries-open-products-fair-source.md).

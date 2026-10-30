@@ -8,7 +8,7 @@ order: 2
 # Licensing
 
 **From the commit that introduces its `NOTICE`, this repository is licensed under FSL-1.1-ALv2**
-(Functional Source License, Apache-2.0 future licence — [`LICENSE.md`](../LICENSE.md)): you may read, run, modify and
+(Functional Source License, Apache-2.0 future licence — [`LICENSE`](../LICENSE)): you may read, run, modify and
 self-host it for any purpose except a Competing Use (offering it to others as a commercial service that substitutes for
 Orazaka), and each version becomes Apache-2.0 two years after its release. Every earlier commit remains Apache-2.0
 ([`LICENSE-APACHE`](../LICENSE-APACHE)). The organisation decision is
