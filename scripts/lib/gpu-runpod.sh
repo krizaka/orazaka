@@ -182,7 +182,7 @@ runpod_batch() {
   trap runpod_batch_cleanup EXIT INT TERM HUP
   # FREE preflight (orazaka#508): the Studio is asked the exact run BEFORE any GPU is rented; a refusal a booted pod cannot fix stops here.
   if [[ -z "${GPU_BATCH_SKIP_PREFLIGHT:-}" ]]; then
-    node "$ROOT/scripts/studio-preflight.mjs" ${model:+--model "$model"} ${size:+--size "$size"} || die "preflight refused: no GPU was rented"
+    node "$ROOT/scripts/studio-preflight.mjs" ${model:+--model "$model"} ${model:+--worker-ref "${GPU_WORKER_REF:-$(git ls-remote https://github.com/krizaka/orazaka-worker-media.git refs/heads/main | cut -c1-40)}"} ${size:+--size "$size"} || die "preflight refused: no GPU was rented"
   fi
   # The pod's own watchdog gets the cap too: at the dearest rate we would ever start (GPU_BATCH_MAX_RATE), the hours the cap pays for.
   GPU_MAX_HOURS="$(python3 -c "print(max(0.25, round(float('$cap') / float('${GPU_BATCH_MAX_RATE:-4}'), 2)))")" runpod_start ${gpu:+"$gpu"}

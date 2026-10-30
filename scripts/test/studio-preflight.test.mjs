@@ -16,3 +16,14 @@ test("the batch runs the free preflight BEFORE it rents a pod", () => {
   const body = sh.slice(sh.indexOf("runpod_batch() {"));
   assert.ok(body.indexOf("studio-preflight.mjs") > 0 && body.indexOf("studio-preflight.mjs") < body.indexOf("runpod_start"));
 });
+
+import { workerListsModel } from "../studio-preflight.mjs";
+test("a worker whose models.yaml lacks the model is refused (a pin older than the model)", () => {
+  const old = "models:\n  sd-turbo:\n    label: x\n  flux-1-schnell-extra:\n    label: y\n";
+  assert.equal(workerListsModel(old, "flux-1-schnell"), false);
+  assert.equal(workerListsModel("models:\n  flux-1-schnell:\n    label: x\n", "flux-1-schnell"), true);
+  assert.equal(workerListsModel("models:\n    defaultImage: flux-1-schnell\n", "flux-1-schnell"), false);
+});
+test("the batch hands the pinned worker ref to the preflight", () => {
+  assert.match(readFileSync(new URL("../lib/gpu-runpod.sh", import.meta.url), "utf8"), /studio-preflight\.mjs"[^\n]*--worker-ref/);
+});
