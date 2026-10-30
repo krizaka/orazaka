@@ -1,7 +1,9 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createQueryClient, QueryClientProvider } from "@krizaka/query";
 import { ThemeProvider } from "@krizaka/ui/theme";
 import type { Snapshot } from "../lib/api";
+import { snapshotKeys } from "../lib/queries";
 
 const invoke = vi.fn();
 vi.mock("@tauri-apps/api/core", () => ({ invoke: (...a: unknown[]) => invoke(...a) }));
@@ -20,11 +22,15 @@ const base: Snapshot = {
   appVersion: "0.1.0",
 };
 
+let client = createQueryClient({ maxRetries: 0 });
 const wrap = (ui: React.ReactNode, locale: "en" | "fr" = "en") => (
-  <ThemeProvider defaultMode="dark"><I18nProvider locale={locale}>{ui}</I18nProvider></ThemeProvider>
+  <QueryClientProvider client={client}>
+    <ThemeProvider defaultMode="dark"><I18nProvider locale={locale}>{ui}</I18nProvider></ThemeProvider>
+  </QueryClientProvider>
 );
 
 beforeEach(() => {
+  client = createQueryClient({ maxRetries: 0 });
   invoke.mockReset();
   invoke.mockImplementation(async (cmd: string, args?: { call?: { command: string } }) => {
     if (cmd === "cli_run") {
@@ -75,27 +81,56 @@ describe("StackPanel", () => {
 
 describe("FilesPanel", () => {
   it("says plainly that no file is readable when nothing is shared", () => {
-    render(wrap(<FilesPanel snap={base} refresh={async () => undefined} />));
+    render(wrap(<FilesPanel snap={base} />));
     expect(screen.getByText(/Orazaka cannot read any file on this Mac/)).toBeInTheDocument();
     expect(screen.getByText("0 folder(s) shared")).toBeInTheDocument();
   });
 
   it("lists the shared folders with a revoke button that calls the backend", async () => {
-    const refresh = vi.fn(async () => undefined);
-    render(wrap(<FilesPanel snap={{ ...base, roots: ["/Users/a/Clients"] }} refresh={refresh} />));
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+    render(wrap(<FilesPanel snap={{ ...base, roots: ["/Users/a/Clients"] }} />));
     expect(screen.getByText("/Users/a/Clients")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("revoke_folder", { path: "/Users/a/Clients" }));
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: snapshotKeys.all }));
   });
 
   it("opens a folder through the scoped listing command", async () => {
     invoke.mockImplementation(async (cmd: string) =>
       cmd === "list_dir" ? { truncated: false, entries: [{ name: "contract.pdf", path: "/Users/a/Clients/contract.pdf", isDir: false, size: 2048, modified: 0, kind: "pdf" }] } : undefined,
     );
-    render(wrap(<FilesPanel snap={{ ...base, roots: ["/Users/a/Clients"] }} refresh={async () => undefined} />));
+    render(wrap(<FilesPanel snap={{ ...base, roots: ["/Users/a/Clients"] }} />));
     fireEvent.click(screen.getByText("/Users/a/Clients"));
     expect(await screen.findByText("contract.pdf")).toBeInTheDocument();
     expect(invoke).toHaveBeenCalledWith("list_dir", { path: "/Users/a/Clients" });
+  });
+
+  it("shows the preview of the file clicked last, whatever the order the answers come back in (race)", async () => {
+    const entry = (name: string) => ({ name, path: `/Users/a/Clients/${name}`, isDir: false, size: 10, modified: 0, kind: "txt" });
+    let answerA: (v: unknown) => void = () => undefined;
+    invoke.mockImplementation(async (cmd: string, args?: { path?: string }) => {
+      if (cmd === "list_dir") return { truncated: false, entries: [entry("a.txt"), entry("b.txt")] };
+      if (cmd === "preview_file" && args?.path?.endsWith("a.txt")) return new Promise((resolve) => { answerA = resolve; });
+      if (cmd === "preview_file") return { name: "b.txt", size: 10, mime: "text/plain", kind: "txt", text: "content of B", data: null };
+      return undefined;
+    });
+    render(wrap(<FilesPanel snap={{ ...base, roots: ["/Users/a/Clients"] }} />));
+    fireEvent.click(screen.getByText("/Users/a/Clients"));
+    fireEvent.click(await screen.findByText("a.txt"));
+    fireEvent.click(screen.getByText("b.txt"));
+    expect(await screen.findByText("content of B")).toBeInTheDocument();
+    answerA({ name: "a.txt", size: 10, mime: "text/plain", kind: "txt", text: "content of A", data: null });
+    await new Promise((r) => setTimeout(r, 20));
+    expect(screen.getByText("content of B")).toBeInTheDocument();
+    expect(screen.queryByText("content of A")).not.toBeInTheDocument();
+  });
+
+  it("falls back to no folder when the shared folder is revoked (derived, no effect)", async () => {
+    invoke.mockImplementation(async (cmd: string) => (cmd === "list_dir" ? { truncated: false, entries: [] } : undefined));
+    const view = render(wrap(<FilesPanel snap={{ ...base, roots: ["/Users/a/Clients"] }} />));
+    fireEvent.click(screen.getByText("/Users/a/Clients"));
+    expect(await screen.findByText("This folder is empty.")).toBeInTheDocument();
+    view.rerender(wrap(<FilesPanel snap={{ ...base, roots: [] }} />));
+    await waitFor(() => expect(screen.queryByText("This folder is empty.")).not.toBeInTheDocument());
   });
 });

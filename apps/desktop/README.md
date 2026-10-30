@@ -81,3 +81,12 @@ calls, the catalogues (en/fr parity) and the helpers.
 Tag `desktop-vX.Y.Z[-suffix]` (it must equal `version` in `package.json` and `src-tauri/tauri.conf.json`): the
 `Desktop` workflow builds the `.dmg` on a macOS runner and attaches it, with its SHA-256, to the GitHub Release
 (a pre-release when the tag has a suffix such as `-dev`).
+
+## Code (ADR-093, slice 1)
+
+The **Code** tab grants a git repository (through the folder scope) and gives the agent its read tools (`read_file`, `list_dir`, `search_text`, `outline`) and a review screen for proposed diffs. Gitignored files, `.git/` and secret patterns are invisible to every read, known token shapes are redacted, a diff is a pending object approved per hunk and applied exactly against its base hash, and `refs/orazaka/snapshots/<run-id>` makes undo one click. Code: `src-tauri/src/code/`.
+
+### Checks (slice 2)
+
+The one narrow `exec` (it amends ADR-079 §4). A **check** is `{ name, argv[], cwd, timeoutSecs, network }`. The repository may suggest checks (`package.json` scripts, `Cargo.toml`, `pom.xml`, `.orazaka/checks.json`); only a check the user confirmed in the app, once per repository and device, can run. The confirmation is a listed, revocable, audited grant (`code-checks.json`, audit events `code.check.*`), and the agent asks for a check **by name**. A run uses argv with no shell, an environment of `PATH`, `HOME`, `LANG`, a private `TMPDIR` and what the check declares (never a credential), and a Seatbelt profile (`sandbox-exec`): writes only under the repository, the run's temp folder and the toolchain caches, never `.git/hooks` or `.git/config`, no network unless the confirmed check declares it. Without `sandbox-exec` nothing runs. A timeout kills the process group; output is capped and redacted; the audit keeps the exit code, duration, `timed_out` and the hash of argv. After an applied « changes what runs » hunk (recomputed on the Mac, not read from the page), the next run asks again even with a grant. Code: `src-tauri/src/code/checks.rs`.
+

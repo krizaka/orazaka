@@ -66,13 +66,18 @@ if [[ -n "${RABBITMQ_CA_CERT_BASE64:-}" ]]; then
   printf '%s' "$RABBITMQ_CA_CERT_BASE64" | base64 -d > "${ORAZAKA_APP_DIR:-/app}/var/broker-ca.pem"
 fi
 
-# Shared JVM settings: small footprint first (serial GC, C1 only, bounded code cache), heap per service.
-COMMON_OPTS="${ORAZAKA_JAVA_OPTS:--XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=64m -Xss512k -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom}"
+# Shared JVM settings: small footprint first. Serial GC and C1 only (no parallel GC or C2 compiler threads), ONE compiler thread
+# and two visible CPUs (the container sees the host's 8: every pool sized from it multiplied the threads of eight JVMs), a heap that
+# gives back what it does not hold (free ratios 10-30 %), no perf-data mmap, bounded code cache and direct buffers.
+# glibc's per-thread malloc arenas (8 x cores by default) were the biggest single overhead of eight small JVMs: two arenas.
+# Measured in orazaka#499 (docker --memory=2g, the dev image's jars): 2042 MiB -> see docs/DEPLOY_DEV.md "Core memory".
+export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
+COMMON_OPTS="${ORAZAKA_JAVA_OPTS:--XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:ActiveProcessorCount=2 -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=64m -Xss512k -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:-UsePerfData -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom}"
 
-# name:jar:default-heap-MiB, in start order (edge last: it is the public port). knowledge serves the
-# recommender (ADR-078) on :8084, reached through the edge's /api/v1/recommendations route; automation serves the
-# signed webhooks and schedules (ADR-084) on :8091, reached through /api/v1/automations and /hooks/.
-SERVICES="${ORAZAKA_SERVICES:-users:users.jar:160 billing:billing.jar:160 job:job.jar:256 conversation:conversation.jar:320 studio:studio.jar:160 knowledge:knowledge.jar:128 automation:automation.jar:128 edge:edge.jar:96}"
+# name:jar:default-heap-MiB (the ceiling, -Xmx; the live set measured at idle is 18-49 MiB), in start order (edge last: it is the public
+# port). knowledge serves the recommender (ADR-078) on :8084, reached through the edge's /api/v1/recommendations route; automation serves
+# the signed webhooks and schedules (ADR-084) on :8091, reached through /api/v1/automations and /hooks/.
+SERVICES="${ORAZAKA_SERVICES:-users:users.jar:128 billing:billing.jar:96 job:job.jar:192 conversation:conversation.jar:224 studio:studio.jar:128 knowledge:knowledge.jar:96 automation:automation.jar:96 edge:edge.jar:80}"
 
 pids=()
 workers=()
@@ -88,7 +93,7 @@ for entry in $SERVICES; do
   heap="${!var:-$heap}"
   echo "[run-services] starting $name (heap ${heap}m)"
   # shellcheck disable=SC2086
-  java $COMMON_OPTS -Xms64m -Xmx"${heap}"m -jar "${ORAZAKA_APP_DIR:-/app}/$jar" \
+  java $COMMON_OPTS -Xms16m -Xmx"${heap}"m -jar "${ORAZAKA_APP_DIR:-/app}/$jar" \
     > >(sed -u "s/^/[$name] /") 2>&1 &
   pids+=("$!")
   sleep "${ORAZAKA_START_STAGGER_SECONDS:-5}"

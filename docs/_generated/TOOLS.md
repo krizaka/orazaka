@@ -18,8 +18,6 @@ tools the turn needs.
 
 | Tool | Description | Input | Fields |
 |:---|:---|:---|:---|
-| `analyzePoster` | Analyzes a movie poster provided as a base64 encoded string using vision model. | `AnalyzePosterRequest` | `posterBase64`, `prompt` |
-| `analyzeAudioExtract` | Analyzes a film audio extract to check for specific compliance or content criteria. | `AnalyzeAudioExtractRequest` | `clipPath`, `checkType` |
 
 `searchKnowledge` searches the sources the knowledge service holds for the signed-in user (not the web). `analyzePoster` and
 `analyzeAudioExtract` are reference tools: they demonstrate the contract and return a fixed analysis.
@@ -102,8 +100,8 @@ Platform servers are declared by an administrator; each user may add private one
 | GET | `/api/v1/mcp/servers/user` | authenticated | — |
 | POST | `/api/v1/mcp/servers/user` | authenticated | — |
 | DELETE | `/api/v1/mcp/servers/user/{id}` | authenticated | — |
-| GET | `/api/v1/mcp/tools` | authenticated | Retrieves all registered tools and their schemas. |
-| POST | `/api/v1/mcp/tools/{name}/execute` | authenticated | Executes a tool by name with the provided arguments. |
+| GET | `/api/v1/mcp/tools` | authenticated | Retrieves the registered tools the caller may use, with their schemas. |
+| POST | `/api/v1/mcp/tools/{name}/execute` | authenticated | Executes a tool by name with the provided arguments, for the authenticated caller: a tool the caller may not use answers 403 and leaves an audit line (ADR-091). |
 
 From the terminal ([CLI reference](CLI.md)):
 

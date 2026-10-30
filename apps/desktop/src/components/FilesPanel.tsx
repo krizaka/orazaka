@@ -1,20 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@krizaka/query";
 import { Badge } from "@krizaka/ui/badge";
 import { Button } from "@krizaka/ui/button";
 import { Alert } from "@krizaka/ui/alert";
 import { Switch } from "@krizaka/ui/switch";
 import {
   api, errorMessage, formatSize, isInside, on, parentOf,
-  type Dropped, type Entry, type FileAdded, type Listing, type Preview, type Snapshot,
+  type Dropped, type Entry, type FileAdded, type Preview, type Snapshot,
 } from "../lib/api";
 import { useI18n } from "../lib/i18n";
+import { filesKeys, listingQuery, previewQuery, snapshotKeys } from "../lib/queries";
 
-export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => Promise<void> }) {
+export function FilesPanel({ snap }: { snap: Snapshot }) {
   const { t, format } = useI18n();
-  const [dir, setDir] = useState<string | null>(null);
-  const [listing, setListing] = useState<Listing | null>(null);
+  const queryClient = useQueryClient();
+  const [picked, setPicked] = useState<string | null>(null);
   const [selected, setSelected] = useState<Entry | null>(null);
-  const [preview, setPreview] = useState<Preview | null>(null);
   const [dropped, setDropped] = useState<Dropped>({ files: [], folders: [] });
   const [added, setAdded] = useState<FileAdded[]>([]);
   const [hover, setHover] = useState(false);
@@ -22,9 +23,29 @@ export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => P
   const [error, setError] = useState<string | null>(null);
 
   const roots = snap.roots;
-  const root = useMemo(() => roots.find((r) => dir && isInside(r, dir)) ?? null, [roots, dir]);
-  const fail = (e: unknown) => setError(errorMessage(e));
+  // derived, not synced: the directory shown is the picked one while a shared folder still contains it
+  const root = picked ? (roots.find((r) => isInside(r, picked)) ?? null) : null;
+  const dir = root ? picked : null;
+  const listingResult = useQuery(listingQuery(dir));
+  const listing = dir ? (listingResult.data ?? null) : null;
+  const previewResult = useQuery(previewQuery(selected?.path ?? null));
+  const preview = selected ? (previewResult.data ?? null) : null;
+  const shownError = error ?? (dir && listingResult.error ? errorMessage(listingResult.error) : null) ?? (previewResult.error ? errorMessage(previewResult.error) : null);
 
+  const fail = (e: unknown) => setError(errorMessage(e));
+  const refresh = () => queryClient.invalidateQueries({ queryKey: snapshotKeys.all });
+
+  const open = (path: string) => {
+    setError(null);
+    setPicked(path);
+    setSelected(null);
+  };
+  const select = (entry: Entry) => {
+    setSelected(entry);
+    setMessage(null);
+  };
+
+  // pushed events only: listeners with their cleanup; a new file invalidates the listings
   useEffect(() => {
     const offs = [
       on<Dropped>("dropped", (d) => {
@@ -33,77 +54,63 @@ export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => P
           files: [...d.files, ...prev.files.filter((f) => !d.files.some((n) => n.path === f.path))],
           folders: [...new Set([...d.folders, ...prev.folders])],
         }));
-        if (d.files[0]) void select(d.files[0]);
+        if (d.files[0]) {
+          setSelected(d.files[0]);
+          setMessage(null);
+        }
       }),
-      on<FileAdded>("file-added", (f) => setAdded((a) => [f, ...a.filter((x) => x.entry.path !== f.entry.path)].slice(0, 30))),
+      on<FileAdded>("file-added", (f) => {
+        setAdded((a) => [f, ...a.filter((x) => x.entry.path !== f.entry.path)].slice(0, 30));
+        void queryClient.invalidateQueries({ queryKey: filesKeys.all });
+      }),
       on<unknown>("tauri://drag-enter", () => setHover(true)),
       on<unknown>("tauri://drag-leave", () => setHover(false)),
     ];
     return () => offs.forEach((o) => void o.then((f) => f()));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [queryClient]);
 
-  useEffect(() => {
-    if (dir && !root) {
-      setDir(null);
-      setListing(null);
-    }
-  }, [dir, root]);
-
-  const open = useCallback(async (path: string) => {
-    setError(null);
-    try {
-      setListing(await api.listDir(path));
-      setDir(path);
-      setSelected(null);
-      setPreview(null);
-    } catch (e) {
-      fail(e);
-    }
-  }, []);
-
-  async function select(entry: Entry) {
-    setSelected(entry);
-    setPreview(null);
-    setMessage(null);
-    try {
-      setPreview(await api.preview(entry.path));
-    } catch (e) {
-      fail(e);
-    }
-  }
-
-  async function choose() {
-    setError(null);
-    try {
+  const choose = useMutation({
+    mutationFn: async () => {
       const path = await api.pickFolder();
       await refresh();
-      if (path) await open(path);
-    } catch (e) {
-      fail(e);
-    }
-  }
-
-  async function revoke(path: string) {
-    await api.revokeFolder(path).catch(fail);
-    if (dir && isInside(path, dir)) {
-      setDir(null);
-      setListing(null);
-      setSelected(null);
-      setPreview(null);
-    }
-    await refresh();
-  }
-
-  async function send(entry: Entry) {
-    setMessage(null);
-    try {
-      await api.sendFile(entry.path);
-      setMessage(t("files.sent"));
-    } catch (e) {
-      fail(e);
-    }
-  }
+      return path;
+    },
+    onMutate: () => setError(null),
+    onSuccess: (path) => path && open(path),
+    onError: fail,
+  });
+  const revoke = useMutation({
+    mutationFn: (path: string) => api.revokeFolder(path),
+    onSuccess: (_roots, path) => {
+      if (picked && isInside(path, picked)) {
+        setPicked(null);
+        setSelected(null);
+      }
+    },
+    onError: fail,
+    onSettled: refresh,
+  });
+  const revokeAll = useMutation({ mutationFn: () => api.revokeAll(), onSettled: refresh });
+  const watch = useMutation({
+    mutationFn: (v: { path: string; enabled: boolean }) => api.watch(v.path, v.enabled),
+    onError: fail,
+    onSettled: refresh,
+  });
+  const grant = useMutation({
+    mutationFn: (path: string) => api.grantDropped(path),
+    onSuccess: (_p, path) => setDropped((d) => ({ ...d, folders: d.folders.filter((x) => x !== path) })),
+    onError: () => setError(t("files.forbidden")),
+    onSettled: refresh,
+  });
+  const sendMutation = useMutation({
+    mutationFn: (entry: Entry) => api.sendFile(entry.path),
+    onMutate: () => setMessage(null),
+    onSuccess: () => setMessage(t("files.sent")),
+    onError: fail,
+  });
+  const send = async (entry: Entry) => {
+    await sendMutation.mutateAsync(entry).catch(() => undefined);
+  };
 
   const watched = new Set(snap.settings.watched);
   return (
@@ -113,26 +120,26 @@ export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => P
           <h2 className="text-lg font-semibold">{t("files.title")}</h2>
           <Badge tone={roots.length ? "accent" : "neutral"} dot>{format(t("files.count"), { count: roots.length })}</Badge>
           <div className="ml-auto flex gap-2">
-            <Button size="sm" onClick={() => void choose()}>{t("files.choose")}</Button>
-            {roots.length > 1 && <Button size="sm" variant="danger" onClick={() => void api.revokeAll().then(refresh)}>{t("files.revokeAll")}</Button>}
+            <Button size="sm" onClick={() => choose.mutate()}>{t("files.choose")}</Button>
+            {roots.length > 1 && <Button size="sm" variant="danger" onClick={() => revokeAll.mutate()}>{t("files.revokeAll")}</Button>}
           </div>
         </div>
         <p className="text-sm text-fg-secondary">{t("files.lead")}</p>
-        {error && <Alert tone="danger">{error}</Alert>}
+        {shownError && <Alert tone="danger">{shownError}</Alert>}
         {roots.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border-default p-4 text-sm text-fg-secondary">{t("files.none")}</p>
         ) : (
           <ul className="divide-y divide-border-subtle rounded-xl border border-border-default bg-surface-2">
             {roots.map((r) => (
               <li key={r} className="flex flex-wrap items-center gap-3 px-3 py-2">
-                <button type="button" onClick={() => void open(r)} className="mono min-w-0 flex-1 truncate text-left text-sm hover:text-fg-accent" title={r}>{r}</button>
+                <button type="button" onClick={() => open(r)} className="mono min-w-0 flex-1 truncate text-left text-sm hover:text-fg-accent" title={r}>{r}</button>
                 <Switch
                   label={t("files.watch")}
                   checked={watched.has(r)}
-                  onCheckedChange={(on) => void api.watch(r, on).then(refresh).catch(fail)}
+                  onCheckedChange={(enabled) => watch.mutate({ path: r, enabled })}
                 />
                 <span className="text-xs text-fg-secondary">{watched.has(r) ? t("files.watching") : t("files.watch")}</span>
-                <Button size="sm" variant="ghost" onClick={() => void revoke(r)}>{t("files.revoke")}</Button>
+                <Button size="sm" variant="ghost" onClick={() => revoke.mutate(r)}>{t("files.revoke")}</Button>
               </li>
             ))}
           </ul>
@@ -145,7 +152,7 @@ export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => P
         {dropped.folders.map((f) => (
           <div key={f} className="mt-3 flex flex-wrap items-center gap-3 text-sm">
             <span className="mono min-w-0 flex-1 truncate">{format(t("files.droppedFolder"), { path: f })}</span>
-            <Button size="sm" variant="secondary" onClick={() => void api.grantDropped(f).then(() => { setDropped((d) => ({ ...d, folders: d.folders.filter((x) => x !== f) })); return refresh(); }).catch(() => setError(t("files.forbidden")))}>
+            <Button size="sm" variant="secondary" onClick={() => grant.mutate(f)}>
               {t("files.grantDropped")}
             </Button>
           </div>
@@ -156,7 +163,7 @@ export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => P
             <ul className="mt-1">
               {dropped.files.map((f) => (
                 <li key={f.path} className="flex items-center gap-3 py-1 text-sm">
-                  <button type="button" className="min-w-0 flex-1 truncate text-left hover:text-fg-accent" onClick={() => void select(f)}>{f.name}</button>
+                  <button type="button" className="min-w-0 flex-1 truncate text-left hover:text-fg-accent" onClick={() => select(f)}>{f.name}</button>
                   <span className="text-xs text-fg-secondary">{formatSize(f.size)}</span>
                   <Button size="sm" variant="secondary" onClick={() => void send(f)}>{t("files.send")}</Button>
                 </li>
@@ -170,7 +177,7 @@ export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => P
         <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="min-w-0">
             <div className="mb-2 flex items-center gap-2">
-              {root && dir !== root && <Button size="sm" variant="ghost" onClick={() => void open(parentOf(dir))}>↑ {t("files.parent")}</Button>}
+              {root && dir !== root && <Button size="sm" variant="ghost" onClick={() => open(parentOf(dir))}>↑ {t("files.parent")}</Button>}
               <span className="mono truncate text-xs text-fg-secondary" title={dir}>{dir}</span>
             </div>
             {listing.entries.length === 0 ? (
@@ -181,7 +188,7 @@ export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => P
                   <li key={e.path}>
                     <button
                       type="button"
-                      onClick={() => (e.isDir ? void open(e.path) : void select(e))}
+                      onClick={() => (e.isDir ? open(e.path) : select(e))}
                       className={`flex w-full items-center gap-3 px-3 py-1.5 text-left text-sm hover:bg-surface-3 ${selected?.path === e.path ? "bg-surface-3" : ""}`}
                     >
                       <span aria-hidden className="w-5 text-center text-fg-secondary">{e.isDir ? "▸" : "·"}</span>
@@ -209,7 +216,7 @@ export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => P
           <ul className="divide-y divide-border-subtle rounded-xl border border-border-default bg-surface-2">
             {added.map((a) => (
               <li key={a.entry.path} className="flex items-center gap-3 px-3 py-2 text-sm">
-                <button type="button" className="min-w-0 flex-1 truncate text-left hover:text-fg-accent" onClick={() => void select(a.entry)}>{a.entry.name}</button>
+                <button type="button" className="min-w-0 flex-1 truncate text-left hover:text-fg-accent" onClick={() => select(a.entry)}>{a.entry.name}</button>
                 <span className="text-xs text-fg-secondary">{formatSize(a.entry.size)}</span>
                 <Button size="sm" variant="secondary" onClick={() => void send(a.entry)}>{t("files.send")}</Button>
               </li>
@@ -223,12 +230,17 @@ export function FilesPanel({ snap, refresh }: { snap: Snapshot; refresh: () => P
 
 function PreviewPane({ entry, preview, onSend, message }: { entry: Entry | null; preview: Preview | null; onSend: (e: Entry) => Promise<void>; message: string | null }) {
   const { t } = useI18n();
-  const pdfUrl = useMemo(() => {
-    if (!preview?.data || preview.kind !== "pdf") return null;
-    const bytes = Uint8Array.from(atob(preview.data), (c) => c.charCodeAt(0));
-    return URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-  }, [preview]);
-  useEffect(() => () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl); }, [pdfUrl]);
+  const pdfData = preview?.kind === "pdf" ? preview.data : null;
+  const [pdf, setPdf] = useState<{ data: string; url: string } | null>(null);
+  // the object URL is created and revoked in the same effect (never in useMemo: impure under StrictMode)
+  useEffect(() => {
+    if (!pdfData) return;
+    const bytes = Uint8Array.from(atob(pdfData), (c) => c.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    setPdf({ data: pdfData, url });
+    return () => URL.revokeObjectURL(url);
+  }, [pdfData]);
+  const pdfUrl = pdf && pdf.data === pdfData ? pdf.url : null;
 
   if (!entry) return <p className="text-sm text-fg-secondary">{t("files.select")}</p>;
   return (

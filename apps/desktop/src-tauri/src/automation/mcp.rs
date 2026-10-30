@@ -111,7 +111,10 @@ impl McpClient {
         let deadline = std::time::Instant::now() + self.timeout;
         loop {
             let left = deadline.saturating_duration_since(std::time::Instant::now());
-            let line = self.lines.recv_timeout(left).map_err(|_| format!("MCP server did not answer {method} in time"))?;
+            let line = self.lines.recv_timeout(left).map_err(|e| match e {
+                std::sync::mpsc::RecvTimeoutError::Timeout => format!("MCP server did not answer {method} in time"),
+                std::sync::mpsc::RecvTimeoutError::Disconnected => format!("MCP server exited before answering {method}"),
+            })?;
             let Ok(msg) = serde_json::from_str::<Value>(&line) else { continue };
             if msg.get("id").and_then(Value::as_u64) != Some(id) {
                 continue; // a notification or a log line

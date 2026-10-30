@@ -88,6 +88,14 @@ Every component is its **own GitHub repository** so that any Krizaka application
 `krizaka/` holds the Krizaka repositories the platform is built on, cloned like every other repository; they are not
 Orazaka's and follow their own `AGENTS.md`.
 
+**Their versions come from the reactor, not from Central.** The reactor builds `krizaka/*` from source at each
+repository's `main`, whatever Maven Central carries (the release can be late: the kit's `v0.3.0` tag was never published
+while Central's quota was out). The BOM of `krizaka-build` names the release of each repository, and
+`scripts/check-krizaka-versions.mjs` (run by the `workspace` job and by `workspace.mjs ci`, tested by
+`scripts/test/krizaka-versions.test.mjs`) fails, artifact by artifact, when it names a `com.krizaka` version that neither
+a cloned repository builds nor Maven Central carries. A repository that adds an artifact bumps the BOM's property in the
+same change. No `-SNAPSHOT` is involved: each repository carries a release version, built and installed locally.
+
 
 The workspace places repositories on **one axis: you *run* apps, you *import* libs.** A lib is `packaging jar`, has no entrypoint, and exists only compiled into an app; an app has a `main()` + a port and is deployed. Nothing else distinguishes the two roots.
 
@@ -384,3 +392,40 @@ These are the defects code review found most often on 2026-10-23. Check them you
 9. **Review threads:** answer every one. Fix it test-first, or reply with the reason, then resolve it.
 
 - **A bug means a missing guard** ([standard](https://github.com/krizaka/.github/blob/main/docs/standards/bug-means-missing-guard.md)): the fix PR first adds a guard that fails on `main`, then fixes the bug; the bug issue says why the guards missed it.
+
+- **React effects**: `useEffect` is for subscriptions and object URLs only; data is `useQuery`/`useMutation` from `@krizaka/query`, derived state is computed in render. [Standard](https://github.com/krizaka/.github/blob/main/docs/standards/react-effects.md).
+
+## 9. Anti-slop (ADR-015)
+
+What a model tends to write and the code does not need. Each line points at the rule that refuses it
+([ADR-015](https://github.com/krizaka/.github/blob/main/docs/adr/ADR-015-ai-code-audit-measured-and-enforced.md), [docs/standards/guards.md](https://github.com/krizaka/.github/blob/main/docs/standards/guards.md)).
+
+1. **No defensive null on `@NullMarked` code.** No `Objects.requireNonNull` or `if (x == null)` on a value the type already
+   guarantees. Enforced by NullAway at compile time; a new package is `@NullMarked` (ArchUnit).
+2. **A closed set is a type.** An enum, a sealed interface or an `as const` object, never a string compared by hand;
+   strategies are a `Map<Kind, Strategy>` built once at startup. Enforced by PMD / ArchUnit (Java) and `no-enum-string-compare` (ast-grep).
+3. **HTTP in Java is a DTO record, `@Valid` and `ProblemDetail`.** No `Map.of("error", …)`, no entity in a response, one
+   `@RestControllerAdvice` per service. Enforced by ArchUnit.
+4. **No `*Utils`, `*Helper` or `*Manager`.** Name the thing by what it does (§4). Enforced by ArchUnit (ADR-015 §5).
+5. **`?.` and `??` in TypeScript**, not a chain of `&&` or a ternary on null. The target rules are `@typescript-eslint/prefer-optional-chain` and `prefer-nullish-coalescing`; they are not in `@krizaka/config` yet.
+6. **The build is the judge.** Compile, lint and test before every push; `krizaka-edit-check` runs on each edit (below) and
+   NullAway and ArchUnit run at pre-push and in CI. A rule is never silenced to get green.
+
+**The edit hook.** Every repository adds this to `.claude/settings.json`. After each `Edit` or `Write`, the one file is
+checked in under 10 s: ESLint with the repository's config for TypeScript, PMD with the Krizaka rules for Java (never Maven).
+A finding comes back to the agent (exit 2); a timeout is silent.
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "npx --yes -p @krizaka/config krizaka-edit-check", "timeout": 10 }]
+      }
+    ]
+  }
+}
+```
+
+In a TypeScript repository that already depends on `@krizaka/config`, use `npx --no-install krizaka-edit-check` (no download).

@@ -38,6 +38,8 @@ import { mdCell, stripTags, xmlDecode } from "./lib/doc-text.mjs";
 import { packsSection } from "./lib/pack-blocks.mjs";
 import { mdMeasuredRuns } from "./lib/measured-runs.mjs";
 import { mdCinema } from "./lib/cinema-measure.mjs";
+import { missingRepositories, notClonedMessage } from "./lib/workspace-cloned.mjs";
+import { mdLawBakeoff } from "./lib/bakeoff/report.mjs";
 
 const ROOT = process.cwd();
 const GEN_DIR = join(ROOT, "docs", "_generated");
@@ -2751,6 +2753,14 @@ const mdAdmin = (a) => {
 // MAIN
 // ════════════════════════════════════════════════════════════════════════════
 
+// The docs read the code of every repository: stop first, and say what is missing, rather than die inside the model
+// registry (its INSERTs are in the siblings' infra/initdb).
+const notCloned = missingRepositories(ROOT, REPOSITORIES);
+if (notCloned.length) {
+  console.error(notClonedMessage(notCloned));
+  process.exit(1);
+}
+
 const api = extractApi();
 const cli = extractCli();
 const registry = extractRegistry();
@@ -2772,7 +2782,8 @@ const outputs = {
   "GOVERNANCE.md": mdGovernance(extractGovernance()),
   "MODELS.md": mdModels(registry, extractModels()),
   "MEASURED_RUNS.md": frontmatter("Measured runs", "Time, cost and every parameter of the video and image runs Orazaka made, per model and provider — generated from the run records.", "Models", 9) + mdMeasuredRuns(JSON.parse(read(join(ROOT, "docs/measurements/runs.json")))) +
-    (existsSync(join(ROOT, "docs/measurements/cinema.json")) ? `\n${mdCinema(JSON.parse(read(join(ROOT, "docs/measurements/cinema.json")))).join("\n")}` : ""),
+    (existsSync(join(ROOT, "docs/measurements/cinema.json")) ? `\n${mdCinema(JSON.parse(read(join(ROOT, "docs/measurements/cinema.json")))).join("\n")}` : "") +
+    (existsSync(join(ROOT, "docs/measurements/law-bakeoff.json")) ? `\n${mdLawBakeoff(JSON.parse(read(join(ROOT, "docs/measurements/law-bakeoff.json"))))}` : ""),
   "ADRS.md": mdAdrs(extractAdrs()),
 };
 

@@ -47,8 +47,9 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/chat/sessions` | authenticated | ChatController |  |
 | DELETE | `/api/v1/chat/sessions/{sessionId}` | authenticated | ChatController |  |
 | PATCH | `/api/v1/chat/sessions/{sessionId}` | authenticated | ChatController |  |
-| GET | `/api/v1/chat/stream/{conversationId}` | ADMIN + USER | ChatController | Streams chat via SSE using GET. |
-| POST | `/api/v1/chat/stream/{conversationId}` | ADMIN + USER | ChatController | Streams chat via SSE using POST (supporting file reference mappings). |
+| POST | `/api/v1/chat/stream/{conversationId}` | ADMIN + USER | ChatController | Streams chat via SSE using POST. |
+| GET | `/api/v1/checks/{providerRef}` | authenticated | ChecksController | Collects a check that came back PENDING. |
+| POST | `/api/v1/checks/{purpose}` | authenticated | ChecksController | Starts a check. |
 | POST | `/api/v1/code` | authenticated | CodeController | Streams code generation via SSE using POST. |
 | POST | `/api/v1/embeddings` | ADMIN + USER | EmbeddingController |  |
 | GET | `/api/v1/features` | ADMIN + USER | FeatureController | What this deployment can currently run: every enabled capability with its live degraded-mode state. |
@@ -72,16 +73,23 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/mcp/servers/user` | authenticated | McpController |  |
 | POST | `/api/v1/mcp/servers/user` | authenticated | McpController |  |
 | DELETE | `/api/v1/mcp/servers/user/{id}` | authenticated | McpController |  |
-| GET | `/api/v1/mcp/tools` | authenticated | McpController | Retrieves all registered tools and their schemas. |
-| POST | `/api/v1/mcp/tools/{name}/execute` | authenticated | McpController | Executes a tool by name with the provided arguments. |
+| GET | `/api/v1/mcp/tools` | authenticated | McpController | Retrieves the registered tools the caller may use, with their schemas. |
+| POST | `/api/v1/mcp/tools/{name}/execute` | authenticated | McpController | Executes a tool by name with the provided arguments, for the authenticated caller: a tool the caller may not use answers 403 and leaves an audit line (ADR-091). |
 | DELETE | `/api/v1/media/assets/{assetId}` | authenticated | MediaAnalysisController | Deletes one of the caller's own uploads (the sealed file in <uploads>/<user>/temp). |
-| GET | `/api/v1/media/search` | authenticated | MediaAnalysisController | Performs a passive RAG context search against the semantic index. |
+| GET | `/api/v1/media/search` | authenticated | MediaAnalysisController | Performs a passive RAG context search against the semantic index, among what the caller may read: the actor is built from the session, and a caller without one gets 401 (ADR-091). |
 | POST | `/api/v1/media/upload` | authenticated | MediaAnalysisController | Securely uploads a raw binary asset, isolated per authenticated user. |
 | GET | `/api/v1/models` | ADMIN + USER | ModelController | Retrieves the local catalog of Ollama models. |
 | POST | `/api/v1/models` | ADMIN | ModelController | Adds a new model definition to the catalog. |
 | DELETE | `/api/v1/models/{id}` | ADMIN | ModelController | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | ADMIN | ModelController | Updates an existing model definition in the catalog. |
 | GET | `/api/v1/models/admin/audit` | ADMIN | OperatorAuditController |  |
+| GET | `/api/v1/models/admin/feature-routes` | ADMIN | FeatureAdminController | The feature routes, read only. |
+| GET | `/api/v1/models/admin/feature-structured-bounds` | ADMIN | FeatureStructuredBoundAdminController | Every bound, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | ADMIN | FeatureStructuredBoundAdminController | Removes the structured-output bound a feature set for itself; the default row then applies. |
+| PUT | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | ADMIN | FeatureStructuredBoundAdminController | Sets the bound of a feature (* is the default row). |
+| GET | `/api/v1/models/admin/feature-tool-bounds` | ADMIN | FeatureAdminController | Every bound, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | ADMIN | FeatureAdminController | Removes a feature's own bound so it falls back to the default row. |
+| PUT | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | ADMIN | FeatureAdminController | Sets the bound of a feature (* is the default row). |
 | GET | `/api/v1/models/catalog` | authenticated | ModelController | Retrieves the complete AI model catalog definitions from the database. |
 | GET | `/api/v1/models/providers` | authenticated | ModelController | Retrieves all available AI provider names from the database. |
 | GET | `/api/v1/models/supported` | authenticated | ModelController | Retrieves the list of supported model names grouped by media type. |
@@ -101,6 +109,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/imports` | authenticated | LawCorpusAdminController | The imports. |
 | POST | `/imports` | authenticated | LawCorpusAdminController | The manual import: the consolidated XML an administrator uploads, with where it came from. |
 | GET | `/instruments` | authenticated | LawCorpusAdminController | The instruments. |
+| POST | `/internal/v1/agent-turns` | SERVICE | AgentTurnsController | Runs one model turn. |
 | POST | `/internal/v1/protected-conversations/erase` | SERVICE | ProtectedConversationController | Erases a person's conversations under a pack. |
 | GET | `/kinds/{kindId}/golden` | authenticated | LawReviewController | The golden cases of a kind against the minimum of promotion. |
 | POST | `/kinds/{kindId}/promote` | authenticated | LawReviewController | Opens the packs pull request of approved proposals. |
@@ -146,8 +155,9 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/recommendations/insights` | authenticated | RecommendationController | A creator's analytics. |
 | POST | `/api/v1/recommendations/items` | authenticated | RecommendationController | Upserts eligible items; the ones whose text changed are embedded. |
 | GET | `/api/v1/recommendations/similar` | authenticated | RecommendationController | Items like an item. |
-| POST | `/internal/v1/knowledge/retrieve` | SERVICE | KnowledgeController | Semantic RAG retrieval over the vector store. |
-| POST | `/internal/v1/knowledge/sources/search` | SERVICE | KnowledgeController | Substring search over a tool's registered RAG sources. |
+| POST | `/internal/v1/knowledge/retrieve` | SERVICE | KnowledgeController | Semantic RAG retrieval over the vector store, among the passages the principal may read. |
+| PUT | `/internal/v1/knowledge/sources/{id}/acl` | SERVICE | KnowledgeController | Replaces who may read a source; an administrator of the source's tenant only. |
+| POST | `/internal/v1/knowledge/sources/search` | SERVICE | KnowledgeController | Substring search over a tool's registered RAG sources the principal may read. |
 
 ## krizaka-billing-service
 
@@ -175,6 +185,10 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/billing/pricebook/estimate` | authenticated | PricebookController | What an action would cost the signed-in user, and whether they can cover it. |
 | GET | `/api/v1/billing/pricebook/history` | ADMIN | PricebookController |  |
 | POST | `/api/v1/billing/pricebook/preview` | ADMIN | PricebookController |  |
+| GET | `/api/v1/billing/prices` | authenticated | PriceController | The public catalogue now. |
+| GET | `/api/v1/billing/prices/admin` | ADMIN | PriceController | Every entry in force, internal ones included. |
+| GET | `/api/v1/billing/prices/admin/{key}/history` | ADMIN | PriceController | Every version of a key, past and scheduled. |
+| POST | `/api/v1/billing/prices/admin/{key}/schedule` | ADMIN | PriceController | Schedules a change from a date. |
 | GET | `/api/v1/billing/subscriptions` | ADMIN | SubscriptionController | Every live subscriber of a plan — what an admin checks before retiring one. |
 | DELETE | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | SubscriptionController | Ends an actor's subscription. |
 | GET | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | SubscriptionController | The subscription in force for an actor. |
@@ -202,6 +216,11 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| GET | `/.well-known/jwks.json` | public | JwksController |  |
+| GET | `/api/v1/admin/lockout-policy` | ADMIN | LockoutPolicyController |  |
+| PUT | `/api/v1/admin/lockout-policy` | ADMIN | LockoutPolicyController |  |
+| GET | `/api/v1/admin/social-connections` | ADMIN | SocialConnectionController |  |
+| POST | `/api/v1/admin/social-connections/rewrap` | ADMIN | SocialConnectionController | Re-wraps every secret under the current vault key (after a key change). |
 | GET | `/api/v1/admin/users` | ADMIN | AdminUserController |  |
 | DELETE | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |
 | GET | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |
@@ -224,6 +243,15 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/credentials/{providerName}` | ADMIN + USER | CredentialController |  |
 | GET | `/api/v1/interceptions/{schemaId}` | authenticated | InterceptionController | Returns the raw interception schema JSON for the given schema id, served as text so the JSON string is not double-encoded by Jackson (the client parses it). |
 | POST | `/api/v1/interceptions/resolve` | authenticated | InterceptionController | Resolves an active interception by merging the user's responses. |
+| GET | `/api/v1/organizations` | authenticated | OrganizationController |  |
+| POST | `/api/v1/organizations` | authenticated | OrganizationController |  |
+| GET | `/api/v1/organizations/{id}` | ADMIN + USER | OrganizationController |  |
+| GET | `/api/v1/organizations/{id}/members` | ADMIN + USER | OrganizationController |  |
+| PUT | `/api/v1/organizations/{id}/members` | ADMIN + USER | OrganizationController |  |
+| DELETE | `/api/v1/organizations/{id}/members/{userId}` | ADMIN + USER | OrganizationController |  |
+| POST | `/api/v1/organizations/{id}/service-accounts` | ADMIN + USER | OrganizationController |  |
+| GET | `/api/v1/organizations/{id}/service-keys` | ADMIN + USER | OrganizationController |  |
+| DELETE | `/api/v1/organizations/{id}/service-keys/{keyId}` | ADMIN + USER | OrganizationController |  |
 | GET | `/api/v1/profile` | authenticated | ProfileController | Returns the authenticated user's profile. |
 | PUT | `/api/v1/profile/preferences` | ADMIN + USER | ProfileController | Updates the authenticated user's preference map and returns the refreshed profile. |
 | GET | `/internal/v1/tiers/{key}` | SERVICE | InternalUserController | Bucket parameters of a rate-limit tier. |
@@ -237,6 +265,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| POST | `/api/v1/studio-runs/{runId}/turns` | authenticated | StudioTurnController | Runs one model turn of a session. |
 | GET | `/api/v1/studios` | authenticated | StudioController | The catalogue, optionally narrowed to one profession. |
 | GET | `/api/v1/studios/{studioKey}` | authenticated | StudioController | One Studio's detail, including the schemas its forms are generated from. |
 | GET | `/api/v1/studios/{studioKey}/blueprints` | ADMIN | StudioBlueprintController | Every version of a Studio, drafts included — the Builder's version list. |
@@ -266,6 +295,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/studios/packs/bundles/{bundleKey}` | ADMIN | PackBundleController | Removes a bundle's catalogue rows and withdraws its pack from sale. |
 | POST | `/api/v1/studios/packs/bundles/validation` | ADMIN | PackBundleController | Checks a bundle against this platform without writing anything. |
 | GET | `/api/v1/studios/packs/categories` | authenticated | PackCatalogController | The shelves themselves, so the client renders headings it did not have to invent. |
+| GET | `/api/v1/studios/public/downloads` | authenticated | PublicSettingsController |  |
 | GET | `/api/v1/studios/runs` | authenticated | StudioRunController | This actor's run history. |
 | DELETE | `/api/v1/studios/runs/{runId}` | authenticated | ProtectedDataController | Erases one entry of the caller's: a run of a protected pack, with its inputs, outputs and files. |
 | GET | `/api/v1/studios/runs/{runId}` | authenticated | StudioRunController | One run with its per-step states and outputs. |

@@ -1,0 +1,1269 @@
+{
+  "measuredOn": "2026-10-27",
+  "promptVersion": "law-retrieval.v1",
+  "seed": 20261026,
+  "cases": 6,
+  "runsPerCase": 2,
+  "priceDate": "2026-10-26",
+  "maxUsd": 5,
+  "spentUsd": 0.003922800000000001,
+  "stoppedAtCap": [],
+  "models": [
+    {
+      "id": "qwen2.5:7b",
+      "local": true,
+      "aggregate": {
+        "runs": 12,
+        "parsed": 12,
+        "claims": 24,
+        "verified": 24,
+        "wrongAccepted": 0,
+        "verifiedRate": 1,
+        "quoteFoundRate": 1,
+        "recall": 0.5714285714285714,
+        "statedRate": 0.5833333333333334,
+        "frenchWording": 1,
+        "latencyP50": 25922,
+        "latencyP95": 32803,
+        "promptTokens": 13282,
+        "completionTokens": 7626,
+        "costUsd": 0
+      },
+      "stability": 1,
+      "costPerRunUsd": 0,
+      "runs": [
+        {
+          "caseId": "visit-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 3,
+            "verified": 3,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 3,
+            "quotesFound": 3,
+            "expected": 3,
+            "recalled": 3,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "f44c87bfd195"
+          },
+          "ms": 32024,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 875,
+            "completionTokens": 872
+          }
+        },
+        {
+          "caseId": "visit-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 3,
+            "verified": 3,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 3,
+            "quotesFound": 3,
+            "expected": 3,
+            "recalled": 3,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "f44c87bfd195"
+          },
+          "ms": 30023,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 875,
+            "completionTokens": 872
+          }
+        },
+        {
+          "caseId": "visit-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 27240,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 838,
+            "completionTokens": 722
+          }
+        },
+        {
+          "caseId": "visit-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 32803,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 838,
+            "completionTokens": 722
+          }
+        },
+        {
+          "caseId": "condition-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 31984,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1190,
+            "completionTokens": 685
+          }
+        },
+        {
+          "caseId": "condition-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 25922,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1190,
+            "completionTokens": 685
+          }
+        },
+        {
+          "caseId": "condition-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 25800,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1064,
+            "completionTokens": 600
+          }
+        },
+        {
+          "caseId": "condition-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 22129,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1064,
+            "completionTokens": 600
+          }
+        },
+        {
+          "caseId": "visit-fr-decoy-rent",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 1,
+            "verified": 1,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 1,
+            "quotesFound": 1,
+            "expected": 3,
+            "recalled": 1,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "c41fe725d261"
+          },
+          "ms": 18056,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1307,
+            "completionTokens": 334
+          }
+        },
+        {
+          "caseId": "visit-fr-decoy-rent",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 1,
+            "verified": 1,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 1,
+            "quotesFound": 1,
+            "expected": 3,
+            "recalled": 1,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "c41fe725d261"
+          },
+          "ms": 12831,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1307,
+            "completionTokens": 334
+          }
+        },
+        {
+          "caseId": "condition-en-decoy-succession",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 26795,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1367,
+            "completionTokens": 600
+          }
+        },
+        {
+          "caseId": "condition-en-decoy-succession",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 24706,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1367,
+            "completionTokens": 600
+          }
+        }
+      ]
+    },
+    {
+      "id": "llama3:8b",
+      "local": true,
+      "aggregate": {
+        "runs": 12,
+        "parsed": 10,
+        "claims": 20,
+        "verified": 20,
+        "wrongAccepted": 0,
+        "verifiedRate": 1,
+        "quoteFoundRate": 1,
+        "recall": 0.47619047619047616,
+        "statedRate": 0.5,
+        "frenchWording": 1,
+        "latencyP50": 15941,
+        "latencyP95": 28299,
+        "promptTokens": 11716,
+        "completionTokens": 5678,
+        "costUsd": 0
+      },
+      "stability": 1,
+      "costPerRunUsd": 0,
+      "runs": [
+        {
+          "caseId": "visit-fr",
+          "language": "fr",
+          "score": {
+            "parsed": false,
+            "fenced": false,
+            "claims": 0,
+            "verified": 0,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 0,
+            "quotesFound": 0,
+            "expected": 3,
+            "recalled": 0,
+            "mustState": 4,
+            "stated": 0,
+            "wording": 0,
+            "verdictKey": "4f53cda18c2b"
+          },
+          "ms": 20966,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 784,
+            "completionTokens": 451
+          }
+        },
+        {
+          "caseId": "visit-fr",
+          "language": "fr",
+          "score": {
+            "parsed": false,
+            "fenced": false,
+            "claims": 0,
+            "verified": 0,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 0,
+            "quotesFound": 0,
+            "expected": 3,
+            "recalled": 0,
+            "mustState": 4,
+            "stated": 0,
+            "wording": 0,
+            "verdictKey": "4f53cda18c2b"
+          },
+          "ms": 15941,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 784,
+            "completionTokens": 451
+          }
+        },
+        {
+          "caseId": "visit-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 19022,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 742,
+            "completionTokens": 481
+          }
+        },
+        {
+          "caseId": "visit-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 15483,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 742,
+            "completionTokens": 481
+          }
+        },
+        {
+          "caseId": "condition-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 16931,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1040,
+            "completionTokens": 445
+          }
+        },
+        {
+          "caseId": "condition-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 13935,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1040,
+            "completionTokens": 445
+          }
+        },
+        {
+          "caseId": "condition-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 13291,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 932,
+            "completionTokens": 368
+          }
+        },
+        {
+          "caseId": "condition-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 11259,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 932,
+            "completionTokens": 368
+          }
+        },
+        {
+          "caseId": "visit-fr-decoy-rent",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 28299,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1155,
+            "completionTokens": 726
+          }
+        },
+        {
+          "caseId": "visit-fr-decoy-rent",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 24710,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1155,
+            "completionTokens": 726
+          }
+        },
+        {
+          "caseId": "condition-en-decoy-succession",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 17051,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1205,
+            "completionTokens": 368
+          }
+        },
+        {
+          "caseId": "condition-en-decoy-succession",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": false,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 11860,
+          "costUsd": 0,
+          "usage": {
+            "promptTokens": 1205,
+            "completionTokens": 368
+          }
+        }
+      ]
+    },
+    {
+      "id": "mistral-3-14B",
+      "local": false,
+      "aggregate": {
+        "runs": 12,
+        "parsed": 12,
+        "claims": 20,
+        "verified": 20,
+        "wrongAccepted": 0,
+        "verifiedRate": 1,
+        "quoteFoundRate": 1,
+        "recall": 0.47619047619047616,
+        "statedRate": 0.5,
+        "frenchWording": 1,
+        "latencyP50": 4931,
+        "latencyP95": 11597,
+        "promptTokens": 13218,
+        "completionTokens": 6396,
+        "costUsd": 0.003922800000000001
+      },
+      "stability": 1,
+      "costPerRunUsd": 0.00032690000000000003,
+      "runs": [
+        {
+          "caseId": "visit-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 11597,
+          "costUsd": 0.0003058,
+          "usage": {
+            "promptTokens": 864,
+            "completionTokens": 665
+          }
+        },
+        {
+          "caseId": "visit-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 4990,
+          "costUsd": 0.0003058,
+          "usage": {
+            "promptTokens": 864,
+            "completionTokens": 665
+          }
+        },
+        {
+          "caseId": "visit-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 5028,
+          "costUsd": 0.00030020000000000003,
+          "usage": {
+            "promptTokens": 845,
+            "completionTokens": 656
+          }
+        },
+        {
+          "caseId": "visit-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 4911,
+          "costUsd": 0.00030020000000000003,
+          "usage": {
+            "promptTokens": 845,
+            "completionTokens": 656
+          }
+        },
+        {
+          "caseId": "condition-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 0,
+            "verified": 0,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 0,
+            "quotesFound": 0,
+            "expected": 4,
+            "recalled": 0,
+            "mustState": 4,
+            "stated": 0,
+            "wording": 0,
+            "verdictKey": "4f53cda18c2b"
+          },
+          "ms": 571,
+          "costUsd": 0.00024040000000000002,
+          "usage": {
+            "promptTokens": 1150,
+            "completionTokens": 52
+          }
+        },
+        {
+          "caseId": "condition-fr",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 0,
+            "verified": 0,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 0,
+            "quotesFound": 0,
+            "expected": 4,
+            "recalled": 0,
+            "mustState": 4,
+            "stated": 0,
+            "wording": 0,
+            "verdictKey": "4f53cda18c2b"
+          },
+          "ms": 800,
+          "costUsd": 0.00024040000000000002,
+          "usage": {
+            "promptTokens": 1150,
+            "completionTokens": 52
+          }
+        },
+        {
+          "caseId": "condition-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 4666,
+          "costUsd": 0.000331,
+          "usage": {
+            "promptTokens": 1076,
+            "completionTokens": 579
+          }
+        },
+        {
+          "caseId": "condition-en",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 4572,
+          "costUsd": 0.000331,
+          "usage": {
+            "promptTokens": 1076,
+            "completionTokens": 579
+          }
+        },
+        {
+          "caseId": "visit-fr-decoy-rent",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 5650,
+          "costUsd": 0.0003914,
+          "usage": {
+            "promptTokens": 1292,
+            "completionTokens": 665
+          }
+        },
+        {
+          "caseId": "visit-fr-decoy-rent",
+          "language": "fr",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 3,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 3,
+            "wording": 1,
+            "verdictKey": "6018266db690"
+          },
+          "ms": 5578,
+          "costUsd": 0.0003914,
+          "usage": {
+            "promptTokens": 1292,
+            "completionTokens": 665
+          }
+        },
+        {
+          "caseId": "condition-en-decoy-succession",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 5064,
+          "costUsd": 0.0003926,
+          "usage": {
+            "promptTokens": 1382,
+            "completionTokens": 581
+          }
+        },
+        {
+          "caseId": "condition-en-decoy-succession",
+          "language": "en",
+          "score": {
+            "parsed": true,
+            "fenced": true,
+            "claims": 2,
+            "verified": 2,
+            "wrongAccepted": 0,
+            "wrongReasons": [],
+            "citations": 2,
+            "quotesFound": 2,
+            "expected": 4,
+            "recalled": 2,
+            "mustState": 4,
+            "stated": 2,
+            "wording": 1,
+            "verdictKey": "3e819ed4be0a"
+          },
+          "ms": 4931,
+          "costUsd": 0.0003926,
+          "usage": {
+            "promptTokens": 1382,
+            "completionTokens": 581
+          }
+        }
+      ]
+    }
+  ],
+  "decision": {
+    "winner": "qwen2.5:7b",
+    "ranking": [
+      "qwen2.5:7b",
+      "llama3:8b",
+      "mistral-3-14B"
+    ],
+    "disqualified": []
+  },
+  "runIds": [
+    {
+      "runId": "28e918543c",
+      "model": "qwen2.5:7b",
+      "caseId": "visit-fr",
+      "n": 1
+    },
+    {
+      "runId": "2808c4caba",
+      "model": "qwen2.5:7b",
+      "caseId": "visit-fr",
+      "n": 2
+    },
+    {
+      "runId": "027db21814",
+      "model": "qwen2.5:7b",
+      "caseId": "visit-en",
+      "n": 1
+    },
+    {
+      "runId": "3639b69262",
+      "model": "qwen2.5:7b",
+      "caseId": "visit-en",
+      "n": 2
+    },
+    {
+      "runId": "50f9afb0ea",
+      "model": "qwen2.5:7b",
+      "caseId": "condition-fr",
+      "n": 1
+    },
+    {
+      "runId": "bf8aa41153",
+      "model": "qwen2.5:7b",
+      "caseId": "condition-fr",
+      "n": 2
+    },
+    {
+      "runId": "7e0decac88",
+      "model": "qwen2.5:7b",
+      "caseId": "condition-en",
+      "n": 1
+    },
+    {
+      "runId": "9ed9eecce5",
+      "model": "qwen2.5:7b",
+      "caseId": "condition-en",
+      "n": 2
+    },
+    {
+      "runId": "169cdbcdb9",
+      "model": "qwen2.5:7b",
+      "caseId": "visit-fr-decoy-rent",
+      "n": 1
+    },
+    {
+      "runId": "908926250f",
+      "model": "qwen2.5:7b",
+      "caseId": "visit-fr-decoy-rent",
+      "n": 2
+    },
+    {
+      "runId": "2991547144",
+      "model": "qwen2.5:7b",
+      "caseId": "condition-en-decoy-succession",
+      "n": 1
+    },
+    {
+      "runId": "0dc029fdba",
+      "model": "qwen2.5:7b",
+      "caseId": "condition-en-decoy-succession",
+      "n": 2
+    },
+    {
+      "runId": "03e50dc0de",
+      "model": "llama3:8b",
+      "caseId": "visit-fr",
+      "n": 1
+    },
+    {
+      "runId": "6d66aa945b",
+      "model": "llama3:8b",
+      "caseId": "visit-fr",
+      "n": 2
+    },
+    {
+      "runId": "7217227f90",
+      "model": "llama3:8b",
+      "caseId": "visit-en",
+      "n": 1
+    },
+    {
+      "runId": "cb632423f1",
+      "model": "llama3:8b",
+      "caseId": "visit-en",
+      "n": 2
+    },
+    {
+      "runId": "e357eb98ec",
+      "model": "llama3:8b",
+      "caseId": "condition-fr",
+      "n": 1
+    },
+    {
+      "runId": "8ae704e695",
+      "model": "llama3:8b",
+      "caseId": "condition-fr",
+      "n": 2
+    },
+    {
+      "runId": "14d8534bcc",
+      "model": "llama3:8b",
+      "caseId": "condition-en",
+      "n": 1
+    },
+    {
+      "runId": "4160bd5367",
+      "model": "llama3:8b",
+      "caseId": "condition-en",
+      "n": 2
+    },
+    {
+      "runId": "21cece32d3",
+      "model": "llama3:8b",
+      "caseId": "visit-fr-decoy-rent",
+      "n": 1
+    },
+    {
+      "runId": "1fed64ab05",
+      "model": "llama3:8b",
+      "caseId": "visit-fr-decoy-rent",
+      "n": 2
+    },
+    {
+      "runId": "d77c5d4e4d",
+      "model": "llama3:8b",
+      "caseId": "condition-en-decoy-succession",
+      "n": 1
+    },
+    {
+      "runId": "8b50133228",
+      "model": "llama3:8b",
+      "caseId": "condition-en-decoy-succession",
+      "n": 2
+    },
+    {
+      "runId": "326ca208b1",
+      "model": "mistral-3-14B",
+      "caseId": "visit-fr",
+      "n": 1
+    },
+    {
+      "runId": "3a22640ad0",
+      "model": "mistral-3-14B",
+      "caseId": "visit-fr",
+      "n": 2
+    },
+    {
+      "runId": "077fd25f78",
+      "model": "mistral-3-14B",
+      "caseId": "visit-en",
+      "n": 1
+    },
+    {
+      "runId": "8e3185e58f",
+      "model": "mistral-3-14B",
+      "caseId": "visit-en",
+      "n": 2
+    },
+    {
+      "runId": "defe3428bb",
+      "model": "mistral-3-14B",
+      "caseId": "condition-fr",
+      "n": 1
+    },
+    {
+      "runId": "98447d32d2",
+      "model": "mistral-3-14B",
+      "caseId": "condition-fr",
+      "n": 2
+    },
+    {
+      "runId": "08fcdf9a42",
+      "model": "mistral-3-14B",
+      "caseId": "condition-en",
+      "n": 1
+    },
+    {
+      "runId": "de1f9d2997",
+      "model": "mistral-3-14B",
+      "caseId": "condition-en",
+      "n": 2
+    },
+    {
+      "runId": "0f3066d4e4",
+      "model": "mistral-3-14B",
+      "caseId": "visit-fr-decoy-rent",
+      "n": 1
+    },
+    {
+      "runId": "98d43e2cbf",
+      "model": "mistral-3-14B",
+      "caseId": "visit-fr-decoy-rent",
+      "n": 2
+    },
+    {
+      "runId": "f7c03acf5c",
+      "model": "mistral-3-14B",
+      "caseId": "condition-en-decoy-succession",
+      "n": 1
+    },
+    {
+      "runId": "db5ca8af80",
+      "model": "mistral-3-14B",
+      "caseId": "condition-en-decoy-succession",
+      "n": 2
+    }
+  ],
+  "notMeasured": [
+    {
+      "step": "classify fallback of identify (cut 5)",
+      "why": "identify is deterministic today; no model call exists to measure"
+    },
+    {
+      "step": "rule-derivation (cut 8)",
+      "why": "the service has a model port but no model adapter yet"
+    },
+    {
+      "step": "lecture for unsupported kinds (cut 10)",
+      "why": "orazaka-packs#130 is not merged"
+    },
+    {
+      "step": "gemma-4-31B-it",
+      "why": "the dev inference key answers HTTP 403 for it"
+    }
+  ]
+}

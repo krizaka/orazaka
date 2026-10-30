@@ -46,6 +46,22 @@ capability rows, a price, catalogue entries — and changes no code.
   "studios": 3
  },
  {
+  "key": "code-contributor",
+  "title": "Contributor",
+  "tagline": "The model turn behind Orazaka's code agent on your Mac.",
+  "tier": "DATA",
+  "category": "Developer tools",
+  "studios": 2
+ },
+ {
+  "key": "bill96-french-first",
+  "title": "French-first documents (Bill 96)",
+  "tagline": "French versions, bilingual checks and French-first copy, on your own machine.",
+  "tier": "DATA",
+  "category": "Business & documents",
+  "studios": 4
+ },
+ {
   "key": "data-analytics",
   "title": "Recommendations & insights",
   "tagline": "A feed per person and analytics per creator, on your own data.",
@@ -62,12 +78,36 @@ capability rows, a price, catalogue entries — and changes no code.
   "studios": 4
  },
  {
+  "key": "privacy-law25",
+  "title": "Privacy compliance (Law 25)",
+  "tagline": "Prepare your Law 25 privacy documents on your own machine.",
+  "tier": "DATA",
+  "category": "Business & documents",
+  "studios": 4
+ },
+ {
   "key": "document-validation",
   "title": "Document Verification",
   "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
   "tier": "WORKER",
   "category": "Business & documents",
   "studios": 2
+ },
+ {
+  "key": "business-brief",
+  "title": "Business brief",
+  "tagline": "The writer behind a small shop's Monday brief.",
+  "tier": "DATA",
+  "category": null,
+  "studios": 1
+ },
+ {
+  "key": "identity-document-check",
+  "title": "Identity document check",
+  "tagline": "Is this identity document consistent with itself?",
+  "tier": "WORKER",
+  "category": null,
+  "studios": 1
  },
  {
   "key": "media-safety",
@@ -773,6 +813,186 @@ capability rows, a price, catalogue entries — and changes no code.
 }
 ```
 
+### Contributor
+
+```pack
+{
+ "key": "code-contributor",
+ "title": "Contributor",
+ "tagline": "The model turn behind Orazaka's code agent on your Mac.",
+ "description": "Carries the model turns of the Orazaka app's code agent, so that access, consent and credits are checked on every turn. The tools, the approvals, git and the audit stay on your Mac.",
+ "version": "1.1.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "STANDARD",
+ "category": "Developer tools",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": true,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "code-issue-to-pr",
+   "label": "From an issue to a pull request",
+   "summary": "Reads a GitHub issue and your repository, proposes changes you approve, and opens a draft pull request.",
+   "description": "The model turn for the issue-to-pull-request flow. Every write and every push is approved on your Mac.",
+   "inputs": [
+    {
+     "key": "task",
+     "title": "Tâche"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "SESSION"
+   ],
+   "credits": 40
+  },
+  {
+   "key": "code-read-write",
+   "label": "Read and change code",
+   "summary": "Reads a repository you grant and proposes changes, hunk by hunk.",
+   "description": "The model turn for reading and changing files in a repository you grant. Nothing is written without your approval.",
+   "inputs": [
+    {
+     "key": "task",
+     "title": "Tâche"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "SESSION"
+   ],
+   "credits": 40
+  }
+ ]
+}
+```
+
+### French-first documents (Bill 96)
+
+```pack
+{
+ "key": "bill96-french-first",
+ "title": "French-first documents (Bill 96)",
+ "tagline": "French versions, bilingual checks and French-first copy, on your own machine.",
+ "description": "Matrices for extracting information from your documents and parameterizable technology templates that produce a French version in Québec usage, compare an English and a French version, turn site copy into French-first copy and keep your own glossary, technical tools validated by the client's legal counsel. Not a certified translation: a professional reviews every output. Your documents stay on your machine.",
+ "version": "1.0.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": "Business & documents",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "french-version",
+   "label": "French version of a document",
+   "summary": "Québec usage, the terms chosen, the doubtful passages flagged.",
+   "description": "A French version of a contract, policy, terms or product sheet, with a glossary of the terms chosen and the passages to review.",
+   "inputs": [
+    {
+     "key": "document",
+     "title": "Le document"
+    },
+    {
+     "key": "documentKind",
+     "title": "Type de document"
+    },
+    {
+     "key": "glossary",
+     "title": "Glossaire de l'entreprise"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 110
+  },
+  {
+   "key": "bilingual-consistency-check",
+   "label": "Bilingual consistency check",
+   "summary": "What differs between your English and French versions.",
+   "description": "Lists the differences in meaning, numbers, dates and obligations between two versions, and which section to review first.",
+   "inputs": [
+    {
+     "key": "english",
+     "title": "Version anglaise"
+    },
+    {
+     "key": "french",
+     "title": "Version française"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 100
+  },
+  {
+   "key": "french-first-copy",
+   "label": "French-first copy",
+   "summary": "Site and product copy in French first, with the English kept equivalent.",
+   "description": "Adapts English copy into natural Québec French that keeps your brand voice, French first and the English right after.",
+   "inputs": [
+    {
+     "key": "englishCopy",
+     "title": "Texte anglais"
+    },
+    {
+     "key": "brandVoice",
+     "title": "Ton de la marque"
+    },
+    {
+     "key": "glossary",
+     "title": "Glossaire de l'entreprise"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 100
+  },
+  {
+   "key": "firm-glossary",
+   "label": "Firm glossary",
+   "summary": "Your own FR/EN terminology, reused by the other Studios.",
+   "description": "Builds and extends the firm's glossary from its documents, with the source of each term, ready to paste into the other Studios.",
+   "inputs": [
+    {
+     "key": "documents",
+     "title": "Vos documents"
+    },
+    {
+     "key": "glossary",
+     "title": "Glossaire de l'entreprise"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 90
+  }
+ ]
+}
+```
+
 ### Recommendations & insights
 
 ```pack
@@ -1002,6 +1222,177 @@ capability rows, a price, catalogue entries — and changes no code.
 }
 ```
 
+### Privacy compliance (Law 25)
+
+```pack
+{
+ "key": "privacy-law25",
+ "title": "Privacy compliance (Law 25)",
+ "tagline": "Prepare your Law 25 privacy documents on your own machine.",
+ "description": "Matrices for extracting information from your documents and parameterizable technology templates that prepare an inventory of personal information, a privacy impact assessment draft, a confidentiality-incident entry with notice drafts, and a governance policy, technical tools validated by the client's legal counsel: they prepare, the person in charge validates, and nothing is legal advice. Your data stays on your machine.",
+ "version": "1.0.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": "Business & documents",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "personal-information-inventory",
+   "label": "Personal-information inventory",
+   "summary": "What you hold, where, why, who sees it, how long.",
+   "description": "From a description of your tools and processes, a table of the personal information you hold, with the questions to settle.",
+   "inputs": [
+    {
+     "key": "firmName",
+     "title": "Nom de l'entreprise"
+    },
+    {
+     "key": "description",
+     "title": "Vos outils et processus"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 90
+  },
+  {
+   "key": "privacy-impact-assessment",
+   "label": "Privacy impact assessment draft",
+   "summary": "A structured draft before a project that touches personal information.",
+   "description": "Purpose, information, flows, risks and safeguards, with the decision and signature left to the person in charge.",
+   "inputs": [
+    {
+     "key": "firmName",
+     "title": "Nom de l'entreprise"
+    },
+    {
+     "key": "projectName",
+     "title": "Nom du projet"
+    },
+    {
+     "key": "purpose",
+     "title": "Objectif du projet"
+    },
+    {
+     "key": "personalData",
+     "title": "Renseignements en cause"
+    },
+    {
+     "key": "peopleConcerned",
+     "title": "Personnes concernées"
+    },
+    {
+     "key": "outsideQuebec",
+     "title": "Hors Québec ?"
+    },
+    {
+     "key": "safeguards",
+     "title": "Mesures déjà prévues"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 140
+  },
+  {
+   "key": "confidentiality-incident",
+   "label": "Confidentiality incident",
+   "summary": "A register entry and notice drafts; the person in charge decides.",
+   "description": "Reads the serious-injury criteria, drafts the register entry and, when the criteria point that way, the notices.",
+   "inputs": [
+    {
+     "key": "firmName",
+     "title": "Nom de l'entreprise"
+    },
+    {
+     "key": "incidentDescription",
+     "title": "Ce qui s'est passé"
+    },
+    {
+     "key": "discoveredOn",
+     "title": "Date de découverte"
+    },
+    {
+     "key": "dataInvolved",
+     "title": "Renseignements en cause"
+    },
+    {
+     "key": "peopleAffected",
+     "title": "Personnes touchées"
+    },
+    {
+     "key": "containment",
+     "title": "Mesures prises"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    }
+   ],
+   "steps": 3,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 130
+  },
+  {
+   "key": "privacy-governance-policy",
+   "label": "Governance policy",
+   "summary": "Your public privacy policy, in French and English, in plain language.",
+   "description": "Drafts the public policy from your activities and practices, and marks every point to confirm.",
+   "inputs": [
+    {
+     "key": "firmName",
+     "title": "Nom de l'entreprise"
+    },
+    {
+     "key": "activities",
+     "title": "Vos activités"
+    },
+    {
+     "key": "dataKinds",
+     "title": "Renseignements recueillis"
+    },
+    {
+     "key": "retention",
+     "title": "Durée de conservation"
+    },
+    {
+     "key": "contactRole",
+     "title": "Rôle de la personne responsable"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 120
+  }
+ ]
+}
+```
+
 ### Document Verification
 
 ```pack
@@ -1009,8 +1400,8 @@ capability rows, a price, catalogue entries — and changes no code.
  "key": "document-validation",
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
- "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
- "version": "1.9.0",
+ "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice: technical tools validated by the client's legal counsel.",
+ "version": "1.11.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1044,6 +1435,14 @@ capability rows, a price, catalogue entries — and changes no code.
    ]
   },
   {
+   "label": "État des lieux du logement — Québec",
+   "jurisdiction": "QC",
+   "rules": 5,
+   "versions": [
+    "2023-06-01"
+   ]
+  },
+  {
    "label": "Facture — Québec (TPS et TVQ)",
    "jurisdiction": "QC",
    "rules": 8,
@@ -1054,7 +1453,7 @@ capability rows, a price, catalogue entries — and changes no code.
   {
    "label": "Bail de logement — Québec",
    "jurisdiction": "QC",
-   "rules": 12,
+   "rules": 16,
    "versions": [
     "2024-02-21"
    ]
@@ -1065,6 +1464,14 @@ capability rows, a price, catalogue entries — and changes no code.
    "rules": 4,
    "versions": [
     "2026-10-19"
+   ]
+  },
+  {
+   "label": "Avis de visite du logement — Québec",
+   "jurisdiction": "QC",
+   "rules": 6,
+   "versions": [
+    "2023-06-01"
    ]
   }
  ],
@@ -1126,6 +1533,128 @@ capability rows, a price, catalogue entries — and changes no code.
     "CAPABILITY"
    ],
    "credits": 120
+  }
+ ]
+}
+```
+
+### Business brief
+
+```pack
+{
+ "key": "business-brief",
+ "title": "Business brief",
+ "tagline": "The writer behind a small shop's Monday brief.",
+ "description": "Writes the invitation of a brief action from aggregates only: the shop, the service and the free slots. No client name, no history.",
+ "version": "1.0.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "STANDARD",
+ "category": null,
+ "listed": false,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "invitation-writer",
+   "label": "Invitation writer",
+   "summary": "One short invitation, in Québec French or English, in the shop's tone.",
+   "description": "From the shop's name, a service and its free slots only, writes an invitation sized for a text message, a notification or an email.",
+   "inputs": [
+    {
+     "key": "shopName",
+     "title": "Nom de la boutique"
+    },
+    {
+     "key": "service",
+     "title": "Service"
+    },
+    {
+     "key": "freeSlots",
+     "title": "Créneaux libres"
+    },
+    {
+     "key": "channel",
+     "title": "Canal"
+    },
+    {
+     "key": "tone",
+     "title": "Ton de la boutique"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 15
+  }
+ ]
+}
+```
+
+### Identity document check
+
+```pack
+{
+ "key": "identity-document-check",
+ "title": "Identity document check",
+ "tagline": "Is this identity document consistent with itself?",
+ "description": "Reads an identity document with a vision model, then checks by arithmetic what can be checked: the check digits of the machine-readable zone, the dates, and the agreement between the printed fields, the zone and the barcode. Each finding comes with its evidence and a confidence. It identifies no one and looks nothing up.",
+ "version": "1.0.0",
+ "tier": "WORKER",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": null,
+ "listed": false,
+ "workers": [
+  "orazaka-worker-identity"
+ ],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "identity-document-check",
+   "label": "Identity document check",
+   "summary": "Zone, dates and printed fields checked by code, signs of tampering flagged for a person.",
+   "description": "A vision model transcribes the document; the check digits, the calendar and the cross-checks are plain code. A sign of tampering asks a person to look and never fails a document alone.",
+   "inputs": [
+    {
+     "key": "document",
+     "title": "La pièce d'identité (fichier envoyé)"
+    },
+    {
+     "key": "asOf",
+     "title": "Jour de référence"
+    },
+    {
+     "key": "minimumAge",
+     "title": "Âge minimal (années)"
+    },
+    {
+     "key": "barcodeText",
+     "title": "Texte du code-barres"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 30
   }
  ]
 }
@@ -1425,13 +1954,18 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 
 | Pack | Version | Studios |
 |:---|:---|:---|
+| `bill96-french-first` | 1.0.0 | `french-version` · `bilingual-consistency-check` · `french-first-copy` · `firm-glossary` |
+| `business-brief` | 1.0.0 | `invitation-writer` |
+| `code-contributor` | 1.1.0 | `code-issue-to-pr` · `code-read-write` |
 | `data-analytics` | 1.6.0 | `data-driven-ui` · `video-understanding` · `creator-suggestions` |
-| `document-validation` | 1.9.0 | `document-authenticity` · `compliance-check` |
+| `document-validation` | 1.11.0 | `document-authenticity` · `compliance-check` |
 | `echo-toolkit` | 1.2.0 | `echo-reverse` |
+| `identity-document-check` | 1.0.0 | `identity-document-check` |
 | `media-safety` | 1.2.0 | `media-safety` |
 | `message-authenticity` | 1.3.0 | `message-authenticity` |
 | `orazaka-media` | 1.13.0 | `image-generation` · `art-golden-hour` · `art-miniature` · `art-still-life` · `art-montreal-night` · `video-generation` · `cinematic-treatment` · `cinematic-critique` · `cinematic-script` · `cinematic-cut` · `video-with-sound` · `video-sound` · `speech-synthesis` · `image-analysis` · `audio-analysis` · `video-analysis` |
 | `outbound-prospection` | 1.3.0 | `outbound-prospection` · `lead-research` · `followup-sequences` |
+| `privacy-law25` | 1.0.0 | `personal-information-inventory` · `privacy-impact-assessment` · `confidentiality-incident` · `privacy-governance-policy` |
 | `profile-photo-check` | 1.2.0 | `profile-photo-check` |
 | `realestate-studio` | 1.3.0 | `realestate-reels` |
 | `tenant-screening-qc` | 2.0.0 | `tenant-screening-qc` |
@@ -1620,7 +2154,7 @@ not a filter, and the engine never adds terms of its own.
 > on the first run, not at install.
 
 **Step kinds**: `CAPABILITY` (runs a model), `TRANSFORM` (reshapes values), `APPROVAL` (parks for a
-human), `CONNECTOR` (calls out), `KNOWLEDGE`. **`onError`**: `FAIL` | `SKIP` | `RETRY` — and a
+human), `CONNECTOR` (calls out), `KNOWLEDGE`, `SESSION` (stays open while a client posts its turns; closes on « finish » or an idle TTL). **`onError`**: `FAIL` | `SKIP` | `RETRY` — and a
 `SKIP` needs a written `skipRationale`, which a fitness function checks.
 
 **Templates.** `{{inputs.x}}`, `{{config.x}}`, `{{steps.<out>}}`, `{{item}}` inside a `forEach`. A
