@@ -45,7 +45,7 @@ async function stub({ pods = [], failCreateFor = [], cost = 0.5 } = {}) {
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
-  return { state, base, close: () => server.close() };
+  return { state, base, close: () => { server.close(); server.closeAllConnections(); } };
 }
 
 const run = (cmd, args, env) => new Promise((resolve) => {
