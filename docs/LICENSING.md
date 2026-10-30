@@ -1,22 +1,30 @@
 ---
 title: "Licensing — where the line falls in the tree"
-description: "Everything in this repository is Apache-2.0. What is proprietary lives in another repository, and the boundary is the repository, not a flag."
+description: "This repository is FSL-1.1-ALv2 from the licence commit (Apache-2.0 before it, and for each version two years after its release). What is proprietary lives in another repository, and the boundary is the repository, not a flag."
 category: Reference
 order: 2
 ---
 
 # Licensing
 
-**Everything in this repository is Apache-2.0.** Engine, pack SPI, CLI, reference packs — all of
-it. There is no proprietary code here, and none may be added.
+**From the commit that introduces its `NOTICE`, this repository is licensed under FSL-1.1-ALv2**
+(Functional Source License, Apache-2.0 future licence — [`LICENSE`](../LICENSE)): you may read, run, modify and
+self-host it for any purpose except a Competing Use (offering it to others as a commercial service that substitutes for
+Orazaka), and each version becomes Apache-2.0 two years after its release. Every earlier commit remains Apache-2.0
+([`LICENSE-APACHE`](../LICENSE-APACHE)). The organisation decision is
+[ADR-012](https://github.com/krizaka/.github/blob/main/docs/adr/ADR-012-licensing-libraries-open-products-fair-source.md);
+it updates ADR-049 on the licence of the engine and keeps its boundary between public and private repositories.
+
+The pieces an integrator needs stay Apache-2.0 in their own repositories: `orazaka-packs` (the pack format and reference
+packs), `orazaka-contracts`, `orazaka-cli`, `orazaka-ui-kit`, `orazaka-build`, `orazaka-edge`.
 
 ## Where the line falls
 
 | Layer | Home | Licence |
 |:---|:---|:---|
-| Engine — studio, job plane, billing, identity, edge, interceptors, persistence | **this repository** | Apache-2.0 |
-| Pack SPI — `pack.schema.json`, `orazaka-jobs-api`, `docs/WORKER_PROTOCOL.md`, `PackInstallerService`, the `orazaka pack` CLI | **this repository** | Apache-2.0 |
-| Reference packs — `orazaka-packs/**` | **this repository** | Apache-2.0 |
+| Engine — studio, job plane, interceptors, persistence | **this repository** and the engine repositories | FSL-1.1-ALv2 (Apache-2.0 after two years) |
+| Pack SPI — `pack.schema.json`, `orazaka-jobs-api`, `docs/WORKER_PROTOCOL.md`, `PackInstallerService`, the `orazaka pack` CLI | `orazaka-contracts`, `orazaka-cli`, `orazaka-packs` | Apache-2.0 |
+| Reference packs — `orazaka-packs/**` | `orazaka-packs` | Apache-2.0 |
 | Commercial packs | `orazaka-packs-cloud` (private) | proprietary |
 | Hosted registry, managed workers, control plane, SLA | private | proprietary |
 
