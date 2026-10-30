@@ -32,7 +32,7 @@ ureq = { version = "2", default-features = false, features = ["json", "tls"] }
 pdf-extract = "0.12"
 # code on the Mac (ADR-093): token redaction and exact per-hunk diffs
 regex = "1"
-similar = "2"
+similar = "3"
 # checks (ADR-093 slice 2): kill the whole process group of a timed-out run
 libc = "0.2"
 
