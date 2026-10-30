@@ -38,7 +38,7 @@ continue.
 
 | Rule | Applies here as |
 |:---|:---|
-| AGENTS.md §0 — 100% local | No CI, no cloud, no remote secret. Lago is added to compose but **profiled off**; `LAGO_API_KEY` is `CHANGE_ME` in `exemple.env.txt`. |
+| AGENTS.md §0 — 100% local | No CI, no cloud, no remote secret. Lago is added to compose but **profiled off**; `LAGO_API_KEY` is `CHANGE_ME` in `.env.example`. |
 | AGENTS.md §5 — own DB, no cross-context FK | `70-billing.sql` creates its own role + database. **Every `REFERENCES` must target a table created in the same file.** `actor_id` is an opaque `VARCHAR(255)`, never an FK. `SqlBoundaryRules` fails the build otherwise. |
 | AGENTS.md §5 — own dedup copy | The billing DB carries its **own** `processed_messages` (contract-copy), not a shared one. |
 | AGENTS.md §4 — config vs data | Plans, prices, entitlements, switches are **rows**. Nothing commercial in yaml. |
@@ -68,7 +68,7 @@ CREATE  …/domain/exception/InsufficientCreditsException.java
 CREATE  …/src/test/java/com/krizaka/billing/domain/model/*Test.java   (one per record — ERR-103)
 MODIFY  pom.xml                                          (+ <module> next to krizaka-users-api)
 MODIFY  .env                                             (+ §6 blocks)
-MODIFY  exemple.env.txt                                  (+ §6 blocks, secrets = CHANGE_ME)
+MODIFY  .env.example                                  (+ §6 blocks, secrets = CHANGE_ME)
 MODIFY  infra/docker-compose.yml                         (+ Lago services, profiles: [billing])
 ```
 
@@ -205,10 +205,10 @@ Tests: one `*Test.java` per record (ERR-103), each asserting the **rejection** c
 constructor, not just the happy path. `EntitlementSnapshotTest` must assert the defensive copy
 (mutating the source map after construction does not affect the record).
 
-## §6 `.env` and `exemple.env.txt`
+## §6 `.env` and `.env.example`
 
 Append the two blocks of design §13.8, numbered to continue the existing sections. In
-`exemple.env.txt` every secret is `CHANGE_ME`; in `.env` you may set the dev-local values **except**
+`.env.example` every secret is `CHANGE_ME`; in `.env` you may set the dev-local values **except**
 `LAGO_API_KEY`, which does not exist until Lago has booted.
 
 Defaults are **off**: `BILLING_ENABLED=false`, `LAGO_ENABLED=false`. A fresh clone must run without

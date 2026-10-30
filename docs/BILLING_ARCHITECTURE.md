@@ -978,7 +978,7 @@ keys live in a table with `ON CONFLICT DO NOTHING` rather than in a file that is
 
 | Environment | `BILLING_ENABLED` | `billing.enforcement.mode` | Rationale |
 |:---|:---:|:---|:---|
-| Fresh clone / `orazaka dev` | `false` | — | A contributor must be able to run the stack without the billing service or Lago. **This is the default in `exemple.env.txt`.** |
+| Fresh clone / `orazaka dev` | `false` | — | A contributor must be able to run the stack without the billing service or Lago. **This is the default in `.env.example`.** |
 | Unit + integration tests | `false` | — | `@DynamicPropertySource` pins it off; no test spins a billing container it does not need |
 | Billing integration tests | `true` | `ENFORCING` | Testcontainers billing DB; the enforcement path is what these tests exist to cover |
 | Hermetic E2E (`orazaka test e2e`) | `true` | `DRY_RUN` by default; **one dedicated scenario flips `ENFORCING`** | The whole suite must not be re-costed, but the paywall path is the quality gate for phase 2 |
@@ -1134,7 +1134,7 @@ and are a complete, enforcing credit system** — the outbox simply has no consu
 No other service ever sees a Lago property. If `LAGO_*` appears in the conversation-service's yaml,
 the seam has leaked.
 
-`.env` additions (and `exemple.env.txt` with `CHANGE_ME` — **`LAGO_API_KEY` is a secret and is
+`.env` additions (and `.env.example` with `CHANGE_ME` — **`LAGO_API_KEY` is a secret and is
 generated in the Lago UI**, so it is never committed):
 
 Both files already number their sections, so these append as **15** and **16** — the numbers below
@@ -1299,7 +1299,7 @@ instructions live in [`.agent/workflows/implement_billing.md`](../.agent/workflo
 | create | `…/krizaka-billing-api/src/main/java/com/krizaka/billing/domain/exception/InsufficientCreditsException.java` |
 | create | one mirroring `*Test.java` per record (ERR-103) |
 | modify | `pom.xml` — register the module next to `krizaka-users-api` |
-| modify | `.env`, `exemple.env.txt` — §13.8 blocks 10 & 11 |
+| modify | `.env`, `.env.example` — §13.8 blocks 10 & 11 |
 | modify | `infra/docker-compose.yml` — §13.7 Lago services under `profiles: [billing]` + `lago_data` volume |
 
 Gate: `./mvnw -q -pl krizaka/krizaka-billing/krizaka-billing-api test` green; `orazaka stop --purge && orazaka start` recreates every database including `krizaka_billing_db`; `SqlBoundaryRules` green; default `orazaka start` still starts exactly four containers.
