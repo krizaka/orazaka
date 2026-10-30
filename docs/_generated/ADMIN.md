@@ -133,6 +133,9 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | DELETE | `/api/v1/models/{id}` | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | Updates an existing model definition in the catalog. |
 | GET | `/api/v1/models/admin/audit` | — |
+| GET | `/api/v1/models/admin/feature-cache-policies` | Every policy, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-cache-policies/{featureKey}` | Removes the policy a feature set for itself; the default row then applies. |
+| PUT | `/api/v1/models/admin/feature-cache-policies/{featureKey}` | Sets the policy of a feature (* is the default row). |
 | GET | `/api/v1/models/admin/feature-routes` | The feature routes, read only. |
 | GET | `/api/v1/models/admin/feature-structured-bounds` | Every bound, the default row first. |
 | DELETE | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | Removes the structured-output bound a feature set for itself; the default row then applies. |
