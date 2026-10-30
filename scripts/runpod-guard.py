@@ -192,7 +192,8 @@ def create_body(e, gpu_id):
         "cloud": "SECURE",
         "gpu": {"id": gpu_id, "count": 1},
         "dataCenterIds": [e["DC"]],
-        "mounts": {"network": [{"volumeId": e["VOLUME"], "path": "/models"}]},
+        # No volume (GPU_RUNPOD_VOLUME=none): the weights are fetched onto the container disk at each start (orazaka#508).
+        **({"mounts": {"network": [{"volumeId": e["VOLUME"], "path": "/models"}]}} if e.get("VOLUME") else {}),
         # A model kept on the host's own disk (`cache: scratch`: the I2V A14B, 115 GB) needs room: GPU_RUNPOD_DISK_GB.
         "disk": int(e.get("DISK_GB") or 60),
         "ports": ["22/tcp"],

@@ -2,7 +2,7 @@
 // answers the v2 routes (/v2/pods, /v2/pods/{id}, /v2/pods/{id}/action, /v2/network-volumes) plus the GraphQL balance.
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -186,4 +186,17 @@ test("batch plan: one clip per prompt, comments and blank lines dropped, ids sor
   assert.equal(t.put, "https://storage.bunnycdn.com/z/site/renders/2026-10-30-kites/r01.png");
   assert.equal(t.cdn, "https://cdn.example/site/renders/2026-10-30-kites/r01.png");
   assert.throws(() => bunnyTarget("../x", "r01", {}), /slug/);
+});
+
+test("without a volume the body mounts nothing and sizes the container disk (orazaka#508)", async () => {
+  const s = await stub();
+  const dir = mkdtempSync(join(tmpdir(), "rp-novol-"));
+  const boot = join(dir, "boot.sh"); writeFileSync(boot, "echo hi\n");
+  const body = join(dir, "body.json");
+  const env = { WORKER_REF: "w", PROFILE: "big", MAX_HOURS: "1", IDLE_MINUTES: "30", RELAY_URL: "u", RELAY_AUTH: "a", RABBIT_PASSWORD: "r", SERVICE_TOKEN: "t", BROKER_CA_B64: "c", RP_IMAGE: "img", DC: "CA-MTL-1", VOLUME: "", PUBKEY: "ssh-ed25519 AAA", BOOT: boot, DISK_GB: "100" };
+  assert.equal((await guard(s, ["body", body, "NVIDIA GeForce RTX 4090"], env)).code, 0);
+  const made = JSON.parse(readFileSync(body, "utf8"));
+  assert.equal(made.mounts, undefined);
+  assert.equal(made.disk, 100);
+  s.close();
 });

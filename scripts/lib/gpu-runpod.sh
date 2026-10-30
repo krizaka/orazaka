@@ -58,8 +58,10 @@ runpod_start() {
   local dc gpu_list; gpu_list="$RP_GPUS"
   [[ -z "${1:-}" ]] || gpu_list="$1"
   for dc in $RP_DCS; do
-    local volume; volume=$(rp_py volume-id "$RP_VOLUME" "$dc")
-    if [[ -z "$volume" ]]; then
+    local volume=""
+    # GPU_RUNPOD_VOLUME=none: no network volume (a monthly cost); the weights are downloaded to the container disk at each start.
+    [[ "$RP_VOLUME" == "none" ]] || volume=$(rp_py volume-id "$RP_VOLUME" "$dc")
+    if [[ -z "$volume" && "$RP_VOLUME" != "none" ]]; then
       # A volume pins its pods to one datacentre: it is created only when asked (GPU_RUNPOD_CREATE_VOLUME=1), never as a side effect.
       [[ -n "${GPU_RUNPOD_CREATE_VOLUME:-}" ]] || { say "  $dc: no models volume"; continue; }
       say "creating the models volume $RP_VOLUME (${RP_VOLUME_GB} GB in $dc, kept between pods)"
