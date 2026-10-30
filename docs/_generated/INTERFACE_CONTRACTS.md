@@ -56,11 +56,13 @@ generated: true
 - `PlatformMcpServerProvider`
 - `PlatformToolConfigProvider`
 - `PromptAssembly`
+- `PromptCachePolicy`
 - `ProviderChatClient`
 - `SemanticClassifierPort`
 - `SpeechSynthesis`
 - `StepModelRecorder`
 - `StepRouteProvider`
+- `StructuredOutputBounds`
 - `StructuredOutputClient`
 - `TestShaperPort`
 - `ToolAnswerCodec`
