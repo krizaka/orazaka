@@ -21,7 +21,7 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 |:---|:---|:---|
 | `/` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
 | `/audit` | `/audit` — the audit trail of account administration. | — |
-| `/billing` | The billing console. | Consommation · Clés des produits · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
+| `/billing` | The billing console. | Consommation · Clés des produits · Tarifs par modèle · Tarifs par capacité · Offres · Catalogue de prix · Packs métier · Portefeuilles |
 | `/engine` | — | — |
 | `/engine/tools` | — | — |
 | `/law` | `/law` — Law → Proposals (ADR-089 §8): the review queue and promotion of the rules from the law, the corpus, the demand. | — |
@@ -85,6 +85,7 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | GET | `/api/v1/billing/pricebook` | ADMIN | — |
 | POST | `/api/v1/billing/pricebook` | ADMIN | — |
 | POST | `/api/v1/billing/pricebook/preview` | ADMIN | — |
+| GET | `/api/v1/billing/prices/admin` | ADMIN | Every entry in force, internal ones included. |
 | DELETE | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | Ends an actor's subscription. |
 | GET | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | The subscription in force for an actor. |
 | POST | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | Moves an actor onto a plan — upgrade, downgrade or trial. |
