@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 // server) only when every container name and every published host port comes from the environment. The defaults are
 // the values the running stacks already use, so nothing changes for them.
 const compose = readFileSync(new URL("../../infra/docker-compose.yml", import.meta.url), "utf8");
-const template = readFileSync(new URL("../../exemple.env.txt", import.meta.url), "utf8");
+const template = readFileSync(new URL("../../.env.example", import.meta.url), "utf8");
 
 const TODAY = {
   POSTGRES_PORT: "5432", REDIS_PORT: "6379", RABBITMQ_PORT: "5672", RABBITMQ_MGMT_PORT: "15672", JAEGER_UI_PORT: "16686",
@@ -36,7 +36,7 @@ test("the env template names every variable, at today's value", () => {
   for (const [name, value] of Object.entries({ ...TODAY, COMPOSE_CONTAINER_PREFIX: "orazaka" })) {
     const line = new RegExp(`^${name}=(.*)$`, "m").exec(template);
     if (name.startsWith("LAGO_") && !line) continue; // Lago's ports are documented with Lago, when enabled
-    assert.ok(line, `${name} in exemple.env.txt`);
+    assert.ok(line, `${name} in .env.example`);
     assert.equal(line[1].trim(), value, name);
   }
 });

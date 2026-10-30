@@ -996,7 +996,7 @@ a valid recovery checkpoint. Commit `refactor(phase-N): …` locally, never push
 
 | Phase | Scope | Done when |
 |:---|:---|:---|
-| **0** | Contract + schema. `orazaka-studio-api`, `80-studio.sql`, `Capability.STUDIO`, `StudioPayload`, pom module, `.env`/`exemple.env.txt` keys | `orazaka start` boots with the new DB; `SqlBoundaryRules` green |
+| **0** | Contract + schema. `orazaka-studio-api`, `80-studio.sql`, `Capability.STUDIO`, `StudioPayload`, pom module, `.env`/`.env.example` keys | `orazaka start` boots with the new DB; `SqlBoundaryRules` green |
 | **1** | Catalogue read-only. Service skeleton :8096, `StudioController`, edge route, seeds, UI `/studios` grid + detail (no install) | A user can browse two seeded Studios; locked state renders |
 | **2** | Install + config. `StudioInstallationController`, `EntitlementProvider` gate, `InstallDialog`, *Mes Studios* | Install → configure → uninstall round-trips; `PAID` returns `409 {packKey}` |
 | **3** | Blueprint engine + run. `orazaka-business/usecases/studio`, `StepExecutionClient`, saga listener, hold/settle, `RunForm`/`RunTimeline` over the existing SSE | `trade-showcase` (chat + image only, no new capability) runs end-to-end |
@@ -1078,7 +1078,7 @@ Exact paths, in build order. Every Java file gets a mirroring test file [ERR-103
 infra/initdb/80-studio.sql                                                   (new)
 infra/initdb/70-billing.sql                                                  (edit: seed realestate-studio package + entitlement)
 pom.xml                                                                      (edit: 2 modules)
-exemple.env.txt / .env                                                       (edit: STUDIO_PORT, STUDIO_INTERNAL_URL, STUDIO_DB_*)
+.env.example / .env                                                       (edit: STUDIO_PORT, STUDIO_INTERNAL_URL, STUDIO_DB_*)
 orazaka-apps/services/orazaka-studio/orazaka-studio-api/pom.xml
   src/main/java/com/orazaka/studio/domain/model/{Studio,StudioPricing,StudioStatus,
       Blueprint,BlueprintStatus,BlueprintStep,StepKind,ErrorPolicy,BlueprintOutput,

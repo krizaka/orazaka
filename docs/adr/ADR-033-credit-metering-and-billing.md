@@ -198,7 +198,7 @@ financial records alongside disposable dev data. Host ports are remapped (API 30
   templates are tagged with a `pack_key` and the orchestration `CALL` fee is metered (at zero
   credits) from day one.
 - **A fresh clone runs with billing off.** `BILLING_ENABLED=false` and `LAGO_ENABLED=false` are the
-  defaults in `exemple.env.txt`; unit and integration tests pin the wiring switch off via
+  defaults in `.env.example`; unit and integration tests pin the wiring switch off via
   `@DynamicPropertySource`. A billing system that must be running for the chat E2E to pass is a
   billing system that blocks every contributor, so enforcement is enabled only where it is the
   subject under test.
