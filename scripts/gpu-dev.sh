@@ -3,7 +3,8 @@
 # Orazaka dev — the GPU, by the hour (docs/DEPLOY_DEV.md § GPU, ADR-077).
 #
 #   scripts/gpu-dev.sh start big|small   create the GPU droplet: images (FLUX.2 [klein] 4B) + 9:16 video (Wan)
-#   scripts/gpu-dev.sh runpod start|stop|status|logs   the same worker on RunPod (an H100/A100 pod by the hour, scripts/lib/gpu-runpod.sh)
+#   scripts/gpu-dev.sh runpod start|stop|status|count|logs   the same worker on RunPod (an H100/A100 pod by the hour, API v2, scripts/lib/gpu-runpod.sh)
+#   scripts/gpu-dev.sh runpod batch prompts.txt --cap 1   N prompts → images → Bunny, $ cap, the pod terminated in a trap, then « pods: 0 running »
 #   scripts/gpu-dev.sh stop              destroy it (and any RunPod pod) — always destroy, never power off (a stopped droplet bills)
 #   scripts/gpu-dev.sh status            what runs, since when, what it has cost so far
 #   scripts/gpu-dev.sh cost              every session of the ledger: hours × rate, and the total
