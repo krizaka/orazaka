@@ -1401,7 +1401,7 @@ capability rows, a price, catalogue entries — and changes no code.
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
  "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice: technical tools validated by the client's legal counsel.",
- "version": "1.11.0",
+ "version": "1.12.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1526,9 +1526,13 @@ capability rows, a price, catalogue entries — and changes no code.
     {
      "key": "ruleset",
      "title": "Corpus nommé"
+    },
+    {
+     "key": "lecture",
+     "title": "Lecture du droit proche"
     }
    ],
-   "steps": 6,
+   "steps": 7,
    "stepKinds": [
     "CAPABILITY"
    ],
@@ -1958,7 +1962,7 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 | `business-brief` | 1.0.0 | `invitation-writer` |
 | `code-contributor` | 1.1.0 | `code-issue-to-pr` · `code-read-write` |
 | `data-analytics` | 1.6.0 | `data-driven-ui` · `video-understanding` · `creator-suggestions` |
-| `document-validation` | 1.11.0 | `document-authenticity` · `compliance-check` |
+| `document-validation` | 1.12.0 | `document-authenticity` · `compliance-check` |
 | `echo-toolkit` | 1.2.0 | `echo-reverse` |
 | `identity-document-check` | 1.0.0 | `identity-document-check` |
 | `media-safety` | 1.2.0 | `media-safety` |
