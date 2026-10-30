@@ -34,3 +34,11 @@ test("finds the reports of every module and ignores surefire's", () => {
   writeFileSync(join(dir, "svc", "target", "surefire-reports", "TEST-a.UnitIT.xml"), xml("a.UnitIT", 1, 1));
   assert.deepEqual(load(dir).map((r) => r.name), ["a.RunIT"]);
 });
+
+test("a component with no integration test fails unless it is declared, and a declared one that gains a test is stale", () => {
+  const declared = [{ component: "orazaka-contracts", reason: "libraries" }];
+  assert.equal(judge("orazaka-contracts", [], [], []).nothingRan, true);
+  assert.equal(judge("orazaka-contracts", [], [], declared).nothingRan, false);
+  assert.equal(judge("orazaka-packs", [], [], declared).nothingRan, true);
+  assert.equal(judge("orazaka-contracts", [readReport(xml("a.FooIT", 1, 0))], [], declared).staleExemption?.component, "orazaka-contracts");
+});
