@@ -83,6 +83,9 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/models/{id}` | ADMIN | ModelController | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | ADMIN | ModelController | Updates an existing model definition in the catalog. |
 | GET | `/api/v1/models/admin/audit` | ADMIN | OperatorAuditController |  |
+| GET | `/api/v1/models/admin/feature-cache-policies` | ADMIN | FeatureCachePolicyAdminController | Every policy, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-cache-policies/{featureKey}` | ADMIN | FeatureCachePolicyAdminController | Removes the policy a feature set for itself; the default row then applies. |
+| PUT | `/api/v1/models/admin/feature-cache-policies/{featureKey}` | ADMIN | FeatureCachePolicyAdminController | Sets the policy of a feature (* is the default row). |
 | GET | `/api/v1/models/admin/feature-routes` | ADMIN | FeatureAdminController | The feature routes, read only. |
 | GET | `/api/v1/models/admin/feature-structured-bounds` | ADMIN | FeatureStructuredBoundAdminController | Every bound, the default row first. |
 | DELETE | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | ADMIN | FeatureStructuredBoundAdminController | Removes the structured-output bound a feature set for itself; the default row then applies. |
