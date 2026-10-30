@@ -49,7 +49,7 @@ jobs:
   changes:
     permissions:
       contents: read
-    uses: krizaka/.github/.github/workflows/changes.yml@3f78a2d25b154a21cabbc5d57b8278f6b1ddf0f1 # main
+    uses: krizaka/.github/.github/workflows/changes.yml@58d71a2cacfa1563a74aab117bc6a1db75821b87 # main
     with:
       ignore: ${{ inputs.ignore }}
 
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "22"
-      - uses: krizaka/.github/actions/dup-check@3f78a2d25b154a21cabbc5d57b8278f6b1ddf0f1 # v1.5.0
+      - uses: krizaka/.github/actions/dup-check@58d71a2cacfa1563a74aab117bc6a1db75821b87 # v1.5.0
 
   verify:
     needs: changes
@@ -117,7 +117,7 @@ jobs:
           server-password: GITHUB_TOKEN
 
       # A Krizaka release waits for a human to press Publish on Central; development builds resolve it from GitHub Packages.
-      - uses: krizaka/.github/actions/maven-github-packages@3f78a2d25b154a21cabbc5d57b8278f6b1ddf0f1 # main
+      - uses: krizaka/.github/actions/maven-github-packages@58d71a2cacfa1563a74aab117bc6a1db75821b87 # main
         with:
           token: ${{ github.token }}
 
@@ -151,7 +151,7 @@ jobs:
 
       - name: SonarCloud — analysis with the coverage of the verification
         if: ${{ inputs.sonar }}
-        uses: krizaka/.github/actions/sonar-scan@3f78a2d25b154a21cabbc5d57b8278f6b1ddf0f1 # main
+        uses: krizaka/.github/actions/sonar-scan@58d71a2cacfa1563a74aab117bc6a1db75821b87 # main
         with:
           token: ${{ secrets.SONAR_TOKEN }}
           project-base-dir: ${{ steps.where.outputs.dir }}
