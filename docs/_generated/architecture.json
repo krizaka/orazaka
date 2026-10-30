@@ -8549,6 +8549,10 @@
           {
             "name": "<ref>",
             "desc": "The run name or id"
+          },
+          {
+            "name": "<ref>",
+            "desc": "The run name or id"
           }
         ],
         "aliases": [],
@@ -8561,6 +8565,105 @@
           {
             "flag": "--json",
             "desc": "Output the run as JSON",
+            "default": null
+          },
+          {
+            "flag": "--json",
+            "desc": "Output the result as JSON",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "runs send",
+        "top": "runs",
+        "isTop": false,
+        "description": "Answer a run that is waiting for input: the message becomes the output of the step it waits on",
+        "args": [
+          {
+            "name": "<ref>",
+            "desc": "The run name or id"
+          },
+          {
+            "name": "<message>",
+            "desc": "What to say to the run"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--json",
+            "desc": "Output the run as JSON",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "runs deny",
+        "top": "runs",
+        "isTop": false,
+        "description": "Refuse the approval a run is waiting on: the run stops without the step and its hold is released",
+        "args": [
+          {
+            "name": "<ref>",
+            "desc": "The run name or id"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--reason <text>",
+            "desc": "Why the approval is refused",
+            "default": null
+          },
+          {
+            "flag": "--json",
+            "desc": "Output the run as JSON",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "runs wait",
+        "top": "runs",
+        "isTop": false,
+        "description": "Follow a run until it ends or needs your approval",
+        "args": [
+          {
+            "name": "<ref>",
+            "desc": "The run name or id"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--notify",
+            "desc": "Send a desktop notification when it ends or needs approval",
+            "default": null
+          },
+          {
+            "flag": "--json",
+            "desc": "Output the final row as JSON",
+            "default": null
+          }
+        ]
+      },
+      {
+        "name": "runs resume",
+        "top": "runs",
+        "isTop": false,
+        "description": "Start a new run from a step of a finished one; the steps before it keep their outputs",
+        "args": [
+          {
+            "name": "<ref>",
+            "desc": "The run name or id"
+          }
+        ],
+        "aliases": [],
+        "options": [
+          {
+            "flag": "--json",
+            "desc": "Output the new run as JSON",
             "default": null
           }
         ]
@@ -8765,6 +8868,16 @@
           {
             "flag": "-s, --studio",
             "desc": "The target is a Studio key: a toolkit Studio (media, art direction) has no installation",
+            "default": null
+          },
+          {
+            "flag": "--background",
+            "desc": "Print the run id and return at once; follow it with `orazaka runs ls` or `runs wait`",
+            "default": null
+          },
+          {
+            "flag": "--notify",
+            "desc": "Send a desktop notification when the run ends or needs your approval",
             "default": null
           }
         ]

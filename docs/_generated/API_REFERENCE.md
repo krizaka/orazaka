@@ -304,8 +304,10 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/api/v1/studios/runs/{runId}` | authenticated | StudioRunController | One run with its per-step states and outputs. |
 | POST | `/api/v1/studios/runs/{runId}/approve` | authenticated | StudioRunController | Resolves an approval step, resuming the run. |
 | POST | `/api/v1/studios/runs/{runId}/cancel` | authenticated | StudioRunController | Cancels a run and releases its hold. |
+| POST | `/api/v1/studios/runs/{runId}/deny` | authenticated | StudioRunController | Refuses the approval a run waits on: the run stops without the step and its hold is released (orazaka-studio#115). |
 | GET | `/api/v1/studios/runs/{runId}/events` | authenticated | StudioRunController | Follows a run as Server-Sent Events instead of polling it (orazaka#189, ADR-083). |
 | POST | `/api/v1/studios/runs/{runId}/resume` | authenticated | StudioRunController | Starts a new run from a step of a finished one (orazaka-studio#63): the steps before it keep their recorded outputs and only the re-run steps are billed. |
+| POST | `/api/v1/studios/runs/{runId}/send` | authenticated | StudioRunController | Answers a run that waits for input: the message is the parked step's output and the run goes on (orazaka-studio#115). |
 | GET | `/api/v1/studios/runs/events` | authenticated | StudioRunController | Follows every run of the caller on one connection (the per-key stream of orazaka#189): event: run whenever a run in flight changes, event: done when one ends, each carrying the run as GET /runs/runId would. |
 | GET | `/api/v1/studios/webhooks` | authenticated | WebhookEndpointController | The caller's endpoints (no secrets). |
 | POST | `/api/v1/studios/webhooks` | authenticated | WebhookEndpointController | Creates an endpoint. |
