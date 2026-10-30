@@ -226,3 +226,9 @@ test("runpod bootstrap (cinema, ADR-080): the profile's image engine is served o
   assert.match(lib, /HF_TOKEN="\$\(secret AI_HUGGINGFACE_TOKEN/); // read from the secrets file, never an argument
   assert.match(lib, /worker_ref="\$\{GPU_WORKER_REF:-/);
 });
+
+test("a RunPod batch runs on a remote GPU: it never takes a local heavy-lock slot (orazaka#508)", () => {
+  for (const file of ["scripts/gpu-dev.sh", "scripts/lib/gpu-runpod.sh", "scripts/runpod-batch.mjs"]) {
+    assert.doesNotMatch(read(file), /heavy-lock|HEAVY_SLOTS/, `${file} must not take the Mac's slots`);
+  }
+});
