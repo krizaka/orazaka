@@ -145,9 +145,10 @@ test("runpod: the key comes from the secrets file and is never echoed, a pod is 
   const script = read("scripts/lib/gpu-runpod.sh");
   assert.match(script, /secret AI_GPU_RUNPOD_API_KEY/);
   assert.doesNotMatch(script, /echo[^\n]*rp_key|printf[^\n]*rp_key|say[^\n]*\$\(rp_key\)/);
-  assert.match(script, /rp_call DELETE "\/pods\/\$id"/);
-  assert.match(script, /"volumeMountPath": "\/models"/);
-  assert.match(script, /"networkVolumeId": e\["VOLUME"\]/);
+  assert.match(script, /rp_py terminate "\$id"/); // v2: POST /pods/{id}/action terminate (orazaka#508)
+  const guard = read("scripts/runpod-guard.py");
+  assert.match(guard, /"mounts": \{"network": \[\{"volumeId": e\["VOLUME"\], "path": "\/models"\}\]\}/);
+  assert.doesNotMatch(script + guard, /rest\.runpod\.io|\/v1\b/); // the v1 API is gone with its sunset
   assert.match(script, /GPU_RUNPOD_MIN_BALANCE/); // a budget guard before any pod
   assert.match(script, /ledger_add .*rp-/); // the same ledger as the droplets
   // gpu-dev.sh stop destroys RunPod pods too, even when no droplet runs
@@ -159,7 +160,7 @@ test("runpod: the key comes from the secrets file and is never echoed, a pod is 
 test("runpod bootstrap: a watchdog first, the worker built from its public repository, weights on the volume, the tunnel dials out", () => {
   const boot = read("infra/gpu/runpod-bootstrap.sh");
   assert.ok(boot.indexOf("orazaka-watchdog armed") < 0 && boot.indexOf("watchdog armed") < boot.indexOf("building the worker runtime"));
-  assert.match(boot, /rest\.runpod\.io\/v1\/pods\/\$\{RUNPOD_POD_ID\}/); // the pod ends itself
+  assert.match(boot, /api\.runpod\.io\/v2\/pods\/\$\{RUNPOD_POD_ID\}/); // the pod ends itself
   assert.match(boot, /git clone -q https:\/\/github\.com\/krizaka\/orazaka-worker-media\.git/);
   assert.match(boot, /MEDIA_MODELS_DIR=\/models/);
   assert.match(boot, /127\.0\.0\.1:15671:broker-dev\.orazaka\.com:5671/);
@@ -196,7 +197,7 @@ test("runpod watchdog: the pod destroys ITSELF — through the API with the pod'
   const run = (env) => execFileSync("bash", [script, "--destroy", "idle for 31 min"], { encoding: "utf8", env: { PATH: `${bin}:/usr/bin:/bin`, ...env } });
   const withKey = run({ RUNPOD_POD_ID: "pod123", RUNPOD_API_KEY: "k-test" });
   assert.match(withKey, /destroyed through the API \(204\)/);
-  assert.match(readFileSync(calls, "utf8"), /-X DELETE .*Bearer k-test.*rest\.runpod\.io\/v1\/pods\/pod123/);
+  assert.match(readFileSync(calls, "utf8"), /-X DELETE .*Bearer k-test.*api\.runpod\.io\/v2\/pods\/pod123/);
   // no key in the environment: the REST call is skipped, runpodctl (authenticated by the pod) removes it
   writeFileSync(calls, "");
   const noKey = run({ RUNPOD_POD_ID: "pod123" });
@@ -221,7 +222,13 @@ test("runpod bootstrap (cinema, ADR-080): the profile's image engine is served o
   assert.match(boot, /get\('speech'\)/);
   assert.match(boot, /MEDIA_FONT_FILE="\$FONT"/); // the Krizaka type for titles
   const lib = read("scripts/lib/gpu-runpod.sh");
-  assert.match(lib, /"containerDiskInGb": int\(e\.get\("DISK_GB"\) or 60\)/);
+  assert.match(read("scripts/runpod-guard.py"), /"disk": int\(e\.get\("DISK_GB"\) or 60\)/);
   assert.match(lib, /HF_TOKEN="\$\(secret AI_HUGGINGFACE_TOKEN/); // read from the secrets file, never an argument
   assert.match(lib, /worker_ref="\$\{GPU_WORKER_REF:-/);
+});
+
+test("a RunPod batch runs on a remote GPU: it never takes a local heavy-lock slot (orazaka#508)", () => {
+  for (const file of ["scripts/gpu-dev.sh", "scripts/lib/gpu-runpod.sh", "scripts/runpod-batch.mjs"]) {
+    assert.doesNotMatch(read(file), /heavy-lock|HEAVY_SLOTS/, `${file} must not take the Mac's slots`);
+  }
 });

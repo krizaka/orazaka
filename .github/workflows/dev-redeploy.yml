@@ -40,6 +40,8 @@ jobs:
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         if: steps.configured.outputs.ok == 'true'
+        with:
+          persist-credentials: false
       - uses: digitalocean/action-doctl@3cb3953159719656269e044e0e24ca16dd2a690f # v2
         if: steps.configured.outputs.ok == 'true'
         with:
@@ -47,3 +49,6 @@ jobs:
       - name: Rebuild core when a repository moved
         if: steps.configured.outputs.ok == 'true'
         run: node scripts/dev-redeploy.mjs
+      - name: A rollback never goes unnoticed (the active deployment must not be an automated rollback)
+        if: steps.configured.outputs.ok == 'true'
+        run: node scripts/dev-redeploy.mjs --check

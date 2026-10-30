@@ -26,8 +26,8 @@
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { devSecrets, envFileFromArgs, readEnvFile } from "./lib/dev-secrets.mjs";
@@ -342,7 +342,9 @@ const ACCOUNTS = [
  */
 export function personaAccount(name = "eric") {
   const personas = {
-    eric: { username: "Eric", email: "eric.morel@example.com", secret: "PERSONA" },
+    // `studios`: what the operator grants the demo persona (studio_entitlement_grant), so a recording or a check runs the
+    // Studios the product shows (« not entitled to studio compliance-check » otherwise, orazaka-packs#171). Seed = deployed.
+    eric: { username: "Eric", email: "eric.morel@example.com", secret: "PERSONA", studios: ["compliance-check"] },
     mira: { username: "Mira", email: "mira.tremblay@orazaka.test", secret: "MIRA" },
     // The company itself as a customer (Oussama, 2026-10-22): Krizaka is an SME, it uses Orazaka the way an SME would —
     // a plain user on the free plan, in French — to see its own products from the inside. Not a demo persona, not a
@@ -354,18 +356,26 @@ export function personaAccount(name = "eric") {
   return { key: "persona", ...p, tier: "free", roles: ["ROLE_USER"] };
 }
 
+/** The id of a persona's account, found by e-mail (the display name may have been changed by `names`: « Éric »). */
+export function personaActorSql(persona) {
+  return `SELECT id FROM users WHERE lower(email) = lower('${String(persona.email).replace(/'/g, "''")}') LIMIT 1`;
+}
+
 export function seedSql(accounts) {
   const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
   const rows = accounts.map(
     (a) =>
-      `INSERT INTO users (id, username, password_hash, email, enabled, preferences, rate_limit_tier)
-       VALUES (gen_random_uuid()::text, ${q(a.username)}, ${q(a.hash)}, ${q(a.email)}, true, ${q(JSON.stringify({ language: a.language === "fr" ? "fr" : "en" }))}, ${q(a.tier)})
-       ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash, enabled = true,
+      `UPDATE users SET ${a.hash ? `password_hash = ${q(a.hash)}, ` : ""}enabled = true, rate_limit_tier = ${q(a.tier)}
+         WHERE lower(email) = lower(${q(a.email)});
+       INSERT INTO users (id, username, password_hash, email, enabled, preferences, rate_limit_tier)
+       SELECT gen_random_uuid()::text, ${q(a.username)}, ${q(a.hash ?? "!")}, ${q(a.email)}, true, ${q(JSON.stringify({ language: a.language === "fr" ? "fr" : "en" }))}, ${q(a.tier)}
+         WHERE NOT EXISTS (SELECT 1 FROM users WHERE lower(email) = lower(${q(a.email)}))
+       ON CONFLICT (username) DO UPDATE SET ${a.hash ? "password_hash = EXCLUDED.password_hash, " : ""}enabled = true,
          email = EXCLUDED.email, rate_limit_tier = EXCLUDED.rate_limit_tier;
        ${a.roles
          .map(
            (r) => `INSERT INTO authorities (user_id, authority_name)
-       SELECT id, ${q(r)} FROM users WHERE username = ${q(a.username)} ON CONFLICT ON CONSTRAINT unique_user_authority DO NOTHING;`,
+       SELECT id, ${q(r)} FROM users WHERE lower(email) = lower(${q(a.email)}) ON CONFLICT ON CONSTRAINT unique_user_authority DO NOTHING;`,
          )
          .join("\n")}`,
   );
@@ -388,14 +398,52 @@ function seed() {
   console.log(`seeded ${accounts.map((a) => a.email).join(", ")} — credentials stored in ${ENV_FILE ?? "@dev"} (ORAZAKA_USER_*, ORAZAKA_ADMIN_*), never printed`);
 }
 
-/** Eric on dev: created or refreshed (a re-run gives him a new password), the credentials stored in @dev only. */
+/**
+ * The password of a persona across re-runs: the secret is the source of truth, so a re-run never changes it (the sign-in
+ * smoke's repository secrets and the recordings' E2E secrets copy it). A new password is generated only when no secret is
+ * stored; the hash in the database follows the secret only when it is absent or does not match it.
+ * @param {{ stored: string, hash: string, matches: (password: string, hash: string) => boolean, generate: () => string }} state
+ * @returns {{ password: string, setHash: boolean, storeSecret: boolean }}
+ */
+export function planPersonaPassword({ stored, hash, matches, generate }) {
+  const password = stored || generate();
+  return { password, setHash: !hash || !matches(password, hash), storeSecret: !stored };
+}
+
+/** Does `password` match the bcrypt `hash`? (htpasswd -v on a private temporary file, the password on stdin). */
+function bcryptMatches(secret, hash) {
+  const dir = mkdtempSync(join(tmpdir(), "pw-"));
+  try {
+    const file = join(dir, "h");
+    writeFileSync(file, `u:${hash}\n`, { mode: 0o600 });
+    return spawnSync("htpasswd", ["-vi", file, "u"], { input: secret, encoding: "utf8" }).status === 0;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** The stored value of a key in @dev (empty when absent); the value stays in memory, never printed. */
+function storedSecret(key) {
+  if (ENV_FILE) return (existsSync(ENV_FILE) ? readEnvFile(readFileSync(ENV_FILE, "utf8"))[key] : undefined) ?? "";
+  const r = spawnSync(join(homedir(), ".krizaka-worktrees/tools/secret.sh"), ["@dev", key], { encoding: "utf8" });
+  return r.status === 0 ? r.stdout.trim() : "";
+}
+
+/** Eric on dev: created or completed, idempotent — a re-run keeps his password (see planPersonaPassword), the credentials stored in @dev only. */
 function seedPersona(name) {
   const env = secrets();
   const persona = personaAccount(name);
-  const pw = password();
-  psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], seedSql([{ ...persona, hash: bcrypt(pw) }]));
+  const hashNow = psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB",
+    ["-t", "-A", "-c", `SELECT password_hash FROM users WHERE lower(email) = lower('${String(persona.email).replace(/'/g, "''")}') LIMIT 1`]).trim();
+  const plan = planPersonaPassword({ stored: storedSecret(`APP_QA_ORAZAKA_${persona.secret}_PASSWORD`), hash: hashNow, matches: bcryptMatches, generate: password });
+  psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB", [], seedSql([{ ...persona, hash: plan.setHash ? bcrypt(plan.password) : undefined }]));
   storeSecret(`APP_QA_ORAZAKA_${persona.secret}_EMAIL`, persona.email);
-  storeSecret(`APP_QA_ORAZAKA_${persona.secret}_PASSWORD`, pw);
+  if (plan.storeSecret) storeSecret(`APP_QA_ORAZAKA_${persona.secret}_PASSWORD`, plan.password);
+  if (persona.studios?.length) {
+    const actorId = psql(env, "krizaka_users_db", "krizaka_users_db", "DATABASE_PASSWORD_KRIZAKA_USERS_DB",
+      ["-t", "-A", "-c", personaActorSql(persona)]).trim();
+    psql(env, "orazaka_studio_db", "orazaka_studio_db", "DATABASE_PASSWORD_ORAZAKA_STUDIO_DB", [], grantSql(actorId, persona.studios, `persona ${persona.username}`));
+  }
   console.log(`seeded the persona ${persona.username} (${persona.email}) — credentials stored in @dev (APP_QA_ORAZAKA_${persona.secret}_*), never printed`);
 }
 

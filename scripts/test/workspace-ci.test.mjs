@@ -21,3 +21,10 @@ test("no bare -DskipTests is left in the workspace script", () => {
     .filter((l) => l.includes("-DskipTests") && !l.includes("const SKIP_TESTS"));
   assert.deepEqual(bare, []);
 });
+
+test("every npm member with a format:check script is checked by the workspace CI (krizaka/.github#427)", () => {
+  assert.match(source, /function formatCheck\(target\)/);
+  assert.match(source, /scripts\?\.\["format:check"\]/);
+  const calls = source.split("\n").filter((l) => l.trim() === "formatCheck(target);");
+  assert.equal(calls.length, 2, "the pnpm member and the npm members both run it");
+});

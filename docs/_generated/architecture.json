@@ -731,6 +731,7 @@
         "outbound": [
           "AccessAudit",
           "AudioGeneratorClient",
+          "AudioTranscriber",
           "CapabilityProvider",
           "ChatGeneratorClient",
           "ChatInvocation",
@@ -745,6 +746,7 @@
           "ConsentRegistry",
           "ControlVerdictRecorder",
           "ConversationMemory",
+          "DomainEventPublisher",
           "EmbeddingClient",
           "ExternalCheckConnector",
           "FeatureModelRoutes",
@@ -754,18 +756,22 @@
           "McpOrchestrator",
           "ModelCatalogProvider",
           "ModelEndpointResolver",
+          "OutputJudge",
           "PipelineConfigProvider",
           "PlatformMcpServerProvider",
           "PlatformToolConfigProvider",
           "PromptAssembly",
+          "PromptCachePolicy",
           "ProviderChatClient",
           "SemanticClassifierPort",
           "SpeechSynthesis",
           "StepModelRecorder",
           "StepRouteProvider",
+          "StructuredOutputBounds",
           "StructuredOutputClient",
           "TestShaperPort",
           "ToolAnswerCodec",
+          "ToolLoopBounds",
           "ToolOptions",
           "ToolPermissionProvider",
           "ToolRegistry",
@@ -793,9 +799,12 @@
           "ApiKeyService",
           "IdentityReconciliationService",
           "IdentityService",
+          "LoginLockoutService",
           "OrganizationService",
+          "PasswordPolicyService",
           "PasswordRecoveryService",
           "RateLimitProvider",
+          "SocialConnectionService",
           "TokenService",
           "UserProfileProvider"
         ],
@@ -803,11 +812,15 @@
           "AdminUserRepositoryPort",
           "ApiKeyRepositoryPort",
           "AuthorityRepositoryPort",
+          "BreachedPasswordPort",
           "CryptographyPort",
+          "LockoutRepositoryPort",
           "OAuth2ProviderVerifier",
           "OrganizationRepositoryPort",
           "PasswordEventPublisher",
           "PasswordResetTokenRepositoryPort",
+          "SecretSealPort",
+          "SocialConnectionRepositoryPort",
           "UserCredentialRepositoryPort",
           "UserEventPublisher",
           "UserInterceptionRepositoryPort",
@@ -848,7 +861,10 @@
           "CatalogModelManager",
           "ChatMemoryPersistenceProvider",
           "ChatSessionPersistenceProvider",
+          "FeatureCachePolicyManager",
           "FeatureRouteManager",
+          "FeatureStructuredBoundManager",
+          "FeatureToolBoundManager",
           "JobPersistenceProvider",
           "OutboxStore",
           "PipelineConfigManager",
@@ -1309,6 +1325,10 @@
     {
       "from": "krizaka-webhooks",
       "to": "krizaka-web"
+    },
+    {
+      "from": "orazaka-adapter-spring-ai",
+      "to": "orazaka-business"
     },
     {
       "from": "orazaka-adapter-spring-ai",
@@ -1831,6 +1851,12 @@
       "to": "krizaka-users-service",
       "kind": "http",
       "via": "route /api/v1/interceptions"
+    },
+    {
+      "from": "orazaka-edge",
+      "to": "krizaka-users-service",
+      "kind": "http",
+      "via": "route /api/v1/organizations"
     },
     {
       "from": "orazaka-edge",
@@ -2461,6 +2487,11 @@
       {
         "feature": "orazaka.core.media.speech",
         "handler": "speech.synthesize",
+        "routingKey": "job.text.process"
+      },
+      {
+        "feature": "orazaka.core.research.grounded",
+        "handler": "research.grounded",
         "routingKey": "job.text.process"
       },
       {
@@ -4486,7 +4517,7 @@
     {
       "key": "code-contributor",
       "dir": "code-contributor",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tier": "DATA",
       "kind": null,
       "distribution": "CLOUD",
@@ -4541,26 +4572,18 @@
           "estimatedCredits": 40,
           "steps": 1,
           "stepKinds": [
-            "CAPABILITY"
+            "SESSION"
           ],
           "inputs": [
             {
-              "key": "messages",
-              "title": "Messages"
-            },
-            {
-              "key": "tools",
-              "title": "Outils"
+              "key": "task",
+              "title": "Tâche"
             }
           ],
           "outputs": [
             {
-              "key": "text",
+              "key": "closedBy",
               "type": "TEXT"
-            },
-            {
-              "key": "calls",
-              "type": "JSON"
             }
           ],
           "text": {
@@ -4585,26 +4608,18 @@
           "estimatedCredits": 40,
           "steps": 1,
           "stepKinds": [
-            "CAPABILITY"
+            "SESSION"
           ],
           "inputs": [
             {
-              "key": "messages",
-              "title": "Messages"
-            },
-            {
-              "key": "tools",
-              "title": "Outils"
+              "key": "task",
+              "title": "Tâche"
             }
           ],
           "outputs": [
             {
-              "key": "text",
+              "key": "closedBy",
               "type": "TEXT"
-            },
-            {
-              "key": "calls",
-              "type": "JSON"
             }
           ],
           "text": {
@@ -6773,6 +6788,28 @@
       "licence": {
         "name": "Apache-2.0",
         "url": "https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "flux-1-schnell",
+      "name": "FLUX.1 [schnell] (Q8_0)",
+      "vendor": "Black Forest Labs",
+      "family": "FLUX.1 schnell",
+      "category": "image",
+      "capabilities": [
+        "image"
+      ],
+      "runsOn": "local",
+      "runtime": "stable-diffusion.cpp · CUDA (24 GB)",
+      "provider": "localai-image",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell"
       },
       "commercialUse": "yes",
       "contextWindow": null,

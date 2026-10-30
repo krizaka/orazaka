@@ -54,7 +54,8 @@ export function stripComments(sql) {
 export function statements(sql) {
   const out = [];
   let cur = "";
-  const src = stripComments(sql);
+  // psql meta-commands (`\c orazaka_db`) end at the line, not at a `;`: left in, they glue to the next statement
+  const src = stripComments(sql).replace(/^[ \t]*\\.*$/gm, "");
   for (let i = 0; i < src.length; ) {
     const c = src[i];
     if (c === "'") {

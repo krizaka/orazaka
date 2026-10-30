@@ -57,7 +57,7 @@ RUN echo "core build ${CORE_REBUILD}" \
     ./mvnw -B -ntp -q install \
       -DskipTests -DskipITs=true -Dspotless.check.skip=true -Dexec.skip=true \
       -Dskip.npm=true -Dskip.installnodenpm=true \
-      -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dgpg.skip=true \
+      -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dgpg.skip=true -Dkrizaka.quality.phase=none \
       -pl orazaka-apps/services/orazaka-edge,krizaka/krizaka-users/krizaka-users-service,krizaka/krizaka-billing/krizaka-billing-service,orazaka-apps/services/orazaka-conversation-service,orazaka-apps/services/orazaka-studio/orazaka-studio-service,orazaka-apps/services/orazaka-job-service,orazaka-apps/services/orazaka-knowledge-service,orazaka-apps/services/orazaka-automation-service \
       -am \
  && mkdir -p /out \
