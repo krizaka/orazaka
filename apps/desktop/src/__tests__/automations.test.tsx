@@ -1,5 +1,6 @@
 import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createQueryClient, QueryClientProvider } from "@krizaka/query";
 import { ThemeProvider } from "@krizaka/ui/theme";
 import type { Overview, Run, Snapshot } from "../lib/api";
 
@@ -50,7 +51,9 @@ const run: Run = {
 let overview: Overview;
 
 const wrap = (ui: React.ReactNode) => (
-  <ThemeProvider defaultMode="dark"><I18nProvider locale="en">{ui}</I18nProvider></ThemeProvider>
+  <QueryClientProvider client={createQueryClient({ maxRetries: 0 })}>
+    <ThemeProvider defaultMode="dark"><I18nProvider locale="en">{ui}</I18nProvider></ThemeProvider>
+  </QueryClientProvider>
 );
 
 beforeEach(() => {

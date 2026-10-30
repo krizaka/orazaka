@@ -25,11 +25,11 @@ jobs:
   # tests replay, the workspace manifest or this workflow change — and always on the nightly, dispatch and on every
   # other event (krizaka/.github changes.yml fails open). The docs freshness gate and the workspace script tests always run.
   maven-changes:
-    uses: krizaka/.github/.github/workflows/changes.yml@ccd224612f5bb9db815335654f359a595a597fbb # main
+    uses: krizaka/.github/.github/workflows/changes.yml@3f78a2d25b154a21cabbc5d57b8278f6b1ddf0f1 # main
     with:
       relevant: '^(pom\.xml|\.mvn/|mvnw(\.cmd)?$|orazaka-end2end/|infra/(initdb|migrations|users|brokers-infra|docker-compose)|orazaka\.workspace\.json|scripts/workspace\.mjs|\.github/workflows/ci\.yml$)'
   ui-changes:
-    uses: krizaka/.github/.github/workflows/changes.yml@ccd224612f5bb9db815335654f359a595a597fbb # main
+    uses: krizaka/.github/.github/workflows/changes.yml@3f78a2d25b154a21cabbc5d57b8278f6b1ddf0f1 # main
     with:
       relevant: '^(orazaka-apps/ui/|orazaka\.workspace\.json|scripts/workspace\.mjs|\.github/workflows/ci\.yml$)'
 
@@ -39,8 +39,13 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: read   # the Krizaka releases not yet on Central resolve from GitHub Packages
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Clone every repository
         run: node scripts/workspace.mjs clone --depth 1
@@ -52,12 +57,23 @@ jobs:
           java-version: "21"
           cache: maven
 
+      # A Krizaka release waits for a human to press Publish on Central; development builds resolve it from GitHub Packages.
+      - uses: krizaka/.github/actions/maven-github-packages@3f78a2d25b154a21cabbc5d57b8278f6b1ddf0f1 # main
+        if: ${{ needs.maven-changes.outputs.code != 'false' }}
+        with:
+          token: ${{ github.token }}
+
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "22"
 
       - name: Workspace scripts
         run: node --test 'scripts/test/*.test.mjs'
+
+      - name: Krizaka versions are provided
+        # The BOM may only name a com.krizaka release that a cloned repository builds or Maven Central carries
+        # (Central's free quota can be out, a tag unpublished): fails here, by artifact, not deep in the reactor.
+        run: node scripts/check-krizaka-versions.mjs
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:

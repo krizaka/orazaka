@@ -1,0 +1,320 @@
+{
+  "$comment": "Golden cases of step 1 (grounded legal claims of the law retrieval, ADR-089 cut 7). They name articles of the Code civil du Québec and never hold their text: the texts are read at run time from a local copy of the official statute file (--corpus), never committed. `targets` are what the kind points at (orazaka-packs document-validation/kinds); `decoys` are articles added to the passages that the kind does not target and must not be cited; `mustState` are the facts a verified claim should carry; `forbidden` and `offTopic` make a verified claim wrong.",
+  "step": "law-retrieval",
+  "promptVersion": "law-retrieval.v1",
+  "cases": [
+    {
+      "id": "visit-fr",
+      "kindId": "qc-visit-notice",
+      "language": "fr",
+      "question": "Quels articles régissent un avis de visite d'un logement au Québec ?",
+      "targets": [
+        {
+          "instrument": "CCQ-1991",
+          "refs": [
+            "1931",
+            "1932",
+            "1933"
+          ]
+        }
+      ],
+      "expectedRefs": [
+        "1931",
+        "1932",
+        "1933"
+      ],
+      "mustState": [
+        {
+          "id": "notice-24h",
+          "pattern": "24\\s*(h|heures|hours)"
+        },
+        {
+          "id": "visit-hours",
+          "pattern": "\\b9\\b.*(\\b21\\b|p\\.?m)"
+        },
+        {
+          "id": "emergency",
+          "pattern": "urgen|emergenc"
+        },
+        {
+          "id": "work-hours",
+          "pattern": "\\b7\\b.*(\\b19\\b|p\\.?m)"
+        }
+      ],
+      "forbidden": [
+        {
+          "pattern": "ne peut (pas )?refuser (la|une|toute) visite|aucun pr[ée]avis",
+          "why": "1932 lets the lessee refuse; 1931 requires 24 h"
+        },
+        {
+          "pattern": "may not refuse (a |the |any )?visit|no (prior )?notice is (ever )?required",
+          "why": "same, in English"
+        }
+      ],
+      "offTopic": "\\b(loyer|rent|d[ée]p[oô]t|deposit)\\b"
+    },
+    {
+      "id": "visit-en",
+      "kindId": "qc-visit-notice",
+      "language": "en",
+      "question": "Which articles govern a notice of visit to a dwelling in Québec?",
+      "targets": [
+        {
+          "instrument": "CCQ-1991",
+          "refs": [
+            "1931",
+            "1932",
+            "1933"
+          ]
+        }
+      ],
+      "expectedRefs": [
+        "1931",
+        "1932",
+        "1933"
+      ],
+      "mustState": [
+        {
+          "id": "notice-24h",
+          "pattern": "24\\s*(h|heures|hours)"
+        },
+        {
+          "id": "visit-hours",
+          "pattern": "\\b9\\b.*(\\b21\\b|p\\.?m)"
+        },
+        {
+          "id": "emergency",
+          "pattern": "urgen|emergenc"
+        },
+        {
+          "id": "work-hours",
+          "pattern": "\\b7\\b.*(\\b19\\b|p\\.?m)"
+        }
+      ],
+      "forbidden": [
+        {
+          "pattern": "ne peut (pas )?refuser (la|une|toute) visite|aucun pr[ée]avis",
+          "why": "1932 lets the lessee refuse; 1931 requires 24 h"
+        },
+        {
+          "pattern": "may not refuse (a |the |any )?visit|no (prior )?notice is (ever )?required",
+          "why": "same, in English"
+        }
+      ],
+      "offTopic": "\\b(loyer|rent|d[ée]p[oô]t|deposit)\\b"
+    },
+    {
+      "id": "condition-fr",
+      "kindId": "qc-condition-report",
+      "language": "fr",
+      "question": "Quels articles encadrent l'état des lieux et la remise d'un logement au Québec ?",
+      "targets": [
+        {
+          "instrument": "CCQ-1991",
+          "refs": [
+            "1893",
+            "1900",
+            "1910",
+            "1911"
+          ]
+        }
+      ],
+      "expectedRefs": [
+        "1893",
+        "1900",
+        "1910",
+        "1911"
+      ],
+      "mustState": [
+        {
+          "id": "habitable",
+          "pattern": "habitab"
+        },
+        {
+          "id": "clean",
+          "pattern": "propret|clean"
+        },
+        {
+          "id": "without-effect",
+          "pattern": "sans effet|without effect|no effect|null|void"
+        },
+        {
+          "id": "liability",
+          "pattern": "responsabilit|liab"
+        }
+      ],
+      "forbidden": [
+        {
+          "pattern": "(peut|doit) renoncer|clause (est|reste) valide",
+          "why": "1893/1900/1910 void such clauses"
+        },
+        {
+          "pattern": "may waive|clause is (valid|enforceable)",
+          "why": "same, in English"
+        }
+      ],
+      "offTopic": "\\b(loyer|rent|ch[eè]que|cheque|postdat)"
+    },
+    {
+      "id": "condition-en",
+      "kindId": "qc-condition-report",
+      "language": "en",
+      "question": "Which articles govern the condition report and the delivery of a dwelling in Québec?",
+      "targets": [
+        {
+          "instrument": "CCQ-1991",
+          "refs": [
+            "1893",
+            "1900",
+            "1910",
+            "1911"
+          ]
+        }
+      ],
+      "expectedRefs": [
+        "1893",
+        "1900",
+        "1910",
+        "1911"
+      ],
+      "mustState": [
+        {
+          "id": "habitable",
+          "pattern": "habitab"
+        },
+        {
+          "id": "clean",
+          "pattern": "propret|clean"
+        },
+        {
+          "id": "without-effect",
+          "pattern": "sans effet|without effect|no effect|null|void"
+        },
+        {
+          "id": "liability",
+          "pattern": "responsabilit|liab"
+        }
+      ],
+      "forbidden": [
+        {
+          "pattern": "(peut|doit) renoncer|clause (est|reste) valide",
+          "why": "1893/1900/1910 void such clauses"
+        },
+        {
+          "pattern": "may waive|clause is (valid|enforceable)",
+          "why": "same, in English"
+        }
+      ],
+      "offTopic": "\\b(loyer|rent|ch[eè]que|cheque|postdat)"
+    },
+    {
+      "id": "visit-fr-decoy-rent",
+      "kindId": "qc-visit-notice",
+      "language": "fr",
+      "question": "Quels articles régissent un avis de visite d'un logement au Québec ?",
+      "targets": [
+        {
+          "instrument": "CCQ-1991",
+          "refs": [
+            "1931",
+            "1932",
+            "1933"
+          ]
+        }
+      ],
+      "expectedRefs": [
+        "1931",
+        "1932",
+        "1933"
+      ],
+      "mustState": [
+        {
+          "id": "notice-24h",
+          "pattern": "24\\s*(h|heures|hours)"
+        },
+        {
+          "id": "visit-hours",
+          "pattern": "\\b9\\b.*(\\b21\\b|p\\.?m)"
+        },
+        {
+          "id": "emergency",
+          "pattern": "urgen|emergenc"
+        },
+        {
+          "id": "work-hours",
+          "pattern": "\\b7\\b.*(\\b19\\b|p\\.?m)"
+        }
+      ],
+      "forbidden": [
+        {
+          "pattern": "ne peut (pas )?refuser (la|une|toute) visite|aucun pr[ée]avis",
+          "why": "1932 lets the lessee refuse; 1931 requires 24 h"
+        },
+        {
+          "pattern": "may not refuse (a |the |any )?visit|no (prior )?notice is (ever )?required",
+          "why": "same, in English"
+        }
+      ],
+      "offTopic": "\\b(loyer|rent|d[ée]p[oô]t|deposit)\\b",
+      "decoys": [
+        "1903",
+        "1904"
+      ]
+    },
+    {
+      "id": "condition-en-decoy-succession",
+      "kindId": "qc-condition-report",
+      "language": "en",
+      "question": "Which articles govern the condition report and the delivery of a dwelling in Québec?",
+      "targets": [
+        {
+          "instrument": "CCQ-1991",
+          "refs": [
+            "1893",
+            "1900",
+            "1910",
+            "1911"
+          ]
+        }
+      ],
+      "expectedRefs": [
+        "1893",
+        "1900",
+        "1910",
+        "1911"
+      ],
+      "mustState": [
+        {
+          "id": "habitable",
+          "pattern": "habitab"
+        },
+        {
+          "id": "clean",
+          "pattern": "propret|clean"
+        },
+        {
+          "id": "without-effect",
+          "pattern": "sans effet|without effect|no effect|null|void"
+        },
+        {
+          "id": "liability",
+          "pattern": "responsabilit|liab"
+        }
+      ],
+      "forbidden": [
+        {
+          "pattern": "(peut|doit) renoncer|clause (est|reste) valide",
+          "why": "1893/1900/1910 void such clauses"
+        },
+        {
+          "pattern": "may waive|clause is (valid|enforceable)",
+          "why": "same, in English"
+        }
+      ],
+      "offTopic": "\\b(loyer|rent|ch[eè]que|cheque|postdat)",
+      "decoys": [
+        "1939"
+      ]
+    }
+  ]
+}

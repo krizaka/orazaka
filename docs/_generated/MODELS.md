@@ -10,7 +10,7 @@ generated: true
 
 ## Local first
 
-Orazaka supports **37 models**: **28 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **9 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
+Orazaka supports **38 models**: **29 run on your own hardware** (Ollama, LocalAI, stable-diffusion.cpp on Metal or CUDA, the media worker) and **9 are served by a provider** — optional: a provider-hosted model needs a provider row and its API key, which only an operator adds; a fresh install has none.
 
 Every figure below is read from `orazaka_models` (the table the routing reads): the vendor, licence and context window are those of each model's own card; `last verified` is the date of the last passing sovereign smoke that named the model, empty until one is recorded.
 
@@ -46,6 +46,7 @@ How fast and at what price they really run — time, cost and every parameter of
 | `codellama:7b` — CodeLlama 7B | Meta · Code Llama | Code | Ollama | [Llama 2 Community Licence](https://ai.meta.com/llama/license/) — commercial use under conditions | 16,384 | available | — |
 | `mmaudio-large-44k-v2` — MMAudio large 44k v2 (foley) — non-commercial | Sony · Hkchengrex (UIUC) · MMAudio | Video to audio (foley) | worker-media · Metal, CUDA | [CC-BY-NC-4.0](https://github.com/hkchengrex/MMAudio#licenses) — **non-commercial** | — | available | — |
 | `argmaxinc/mlx-FLUX.1-schnell-4bit-quantized` — FLUX.1 Schnell 4-bit (MLX) | Black Forest Labs · FLUX.1 schnell | Image | MLX · Apple Silicon | [Apache-2.0](https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md) | — | available | — |
+| `flux-1-schnell` — FLUX.1 [schnell] (Q8_0) | Black Forest Labs · FLUX.1 schnell | Image | stable-diffusion.cpp · CUDA (24 GB) | [Apache-2.0](https://huggingface.co/black-forest-labs/FLUX.1-schnell) | — | available | — |
 | `v1-5-pruned-emaonly` — Stable Diffusion 1.5 | Stability AI · Stable Diffusion 1.5 | Image | stable-diffusion.cpp · Metal, CUDA | [CreativeML OpenRAIL-M](https://huggingface.co/spaces/CompVis/stable-diffusion-license) — commercial use under conditions | — | available | — |
 | `z-image-turbo` — Z-Image Turbo | Tongyi Lab (Alibaba) · Z-Image | Image | stable-diffusion.cpp · Metal, CUDA | [Apache-2.0](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/README.md) | — | available | — |
 | `kokoro-82m` — Kokoro 82M (GPU host) | hexgrad · Kokoro | Text to speech | worker-media · CUDA | [Apache-2.0](https://huggingface.co/hexgrad/Kokoro-82M) | — | available | — |

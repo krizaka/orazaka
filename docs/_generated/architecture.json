@@ -182,6 +182,7 @@
       "layer": "ai",
       "description": "Knowledge & RAG retrieval service (pgvector) with asynchronous indexing.",
       "dependsOn": [
+        "krizaka-platform-kit",
         "orazaka-build"
       ]
     },
@@ -206,6 +207,7 @@
       "layer": "foundation",
       "description": "Transparent HTTP edge in front of every Orazaka service: routing, API-key → JWT exchange, CORS and tracing. Spring MVC + virtual threads.",
       "dependsOn": [
+        "krizaka-platform-kit",
         "orazaka-build"
       ]
     },
@@ -465,6 +467,36 @@
       }
     },
     {
+      "id": "orazaka-adapter-spring-ai",
+      "path": "orazaka-libs/orazaka-ai-engine/orazaka-adapter-spring-ai",
+      "repository": "orazaka-ai-engine",
+      "owner": "orazaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "1.0.0-SNAPSHOT",
+      "description": "The only module that depends on Spring AI: implements the engine's ports (inference, embedding, structured output, tools) on top of it (ADR-092 §4, orazaka-ai-engine#112)",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "orazaka-architecture",
+      "path": "orazaka-libs/orazaka-ai-engine/orazaka-architecture",
+      "repository": "orazaka-ai-engine",
+      "owner": "orazaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "1.0.0-SNAPSHOT",
+      "description": "No main code: the boundary rules of the engine, read over the classes of every module, behind a ratchet (ADR-092 §4, orazaka-ai-engine#112)",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "orazaka-assets",
       "path": "orazaka-libs/orazaka-ai-engine/orazaka-assets",
       "repository": "orazaka-ai-engine",
@@ -525,6 +557,21 @@
       }
     },
     {
+      "id": "orazaka-rewrite-style",
+      "path": "orazaka-libs/orazaka-build/orazaka-rewrite-style",
+      "repository": "orazaka-build",
+      "owner": "orazaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "1.0.0-SNAPSHOT",
+      "description": "The explicit OpenRewrite import layout of the Orazaka repositories (same as krizaka-rewrite-style of krizaka-build, which is not yet on Central): no star import, static imports first.",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
       "id": "orazaka-studio-client",
       "path": "orazaka-apps/services/orazaka-studio/orazaka-studio-client",
       "repository": "orazaka-studio",
@@ -549,6 +596,36 @@
       "runtime": "jvm",
       "version": "0.2.0",
       "description": "Tier-2 SDK — the producer side of the billing contract: a NoOp and an HTTP adapter for CreditAuthorizationClient, selected at bootstrap so no call site ever branches on whether billing exists",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "krizaka-quality",
+      "path": "krizaka/krizaka-build/krizaka-quality",
+      "repository": "krizaka-build",
+      "owner": "krizaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "The PMD ruleset and the SpotBugs filter every Krizaka Java build applies in verify: the local twin of the Sonar Java findings we actually have (ADR-013).",
+      "ports": {
+        "inbound": [],
+        "outbound": []
+      }
+    },
+    {
+      "id": "krizaka-rewrite-style",
+      "path": "krizaka/krizaka-build/krizaka-rewrite-style",
+      "repository": "krizaka-build",
+      "owner": "krizaka",
+      "role": "adapter",
+      "layer": "framework",
+      "runtime": "jvm",
+      "version": "0.2.0",
+      "description": "The Java code style OpenRewrite applies in every Krizaka repository, so that it never autodetects one: imports are never folded into a star import, static imports first (the layout google-java-format writes).",
       "ports": {
         "inbound": [],
         "outbound": []
@@ -641,6 +718,7 @@
       "description": "Orazaka AI Orchestration Engine",
       "ports": {
         "inbound": [
+          "AgentTurns",
           "AiClient",
           "CatalogModelService",
           "ChatSessionService",
@@ -651,31 +729,54 @@
           "StepRouter"
         ],
         "outbound": [
+          "AccessAudit",
           "AudioGeneratorClient",
+          "AudioTranscriber",
           "CapabilityProvider",
           "ChatGeneratorClient",
+          "ChatInvocation",
           "ChatMemoryStore",
           "CheckAuditLog",
+          "CheckHttp",
           "CheckKeyStore",
           "CheckMeter",
+          "CheckProviderCatalog",
           "CheckSubjectPepper",
+          "CodeSandboxPort",
           "ConsentRegistry",
+          "ControlVerdictRecorder",
+          "ConversationMemory",
+          "DomainEventPublisher",
           "EmbeddingClient",
           "ExternalCheckConnector",
+          "FeatureModelRoutes",
           "ImageGeneratorClient",
           "InfrastructureStatusProvider",
           "KnowledgeService",
           "McpOrchestrator",
           "ModelCatalogProvider",
           "ModelEndpointResolver",
+          "OutputJudge",
           "PipelineConfigProvider",
           "PlatformMcpServerProvider",
           "PlatformToolConfigProvider",
+          "PromptAssembly",
+          "PromptCachePolicy",
+          "ProviderChatClient",
           "SemanticClassifierPort",
+          "SpeechSynthesis",
           "StepModelRecorder",
           "StepRouteProvider",
+          "StructuredOutputBounds",
+          "StructuredOutputClient",
           "TestShaperPort",
+          "ToolAnswerCodec",
+          "ToolLoopBounds",
+          "ToolOptions",
+          "ToolPermissionProvider",
           "ToolRegistry",
+          "ToolResolution",
+          "ToolResultCache",
           "UserCredentialsProvider",
           "UserMcpServerProvider",
           "ValidationPipelineRepository"
@@ -698,8 +799,12 @@
           "ApiKeyService",
           "IdentityReconciliationService",
           "IdentityService",
+          "LoginLockoutService",
+          "OrganizationService",
+          "PasswordPolicyService",
           "PasswordRecoveryService",
           "RateLimitProvider",
+          "SocialConnectionService",
           "TokenService",
           "UserProfileProvider"
         ],
@@ -707,10 +812,15 @@
           "AdminUserRepositoryPort",
           "ApiKeyRepositoryPort",
           "AuthorityRepositoryPort",
+          "BreachedPasswordPort",
           "CryptographyPort",
+          "LockoutRepositoryPort",
           "OAuth2ProviderVerifier",
+          "OrganizationRepositoryPort",
           "PasswordEventPublisher",
           "PasswordResetTokenRepositoryPort",
+          "SecretSealPort",
+          "SocialConnectionRepositoryPort",
           "UserCredentialRepositoryPort",
           "UserEventPublisher",
           "UserInterceptionRepositoryPort",
@@ -751,6 +861,10 @@
           "CatalogModelManager",
           "ChatMemoryPersistenceProvider",
           "ChatSessionPersistenceProvider",
+          "FeatureCachePolicyManager",
+          "FeatureRouteManager",
+          "FeatureStructuredBoundManager",
+          "FeatureToolBoundManager",
           "JobPersistenceProvider",
           "OutboxStore",
           "PipelineConfigManager",
@@ -832,7 +946,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Version compatibility between a backend and the apps that call it, written once: a public cached app-config endpoint (minimum and latest version, update mode, maintenance, contract range, store URL, flags, localized message) read from database parameters, a filter that answers 426 Upgrade Required to a client below the minimum, N-1 contract compatibility with Deprecation and Sunset headers, and an audited admin API with rollback.",
       "ports": {
         "inbound": [],
@@ -847,7 +961,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "HTTP Idempotency-Key, written once: an action runs at most once per key, a retry with the same key and request replays the stored response, the same key with another request is a 422 Problem Details; PostgreSQL or in-memory store, observed. Promoted from Orazaka (ADR-083).",
       "ports": {
         "inbound": [],
@@ -862,7 +976,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "At-least-once messaging done right for Spring Boot and RabbitMQ: events published through a transactional outbox with their envelope in AMQP headers, a relay that claims what it publishes, consumer queues with retry and a dead-letter queue by convention, and idempotent consumption (an atomic claim, released when the handler fails).",
       "ports": {
         "inbound": [],
@@ -877,7 +991,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "One observability standard for Spring Boot services: every service names itself (product, service, version) or does not start, its metrics carry those names as common tags, and the defaults every service repeats — ECS JSON console logs, health/info/prometheus exposed, 10% trace sampling — are set once, at the lowest priority.",
       "ports": {
         "inbound": [],
@@ -892,7 +1006,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "The tables of the kit's JDBC stores (outbox, message claims, idempotency keys, app-config) created and kept up to date by Flyway at startup, in their own history table, only for the stores a service declares; production defaults for the connection pool.",
       "ports": {
         "inbound": [],
@@ -907,7 +1021,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "A requests-per-minute limit per key, written once: a token bucket per key (client address by default, or any key you resolve), observe or enforce, 429 with Retry-After as Problem Details, observed. Promoted from the Orazaka edge (ADR-083) and krizaka-users.",
       "ports": {
         "inbound": [],
@@ -922,7 +1036,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Stateless JWT security for Spring Boot services: the shared HS256 session-token decoder, the roles-claim authority mapping, one security baseline (CORS preflight, health, error page, SERVICE-only internal surface) and the service-to-service token.",
       "ports": {
         "inbound": [],
@@ -937,7 +1051,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "App version compatibility in one dependency: krizaka-app-config (the public app-config endpoint, the 426 Upgrade Required filter, N-1 contract compatibility, the audited admin API) with Spring MVC and JDBC.",
       "ports": {
         "inbound": [],
@@ -952,7 +1066,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "HTTP Idempotency-Key in one dependency: krizaka-idempotency (at most once per key, replay, 422 on reuse, PostgreSQL store) with Spring MVC and JDBC. Add your JDBC driver.",
       "ports": {
         "inbound": [],
@@ -967,7 +1081,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "The Krizaka observability standard in one dependency: krizaka-observability (required service names, common metric tags, ECS logs, exposure and sampling defaults) with Actuator, OpenTelemetry tracing over OTLP and a Prometheus registry.",
       "ports": {
         "inbound": [],
@@ -982,7 +1096,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "The tables of the kit's JDBC stores migrated at startup in one dependency: krizaka-persistence (Flyway, its own history table, only the declared stores, pool defaults) with Spring JDBC and the PostgreSQL driver.",
       "ports": {
         "inbound": [],
@@ -997,7 +1111,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Events and consumers over RabbitMQ in one dependency: krizaka-messaging (outbox publishing, consumer queues with retry then DLQ, idempotent consumption) with Spring AMQP, JDBC and Jackson. Add your JDBC driver.",
       "ports": {
         "inbound": [],
@@ -1012,7 +1126,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "A requests-per-minute limit per key in one dependency: krizaka-ratelimit (token bucket per key, observe or enforce, 429 with Retry-After as Problem Details) with Spring MVC.",
       "ports": {
         "inbound": [],
@@ -1027,7 +1141,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Stateless JWT security in one dependency: krizaka-security (HS256 session tokens, roles authorities, the security baseline, service tokens) with Spring Security and its OAuth2 resource server.",
       "ports": {
         "inbound": [],
@@ -1042,7 +1156,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "HTTP service baseline in one dependency: krizaka-web (Problem Details, request correlation, Jackson defaults, cursor pagination, declared CORS) with Spring MVC, bean validation and Actuator.",
       "ports": {
         "inbound": [],
@@ -1057,7 +1171,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Signed webhooks in one dependency: krizaka-webhooks (Standard Webhooks signing and sending, verification with a 401 Problem Details, secret rotation) with Spring MVC.",
       "ports": {
         "inbound": [],
@@ -1072,7 +1186,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "The HTTP baseline of a Spring Boot service, written once: RFC 9457 Problem Details with stable error codes, X-Request-Id correlation into the MDC, Jackson 3 defaults, opaque cursor pagination and declared CORS origins.",
       "ports": {
         "inbound": [],
@@ -1087,7 +1201,7 @@
       "role": "platform",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Signed webhooks, written once, the Standard Webhooks way: sign and send with a stable id and secret rotation, verify what you receive (signature, constant-time, timestamp tolerance) with a 401 Problem Details otherwise; observed. Promoted from Orazaka (orazaka#189) and krizaka-notifications.",
       "ports": {
         "inbound": [],
@@ -1213,6 +1327,34 @@
       "to": "krizaka-web"
     },
     {
+      "from": "orazaka-adapter-spring-ai",
+      "to": "orazaka-business"
+    },
+    {
+      "from": "orazaka-adapter-spring-ai",
+      "to": "orazaka-core"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-adapter-spring-ai"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-business"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-core"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-interceptors"
+    },
+    {
+      "from": "orazaka-architecture",
+      "to": "orazaka-tools"
+    },
+    {
       "from": "orazaka-assets",
       "to": "orazaka-crypto"
     },
@@ -1327,6 +1469,10 @@
     {
       "from": "orazaka-interceptors",
       "to": "krizaka-billing-api"
+    },
+    {
+      "from": "orazaka-interceptors",
+      "to": "orazaka-adapter-spring-ai"
     },
     {
       "from": "orazaka-interceptors",
@@ -1471,6 +1617,10 @@
     {
       "from": "orazaka-tools",
       "to": "krizaka-billing-api"
+    },
+    {
+      "from": "orazaka-tools",
+      "to": "orazaka-adapter-spring-ai"
     },
     {
       "from": "orazaka-tools",
@@ -1706,6 +1856,12 @@
       "from": "orazaka-edge",
       "to": "krizaka-users-service",
       "kind": "http",
+      "via": "route /api/v1/organizations"
+    },
+    {
+      "from": "orazaka-edge",
+      "to": "krizaka-users-service",
+      "kind": "http",
       "via": "route /api/v1/profile"
     },
     {
@@ -1879,7 +2035,7 @@
       "phase": "dynamic",
       "implemented": true,
       "concern": "tooling",
-      "summary": "Tool execution interceptor — analyzes prompt content to selectively attach relevant `ToolCallback` definitions to the chat options."
+      "summary": "Tool execution interceptor — analyzes prompt content to selectively attach relevant `EngineTool` definitions to the chat options."
     },
     {
       "interceptor": "MediaInterceptor",
@@ -2150,6 +2306,11 @@
         "routingKey": "job.{…}.progress"
       },
       {
+        "module": "orazaka-persistence-bridge",
+        "exchange": "orazaka.events",
+        "routingKey": "evt.control.verdict"
+      },
+      {
         "module": "orazaka-studio-service",
         "exchange": "orazaka.jobs",
         "routingKey": "(capability route)"
@@ -2329,6 +2490,11 @@
         "routingKey": "job.text.process"
       },
       {
+        "feature": "orazaka.core.research.grounded",
+        "handler": "research.grounded",
+        "routingKey": "job.text.process"
+      },
+      {
         "feature": "orazaka.core.media.video",
         "handler": "video.generate",
         "routingKey": "job.video.generate"
@@ -2478,7 +2644,7 @@
         "repository": "krizaka-platform-kit",
         "role": "starter",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "App version compatibility in one dependency: krizaka-app-config (the public app-config endpoint, the 426 Upgrade Required filter, N-1 contract compatibility, the audited admin API) with Spring MVC and JDBC."
       },
       {
@@ -2487,7 +2653,7 @@
         "repository": "krizaka-platform-kit",
         "role": "starter",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "HTTP Idempotency-Key in one dependency: krizaka-idempotency (at most once per key, replay, 422 on reuse, PostgreSQL store) with Spring MVC and JDBC. Add your JDBC driver."
       },
       {
@@ -2496,7 +2662,7 @@
         "repository": "krizaka-platform-kit",
         "role": "starter",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "The Krizaka observability standard in one dependency: krizaka-observability (required service names, common metric tags, ECS logs, exposure and sampling defaults) with Actuator, OpenTelemetry tracing over OTLP and a Prometheus registry."
       },
       {
@@ -2505,7 +2671,7 @@
         "repository": "krizaka-platform-kit",
         "role": "starter",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "The tables of the kit's JDBC stores migrated at startup in one dependency: krizaka-persistence (Flyway, its own history table, only the declared stores, pool defaults) with Spring JDBC and the PostgreSQL driver."
       },
       {
@@ -2514,7 +2680,7 @@
         "repository": "krizaka-platform-kit",
         "role": "starter",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "Events and consumers over RabbitMQ in one dependency: krizaka-messaging (outbox publishing, consumer queues with retry then DLQ, idempotent consumption) with Spring AMQP, JDBC and Jackson. Add your JDBC driver."
       },
       {
@@ -2523,7 +2689,7 @@
         "repository": "krizaka-platform-kit",
         "role": "starter",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "A requests-per-minute limit per key in one dependency: krizaka-ratelimit (token bucket per key, observe or enforce, 429 with Retry-After as Problem Details) with Spring MVC."
       },
       {
@@ -2532,7 +2698,7 @@
         "repository": "krizaka-platform-kit",
         "role": "starter",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "Stateless JWT security in one dependency: krizaka-security (HS256 session tokens, roles authorities, the security baseline, service tokens) with Spring Security and its OAuth2 resource server."
       },
       {
@@ -2541,7 +2707,7 @@
         "repository": "krizaka-platform-kit",
         "role": "starter",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "HTTP service baseline in one dependency: krizaka-web (Problem Details, request correlation, Jackson defaults, cursor pagination, declared CORS) with Spring MVC, bean validation and Actuator."
       },
       {
@@ -2550,7 +2716,7 @@
         "repository": "krizaka-platform-kit",
         "role": "starter",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "Signed webhooks in one dependency: krizaka-webhooks (Standard Webhooks signing and sending, verification with a 401 Problem Details, secret rotation) with Spring MVC."
       },
       {
@@ -2559,7 +2725,7 @@
         "repository": "krizaka-platform-kit",
         "role": "platform",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "Version compatibility between a backend and the apps that call it, written once: a public cached app-config endpoint (minimum and latest version, update mode, maintenance, contract range, store URL, flags, localized message) read from database parameters, a filter that answers 426 Upgrade Required to a client below the minimum, N-1 contract compatibility with Deprecation and Sunset headers, and an audited admin API with rollback."
       },
       {
@@ -2568,7 +2734,7 @@
         "repository": "krizaka-platform-kit",
         "role": "platform",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "HTTP Idempotency-Key, written once: an action runs at most once per key, a retry with the same key and request replays the stored response, the same key with another request is a 422 Problem Details; PostgreSQL or in-memory store, observed. Promoted from Orazaka (ADR-083)."
       },
       {
@@ -2577,7 +2743,7 @@
         "repository": "krizaka-platform-kit",
         "role": "platform",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "At-least-once messaging done right for Spring Boot and RabbitMQ: events published through a transactional outbox with their envelope in AMQP headers, a relay that claims what it publishes, consumer queues with retry and a dead-letter queue by convention, and idempotent consumption (an atomic claim, released when the handler fails)."
       },
       {
@@ -2586,7 +2752,7 @@
         "repository": "krizaka-platform-kit",
         "role": "platform",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "One observability standard for Spring Boot services: every service names itself (product, service, version) or does not start, its metrics carry those names as common tags, and the defaults every service repeats — ECS JSON console logs, health/info/prometheus exposed, 10% trace sampling — are set once, at the lowest priority."
       },
       {
@@ -2595,7 +2761,7 @@
         "repository": "krizaka-platform-kit",
         "role": "platform",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "The tables of the kit's JDBC stores (outbox, message claims, idempotency keys, app-config) created and kept up to date by Flyway at startup, in their own history table, only for the stores a service declares; production defaults for the connection pool."
       },
       {
@@ -2604,7 +2770,7 @@
         "repository": "krizaka-platform-kit",
         "role": "platform",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "A requests-per-minute limit per key, written once: a token bucket per key (client address by default, or any key you resolve), observe or enforce, 429 with Retry-After as Problem Details, observed. Promoted from the Orazaka edge (ADR-083) and krizaka-users."
       },
       {
@@ -2613,7 +2779,7 @@
         "repository": "krizaka-platform-kit",
         "role": "platform",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "Stateless JWT security for Spring Boot services: the shared HS256 session-token decoder, the roles-claim authority mapping, one security baseline (CORS preflight, health, error page, SERVICE-only internal surface) and the service-to-service token."
       },
       {
@@ -2622,7 +2788,7 @@
         "repository": "krizaka-platform-kit",
         "role": "platform",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "The HTTP baseline of a Spring Boot service, written once: RFC 9457 Problem Details with stable error codes, X-Request-Id correlation into the MDC, Jackson 3 defaults, opaque cursor pagination and declared CORS origins."
       },
       {
@@ -2631,7 +2797,7 @@
         "repository": "krizaka-platform-kit",
         "role": "platform",
         "packaging": "jar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "Signed webhooks, written once, the Standard Webhooks way: sign and send with a stable id and secret rotation, verify what you receive (signature, constant-time, timestamp tolerance) with a 401 Problem Details otherwise; observed. Promoted from Orazaka (orazaka#189) and krizaka-notifications."
       },
       {
@@ -2651,6 +2817,24 @@
         "packaging": "pom",
         "version": "0.2.0",
         "description": "Parent POM of every Krizaka JVM artifact: Maven Central metadata, Java 21 build conventions (formatting, tests, coverage, enforcer) and the signed release to Maven Central."
+      },
+      {
+        "id": "krizaka-quality",
+        "path": "krizaka/krizaka-build/krizaka-quality",
+        "repository": "krizaka-build",
+        "role": "build",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "The PMD ruleset and the SpotBugs filter every Krizaka Java build applies in verify: the local twin of the Sonar Java findings we actually have (ADR-013)."
+      },
+      {
+        "id": "krizaka-rewrite-style",
+        "path": "krizaka/krizaka-build/krizaka-rewrite-style",
+        "repository": "krizaka-build",
+        "role": "build",
+        "packaging": "jar",
+        "version": "0.2.0",
+        "description": "The Java code style OpenRewrite applies in every Krizaka repository, so that it never autodetects one: imports are never folded into a star import, static imports first (the layout google-java-format writes)."
       },
       {
         "id": "krizaka-test-support",
@@ -2854,6 +3038,11 @@
         "kind": "test"
       },
       {
+        "from": "krizaka-quality",
+        "to": "krizaka-parent",
+        "kind": "parent"
+      },
+      {
         "from": "krizaka-ratelimit",
         "to": "krizaka-parent",
         "kind": "parent"
@@ -2867,6 +3056,11 @@
         "from": "krizaka-ratelimit",
         "to": "krizaka-web",
         "kind": "compile"
+      },
+      {
+        "from": "krizaka-rewrite-style",
+        "to": "krizaka-parent",
+        "kind": "parent"
       },
       {
         "from": "krizaka-security",
@@ -4321,6 +4515,354 @@
       ]
     },
     {
+      "key": "code-contributor",
+      "dir": "code-contributor",
+      "version": "1.1.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "STANDARD",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "developer-tools",
+      "categorySortWeight": 120,
+      "iconKey": "code",
+      "sortWeight": 50,
+      "pricing": {
+        "priceCents": 0,
+        "includedCredits": 0
+      },
+      "capabilities": [
+        "orazaka.code.agent.turn"
+      ],
+      "workers": [],
+      "scopeGuard": false,
+      "consent": true,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Contributor",
+          "tagline": "The model turn behind Orazaka's code agent on your Mac.",
+          "description": "Carries the model turns of the Orazaka app's code agent, so that access, consent and credits are checked on every turn. The tools, the approvals, git and the audit stay on your Mac."
+        },
+        "fr": {
+          "label": "Contributeur",
+          "tagline": "Le tour de modèle derrière l'agent de code d'Orazaka sur votre Mac.",
+          "description": "Porte les tours de modèle de l'agent de code de l'app Orazaka, pour que l'accès, le consentement et les crédits soient vérifiés à chaque tour. Les outils, les approbations, git et le journal restent sur votre Mac."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Developer tools",
+          "description": "Packs that work on code with you: read it, change it, carry an issue to a pull request."
+        },
+        "fr": {
+          "label": "Outils de développement",
+          "description": "Des packs qui travaillent sur le code avec vous : le lire, le modifier, mener une issue jusqu'à une pull request."
+        }
+      },
+      "studios": [
+        {
+          "key": "code-issue-to-pr",
+          "profession": "developer",
+          "iconKey": "code",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "SESSION"
+          ],
+          "inputs": [
+            {
+              "key": "task",
+              "title": "Tâche"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "closedBy",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "From an issue to a pull request",
+              "tagline": "Reads a GitHub issue and your repository, proposes changes you approve, and opens a draft pull request.",
+              "description": "The model turn for the issue-to-pull-request flow. Every write and every push is approved on your Mac."
+            },
+            "fr": {
+              "label": "D'une issue à une pull request",
+              "tagline": "Lit une issue GitHub et votre dépôt, propose des changements que vous approuvez et ouvre une pull request en brouillon.",
+              "description": "Le tour de modèle du parcours issue vers pull request. Chaque écriture et chaque envoi est approuvé sur votre Mac."
+            }
+          }
+        },
+        {
+          "key": "code-read-write",
+          "profession": "developer",
+          "iconKey": "code",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 40,
+          "steps": 1,
+          "stepKinds": [
+            "SESSION"
+          ],
+          "inputs": [
+            {
+              "key": "task",
+              "title": "Tâche"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "closedBy",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Read and change code",
+              "tagline": "Reads a repository you grant and proposes changes, hunk by hunk.",
+              "description": "The model turn for reading and changing files in a repository you grant. Nothing is written without your approval."
+            },
+            "fr": {
+              "label": "Lire et modifier du code",
+              "tagline": "Lit un dépôt que vous accordez et propose des changements, bloc par bloc.",
+              "description": "Le tour de modèle pour lire et modifier des fichiers d'un dépôt que vous accordez. Rien n'est écrit sans votre approbation."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "bill96-french-first",
+      "dir": "bill96-french-first",
+      "version": "1.0.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "business-compliance",
+      "categorySortWeight": 100,
+      "iconKey": "shield-check",
+      "sortWeight": 40,
+      "pricing": {
+        "priceCents": 7900,
+        "includedCredits": 500
+      },
+      "capabilities": [],
+      "workers": [],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "French-first documents (Bill 96)",
+          "tagline": "French versions, bilingual checks and French-first copy, on your own machine.",
+          "description": "Matrices for extracting information from your documents and parameterizable technology templates that produce a French version in Québec usage, compare an English and a French version, turn site copy into French-first copy and keep your own glossary, technical tools validated by the client's legal counsel. Not a certified translation: a professional reviews every output. Your documents stay on your machine."
+        },
+        "fr": {
+          "label": "Documents d'abord en français (Loi 96)",
+          "tagline": "Versions françaises, vérifications bilingues et textes d'abord en français, sur votre machine.",
+          "description": "Matrices d'extraction documentaire et gabarits technologiques paramétrables qui produisent une version française en usage québécois, comparent une version anglaise et une version française, adaptent des textes de site d'abord en français et tiennent votre glossaire, outils techniques validés par le conseiller juridique du client. Pas une traduction certifiée : un professionnel révise chaque sortie. Vos documents restent sur votre machine."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Business & documents",
+          "description": "Packs that do the work: check documents, prospect."
+        },
+        "fr": {
+          "label": "Affaires et documents",
+          "description": "Des packs qui font le travail : vérifier des documents, prospecter."
+        }
+      },
+      "studios": [
+        {
+          "key": "french-version",
+          "profession": "legal",
+          "iconKey": "file-text",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 110,
+          "steps": 2,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "document",
+              "title": "Le document"
+            },
+            {
+              "key": "documentKind",
+              "title": "Type de document"
+            },
+            {
+              "key": "glossary",
+              "title": "Glossaire de l'entreprise"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "french",
+              "type": "TEXT"
+            },
+            {
+              "key": "glossary",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "French version of a document",
+              "tagline": "Québec usage, the terms chosen, the doubtful passages flagged.",
+              "description": "A French version of a contract, policy, terms or product sheet, with a glossary of the terms chosen and the passages to review."
+            },
+            "fr": {
+              "label": "Version française d'un document",
+              "tagline": "Usage québécois, termes choisis, passages douteux signalés.",
+              "description": "Une version française d'un contrat, d'une politique, de conditions ou d'une fiche produit, avec un glossaire des termes choisis et les passages à réviser."
+            }
+          }
+        },
+        {
+          "key": "bilingual-consistency-check",
+          "profession": "legal",
+          "iconKey": "search",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 100,
+          "steps": 2,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "english",
+              "title": "Version anglaise"
+            },
+            {
+              "key": "french",
+              "title": "Version française"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "differences",
+              "type": "TEXT"
+            },
+            {
+              "key": "summary",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Bilingual consistency check",
+              "tagline": "What differs between your English and French versions.",
+              "description": "Lists the differences in meaning, numbers, dates and obligations between two versions, and which section to review first."
+            },
+            "fr": {
+              "label": "Vérification de cohérence bilingue",
+              "tagline": "Ce qui diffère entre vos versions anglaise et française.",
+              "description": "Liste les écarts de sens, de chiffres, de dates et d'obligations entre deux versions, et la section à réviser en premier."
+            }
+          }
+        },
+        {
+          "key": "french-first-copy",
+          "profession": "general",
+          "iconKey": "sparkles",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 100,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "englishCopy",
+              "title": "Texte anglais"
+            },
+            {
+              "key": "brandVoice",
+              "title": "Ton de la marque"
+            },
+            {
+              "key": "glossary",
+              "title": "Glossaire de l'entreprise"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "copy",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "French-first copy",
+              "tagline": "Site and product copy in French first, with the English kept equivalent.",
+              "description": "Adapts English copy into natural Québec French that keeps your brand voice, French first and the English right after."
+            },
+            "fr": {
+              "label": "Texte d'abord en français",
+              "tagline": "Textes de site et de produit en français d'abord, avec l'équivalent anglais.",
+              "description": "Adapte un texte anglais en français québécois naturel qui garde le ton de votre marque, le français d'abord et l'anglais ensuite."
+            }
+          }
+        },
+        {
+          "key": "firm-glossary",
+          "profession": "legal",
+          "iconKey": "notebook",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 90,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "documents",
+              "title": "Vos documents"
+            },
+            {
+              "key": "glossary",
+              "title": "Glossaire de l'entreprise"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "glossary",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Firm glossary",
+              "tagline": "Your own FR/EN terminology, reused by the other Studios.",
+              "description": "Builds and extends the firm's glossary from its documents, with the source of each term, ready to paste into the other Studios."
+            },
+            "fr": {
+              "label": "Glossaire de l'entreprise",
+              "tagline": "Votre terminologie FR/EN, réutilisée par les autres études.",
+              "description": "Construit et enrichit le glossaire de l'entreprise à partir de ses documents, avec la source de chaque terme, prêt à coller dans les autres études."
+            }
+          }
+        }
+      ]
+    },
+    {
       "key": "data-analytics",
       "dir": "data-analytics",
       "version": "1.6.0",
@@ -4731,9 +5273,294 @@
       ]
     },
     {
+      "key": "privacy-law25",
+      "dir": "privacy-law25",
+      "version": "1.0.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "PUBLISHED",
+      "showcase": true,
+      "category": "business-compliance",
+      "categorySortWeight": 100,
+      "iconKey": "shield-check",
+      "sortWeight": 30,
+      "pricing": {
+        "priceCents": 9900,
+        "includedCredits": 600
+      },
+      "capabilities": [],
+      "workers": [],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Privacy compliance (Law 25)",
+          "tagline": "Prepare your Law 25 privacy documents on your own machine.",
+          "description": "Matrices for extracting information from your documents and parameterizable technology templates that prepare an inventory of personal information, a privacy impact assessment draft, a confidentiality-incident entry with notice drafts, and a governance policy, technical tools validated by the client's legal counsel: they prepare, the person in charge validates, and nothing is legal advice. Your data stays on your machine."
+        },
+        "fr": {
+          "label": "Conformité vie privée (Loi 25)",
+          "tagline": "Préparez vos documents de la Loi 25 sur votre propre machine.",
+          "description": "Matrices d'extraction documentaire et gabarits technologiques paramétrables qui préparent un inventaire des renseignements personnels, un brouillon d'évaluation des facteurs relatifs à la vie privée, une inscription au registre des incidents avec les brouillons d'avis, et une politique de gouvernance, outils techniques validés par le conseiller juridique du client : ils préparent, la personne responsable valide, et rien n'est un avis juridique. Vos données restent sur votre machine."
+        }
+      },
+      "categoryText": {
+        "en": {
+          "label": "Business & documents",
+          "description": "Packs that do the work: check documents, prospect."
+        },
+        "fr": {
+          "label": "Affaires et documents",
+          "description": "Des packs qui font le travail : vérifier des documents, prospecter."
+        }
+      },
+      "studios": [
+        {
+          "key": "personal-information-inventory",
+          "profession": "legal",
+          "iconKey": "list-checks",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 90,
+          "steps": 2,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "firmName",
+              "title": "Nom de l'entreprise"
+            },
+            {
+              "key": "description",
+              "title": "Vos outils et processus"
+            },
+            {
+              "key": "language",
+              "title": "Langue"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "inventory",
+              "type": "TEXT"
+            },
+            {
+              "key": "gaps",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Personal-information inventory",
+              "tagline": "What you hold, where, why, who sees it, how long.",
+              "description": "From a description of your tools and processes, a table of the personal information you hold, with the questions to settle."
+            },
+            "fr": {
+              "label": "Inventaire des renseignements personnels",
+              "tagline": "Ce que vous détenez, où, pourquoi, qui y accède, combien de temps.",
+              "description": "À partir de la description de vos outils et processus, un tableau des renseignements personnels que vous détenez, avec les questions à trancher."
+            }
+          }
+        },
+        {
+          "key": "privacy-impact-assessment",
+          "profession": "legal",
+          "iconKey": "shield-check",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 140,
+          "steps": 2,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "firmName",
+              "title": "Nom de l'entreprise"
+            },
+            {
+              "key": "projectName",
+              "title": "Nom du projet"
+            },
+            {
+              "key": "purpose",
+              "title": "Objectif du projet"
+            },
+            {
+              "key": "personalData",
+              "title": "Renseignements en cause"
+            },
+            {
+              "key": "peopleConcerned",
+              "title": "Personnes concernées"
+            },
+            {
+              "key": "outsideQuebec",
+              "title": "Hors Québec ?"
+            },
+            {
+              "key": "safeguards",
+              "title": "Mesures déjà prévues"
+            },
+            {
+              "key": "language",
+              "title": "Langue"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "efvp",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Privacy impact assessment draft",
+              "tagline": "A structured draft before a project that touches personal information.",
+              "description": "Purpose, information, flows, risks and safeguards, with the decision and signature left to the person in charge."
+            },
+            "fr": {
+              "label": "Brouillon d'évaluation des facteurs relatifs à la vie privée",
+              "tagline": "Un brouillon structuré avant un projet qui touche des renseignements personnels.",
+              "description": "Objectif, renseignements, flux, risques et mesures, la décision et la signature étant laissées à la personne responsable."
+            }
+          }
+        },
+        {
+          "key": "confidentiality-incident",
+          "profession": "legal",
+          "iconKey": "alert-triangle",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 130,
+          "steps": 3,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "firmName",
+              "title": "Nom de l'entreprise"
+            },
+            {
+              "key": "incidentDescription",
+              "title": "Ce qui s'est passé"
+            },
+            {
+              "key": "discoveredOn",
+              "title": "Date de découverte"
+            },
+            {
+              "key": "dataInvolved",
+              "title": "Renseignements en cause"
+            },
+            {
+              "key": "peopleAffected",
+              "title": "Personnes touchées"
+            },
+            {
+              "key": "containment",
+              "title": "Mesures prises"
+            },
+            {
+              "key": "language",
+              "title": "Langue"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "assessment",
+              "type": "TEXT"
+            },
+            {
+              "key": "register",
+              "type": "TEXT"
+            },
+            {
+              "key": "notices",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Confidentiality incident",
+              "tagline": "A register entry and notice drafts; the person in charge decides.",
+              "description": "Reads the serious-injury criteria, drafts the register entry and, when the criteria point that way, the notices."
+            },
+            "fr": {
+              "label": "Incident de confidentialité",
+              "tagline": "Une inscription au registre et des brouillons d'avis ; la personne responsable décide.",
+              "description": "Lit les critères du préjudice sérieux, rédige l'inscription au registre et, si les critères le laissent croire, les avis."
+            }
+          }
+        },
+        {
+          "key": "privacy-governance-policy",
+          "profession": "legal",
+          "iconKey": "file-text",
+          "pricing": "PAID",
+          "status": "PUBLISHED",
+          "estimatedCredits": 120,
+          "steps": 2,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "firmName",
+              "title": "Nom de l'entreprise"
+            },
+            {
+              "key": "activities",
+              "title": "Vos activités"
+            },
+            {
+              "key": "dataKinds",
+              "title": "Renseignements recueillis"
+            },
+            {
+              "key": "retention",
+              "title": "Durée de conservation"
+            },
+            {
+              "key": "contactRole",
+              "title": "Rôle de la personne responsable"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "policyFr",
+              "type": "TEXT"
+            },
+            {
+              "key": "policyEn",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Governance policy",
+              "tagline": "Your public privacy policy, in French and English, in plain language.",
+              "description": "Drafts the public policy from your activities and practices, and marks every point to confirm."
+            },
+            "fr": {
+              "label": "Politique de gouvernance",
+              "tagline": "Votre politique publique de confidentialité, en français et en anglais, en langage clair.",
+              "description": "Rédige la politique publique à partir de vos activités et pratiques, et marque chaque point à confirmer."
+            }
+          }
+        }
+      ]
+    },
+    {
       "key": "document-validation",
       "dir": "document-validation",
-      "version": "1.9.0",
+      "version": "1.11.0",
       "tier": "WORKER",
       "kind": null,
       "distribution": "CLOUD",
@@ -4783,6 +5610,15 @@
           "rules": 10
         },
         {
+          "id": "qc-condition-report",
+          "label": "État des lieux du logement — Québec",
+          "jurisdiction": "QC",
+          "versions": [
+            "2023-06-01"
+          ],
+          "rules": 5
+        },
+        {
           "id": "qc-invoice",
           "label": "Facture — Québec (TPS et TVQ)",
           "jurisdiction": "QC",
@@ -4798,7 +5634,7 @@
           "versions": [
             "2024-02-21"
           ],
-          "rules": 12
+          "rules": 16
         },
         {
           "id": "qc-service-contract",
@@ -4808,18 +5644,27 @@
             "2026-10-19"
           ],
           "rules": 4
+        },
+        {
+          "id": "qc-visit-notice",
+          "label": "Avis de visite du logement — Québec",
+          "jurisdiction": "QC",
+          "versions": [
+            "2023-06-01"
+          ],
+          "rules": 6
         }
       ],
       "text": {
         "en": {
           "label": "Document Verification",
           "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
-          "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice."
+          "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice: technical tools validated by the client's legal counsel."
         },
         "fr": {
           "label": "Vérification de documents",
           "tagline": "Un contrat contrôlé contre les règles, un PDF examiné pour ses retouches.",
-          "description": "Contrôlez un document contre un corpus de règles versionné — chaque constat cite sa règle, sa source et l'extrait qui le justifie — et examinez un fichier PDF pour les signes d'une modification. Des rapports, jamais un conseil juridique."
+          "description": "Contrôlez un document contre un corpus de règles versionné — chaque constat cite sa règle, sa source et l'extrait qui le justifie — et examinez un fichier PDF pour les signes d'une modification. Des rapports, jamais un conseil juridique : des outils techniques validés par le conseiller juridique du client."
         }
       },
       "categoryText": {
@@ -5017,6 +5862,198 @@
               "label": "Miroir",
               "tagline": "Votre texte, à l'envers.",
               "description": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "business-brief",
+      "dir": "business-brief",
+      "version": "1.0.0",
+      "tier": "DATA",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "STANDARD",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "categorySortWeight": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [],
+      "workers": [],
+      "scopeGuard": false,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Business brief",
+          "tagline": "The writer behind a small shop's Monday brief.",
+          "description": "Writes the invitation of a brief action from aggregates only: the shop, the service and the free slots. No client name, no history."
+        },
+        "fr": {
+          "label": "Point d'affaires",
+          "tagline": "La plume derrière le point du lundi d'une petite boutique.",
+          "description": "Rédige l'invitation d'une action du point à partir d'agrégats seulement : la boutique, le service et les créneaux libres. Aucun nom de client, aucun historique."
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "invitation-writer",
+          "profession": "general",
+          "iconKey": "send",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 15,
+          "steps": 1,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "shopName",
+              "title": "Nom de la boutique"
+            },
+            {
+              "key": "service",
+              "title": "Service"
+            },
+            {
+              "key": "freeSlots",
+              "title": "Créneaux libres"
+            },
+            {
+              "key": "channel",
+              "title": "Canal"
+            },
+            {
+              "key": "tone",
+              "title": "Ton de la boutique"
+            },
+            {
+              "key": "language",
+              "title": "Langue"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "invitation",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Invitation writer",
+              "tagline": "One short invitation, in Québec French or English, in the shop's tone.",
+              "description": "From the shop's name, a service and its free slots only, writes an invitation sized for a text message, a notification or an email."
+            },
+            "fr": {
+              "label": "Rédaction d'invitation",
+              "tagline": "Une invitation courte, en français québécois ou en anglais, dans le ton de la boutique.",
+              "description": "À partir du seul nom de la boutique, d'un service et de ses créneaux libres, rédige une invitation à la taille d'un texto, d'une notification ou d'un courriel."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "identity-document-check",
+      "dir": "identity-document-check",
+      "version": "1.0.0",
+      "tier": "WORKER",
+      "kind": null,
+      "distribution": "CLOUD",
+      "regulatoryClass": "SENSITIVE",
+      "status": "UNLISTED",
+      "showcase": true,
+      "category": null,
+      "categorySortWeight": null,
+      "iconKey": null,
+      "sortWeight": null,
+      "pricing": null,
+      "capabilities": [
+        "orazaka.identity.document.verify"
+      ],
+      "workers": [
+        "orazaka-worker-identity"
+      ],
+      "scopeGuard": true,
+      "consent": false,
+      "safety": false,
+      "rulesets": [],
+      "text": {
+        "en": {
+          "label": "Identity document check",
+          "tagline": "Is this identity document consistent with itself?",
+          "description": "Reads an identity document with a vision model, then checks by arithmetic what can be checked: the check digits of the machine-readable zone, the dates, and the agreement between the printed fields, the zone and the barcode. Each finding comes with its evidence and a confidence. It identifies no one and looks nothing up."
+        },
+        "fr": {
+          "label": "Vérification de pièce d'identité",
+          "tagline": "Cette pièce d'identité est-elle cohérente avec elle-même ?",
+          "description": "Lit une pièce d'identité avec un modèle de vision, puis vérifie par le calcul ce qui peut l'être : les chiffres de contrôle de la zone lisible par machine, les dates, et la concordance entre les champs imprimés, la zone et le code-barres. Chaque constat vient avec sa preuve et une confiance. Elle n'identifie personne et ne consulte aucune base."
+        }
+      },
+      "categoryText": {
+        "en": null,
+        "fr": null
+      },
+      "studios": [
+        {
+          "key": "identity-document-check",
+          "profession": "general",
+          "iconKey": "shield-check",
+          "pricing": "FREE",
+          "status": "PUBLISHED",
+          "estimatedCredits": 30,
+          "steps": 2,
+          "stepKinds": [
+            "CAPABILITY"
+          ],
+          "inputs": [
+            {
+              "key": "document",
+              "title": "La pièce d'identité (fichier envoyé)"
+            },
+            {
+              "key": "asOf",
+              "title": "Jour de référence"
+            },
+            {
+              "key": "minimumAge",
+              "title": "Âge minimal (années)"
+            },
+            {
+              "key": "barcodeText",
+              "title": "Texte du code-barres"
+            }
+          ],
+          "outputs": [
+            {
+              "key": "report",
+              "type": "JSON"
+            },
+            {
+              "key": "status",
+              "type": "TEXT"
+            }
+          ],
+          "text": {
+            "en": {
+              "label": "Identity document check",
+              "tagline": "Zone, dates and printed fields checked by code, signs of tampering flagged for a person.",
+              "description": "A vision model transcribes the document; the check digits, the calendar and the cross-checks are plain code. A sign of tampering asks a person to look and never fails a document alone."
+            },
+            "fr": {
+              "label": "Vérification de pièce d'identité",
+              "tagline": "Zone, dates et champs imprimés vérifiés par le code, signes de retouche signalés à une personne.",
+              "description": "Un modèle de vision transcrit la pièce ; les chiffres de contrôle, le calendrier et les recoupements sont du code. Un signe de retouche demande à une personne de regarder et ne fait jamais échouer une pièce à lui seul."
             }
           }
         }
@@ -5751,6 +6788,28 @@
       "licence": {
         "name": "Apache-2.0",
         "url": "https://huggingface.co/argmaxinc/mlx-FLUX.1-schnell-4bit-quantized/blob/main/README.md"
+      },
+      "commercialUse": "yes",
+      "contextWindow": null,
+      "status": "available",
+      "lastVerified": null
+    },
+    {
+      "id": "flux-1-schnell",
+      "name": "FLUX.1 [schnell] (Q8_0)",
+      "vendor": "Black Forest Labs",
+      "family": "FLUX.1 schnell",
+      "category": "image",
+      "capabilities": [
+        "image"
+      ],
+      "runsOn": "local",
+      "runtime": "stable-diffusion.cpp · CUDA (24 GB)",
+      "provider": "localai-image",
+      "openWeights": true,
+      "licence": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell"
       },
       "commercialUse": "yes",
       "contextWindow": null,

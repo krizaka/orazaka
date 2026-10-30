@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@krizaka/query";
 import { Timeline, type ActivityEvent, type ActivityTone } from "@krizaka/ui/activity-feed";
 import { Button } from "@krizaka/ui/button";
 import { Card } from "@krizaka/ui/card";
@@ -12,15 +13,19 @@ const STEP_TONE = { ok: "success", error: "danger", skipped: "neutral", "dry-run
 export function RunHistory({ runs }: { runs: RunSummary[] }) {
   const { t, format } = useI18n();
   const [open, setOpen] = useState<string | null>(null);
-  const [run, setRun] = useState<Run | null>(null);
   const dateLocale = t("common.dateLocale");
   const latest = runs.find((r) => r.id === open);
 
-  useEffect(() => {
-    if (!open) return setRun(null);
-    void automationsApi.run(open).then(setRun).catch(() => setRun(null));
-    // the summary changes (status, steps) while the run goes on: re-read the trace with it
-  }, [open, latest?.status, latest?.steps]);
+  // The trace of the open run, read again when its summary moves (status, steps) while the run goes on. Keyed by the run,
+  // so the answer for a run since closed or replaced never shows; the previous trace of the same run stays until the new one.
+  const trace = useQuery({
+    queryKey: ["automations", "run", open, latest?.status, latest?.steps],
+    enabled: open !== null,
+    retry: false,
+    queryFn: () => automationsApi.run(open as string),
+    placeholderData: (previous, previousQuery) => (previousQuery?.queryKey[2] === open ? previous : undefined),
+  });
+  const run: Run | null = open ? (trace.data ?? null) : null;
 
   const events: ActivityEvent[] = (run?.steps ?? []).map((s) => ({
     id: `${s.seq}`,

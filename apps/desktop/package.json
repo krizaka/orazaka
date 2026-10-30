@@ -2,7 +2,7 @@
   "name": "orazaka-desktop",
   "private": true,
   "version": "0.2.0",
-  "description": "Orazaka Desktop \u2014 a Tauri 2 control panel and file bridge for the Orazaka sovereign AI platform (macOS).",
+  "description": "Orazaka Desktop — a Tauri 2 control panel and file bridge for the Orazaka sovereign AI platform (macOS).",
   "type": "module",
   "license": "FSL-1.1-ALv2",
   "engines": {
@@ -23,6 +23,7 @@
     "@krizaka/i18n": "0.2.1",
     "@krizaka/icons": "^0.4.0",
     "@krizaka/orazaka-design-system": "3.4.0",
+    "@krizaka/query": "0.2.2",
     "@krizaka/tailwind": "3.44.0",
     "@krizaka/tokens": "3.44.0",
     "@krizaka/ui": "3.44.0",

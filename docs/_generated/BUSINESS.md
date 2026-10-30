@@ -38,34 +38,34 @@ discovered by Spring — adding one changes neither the core nor the router.
 
 | Package | Type | Kind | Role |
 |:---|:---|:---|:---|
-| `.` | `BusinessAutoConfiguration` | class | Spring Boot auto-configuration for the orazaka-business module — the App Factory wiring. |
-| `api` | `AgentPayload` | record | Payload for a `Capability#AGENT` intention — a goal the core's agent loop will plan and execute (plan→act→observe). |
-| `api` | `Capability` | enum | The high-level capability an `Intention` targets. |
-| `api` | `ChatPayload` | record | Payload for a `Capability#CHAT` intention. |
-| `api` | `ExecutionMode` | enum | Execution mode of an `Intention`: `SYNC` for low-latency interactive responses (including token streaming), `ASYNC` for heavy/deferred work dispatched to a worker. |
-| `api` | `ImagePayload` | record | Payload for a `Capability#IMAGE` intention. |
-| `api` | `Intention` | record | The immutable entry unit of the platform — the single thing the router translates transport into and hands to the `UseCaseDispatcher`. |
-| `api` | `IntentionContext` | record | Ambient context of an `Intention`: the conversation session, the acting principal (opaque `actorId` — no cross-context identity coupling), the actor's resolved authorities (for RBAC), and resolved preferences / environment signals. |
-| `api` | `IntentionType` | enum | CQRS pivot of an `Intention`: `COMMAND` mutates state, `QUERY` only reads. |
-| `api` | `Payload` | interface | Sealed hierarchy of the typed payloads an `Intention` can carry. |
-| `api` | `PlanningMode` | enum | How a use-case resolves its execution plan: `DETERMINISTIC` runs a fixed workflow (DAG), `AGENTIC` delegates planning to the core's agent loop (plan→act→observe). |
-| `api` | `RbacPolicy` | record | RBAC requirement a `UseCaseDescriptor` declares: the authorities an actor must hold to run the use-case. |
-| `api` | `StudioPayload` | record | Payload for a `Capability#STUDIO` intention — one run of an installed Studio (ADR-034). |
-| `api` | `UseCase` | interface | SPI extension point — adding a product capability means implementing a `UseCase` and declaring its `UseCaseDescriptor`. |
-| `api` | `UseCaseContext` | record | Execution context handed to a `UseCase`, derived by the dispatcher from the `Intention` and the resolved security context. |
-| `api` | `UseCaseDescriptor` | record | Metadata describing a `UseCase` — the metadata-driven contract the `UseCaseRegistry` matches intentions against and the auto-docs surface. |
-| `api` | `UseCaseDispatcher` | interface | Inbound port — the single entry the router calls after translating transport into an `Intention`. |
-| `api` | `UseCasePayload` | interface | Marker for a typed input accepted by a `UseCase`. |
-| `api` | `UseCaseRegistry` | interface | Inbound port — the auto-discovered catalogue of registered `UseCase`s. |
-| `api` | `UseCaseResolutionException` | class | Thrown by the `UseCaseDispatcher` when an `Intention` cannot be served — no registered `UseCase` matches it (ERR-410) or RBAC denies the actor (ERR-403). |
-| `application` | `SpringUseCaseRegistry` | class | Auto-discovering `UseCaseRegistry`: it is handed every `UseCase` bean registered in the context and resolves an `Intention` to the first use-case whose descriptor serves the intention's capability. |
-| `application` | `UseCaseDispatcherImpl` | class | App-Factory dispatcher: resolves an `Intention` to its `UseCase` via the `UseCaseRegistry`, enforces the descriptor's RBAC against the actor's authorities, then executes the use-case with a context derived from the intention. |
-| `domain/model` | `WorkflowContext` | record | Rich, self-validating domain context for Workflow orchestration. |
-| `domain/port` | `WorkflowOrchestrator` | interface | Business-owned port interface for sovereign workflow orchestration. |
-| `prompt` | `MarkdownPromptResolver` | class | Thread-safe, cached resolver for Git-tracked Markdown prompt templates. |
-| `usecases/chat` | `ChatAssistantUseCase` | class | Reference use-case — a synchronous chat assistant. |
-| `usecases/image` | `ImageGenerationUseCase` | class | Second reference use-case — image generation. |
-| `usecases/studio` | `StudioRunUseCase` | class | Runs an installed Studio as a first-class `Intention` (ADR-034 §9.2). |
+| `com/krizaka/orazaka/business/api` | `AgentPayload` | record | Payload for a `Capability#AGENT` intention — a goal the core's agent loop will plan and execute (plan→act→observe). |
+| `com/krizaka/orazaka/business/api` | `Capability` | enum | The high-level capability an `Intention` targets. |
+| `com/krizaka/orazaka/business/api` | `ChatPayload` | record | Payload for a `Capability#CHAT` intention. |
+| `com/krizaka/orazaka/business/api` | `ExecutionMode` | enum | Execution mode of an `Intention`: `SYNC` for low-latency interactive responses (including token streaming), `ASYNC` for heavy/deferred work dispatched to a worker. |
+| `com/krizaka/orazaka/business/api` | `ImagePayload` | record | Payload for a `Capability#IMAGE` intention. |
+| `com/krizaka/orazaka/business/api` | `Intention` | record | The immutable entry unit of the platform — the single thing the router translates transport into and hands to the `UseCaseDispatcher`. |
+| `com/krizaka/orazaka/business/api` | `IntentionContext` | record | Ambient context of an `Intention`: the conversation session, the acting principal (opaque `actorId` — no cross-context identity coupling), the actor's resolved authorities (for RBAC), and resolved preferences / environment signals. |
+| `com/krizaka/orazaka/business/api` | `IntentionType` | enum | CQRS pivot of an `Intention`: `COMMAND` mutates state, `QUERY` only reads. |
+| `com/krizaka/orazaka/business/api` | `Payload` | interface | Sealed hierarchy of the typed payloads an `Intention` can carry. |
+| `com/krizaka/orazaka/business/api` | `PlanningMode` | enum | How a use-case resolves its execution plan: `DETERMINISTIC` runs a fixed workflow (DAG), `AGENTIC` delegates planning to the core's agent loop (plan→act→observe). |
+| `com/krizaka/orazaka/business/api` | `RbacPolicy` | record | RBAC requirement a `UseCaseDescriptor` declares: the authorities an actor must hold to run the use-case. |
+| `com/krizaka/orazaka/business/api` | `StudioPayload` | record | Payload for a `Capability#STUDIO` intention — one run of an installed Studio (ADR-034). |
+| `com/krizaka/orazaka/business/api` | `UseCase` | interface | SPI extension point — adding a product capability means implementing a `UseCase` and declaring its `UseCaseDescriptor`. |
+| `com/krizaka/orazaka/business/api` | `UseCaseContext` | record | Execution context handed to a `UseCase`, derived by the dispatcher from the `Intention` and the resolved security context. |
+| `com/krizaka/orazaka/business/api` | `UseCaseDescriptor` | record | Metadata describing a `UseCase` — the metadata-driven contract the `UseCaseRegistry` matches intentions against and the auto-docs surface. |
+| `com/krizaka/orazaka/business/api` | `UseCaseDispatcher` | interface | Inbound port — the single entry the router calls after translating transport into an `Intention`. |
+| `com/krizaka/orazaka/business/api` | `UseCasePayload` | interface | Marker for a typed input accepted by a `UseCase`. |
+| `com/krizaka/orazaka/business/api` | `UseCaseRegistry` | interface | Inbound port — the auto-discovered catalogue of registered `UseCase`s. |
+| `com/krizaka/orazaka/business/api` | `UseCaseResolutionException` | class | Thrown by the `UseCaseDispatcher` when an `Intention` cannot be served — no registered `UseCase` matches it (ERR-410) or RBAC denies the actor (ERR-403). |
+| `com/krizaka/orazaka/business/application` | `SpringUseCaseRegistry` | class | Auto-discovering `UseCaseRegistry`: it is handed every `UseCase` bean registered in the context and resolves an `Intention` to the first use-case whose descriptor serves the intention's capability. |
+| `com/krizaka/orazaka/business/application` | `UseCaseDispatcherImpl` | class | App-Factory dispatcher: resolves an `Intention` to its `UseCase` via the `UseCaseRegistry`, enforces the descriptor's RBAC against the actor's authorities, then executes the use-case with a context derived from the intention. |
+| `com/krizaka/orazaka/business/domain/model` | `WorkflowContext` | record | Rich, self-validating domain context for Workflow orchestration. |
+| `com/krizaka/orazaka/business/domain/port` | `WorkflowOrchestrator` | interface | Business-owned port interface for sovereign workflow orchestration. |
+| `com/krizaka/orazaka/business/prompt` | `MarkdownPromptResolver` | class | Thread-safe, cached resolver for Git-tracked Markdown prompt templates. |
+| `com/krizaka/orazaka/business/prompt` | `PromptTextSource` | interface | Outbound port of the prompt resolver: reads the text behind a resource location. |
+| `com/krizaka/orazaka/business/usecases/chat` | `ChatAssistantUseCase` | class | Reference use-case — a synchronous chat assistant. |
+| `com/krizaka/orazaka/business/usecases/image` | `ImageGenerationUseCase` | class | Second reference use-case — image generation. |
+| `com/krizaka/orazaka/business/usecases/studio` | `StudioRunUseCase` | class | Runs an installed Studio as a first-class `Intention` (ADR-034 §9.2). |
 
 ## The contract
 

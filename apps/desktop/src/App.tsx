@@ -1,3 +1,4 @@
+import { useQuery, useQueryClient } from "@krizaka/query";
 import { useCallback, useEffect, useState } from "react";
 import { OrazakaLogo } from "@krizaka/ui";
 import { Badge } from "@krizaka/ui/badge";
@@ -5,25 +6,34 @@ import { Button } from "@krizaka/ui/button";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "@krizaka/ui/tabs";
 import { ThemeToggle, useTheme } from "@krizaka/ui/theme";
 import { Alert } from "@krizaka/ui/alert";
+import { snapshotKeys, snapshotQuery } from "./lib/queries";
 import { api, errorMessage, hostOf, on, type Probe, type Settings, type Snapshot } from "./lib/api";
 import { I18nProvider, useI18n, type Locale } from "./lib/i18n";
+import { CodePanel } from "./components/code/CodePanel";
 import { AutomationsPanel } from "./components/automations/AutomationsPanel";
 import { FilesPanel } from "./components/FilesPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { StackPanel } from "./components/StackPanel";
 
 export function App() {
-  const [snap, setSnap] = useState<Snapshot | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const refresh = useCallback(() => api.snapshot().then(setSnap).catch((e) => setError(errorMessage(e))), []);
+  const queryClient = useQueryClient();
+  const snapshot = useQuery(snapshotQuery());
+  const snap = snapshot.data ?? null;
+  const error = snapshot.error ? errorMessage(snapshot.error) : null;
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: snapshotKeys.all });
+  }, [queryClient]);
+  const setSnap = useCallback((s: Snapshot) => queryClient.setQueryData(snapshotKeys.all, s), [queryClient]);
 
+  // a pushed event (the probe) is tied to the cache; the listener is cleaned up
   useEffect(() => {
-    void refresh();
-    const off = on<Probe>("stack-probe", (probe) => setSnap((s) => (s ? { ...s, probe } : s)));
+    const off = on<Probe>("stack-probe", (probe) =>
+      queryClient.setQueryData<Snapshot>(snapshotKeys.all, (s) => (s ? { ...s, probe } : s)),
+    );
     return () => {
       void off.then((f) => f());
     };
-  }, [refresh]);
+  }, [queryClient]);
 
   const locale: Locale = snap?.settings.locale ?? "en";
   return (
@@ -78,14 +88,16 @@ function Shell({ snap, error, refresh, setSnap }: { snap: Snapshot | null; error
           <TabsTrigger value="stack">{t("tabs.stack")}</TabsTrigger>
           <TabsTrigger value="files">{t("tabs.files")}</TabsTrigger>
           <TabsTrigger value="automations">{t("tabs.automations")}</TabsTrigger>
+          <TabsTrigger value="code">{t("tabs.code")}</TabsTrigger>
           <TabsTrigger value="settings">{t("tabs.settings")}</TabsTrigger>
         </TabsList>
         <main className="min-h-0 flex-1 overflow-auto p-5">
           {snap ? (
             <>
               <TabsContent value="stack"><StackPanel snap={snap} goSettings={() => setTab("settings")} /></TabsContent>
-              <TabsContent value="files"><FilesPanel snap={snap} refresh={refresh} /></TabsContent>
+              <TabsContent value="files"><FilesPanel snap={snap} /></TabsContent>
               <TabsContent value="automations"><AutomationsPanel snap={snap} /></TabsContent>
+              <TabsContent value="code"><CodePanel /></TabsContent>
               <TabsContent value="settings"><SettingsPanel snap={snap} onSaved={(s) => setSnap(s)} refresh={refresh} /></TabsContent>
             </>
           ) : null}

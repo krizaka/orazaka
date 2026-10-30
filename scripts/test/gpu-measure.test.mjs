@@ -9,6 +9,7 @@ const read = (p) => readFileSync(join(root, p), "utf8");
 const measure = read("infra/gpu/runpod-measure.sh");
 const bootstrap = read("infra/gpu/runpod-bootstrap.sh");
 const lib = read("scripts/lib/gpu-runpod.sh");
+const guard = read("scripts/runpod-guard.py"); // the v2 client builds the pod body (orazaka#508)
 const watchdog = (t) => t.slice(t.indexOf("cat > /usr/local/bin/orazaka-watchdog"), t.indexOf("chmod +x /usr/local/bin/orazaka-watchdog"));
 
 test("the measurement pod never learns the relay, the broker, a service token or starts the consumer", () => {
@@ -26,14 +27,15 @@ test("it arms the same watchdog as the worker pod, first, and ends itself after 
 
 test("the measure subcommand sends the pod only what it needs", () => {
   assert.match(lib, /measure\) shift; MEASURE=1 runpod_start/);
-  const block = lib.slice(lib.indexOf('if e.get("MEASURE")'), lib.indexOf("if e.get(\"HF_TOKEN\")"));
+  const block = guard.slice(guard.indexOf('if e.get("MEASURE")'), guard.indexOf('if e.get("HF_TOKEN")'));
   assert.match(block, /WORKER_REF.*PROFILE.*MAX_HOURS.*IDLE_MINUTES.*MEASURE_ARGS.*MEASURE_PIP/s);
   assert.ok(!/RELAY|RABBIT|SERVICE_TOKEN|BROKER/.test(block.split("else:")[0]), "measure env carries no broker credential");
-  assert.match(lib, /"measure" if e.get\("MEASURE"\)/);
+  assert.match(guard, /"measure" if e.get\("MEASURE"\)/);
 });
 
 test("one pod at a time: the measure pod is named orazaka-gpu-* so the existing guard refuses a second one", () => {
-  assert.match(lib, /startswith\("orazaka-gpu"\)/);
+  assert.match(guard, /"orazaka-gpu-" \+/);
+  assert.match(lib, /rp_py list orazaka-gpu/);
 });
 
 test("the measures write where the next pod and the operator can read them", () => {
@@ -42,10 +44,11 @@ test("the measures write where the next pod and the operator can read them", () 
 });
 
 test("an EXITED pod does not hold the slot: only a pod that runs refuses a second one (its stopped disk costs cents, not a GPU)", () => {
-  assert.match(lib, /startswith\("orazaka-gpu"\) and p\.get\("desiredStatus"\) != "EXITED"/);
+  assert.match(lib, /rp_live\(\) \{[^\n]*\$2 != "EXITED" && \$2 != "TERMINATED"/);
+  assert.match(lib, /running=\$\(rp_live \| wc -l/);
 });
 
 test("stop ends the pods that run, never an EXITED one: a stopped pod keeps its disk (weights, work) for whoever owns it", () => {
   const stop = lib.slice(lib.indexOf("runpod_stop() {"), lib.indexOf("runpod_ledger_close() {"));
-  assert.match(stop, /startswith\("orazaka-gpu"\) and p\.get\("desiredStatus"\) != "EXITED"/);
+  assert.match(stop, /done < <\(rp_live\)/); // rp_live drops EXITED and TERMINATED pods
 });

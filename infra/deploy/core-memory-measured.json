@@ -1,0 +1,8 @@
+{
+  "_": "What the core container holds at steady state, measured with `docker --memory=2g` on the dev image's jars (orazaka#499, 2026-10-29), 90 s after all eight ports answer. `scripts/test/core-memory-budget.test.mjs` reads it: change the JVM flags or heaps of run-services.sh, re-measure, update this file.",
+  "measuredOn": "2026-10-29",
+  "before": { "cgroupMiB": 2042, "jvmRssMiB": { "users": 324, "billing": 240, "job": 390, "conversation": 341, "studio": 222, "knowledge": 207, "automation": 181, "edge": 152 } },
+  "after": { "cgroupMiB": 1502, "jvmRssMiB": { "users": 256, "billing": 165, "job": 299, "conversation": 315, "studio": 179, "knowledge": 154, "automation": 143, "edge": 131 } },
+  "workersMiB": { "validation": 68, "hostedVideo": 74, "source": "dev console, /proc VmRSS, 2026-10-29" },
+  "heapCeilingMiB": { "users": 128, "billing": 96, "job": 192, "conversation": 224, "studio": 128, "knowledge": 96, "automation": 96, "edge": 80 }
+}
