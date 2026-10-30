@@ -2,6 +2,7 @@
   "app": {
     "name": "Orazaka",
     "tagline": "L'IA souveraine sur votre Mac",
+    "development": "En développement : encore en test, pas prête pour le public.",
     "version": "App {version}"
   },
   "tabs": {
