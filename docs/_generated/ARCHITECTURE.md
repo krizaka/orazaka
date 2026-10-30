@@ -14,7 +14,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 |:---|:---|:---|
 | **Clients** | a UI repository of the workspace manifest (layer app, kind npm) | `orazaka-cli`, `orazaka-mobile-client`, `orazaka-web-client` |
 | **Services & workers** | a module with a main (SpringApplication.run), or a native worker | `orazaka-automation-service`, `orazaka-conversation-service`, `orazaka-edge`, `orazaka-job-service`, `orazaka-knowledge-service`, `orazaka-studio-service`, `orazaka-worker-media`, `krizaka-billing-service`, `krizaka-notifications-service`, `krizaka-users-service` |
-| **Adapters** | an imported module that is none of the below: persistence, typed HTTP clients, asset store, bridge | `orazaka-adapter-spring-ai`, `orazaka-architecture`, `orazaka-assets`, `orazaka-crypto`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-rewrite-style`, `orazaka-studio-client`, `krizaka-billing-client`, `krizaka-quality`, `krizaka-rewrite-style`, `krizaka-users-client`, `krizaka-users-persistence` |
+| **Adapters** | an imported module that is none of the below: persistence, typed HTTP clients, asset store, bridge | `orazaka-adapter-spring-ai`, `orazaka-architecture`, `orazaka-assets`, `orazaka-crypto`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-rewrite-style`, `orazaka-studio-client`, `krizaka-billing-client`, `krizaka-payments`, `krizaka-quality`, `krizaka-rewrite-style`, `krizaka-users-client`, `krizaka-users-persistence` |
 | **Application** | the orchestration, pipeline and capability libraries around the core (AGENTS.md §2: business, interceptors, tools) | `orazaka-business`, `orazaka-interceptors`, `orazaka-tools` |
 | **Domain core** | a `*-core` module — the centre of its hexagon, depending on no outer layer | `orazaka-core`, `krizaka-users-core` |
 | **Contracts** | a Tier-1 `*-api` module — pure interfaces and records | `orazaka-jobs-api`, `orazaka-persistence-app-api`, `orazaka-studio-api`, `krizaka-billing-api`, `krizaka-notifications-api`, `krizaka-users-api` |
@@ -46,6 +46,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-rewrite-style` | adapter | `orazaka-build` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-studio-client` | adapter | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
 | `krizaka-billing-client` | adapter | `krizaka-billing` | 0.2.0 | — | — |
+| `krizaka-payments` | adapter | `krizaka-build` | 0.2.0 | — | — |
 | `krizaka-quality` | adapter | `krizaka-build` | 0.2.0 | — | — |
 | `krizaka-rewrite-style` | adapter | `krizaka-build` | 0.2.0 | — | — |
 | `krizaka-users-client` | adapter | `krizaka-users` | 0.2.0 | — | — |
