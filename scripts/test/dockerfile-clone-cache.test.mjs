@@ -43,3 +43,8 @@ test("the clone layer is also keyed by the apply's stamp (CORE_REBUILD): kaniko 
   assert.ok(stamp > 0 && stamp < clone, "the stamp layer comes before the clone, so a new CORE_REBUILD invalidates it");
   assert.ok(arg < dockerfile.indexOf("FROM eclipse-temurin", 1), "declared in the first (sources) stage");
 });
+
+test("the dev image build switches the PMD and SpotBugs checks off: their rules (krizaka-quality) are on GitHub Packages until the Central release, and CI already ran them", () => {
+  const core = dockerfile.slice(dockerfile.indexOf("AS build"), dockerfile.indexOf("# ── 3."));
+  assert.match(core, /-Dkrizaka\.quality\.phase=none/);
+});

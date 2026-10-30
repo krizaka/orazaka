@@ -2761,7 +2761,7 @@
       "usdPerHour": 3.99
     },
     {
-      "what": "RunPod pod (six directed image-to-video clips with Wan 2.2 A14B, one retried, the 1080p/4K passes, the Orochia hero; stopped by id when done)",
+      "what": "RunPod pod (six directed image-to-video clips with Wan 2.2 A14B, one retried, the 1080p/4K passes, the product hero; stopped by id when done)",
       "gpu": "H100 80 GB (CA-MTL-1)",
       "hours": 2.72,
       "usdPerHour": 3.99
@@ -2811,7 +2811,7 @@
       "to": "1872×1080",
       "seconds": 58,
       "gpuUsdPerHour": 3.99,
-      "verdict": "winner — clean detail without grain, temporally stable; 480p sources (the Orochia feed) become convincing HD"
+      "verdict": "winner — clean detail without grain, temporally stable; 480p sources (the product feed) become convincing HD"
     },
     {
       "model": "SeedVR2 3B (video diffusion)",

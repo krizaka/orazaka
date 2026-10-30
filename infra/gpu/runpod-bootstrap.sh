@@ -41,7 +41,7 @@ destroy_pod() {
   local attempt code
   if [[ -n "${RUNPOD_API_KEY:-}" ]]; then
     for attempt in 1 2 3; do
-      code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer ${RUNPOD_API_KEY}" "https://rest.runpod.io/v1/pods/${RUNPOD_POD_ID}")
+      code=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer ${RUNPOD_API_KEY}" "https://api.runpod.io/v2/pods/${RUNPOD_POD_ID}")
       [[ "$code" == "200" || "$code" == "204" || "$code" == "404" ]] && { echo "orazaka-gpu: destroyed through the API ($code)"; return 0; }
       echo "orazaka-gpu: API answered $code (attempt $attempt)"; sleep 5
     done

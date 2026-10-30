@@ -20,7 +20,7 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 
 **Total: $47/month** for Orazaka's own resources (+ its share of the $15 cluster, + tokens).
 
-**Organisation total, measured 2026-10-21 (`doctl`, recurring cloud, GPU apart): about $97/month** — ten web services at $5, the Orazaka core $20, `gpu-relay` $5, the fourth static site $3, the shared PostgreSQL $15, the broker droplet $4 — under the $100 ceiling; about **$87** once `orazaka-admin-dev` (rollback until 2026-10-23) and `orochia-admin-dev` are deleted. There is no RunPod network volume on the account (the earlier « ≈ $14 volume » line was wrong); the GPU is billed by the hour, on use. Dev services run on the smallest instance that fits (`apps-s-1vcpu-0.5gb`; the JVM core cannot go below `basic-s`). Upgrading `core` to
+**Organisation total, measured 2026-10-21 (`doctl`, recurring cloud, GPU apart): about $97/month** — ten web services at $5, the Orazaka core $20, `gpu-relay` $5, the fourth static site $3, the shared PostgreSQL $15, the broker droplet $4 — under the $100 ceiling; about **$87** once `orazaka-admin-dev` (rollback until 2026-10-23) is deleted. There is no RunPod network volume on the account (the earlier « ≈ $14 volume » line was wrong); the GPU is billed by the hour, on use. Dev services run on the smallest instance that fits (`apps-s-1vcpu-0.5gb`; the JVM core cannot go below `basic-s`). Upgrading `core` to
 `basic-m` (4 GB, 2 vCPU, $40) is the first lever if it restarts under load: still $54.
 
 ### The `core` container
@@ -42,6 +42,26 @@ down so App Platform restarts the set.
 
 Measured on 2026-10-14 against the cluster (five JVMs, serial GC, C1 only, virtual threads): **1.3 GB resident**
 idle and after a round of sign-ins and Studio listings — the reason for a 2 GB container.
+
+### Core memory (orazaka#499)
+
+Eight JVMs and two Python workers ran `basic-s` (2 GiB) at 93-99 % and restarted several times an hour (the OOM, orazaka#498).
+Cost comes before size: the first answer is the JVM footprint, measured with `docker --memory=2g` on the image's jars
+(`infra/deploy/core-memory-measured.json`, guarded by `scripts/test/core-memory-budget.test.mjs`).
+
+| | Before | After |
+|---|---|---|
+| Container, eight JVMs, steady | 2042 MiB (at the limit) | 1502 MiB |
+| Largest JVMs (job / conversation / users) | 390 / 341 / 324 MiB | 299 / 315 / 256 MiB |
+| Heap ceilings (sum) | 1408 MiB | 1040 MiB |
+| Time until the eight ports answer | 80 s | 55 s |
+
+What moved it: `MALLOC_ARENA_MAX=2` and `-XX:ActiveProcessorCount=2` / `-XX:CICompilerCount=1` (the container sees the host's 8 CPUs: every
+pool and arena was sized from it), a heap that gives back what it does not hold (`-Xms16m`, free ratios 10-30 %), no perf-data file, heap
+ceilings from the measured live set (18-49 MiB at idle). The rest of a JVM (about 100-250 MiB) is class metadata of the Spring and
+ai-engine stacks: only fewer JVMs, or fewer loaded libraries, reduces it. With the two workers (68 + 74 MiB) the steady set is about
+1.65 GiB, 80 % of the container. Not done: AppCDS (the archive must be trained against live databases at image build), lazy bean
+initialisation (RabbitMQ listeners would not start), dropping automation (-143 MiB; a paused feature is the founder's call).
 
 **Not deployed** (and why): the automation service's connector stubs (Jira, Slack… log only; the service runs for ADR-084), notifications (no e-mail in dev: no password reset),
 worker-media (Metal/MLX — Mac only), Redis (only for `orazaka.identity.rate-limit.enabled`, off).
@@ -125,8 +145,8 @@ edge answers 403 anywhere else; an unscoped key keeps its account's rights). `--
 `AI_ENGINE_URL` / `AI_ENGINE_API_KEY` instead of the Studio callers' `AI_PROVIDER` / `AI_API_URL` / `AI_API_KEY`:
 
 ```bash
-node scripts/dev-deploy.mjs service-account orochia-explorer --scopes ai:embed --prefix AI_ENGINE \
-  --out ~/Documents/krizaka/orochia-dev.env
+node scripts/dev-deploy.mjs service-account product-explorer --scopes ai:embed --prefix AI_ENGINE \
+  --out ~/Documents/krizaka/product-dev.env
 ```
 
 Embeddings: `POST /api/v1/embeddings` `{ "input": ["…"], "model"?: "gte-large-en-v1.5" }` → `{ runId, model, dimensions, data:[{index, embedding}],
@@ -138,7 +158,7 @@ runId=…` in the core's logs (user, model, counts — never a text or a vector)
 
 ## Recommendations — a product's feed, served by Orazaka (ADR-078)
 
-The knowledge service serves the products' recommender (krizaka/orochia#226; decision:
+The knowledge service serves the products' recommender (ADR-078); decision:
 [ADR-078](https://github.com/krizaka/orazaka-packs/blob/main/docs/adr/ADR-078-recommendations.md)). A product feeds it
 with its service key — events, eligible items, erasures (scope `reco:sync`) — and reads its feeds (scope `reco:read`):
 `POST /api/v1/recommendations/{events,items,erasures}`, `GET /api/v1/recommendations/{for-you,similar,insights}`. Users
@@ -148,8 +168,8 @@ The parameters are rows of `reco_settings` (versioned; v1 seeded), never configu
 
 ```bash
 node scripts/dev-deploy.mjs recommendations      # the tables and settings v1 on orazaka_knowledge_db (idempotent)
-node scripts/dev-deploy.mjs service-account orochia-explorer --scopes ai:embed,reco:sync,reco:read --prefix AI_ENGINE \
-  --out ~/Documents/krizaka/orochia-dev.env   # rotates the product's key: update its App Platform secret
+node scripts/dev-deploy.mjs service-account product-explorer --scopes ai:embed,reco:sync,reco:read --prefix AI_ENGINE \
+  --out ~/Documents/krizaka/product-dev.env   # rotates the product's key: update its App Platform secret
 ```
 
 ## Admin console (host routing)

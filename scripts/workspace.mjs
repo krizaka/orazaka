@@ -98,7 +98,15 @@ function clone(args) {
     const url = ssh
       ? `git@github.com:${MANIFEST.org}/${r.name}.git`
       : `https://github.com/${MANIFEST.org}/${r.name}.git`;
-    run("git", ["clone", ...(depth ? ["--depth", depth] : []), url, target]);
+    const shallow = depth ? ["--depth", depth] : [];
+    // A repository may name a `ref` (a branch) while its change and the workspace's must land together
+    // (a lock that follows a migration). Once the branch is merged and deleted, the default branch is cloned.
+    if (r.ref) {
+      const taken = spawnSync("git", ["clone", ...shallow, "--branch", r.ref, url, target], { stdio: "inherit" });
+      if (taken.status === 0) continue;
+      console.warn(`· ${r.name}: branch ${r.ref} is gone, cloning the default branch`);
+    }
+    run("git", ["clone", ...shallow, url, target]);
   }
 }
 
@@ -152,6 +160,18 @@ function upstreams(name) {
   }
 }
 
+/**
+ * The formatter rule (krizaka/.github#427): a component repository that carries a `format:check` script (Prettier with
+ * `@krizaka/config/prettier`) is checked here too, so an unformatted change cannot reach the workspace through a member.
+ */
+function formatCheck(target) {
+  const dir = join(ROOT, target.path);
+  const file = join(dir, "package.json");
+  if (!existsSync(file) || !JSON.parse(readFileSync(file, "utf8")).scripts?.["format:check"]) return;
+  if (target.packageManager === "pnpm") run("npx", ["-y", PNPM, "--dir", dir, "run", "format:check"], { cwd: ROOT });
+  else run("npm", ["run", "format:check"], { cwd: dir });
+}
+
 function ci(name) {
   const target = repo(name);
 
@@ -169,6 +189,7 @@ function ci(name) {
     // The member's own tests (incl. krizaka-deps) run here, in ITS pull requests; the workspace job only builds it (check:web).
     run("npm", ["run", "validate:web"], { cwd: UI });
     run("npx", ["-y", PNPM, "--dir", target.path, "run", "build"], { cwd: ROOT });
+    formatCheck(target);
     return;
   }
 
@@ -185,6 +206,7 @@ function ci(name) {
         run("npm", ["run", "build", `--workspace=${ws}`], { cwd: UI });
       }
     }
+    formatCheck(target);
     return;
   }
 

@@ -1,0 +1,6 @@
+# Fixtures found by the org secret scan in history: documentation examples and test values (reviewed 2026-10-29), not credentials.
+7c4588214487a7f4dfe1053b430c5d08caea643b:apps/desktop/src-tauri/src/code/tests.rs:aws-access-token:157
+c06801b94cc4d9a7bdf01edf43f6dad92a384a6b:apps/desktop/src-tauri/src/code/tests.rs:aws-access-token:157
+d49cb864160ecbe4db78fd5be4a2fdda7819374a:docs/_generated/PACKS.md:generic-api-key:1160
+d49cb864160ecbe4db78fd5be4a2fdda7819374a:docs/_generated/PACKS.md:generic-api-key:73
+d49cb864160ecbe4db78fd5be4a2fdda7819374a:docs/_generated/architecture.json:generic-api-key:4961

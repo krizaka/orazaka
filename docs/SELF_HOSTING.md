@@ -21,9 +21,11 @@ Orazaka runs on hardware you own. Your documents, prompts and results stay there
 | GPU | the Mac's own | optional NVIDIA, 20 GB VRAM or more; without one, text, documents and small images only |
 | Also | FileVault on | Docker Engine 27+ with compose |
 
-## On a Mac (1.0)
+## On a Mac (in testing, not distributed yet)
 
-1. Download `Orazaka.dmg` (signed and notarized) and drag it into Applications. Or run `npx orazaka install`.
+The Mac app is an unsigned test build, still in testing: it is not distributed, so there is no download yet. Until it is, run `npx orazaka install`.
+
+1. Run `npx orazaka install`. (When the Mac app is distributed, you will download it and drag it into Applications.)
 2. Open it. It checks your Mac, downloads the models once, and starts Orazaka.
 3. Open `http://localhost:3000` and create the administrator account. Sign-up stays closed: you invite your colleagues.
 

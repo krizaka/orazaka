@@ -163,3 +163,9 @@ test("the default speech model is never one on an optional GPU host (ADR-080: Ko
   assert.doesNotMatch(sql, /is_default = \(model_name = 'kokoro-82m'\)/);
   assert.match(sql, /is_default = \(model_name = 'piper-en-medium-ljspeech'\) WHERE category = 'speech'/);
 });
+
+test("a psql meta-command line (\\c orazaka_db) does not glue to the INSERT that follows it", () => {
+  const sql = "\\c orazaka_db\n\nINSERT INTO orazaka_models (model_name, category) VALUES ('m-x', 'image') ON CONFLICT (model_name) DO NOTHING;\nUPDATE orazaka_models SET vendor = 'V' WHERE model_name = 'm-x';";
+  assert.equal(statements(sql).length, 2);
+  assert.deepEqual(catalogue(sql).map((r) => r.model_name), ["m-x"]);
+});

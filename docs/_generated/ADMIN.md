@@ -21,8 +21,9 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 |:---|:---|:---|
 | `/` | `/` — the console opens on the platform's health: usage, credits, jobs, latency. | — |
 | `/audit` | `/audit` — the audit trail of account administration. | — |
-| `/billing` | The billing console. | Consommation · Tarifs par modèle · Tarifs par capacité · Offres · Packs métier · Portefeuilles |
+| `/billing` | The billing console. | Consommation · Clés des produits · Tarifs par modèle · Tarifs par capacité · Offres · Catalogue de prix · Packs métier · Portefeuilles |
 | `/engine` | — | — |
+| `/engine/tools` | — | — |
 | `/law` | `/law` — Law → Proposals (ADR-089 §8): the review queue and promotion of the rules from the law, the corpus, the demand. | — |
 | `/login` | — | — |
 | `/models` | `/models` — the model registry, its providers and the capabilities that may be dispatched. | — |
@@ -84,6 +85,7 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | GET | `/api/v1/billing/pricebook` | ADMIN | — |
 | POST | `/api/v1/billing/pricebook` | ADMIN | — |
 | POST | `/api/v1/billing/pricebook/preview` | ADMIN | — |
+| GET | `/api/v1/billing/prices/admin` | ADMIN | Every entry in force, internal ones included. |
 | DELETE | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | Ends an actor's subscription. |
 | GET | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | The subscription in force for an actor. |
 | POST | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | Moves an actor onto a plan — upgrade, downgrade or trial. |
@@ -99,6 +101,9 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | POST | `/api/v1/admin/users/{id}/restore` | ADMIN | — |
 | POST | `/api/v1/admin/users/{id}/suspend` | ADMIN | — |
 | GET | `/api/v1/admin/users/audit` | ADMIN | — |
+| GET | `/api/v1/organizations` | authenticated | — |
+| POST | `/api/v1/organizations` | authenticated | — |
+| GET | `/api/v1/organizations/{id}/service-keys` | ADMIN + USER | — |
 | GET | `/api/v1/studios` | authenticated | The catalogue, optionally narrowed to one profession. |
 | GET | `/api/v1/studios/{studioKey}` | authenticated | One Studio's detail, including the schemas its forms are generated from. |
 | GET | `/api/v1/studios/{studioKey}/blueprints` | ADMIN | Every version of a Studio, drafts included — the Builder's version list. |
@@ -128,6 +133,13 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | DELETE | `/api/v1/models/{id}` | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | Updates an existing model definition in the catalog. |
 | GET | `/api/v1/models/admin/audit` | — |
+| GET | `/api/v1/models/admin/feature-routes` | The feature routes, read only. |
+| GET | `/api/v1/models/admin/feature-structured-bounds` | Every bound, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | Removes the structured-output bound a feature set for itself; the default row then applies. |
+| PUT | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | Sets the bound of a feature (* is the default row). |
+| GET | `/api/v1/models/admin/feature-tool-bounds` | Every bound, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | Removes a feature's own bound so it falls back to the default row. |
+| PUT | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | Sets the bound of a feature (* is the default row). |
 | GET | `/api/v1/pipeline/interceptors` | Retrieves all pipeline interceptor configurations ordered by execution order. |
 | PUT | `/api/v1/pipeline/interceptors` | Bulk-updates pipeline interceptor ordering and enabled state. |
 | POST | `/api/v1/pipeline/interceptors/reset` | Resets all pipeline interceptor configurations to hardcoded defaults. |
@@ -171,6 +183,10 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 
 | Method | Path | Summary |
 |:---|:---|:---|
+| GET | `/api/v1/admin/lockout-policy` | — |
+| PUT | `/api/v1/admin/lockout-policy` | — |
+| GET | `/api/v1/admin/social-connections` | — |
+| POST | `/api/v1/admin/social-connections/rewrap` | Re-wraps every secret under the current vault key (after a key change). |
 | GET | `/api/v1/admin/users` | — |
 | DELETE | `/api/v1/admin/users/{id}` | — |
 | GET | `/api/v1/admin/users/{id}` | — |

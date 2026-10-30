@@ -29,3 +29,10 @@ test("the packs recipe writes coverage.xml at the repository root (krizaka/.gith
   assert.doesNotMatch(packs, /run\("python3", \["test_/, "no suite runs outside coverage");
   assert.match(packs, /"coverage", "xml"[\s\S]*"coverage\.xml"/);
 });
+
+test("every npm member with a format:check script is checked by the workspace CI (krizaka/.github#427)", () => {
+  assert.match(source, /function formatCheck\(target\)/);
+  assert.match(source, /scripts\?\.\["format:check"\]/);
+  const calls = source.split("\n").filter((l) => l.trim() === "formatCheck(target);");
+  assert.equal(calls.length, 2, "the pnpm member and the npm members both run it");
+});

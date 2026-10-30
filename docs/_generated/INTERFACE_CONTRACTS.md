@@ -26,6 +26,7 @@ generated: true
 
 - `AccessAudit`
 - `AudioGeneratorClient`
+- `AudioTranscriber`
 - `CapabilityProvider`
 - `ChatGeneratorClient`
 - `ChatInvocation`
@@ -40,6 +41,7 @@ generated: true
 - `ConsentRegistry`
 - `ControlVerdictRecorder`
 - `ConversationMemory`
+- `DomainEventPublisher`
 - `EmbeddingClient`
 - `ExternalCheckConnector`
 - `FeatureModelRoutes`
@@ -49,18 +51,22 @@ generated: true
 - `McpOrchestrator`
 - `ModelCatalogProvider`
 - `ModelEndpointResolver`
+- `OutputJudge`
 - `PipelineConfigProvider`
 - `PlatformMcpServerProvider`
 - `PlatformToolConfigProvider`
 - `PromptAssembly`
+- `PromptCachePolicy`
 - `ProviderChatClient`
 - `SemanticClassifierPort`
 - `SpeechSynthesis`
 - `StepModelRecorder`
 - `StepRouteProvider`
+- `StructuredOutputBounds`
 - `StructuredOutputClient`
 - `TestShaperPort`
 - `ToolAnswerCodec`
+- `ToolLoopBounds`
 - `ToolOptions`
 - `ToolPermissionProvider`
 - `ToolRegistry`
@@ -78,9 +84,12 @@ generated: true
 - `ApiKeyService`
 - `IdentityReconciliationService`
 - `IdentityService`
+- `LoginLockoutService`
 - `OrganizationService`
+- `PasswordPolicyService`
 - `PasswordRecoveryService`
 - `RateLimitProvider`
+- `SocialConnectionService`
 - `TokenService`
 - `UserProfileProvider`
 
@@ -89,11 +98,15 @@ generated: true
 - `AdminUserRepositoryPort`
 - `ApiKeyRepositoryPort`
 - `AuthorityRepositoryPort`
+- `BreachedPasswordPort`
 - `CryptographyPort`
+- `LockoutRepositoryPort`
 - `OAuth2ProviderVerifier`
 - `OrganizationRepositoryPort`
 - `PasswordEventPublisher`
 - `PasswordResetTokenRepositoryPort`
+- `SecretSealPort`
+- `SocialConnectionRepositoryPort`
 - `UserCredentialRepositoryPort`
 - `UserEventPublisher`
 - `UserInterceptionRepositoryPort`
@@ -109,7 +122,10 @@ generated: true
 - `CatalogModelManager`
 - `ChatMemoryPersistenceProvider`
 - `ChatSessionPersistenceProvider`
+- `FeatureCachePolicyManager`
 - `FeatureRouteManager`
+- `FeatureStructuredBoundManager`
+- `FeatureToolBoundManager`
 - `JobPersistenceProvider`
 - `OutboxStore`
 - `PipelineConfigManager`
