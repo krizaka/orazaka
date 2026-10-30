@@ -95,7 +95,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 ## Commands
 
 ```cli-commands
-33 commands, 39 subcommands — every one in the table below.
+34 commands, 41 subcommands — every one in the table below.
 ```
 
 | Command | Description |
@@ -157,6 +157,9 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka release` | Release bundles — check a release manifest and an offline bundle before installing it |
 | `orazaka release verify <manifest>` | Check a release manifest, and with --dir the artefacts of an offline bundle against it |
 | `orazaka reset [token]` | Reset account password using a valid reset token |
+| `orazaka runs` | Runs as background tasks: list and inspect them by name or id |
+| `orazaka runs ls` (alias `list`) | List the runs: name, status, current step, elapsed time, cost against the budget |
+| `orazaka runs show <ref>` | Show one run, by name or id |
 | `orazaka settings` | Manage user settings and preferences |
 | `orazaka settings get` | Get all settings and preferences |
 | `orazaka settings set <key> <value>` | Set a user preference key-value pair |
@@ -551,6 +554,25 @@ Reset account password using a valid reset token
 | Argument / option | Description |
 |:---|:---|
 | `[token]` | Password reset token |
+
+### `orazaka runs ls`
+
+List the runs: name, status, current step, elapsed time, cost against the budget
+
+| Argument / option | Description |
+|:---|:---|
+| `--watch` | Refresh the list every few seconds |
+| `--json` | Output the rows as JSON |
+
+### `orazaka runs show <ref>`
+
+Show one run, by name or id
+
+| Argument / option | Description |
+|:---|:---|
+| `<ref>` | The run name or id |
+| `--steps` | Show the folded timeline, one line per step |
+| `--json` | Output the run as JSON |
 
 ### `orazaka settings set <key> <value>`
 
