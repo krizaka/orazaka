@@ -72,6 +72,10 @@ pub struct AppState {
     code_checks: Mutex<code::checks::Book>,
     /// The settings rule set for code runs (`code-rules.json`): check limits and the agent's budgets.
     code_rules: code::rules::CodeRules,
+    /// The GitHub App connection (ADR-093 slice 4): the sign-in in progress; the tokens live in the Keychain only.
+    github: code::github::Connection,
+    github_config: code::github::GithubConfig,
+    secrets: Arc<dyn krizaka_tauri_kit::secrets::SecretStore>,
 }
 
 impl AppState {
@@ -647,6 +651,31 @@ async fn code_check_run(state: State<'_, AppState>, name: String, approved: bool
     }
 }
 
+/// GitHub (slice 4): what the page may know. Never a token.
+#[tauri::command]
+fn github_status(state: State<'_, AppState>) -> Res<code::github::GithubStatus> {
+    state.github.status(&*state.secrets)
+}
+
+/// Starts the device flow: returns the code to type and where; the wait runs on its own thread.
+#[tauri::command]
+async fn github_sign_in(state: State<'_, AppState>) -> Res<krizaka_tauri_kit::device_flow::DeviceCode> {
+    let spawn = |job: Box<dyn FnOnce() + Send>| {
+        std::thread::spawn(job);
+    };
+    let code = state.github.begin(Arc::new(code::github::HttpTransport), state.secrets.clone(), &state.github_config, spawn)?;
+    code_audit(&state, "code.github.sign_in", serde_json::json!({ "userCode": code.user_code }));
+    Ok(code)
+}
+
+/// Signs out here: both Keychain items go. Revoking the App is done in GitHub's settings.
+#[tauri::command]
+fn github_sign_out(state: State<'_, AppState>) -> Res<()> {
+    state.github.sign_out(&*state.secrets)?;
+    code_audit(&state, "code.github.sign_out", serde_json::json!({}));
+    Ok(())
+}
+
 /// Undo: puts the touched files back from `refs/orazaka/snapshots/<run-id>`.
 #[tauri::command]
 fn code_undo(state: State<'_, AppState>, run_id: String, paths: Vec<String>) -> Res<Vec<String>> {
@@ -974,6 +1003,7 @@ pub fn run() {
             );
             spawn_scheduler(automations.clone());
             let checks_file = data_dir.join("code-checks.json");
+            let github_file = data_dir.join("github.json");
             let code_rules = code::rules::CodeRules::load(&data_dir.join("code-rules.json"));
             app.manage(AppState {
                 data_dir,
@@ -989,6 +1019,11 @@ pub fn run() {
                 code: Mutex::new(None),
                 code_checks: Mutex::new(code::checks::Book::open(&checks_file)),
                 code_rules: code_rules.clone(),
+                github: code::github::Connection::default(),
+                github_config: code::github::GithubConfig::load(&github_file),
+                secrets: Arc::new(krizaka_tauri_kit::secrets::Checked(krizaka_tauri_kit::keychain::Keychain::new(
+                    &app.config().identifier,
+                ))),
             });
             let handle = app.handle().clone();
             let state = handle.state::<AppState>();
@@ -1064,6 +1099,9 @@ pub fn run() {
             code_check_confirm,
             code_check_revoke,
             code_check_run,
+            github_status,
+            github_sign_in,
+            github_sign_out,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Orazaka Desktop");

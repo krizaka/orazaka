@@ -252,6 +252,17 @@
       "output": "Sortie",
       "exit": "Code {code} en {ms} ms",
       "timedOut": "Délai dépassé"
+    },
+    "github": {
+      "title": "GitHub",
+      "lead": "Connectez GitHub pour mener une issue jusqu'à une pull request. Le jeton reste dans le trousseau macOS ; cette page ne le voit jamais.",
+      "connect": "Connecter GitHub",
+      "connected": "GitHub est connecté",
+      "signOut": "Déconnecter",
+      "revokeHint": "Pour révoquer complètement l'application, utilisez vos réglages GitHub (Applications).",
+      "enter": "Saisissez ce code sur {uri}",
+      "open": "Ouvrir GitHub",
+      "waiting": "En attente de votre accord dans le navigateur…"
     }
   }
 }
