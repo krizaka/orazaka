@@ -1,0 +1,4 @@
+{
+  "$comment": "Integration tests allowed to skip in CI (orazaka-studio#98). Each entry: component, class (fully qualified), reason. It only shrinks: a stale entry fails.",
+  "allowed": []
+}
