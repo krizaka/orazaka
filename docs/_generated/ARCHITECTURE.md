@@ -60,24 +60,24 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-studio-api` | contract | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
 | `krizaka-billing-api` | contract | `krizaka-billing` | 0.2.0 | — | — |
 | `krizaka-users-api` | contract | `krizaka-users` | 0.2.0 | — | — |
-| `krizaka-app-config` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-idempotency` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-messaging` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-observability` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-persistence` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-ratelimit` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-security` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-spring-boot-starter-app-config` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-spring-boot-starter-idempotency` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-spring-boot-starter-observability` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-spring-boot-starter-persistence` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-spring-boot-starter-ratelimit` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-spring-boot-starter-security` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-spring-boot-starter-web` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-spring-boot-starter-webhooks` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-web` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
-| `krizaka-webhooks` | platform | `krizaka-platform-kit` | 0.3.0 | — | — |
+| `krizaka-app-config` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-idempotency` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-messaging` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-observability` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-persistence` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-ratelimit` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-security` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-spring-boot-starter-app-config` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-spring-boot-starter-idempotency` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-spring-boot-starter-observability` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-spring-boot-starter-persistence` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-spring-boot-starter-ratelimit` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-spring-boot-starter-security` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-spring-boot-starter-web` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-spring-boot-starter-webhooks` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-web` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
+| `krizaka-webhooks` | platform | `krizaka-platform-kit` | 0.4.0 | — | — |
 
 ## Dependencies
 

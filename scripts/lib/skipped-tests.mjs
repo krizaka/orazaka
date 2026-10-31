@@ -26,7 +26,8 @@ export function reportFiles(dir, found = []) {
  * allowed: [{ component, class, reason }] - a justified skip. Returns the totals and the offenders (skipped, not allowed).
  * A class on the allow-list that no longer skips is also reported as stale, so the list only shrinks.
  */
-export function judge(component, reports, allowed = []) {
+export function judge(component, reports, allowed = [], noIntegrationTests = []) {
+  const exempt = noIntegrationTests.find((e) => e.component === component);
   const mine = allowed.filter((a) => a.component === component);
   const offenders = reports.filter((r) => r.skipped > 0 && !mine.some((a) => a.class === r.name));
   const stale = mine.filter((a) => !reports.some((r) => r.name === a.class && r.skipped > 0));
@@ -36,6 +37,10 @@ export function judge(component, reports, allowed = []) {
     skipped: reports.reduce((sum, r) => sum + r.skipped, 0),
     offenders,
     stale,
+    // A component with no integration test at all is declared (with its reason), never inferred: an empty report
+    // directory on any other component still means nothing ran. A declared component that gains one is stale.
+    nothingRan: reports.length === 0 && !exempt,
+    staleExemption: exempt && reports.length > 0 ? exempt : undefined,
   };
 }
 
