@@ -1307,6 +1307,10 @@
     },
     {
       "from": "krizaka-users-core",
+      "to": "krizaka-security"
+    },
+    {
+      "from": "krizaka-users-core",
       "to": "krizaka-users-api"
     },
     {
@@ -3328,6 +3332,11 @@
         "from": "krizaka-users-core",
         "to": "krizaka-parent",
         "kind": "parent"
+      },
+      {
+        "from": "krizaka-users-core",
+        "to": "krizaka-security",
+        "kind": "compile"
       },
       {
         "from": "krizaka-users-core",

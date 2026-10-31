@@ -109,7 +109,7 @@ Build dependencies between the modules above (test scope excluded): who packages
 | `orazaka-interceptors` | `krizaka-billing-api`, `orazaka-adapter-spring-ai`, `orazaka-core`, `orazaka-jobs-api` |
 | `orazaka-tools` | `krizaka-billing-api`, `orazaka-adapter-spring-ai`, `orazaka-core` |
 | `orazaka-core` | `krizaka-security`, `orazaka-persistence-app-api` |
-| `krizaka-users-core` | `krizaka-users-api`, `krizaka-users-persistence` |
+| `krizaka-users-core` | `krizaka-security`, `krizaka-users-api`, `krizaka-users-persistence` |
 | `orazaka-persistence-app-api` | `orazaka-jobs-api` |
 | `orazaka-studio-api` | `orazaka-jobs-api` |
 | `krizaka-idempotency` | `krizaka-web` |
