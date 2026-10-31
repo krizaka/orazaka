@@ -5,6 +5,7 @@ import { EmptyState } from "@krizaka/ui/empty-state";
 import { api, codeApi, errorMessage, type CodeApplied, type CodeFileProposal, type CodeRepoInfo } from "../../lib/api";
 import { format, useI18n } from "../../lib/i18n";
 import { ChecksPanel } from "./ChecksPanel";
+import { GithubPanel } from "./GithubPanel";
 import { ReviewPanel } from "./ReviewPanel";
 
 /** The Code tab (ADR-093, slice 1): grant a repository, see what Orazaka can see, review proposed diffs per hunk. */
@@ -41,6 +42,7 @@ export function CodePanel({ proposals = [] }: { proposals?: CodeFileProposal[] }
       ) : (
         <EmptyState title={t("code.noneTitle")} description={t("code.noneLead")} />
       )}
+      <GithubPanel />
       {repo && <ChecksPanel />}
       {repo && proposals.length > 0 && (
         <ReviewPanel

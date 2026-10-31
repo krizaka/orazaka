@@ -11,13 +11,14 @@
 //! * `data`       — slice 3: the data channel (untrusted text, fenced, capped, redacted).
 //! * `agent`      — slice 3: the closed tool list and the loop; the engine owns each model turn.
 //!
-//! No GitHub here (slice 4).
+//! * `github`    — slice 4: the GitHub App connection (device flow, Keychain tokens, refresh, sign-out).
 
 pub mod agent;
 pub mod checks;
 pub mod data;
 pub mod diff;
 pub mod editor;
+pub mod github;
 pub mod rules;
 pub mod scope;
 pub mod snapshot;
