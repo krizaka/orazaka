@@ -36,6 +36,7 @@ and **which code** runs it (`handler_key`). Both are data: a pack adds a capabil
 | `orazaka.core.checks.credit` | `check.external` | `job.text.process` | `ExternalCheckStrategy` (in process) |
 | `orazaka.core.checks.identity` | `check.external` | `job.text.process` | `ExternalCheckStrategy` (in process) |
 | `orazaka.core.media.speech` | `speech.synthesize` | `job.text.process` | `SpeechSynthesisStrategy` (in process) |
+| `orazaka.core.research.grounded` | `research.grounded` | `job.text.process` | `GroundedResearchStrategy` (in process) |
 | `orazaka.core.media.video` | `video.generate` | `job.video.generate` | a worker (see the [worker protocol](../WORKER_PROTOCOL.md)) |
 
 ### In-process executors
@@ -48,6 +49,7 @@ One capability's execution, in process.
 | `check.external` | `ExternalCheckStrategy` | `orazaka-job-service` | Runs the engine's external checks as job steps (orazaka-packs#138): the capabilities `orazaka.core.checks.courtrecords`, `.credit` and `.identity`, whose rows all name the handler `check.external`. |
 | `image.analyze` | `VisionAnalysisStrategy` | `orazaka-job-service` | Executes vision/image analysis jobs using the AI chat client with vision models. |
 | `image.generate` | `ImageGenerationStrategy` | `orazaka-job-service` | Executes image generation jobs via the AI client's image endpoint. |
+| `research.grounded` | `GroundedResearchStrategy` | `orazaka-job-service` | Runs grounded research as a job step (ADR-087 slice 5): the capability `orazaka.core.research.grounded`, whose row names the handler `research.grounded`. |
 | `speech.synthesize` | `SpeechSynthesisStrategy` | `orazaka-job-service` | Executes text-to-speech synthesis jobs via the AI client's audio endpoint. |
 | `text.generate` | `ChatGenerationStrategy` | `orazaka-job-service` | Default fallback strategy for text/chat generation jobs. |
 | `video.analyze` | `VideoAnalysisStrategy` | `orazaka-job-service` | Executes video analysis jobs by delegating to the `VideoPreProcessor`. |
@@ -90,6 +92,7 @@ the service's `application.yml` or environment.
 | `orazaka-ai-engine` | `InfrastructureProber.probeImageInfrastructure` | every 5 s (`orazaka.core.image.probing.interval-ms`) | Periodically pings the configured image port to check if the image inference engine (Stable Diffusion) is responsive. |
 | `orazaka-ai-engine` | `LawWatchJob.run` | cron `0 0 6 * * MON` (`orazaka.law.watcher.cron`) | The scheduled run of the law watcher. |
 | `orazaka-ai-engine` | `SandboxEvictionScheduler.evictExpiredSandboxes` | every 60 s | Scheduled eviction process — prunes expired or orphaned jobId sandbox contexts from memory. |
+| `orazaka-automation-service` | `SweepTicker.tick` | every 15s (`orazaka.automation-service.scheduler.interval`) | The clock of the automation service: every interval it runs one sweep (schedule slots, queued runs, lost events, retention). |
 | `orazaka-conversation-service` | `JobReconciliationService.reconcileScheduled` | every 60 s (`orazaka.jobs.reconcile-interval-ms`) | Recovers jobs whose result was written to disk but whose terminal status update never reached the database (e.g. |
 | `orazaka-conversation-service` | `JobStreamService.sendHeartbeats` | every 15 s | Service managing client Server-Sent Events (SSE) connections for real-time job lifecycle updates. |
 | `orazaka-conversation-service` | `ProtectedConversationSweeper.sweep` | cron `0 45 3 * * *` (`orazaka.router.regulated-retention.cron`) | Ages out the conversation memory of regulated packs, daily: the 30 days the consent statement states, counted from the conversation's last turn (orazaka#301). |
@@ -136,5 +139,3 @@ orazaka agent listen   # Start CLI agent listener and reverse tunnel
 |:---|:---|:---|:---|
 | POST | `/api/v1/agent/report` | authenticated | Receives execution reports from the CLI agent after local task completion. |
 | GET | `/api/v1/agent/stream` | authenticated | Establishes a persistent SSE stream for the CLI agent. |
-
-The service embeds a Quartz scheduler (`OrazakaAutomationScheduler`): JDBC job store in its own database, 5 threads, clustered: false.

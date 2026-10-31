@@ -15,6 +15,25 @@ order Spring Security applies. `SERVICE` is the machine-to-machine authority req
 no matcher covers the path — the service has no security on it whatsoever.
 
 
+## automation-service
+
+| Method | Path | Access | Controller | Summary |
+|:---|:---|:---|:---|:---|
+| GET | `/api/v1/automations` | authenticated | AutomationController | The caller's automations. |
+| POST | `/api/v1/automations` | authenticated | AutomationController | Creates an automation. |
+| GET | `/api/v1/automations/{automationId}/runs` | authenticated | RunController | The runs of one automation. |
+| GET | `/api/v1/automations/{automationId}/triggers` | authenticated | TriggerController | The triggers of the automation (no secrets). |
+| POST | `/api/v1/automations/{automationId}/triggers` | authenticated | TriggerController | Adds a trigger. |
+| DELETE | `/api/v1/automations/{automationId}/triggers/{triggerId}` | authenticated | TriggerController | Removes a trigger; its runs stay in the history. |
+| PATCH | `/api/v1/automations/{automationId}/triggers/{triggerId}` | authenticated | TriggerController | Enables or disables a trigger. |
+| POST | `/api/v1/automations/{automationId}/triggers/{triggerId}/rotate` | authenticated | TriggerController | Issues a new secret. |
+| DELETE | `/api/v1/automations/{id}` | authenticated | AutomationController | Removes an automation with its triggers and history. |
+| GET | `/api/v1/automations/{id}` | authenticated | AutomationController | One automation. |
+| PATCH | `/api/v1/automations/{id}` | authenticated | AutomationController | Changes an automation; a missing field is left as it is. |
+| GET | `/api/v1/automations/runs` | authenticated | RunController | Every run of every automation of the caller. |
+| GET | `/api/v1/automations/runs/{runId}` | authenticated | RunController | One run, with the webhook body it was started with. |
+| POST | `/hooks/{triggerId}` | authenticated | WebhookIngressController | Receives a signed call and starts the automation it stands for. |
+
 ## conversation-service
 
 | Method | Path | Access | Controller | Summary |
@@ -28,8 +47,9 @@ no matcher covers the path — the service has no security on it whatsoever.
 | POST | `/api/v1/chat/sessions` | authenticated | ChatController |  |
 | DELETE | `/api/v1/chat/sessions/{sessionId}` | authenticated | ChatController |  |
 | PATCH | `/api/v1/chat/sessions/{sessionId}` | authenticated | ChatController |  |
-| GET | `/api/v1/chat/stream/{conversationId}` | ADMIN + USER | ChatController | Streams chat via SSE using GET. |
-| POST | `/api/v1/chat/stream/{conversationId}` | ADMIN + USER | ChatController | Streams chat via SSE using POST (supporting file reference mappings). |
+| POST | `/api/v1/chat/stream/{conversationId}` | ADMIN + USER | ChatController | Streams chat via SSE using POST. |
+| GET | `/api/v1/checks/{providerRef}` | authenticated | ChecksController | Collects a check that came back PENDING. |
+| POST | `/api/v1/checks/{purpose}` | authenticated | ChecksController | Starts a check. |
 | POST | `/api/v1/code` | authenticated | CodeController | Streams code generation via SSE using POST. |
 | POST | `/api/v1/embeddings` | ADMIN + USER | EmbeddingController |  |
 | GET | `/api/v1/features` | ADMIN + USER | FeatureController | What this deployment can currently run: every enabled capability with its live degraded-mode state. |
@@ -63,6 +83,16 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/models/{id}` | ADMIN | ModelController | Deletes a model definition by its database ID. |
 | PUT | `/api/v1/models/{id}` | ADMIN | ModelController | Updates an existing model definition in the catalog. |
 | GET | `/api/v1/models/admin/audit` | ADMIN | OperatorAuditController |  |
+| GET | `/api/v1/models/admin/feature-cache-policies` | ADMIN | FeatureCachePolicyAdminController | Every policy, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-cache-policies/{featureKey}` | ADMIN | FeatureCachePolicyAdminController | Removes the policy a feature set for itself; the default row then applies. |
+| PUT | `/api/v1/models/admin/feature-cache-policies/{featureKey}` | ADMIN | FeatureCachePolicyAdminController | Sets the policy of a feature (* is the default row). |
+| GET | `/api/v1/models/admin/feature-routes` | ADMIN | FeatureAdminController | The feature routes, read only. |
+| GET | `/api/v1/models/admin/feature-structured-bounds` | ADMIN | FeatureStructuredBoundAdminController | Every bound, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | ADMIN | FeatureStructuredBoundAdminController | Removes the structured-output bound a feature set for itself; the default row then applies. |
+| PUT | `/api/v1/models/admin/feature-structured-bounds/{featureKey}` | ADMIN | FeatureStructuredBoundAdminController | Sets the bound of a feature (* is the default row). |
+| GET | `/api/v1/models/admin/feature-tool-bounds` | ADMIN | FeatureAdminController | Every bound, the default row first. |
+| DELETE | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | ADMIN | FeatureAdminController | Removes a feature's own bound so it falls back to the default row. |
+| PUT | `/api/v1/models/admin/feature-tool-bounds/{featureKey}` | ADMIN | FeatureAdminController | Sets the bound of a feature (* is the default row). |
 | GET | `/api/v1/models/catalog` | authenticated | ModelController | Retrieves the complete AI model catalog definitions from the database. |
 | GET | `/api/v1/models/providers` | authenticated | ModelController | Retrieves all available AI provider names from the database. |
 | GET | `/api/v1/models/supported` | authenticated | ModelController | Retrieves the list of supported model names grouped by media type. |
@@ -82,6 +112,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 | GET | `/imports` | authenticated | LawCorpusAdminController | The imports. |
 | POST | `/imports` | authenticated | LawCorpusAdminController | The manual import: the consolidated XML an administrator uploads, with where it came from. |
 | GET | `/instruments` | authenticated | LawCorpusAdminController | The instruments. |
+| POST | `/internal/v1/agent-turns` | SERVICE | AgentTurnsController | Runs one model turn. |
 | POST | `/internal/v1/protected-conversations/erase` | SERVICE | ProtectedConversationController | Erases a person's conversations under a pack. |
 | GET | `/kinds/{kindId}/golden` | authenticated | LawReviewController | The golden cases of a kind against the minimum of promotion. |
 | POST | `/kinds/{kindId}/promote` | authenticated | LawReviewController | Opens the packs pull request of approved proposals. |
@@ -188,6 +219,11 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| GET | `/.well-known/jwks.json` | public | JwksController |  |
+| GET | `/api/v1/admin/lockout-policy` | ADMIN | LockoutPolicyController |  |
+| PUT | `/api/v1/admin/lockout-policy` | ADMIN | LockoutPolicyController |  |
+| GET | `/api/v1/admin/social-connections` | ADMIN | SocialConnectionController |  |
+| POST | `/api/v1/admin/social-connections/rewrap` | ADMIN | SocialConnectionController | Re-wraps every secret under the current vault key (after a key change). |
 | GET | `/api/v1/admin/users` | ADMIN | AdminUserController |  |
 | DELETE | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |
 | GET | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |
@@ -210,6 +246,15 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/credentials/{providerName}` | ADMIN + USER | CredentialController |  |
 | GET | `/api/v1/interceptions/{schemaId}` | authenticated | InterceptionController | Returns the raw interception schema JSON for the given schema id, served as text so the JSON string is not double-encoded by Jackson (the client parses it). |
 | POST | `/api/v1/interceptions/resolve` | authenticated | InterceptionController | Resolves an active interception by merging the user's responses. |
+| GET | `/api/v1/organizations` | authenticated | OrganizationController |  |
+| POST | `/api/v1/organizations` | authenticated | OrganizationController |  |
+| GET | `/api/v1/organizations/{id}` | ADMIN + USER | OrganizationController |  |
+| GET | `/api/v1/organizations/{id}/members` | ADMIN + USER | OrganizationController |  |
+| PUT | `/api/v1/organizations/{id}/members` | ADMIN + USER | OrganizationController |  |
+| DELETE | `/api/v1/organizations/{id}/members/{userId}` | ADMIN + USER | OrganizationController |  |
+| POST | `/api/v1/organizations/{id}/service-accounts` | ADMIN + USER | OrganizationController |  |
+| GET | `/api/v1/organizations/{id}/service-keys` | ADMIN + USER | OrganizationController |  |
+| DELETE | `/api/v1/organizations/{id}/service-keys/{keyId}` | ADMIN + USER | OrganizationController |  |
 | GET | `/api/v1/profile` | authenticated | ProfileController | Returns the authenticated user's profile. |
 | PUT | `/api/v1/profile/preferences` | ADMIN + USER | ProfileController | Updates the authenticated user's preference map and returns the refreshed profile. |
 | GET | `/internal/v1/tiers/{key}` | SERVICE | InternalUserController | Bucket parameters of a rate-limit tier. |
@@ -223,6 +268,7 @@ no matcher covers the path — the service has no security on it whatsoever.
 
 | Method | Path | Access | Controller | Summary |
 |:---|:---|:---|:---|:---|
+| POST | `/api/v1/studio-runs/{runId}/turns` | authenticated | StudioTurnController | Runs one model turn of a session. |
 | GET | `/api/v1/studios` | authenticated | StudioController | The catalogue, optionally narrowed to one profession. |
 | GET | `/api/v1/studios/{studioKey}` | authenticated | StudioController | One Studio's detail, including the schemas its forms are generated from. |
 | GET | `/api/v1/studios/{studioKey}/blueprints` | ADMIN | StudioBlueprintController | Every version of a Studio, drafts included — the Builder's version list. |
@@ -252,13 +298,16 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/api/v1/studios/packs/bundles/{bundleKey}` | ADMIN | PackBundleController | Removes a bundle's catalogue rows and withdraws its pack from sale. |
 | POST | `/api/v1/studios/packs/bundles/validation` | ADMIN | PackBundleController | Checks a bundle against this platform without writing anything. |
 | GET | `/api/v1/studios/packs/categories` | authenticated | PackCatalogController | The shelves themselves, so the client renders headings it did not have to invent. |
+| GET | `/api/v1/studios/public/downloads` | authenticated | PublicSettingsController |  |
 | GET | `/api/v1/studios/runs` | authenticated | StudioRunController | This actor's run history. |
 | DELETE | `/api/v1/studios/runs/{runId}` | authenticated | ProtectedDataController | Erases one entry of the caller's: a run of a protected pack, with its inputs, outputs and files. |
 | GET | `/api/v1/studios/runs/{runId}` | authenticated | StudioRunController | One run with its per-step states and outputs. |
 | POST | `/api/v1/studios/runs/{runId}/approve` | authenticated | StudioRunController | Resolves an approval step, resuming the run. |
 | POST | `/api/v1/studios/runs/{runId}/cancel` | authenticated | StudioRunController | Cancels a run and releases its hold. |
+| POST | `/api/v1/studios/runs/{runId}/deny` | authenticated | StudioRunController | Refuses the approval a run waits on: the run stops without the step and its hold is released (orazaka-studio#115). |
 | GET | `/api/v1/studios/runs/{runId}/events` | authenticated | StudioRunController | Follows a run as Server-Sent Events instead of polling it (orazaka#189, ADR-083). |
 | POST | `/api/v1/studios/runs/{runId}/resume` | authenticated | StudioRunController | Starts a new run from a step of a finished one (orazaka-studio#63): the steps before it keep their recorded outputs and only the re-run steps are billed. |
+| POST | `/api/v1/studios/runs/{runId}/send` | authenticated | StudioRunController | Answers a run that waits for input: the message is the parked step's output and the run goes on (orazaka-studio#115). |
 | GET | `/api/v1/studios/runs/events` | authenticated | StudioRunController | Follows every run of the caller on one connection (the per-key stream of orazaka#189): event: run whenever a run in flight changes, event: done when one ends, each carrying the run as GET /runs/runId would. |
 | GET | `/api/v1/studios/webhooks` | authenticated | WebhookEndpointController | The caller's endpoints (no secrets). |
 | POST | `/api/v1/studios/webhooks` | authenticated | WebhookEndpointController | Creates an endpoint. |

@@ -46,6 +46,22 @@ capability rows, a price, catalogue entries — and changes no code.
   "studios": 3
  },
  {
+  "key": "code-contributor",
+  "title": "Contributor",
+  "tagline": "The model turn behind Orazaka's code agent on your Mac.",
+  "tier": "DATA",
+  "category": "Developer tools",
+  "studios": 2
+ },
+ {
+  "key": "bill96-french-first",
+  "title": "French-first documents (Bill 96)",
+  "tagline": "French versions, bilingual checks and French-first copy, on your own machine.",
+  "tier": "DATA",
+  "category": "Business & documents",
+  "studios": 4
+ },
+ {
   "key": "data-analytics",
   "title": "Recommendations & insights",
   "tagline": "A feed per person and analytics per creator, on your own data.",
@@ -62,12 +78,36 @@ capability rows, a price, catalogue entries — and changes no code.
   "studios": 4
  },
  {
+  "key": "privacy-law25",
+  "title": "Privacy compliance (Law 25)",
+  "tagline": "Prepare your Law 25 privacy documents on your own machine.",
+  "tier": "DATA",
+  "category": "Business & documents",
+  "studios": 4
+ },
+ {
   "key": "document-validation",
   "title": "Document Verification",
   "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
   "tier": "WORKER",
   "category": "Business & documents",
   "studios": 2
+ },
+ {
+  "key": "business-brief",
+  "title": "Business brief",
+  "tagline": "The writer behind a small shop's Monday brief.",
+  "tier": "DATA",
+  "category": null,
+  "studios": 1
+ },
+ {
+  "key": "identity-document-check",
+  "title": "Identity document check",
+  "tagline": "Is this identity document consistent with itself?",
+  "tier": "WORKER",
+  "category": null,
+  "studios": 1
  },
  {
   "key": "media-safety",
@@ -89,6 +129,14 @@ capability rows, a price, catalogue entries — and changes no code.
   "key": "profile-photo-check",
   "title": "Profile photo check",
   "tagline": "Are these photos one real adult's profile?",
+  "tier": "WORKER",
+  "category": null,
+  "studios": 1
+ },
+ {
+  "key": "tenant-screening-qc",
+  "title": "Tenant screening, Québec",
+  "tagline": "A rental applicant check, one stage at a time, stopped by the manager's rules.",
   "tier": "WORKER",
   "category": null,
   "studios": 1
@@ -765,6 +813,186 @@ capability rows, a price, catalogue entries — and changes no code.
 }
 ```
 
+### Contributor
+
+```pack
+{
+ "key": "code-contributor",
+ "title": "Contributor",
+ "tagline": "The model turn behind Orazaka's code agent on your Mac.",
+ "description": "Carries the model turns of the Orazaka app's code agent, so that access, consent and credits are checked on every turn. The tools, the approvals, git and the audit stay on your Mac.",
+ "version": "1.1.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "STANDARD",
+ "category": "Developer tools",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": true,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "code-issue-to-pr",
+   "label": "From an issue to a pull request",
+   "summary": "Reads a GitHub issue and your repository, proposes changes you approve, and opens a draft pull request.",
+   "description": "The model turn for the issue-to-pull-request flow. Every write and every push is approved on your Mac.",
+   "inputs": [
+    {
+     "key": "task",
+     "title": "Tâche"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "SESSION"
+   ],
+   "credits": 40
+  },
+  {
+   "key": "code-read-write",
+   "label": "Read and change code",
+   "summary": "Reads a repository you grant and proposes changes, hunk by hunk.",
+   "description": "The model turn for reading and changing files in a repository you grant. Nothing is written without your approval.",
+   "inputs": [
+    {
+     "key": "task",
+     "title": "Tâche"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "SESSION"
+   ],
+   "credits": 40
+  }
+ ]
+}
+```
+
+### French-first documents (Bill 96)
+
+```pack
+{
+ "key": "bill96-french-first",
+ "title": "French-first documents (Bill 96)",
+ "tagline": "French versions, bilingual checks and French-first copy, on your own machine.",
+ "description": "Matrices for extracting information from your documents and parameterizable technology templates that produce a French version in Québec usage, compare an English and a French version, turn site copy into French-first copy and keep your own glossary, technical tools validated by the client's legal counsel. Not a certified translation: a professional reviews every output. Your documents stay on your machine.",
+ "version": "1.0.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": "Business & documents",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "french-version",
+   "label": "French version of a document",
+   "summary": "Québec usage, the terms chosen, the doubtful passages flagged.",
+   "description": "A French version of a contract, policy, terms or product sheet, with a glossary of the terms chosen and the passages to review.",
+   "inputs": [
+    {
+     "key": "document",
+     "title": "Le document"
+    },
+    {
+     "key": "documentKind",
+     "title": "Type de document"
+    },
+    {
+     "key": "glossary",
+     "title": "Glossaire de l'entreprise"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 110
+  },
+  {
+   "key": "bilingual-consistency-check",
+   "label": "Bilingual consistency check",
+   "summary": "What differs between your English and French versions.",
+   "description": "Lists the differences in meaning, numbers, dates and obligations between two versions, and which section to review first.",
+   "inputs": [
+    {
+     "key": "english",
+     "title": "Version anglaise"
+    },
+    {
+     "key": "french",
+     "title": "Version française"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 100
+  },
+  {
+   "key": "french-first-copy",
+   "label": "French-first copy",
+   "summary": "Site and product copy in French first, with the English kept equivalent.",
+   "description": "Adapts English copy into natural Québec French that keeps your brand voice, French first and the English right after.",
+   "inputs": [
+    {
+     "key": "englishCopy",
+     "title": "Texte anglais"
+    },
+    {
+     "key": "brandVoice",
+     "title": "Ton de la marque"
+    },
+    {
+     "key": "glossary",
+     "title": "Glossaire de l'entreprise"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 100
+  },
+  {
+   "key": "firm-glossary",
+   "label": "Firm glossary",
+   "summary": "Your own FR/EN terminology, reused by the other Studios.",
+   "description": "Builds and extends the firm's glossary from its documents, with the source of each term, ready to paste into the other Studios.",
+   "inputs": [
+    {
+     "key": "documents",
+     "title": "Vos documents"
+    },
+    {
+     "key": "glossary",
+     "title": "Glossaire de l'entreprise"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 90
+  }
+ ]
+}
+```
+
 ### Recommendations & insights
 
 ```pack
@@ -994,6 +1222,177 @@ capability rows, a price, catalogue entries — and changes no code.
 }
 ```
 
+### Privacy compliance (Law 25)
+
+```pack
+{
+ "key": "privacy-law25",
+ "title": "Privacy compliance (Law 25)",
+ "tagline": "Prepare your Law 25 privacy documents on your own machine.",
+ "description": "Matrices for extracting information from your documents and parameterizable technology templates that prepare an inventory of personal information, a privacy impact assessment draft, a confidentiality-incident entry with notice drafts, and a governance policy, technical tools validated by the client's legal counsel: they prepare, the person in charge validates, and nothing is legal advice. Your data stays on your machine.",
+ "version": "1.0.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": "Business & documents",
+ "listed": true,
+ "workers": [],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "personal-information-inventory",
+   "label": "Personal-information inventory",
+   "summary": "What you hold, where, why, who sees it, how long.",
+   "description": "From a description of your tools and processes, a table of the personal information you hold, with the questions to settle.",
+   "inputs": [
+    {
+     "key": "firmName",
+     "title": "Nom de l'entreprise"
+    },
+    {
+     "key": "description",
+     "title": "Vos outils et processus"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 90
+  },
+  {
+   "key": "privacy-impact-assessment",
+   "label": "Privacy impact assessment draft",
+   "summary": "A structured draft before a project that touches personal information.",
+   "description": "Purpose, information, flows, risks and safeguards, with the decision and signature left to the person in charge.",
+   "inputs": [
+    {
+     "key": "firmName",
+     "title": "Nom de l'entreprise"
+    },
+    {
+     "key": "projectName",
+     "title": "Nom du projet"
+    },
+    {
+     "key": "purpose",
+     "title": "Objectif du projet"
+    },
+    {
+     "key": "personalData",
+     "title": "Renseignements en cause"
+    },
+    {
+     "key": "peopleConcerned",
+     "title": "Personnes concernées"
+    },
+    {
+     "key": "outsideQuebec",
+     "title": "Hors Québec ?"
+    },
+    {
+     "key": "safeguards",
+     "title": "Mesures déjà prévues"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 140
+  },
+  {
+   "key": "confidentiality-incident",
+   "label": "Confidentiality incident",
+   "summary": "A register entry and notice drafts; the person in charge decides.",
+   "description": "Reads the serious-injury criteria, drafts the register entry and, when the criteria point that way, the notices.",
+   "inputs": [
+    {
+     "key": "firmName",
+     "title": "Nom de l'entreprise"
+    },
+    {
+     "key": "incidentDescription",
+     "title": "Ce qui s'est passé"
+    },
+    {
+     "key": "discoveredOn",
+     "title": "Date de découverte"
+    },
+    {
+     "key": "dataInvolved",
+     "title": "Renseignements en cause"
+    },
+    {
+     "key": "peopleAffected",
+     "title": "Personnes touchées"
+    },
+    {
+     "key": "containment",
+     "title": "Mesures prises"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    }
+   ],
+   "steps": 3,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 130
+  },
+  {
+   "key": "privacy-governance-policy",
+   "label": "Governance policy",
+   "summary": "Your public privacy policy, in French and English, in plain language.",
+   "description": "Drafts the public policy from your activities and practices, and marks every point to confirm.",
+   "inputs": [
+    {
+     "key": "firmName",
+     "title": "Nom de l'entreprise"
+    },
+    {
+     "key": "activities",
+     "title": "Vos activités"
+    },
+    {
+     "key": "dataKinds",
+     "title": "Renseignements recueillis"
+    },
+    {
+     "key": "retention",
+     "title": "Durée de conservation"
+    },
+    {
+     "key": "contactRole",
+     "title": "Rôle de la personne responsable"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 120
+  }
+ ]
+}
+```
+
 ### Document Verification
 
 ```pack
@@ -1001,8 +1400,8 @@ capability rows, a price, catalogue entries — and changes no code.
  "key": "document-validation",
  "title": "Document Verification",
  "tagline": "Check a contract against the rules, and a PDF for signs of tampering.",
- "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice.",
- "version": "1.7.3",
+ "description": "Check a document against a versioned body of rules — every finding cites its rule, its source and the passage that justifies it — and examine a PDF file for the signals that something was altered. Reports, never legal advice: technical tools validated by the client's legal counsel.",
+ "version": "1.12.0",
  "tier": "WORKER",
  "kind": null,
  "distribution": "CLOUD",
@@ -1036,6 +1435,14 @@ capability rows, a price, catalogue entries — and changes no code.
    ]
   },
   {
+   "label": "État des lieux du logement — Québec",
+   "jurisdiction": "QC",
+   "rules": 5,
+   "versions": [
+    "2023-06-01"
+   ]
+  },
+  {
    "label": "Facture — Québec (TPS et TVQ)",
    "jurisdiction": "QC",
    "rules": 8,
@@ -1046,7 +1453,7 @@ capability rows, a price, catalogue entries — and changes no code.
   {
    "label": "Bail de logement — Québec",
    "jurisdiction": "QC",
-   "rules": 10,
+   "rules": 16,
    "versions": [
     "2024-02-21"
    ]
@@ -1057,6 +1464,14 @@ capability rows, a price, catalogue entries — and changes no code.
    "rules": 4,
    "versions": [
     "2026-10-19"
+   ]
+  },
+  {
+   "label": "Avis de visite du logement — Québec",
+   "jurisdiction": "QC",
+   "rules": 6,
+   "versions": [
+    "2023-06-01"
    ]
   }
  ],
@@ -1069,11 +1484,15 @@ capability rows, a price, catalogue entries — and changes no code.
    "inputs": [
     {
      "key": "documentBase64",
-     "title": "Le fichier PDF"
+     "title": "Le document"
     },
     {
      "key": "expectedIssuer",
      "title": "Émetteur attendu (facultatif)"
+    },
+    {
+     "key": "documentType",
+     "title": "Type de document (facultatif)"
     }
    ],
    "steps": 1,
@@ -1097,19 +1516,149 @@ capability rows, a price, catalogue entries — and changes no code.
      "title": "Juridiction"
     },
     {
+     "key": "declaredKind",
+     "title": "Type de document déclaré"
+    },
+    {
      "key": "asOf",
      "title": "Règles en vigueur à la date du"
     },
     {
      "key": "ruleset",
      "title": "Corpus nommé"
+    },
+    {
+     "key": "lecture",
+     "title": "Lecture du droit proche"
     }
    ],
-   "steps": 3,
+   "steps": 7,
    "stepKinds": [
     "CAPABILITY"
    ],
    "credits": 120
+  }
+ ]
+}
+```
+
+### Business brief
+
+```pack
+{
+ "key": "business-brief",
+ "title": "Business brief",
+ "tagline": "The writer behind a small shop's Monday brief.",
+ "description": "Writes the invitation of a brief action from aggregates only: the shop, the service and the free slots. No client name, no history.",
+ "version": "1.0.0",
+ "tier": "DATA",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "STANDARD",
+ "category": null,
+ "listed": false,
+ "workers": [],
+ "controls": {
+  "scopeGuard": false,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "invitation-writer",
+   "label": "Invitation writer",
+   "summary": "One short invitation, in Québec French or English, in the shop's tone.",
+   "description": "From the shop's name, a service and its free slots only, writes an invitation sized for a text message, a notification or an email.",
+   "inputs": [
+    {
+     "key": "shopName",
+     "title": "Nom de la boutique"
+    },
+    {
+     "key": "service",
+     "title": "Service"
+    },
+    {
+     "key": "freeSlots",
+     "title": "Créneaux libres"
+    },
+    {
+     "key": "channel",
+     "title": "Canal"
+    },
+    {
+     "key": "tone",
+     "title": "Ton de la boutique"
+    },
+    {
+     "key": "language",
+     "title": "Langue"
+    }
+   ],
+   "steps": 1,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 15
+  }
+ ]
+}
+```
+
+### Identity document check
+
+```pack
+{
+ "key": "identity-document-check",
+ "title": "Identity document check",
+ "tagline": "Is this identity document consistent with itself?",
+ "description": "Reads an identity document with a vision model, then checks by arithmetic what can be checked: the check digits of the machine-readable zone, the dates, and the agreement between the printed fields, the zone and the barcode. Each finding comes with its evidence and a confidence. It identifies no one and looks nothing up.",
+ "version": "1.0.0",
+ "tier": "WORKER",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": null,
+ "listed": false,
+ "workers": [
+  "orazaka-worker-identity"
+ ],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "identity-document-check",
+   "label": "Identity document check",
+   "summary": "Zone, dates and printed fields checked by code, signs of tampering flagged for a person.",
+   "description": "A vision model transcribes the document; the check digits, the calendar and the cross-checks are plain code. A sign of tampering asks a person to look and never fails a document alone.",
+   "inputs": [
+    {
+     "key": "document",
+     "title": "La pièce d'identité (fichier envoyé)"
+    },
+    {
+     "key": "asOf",
+     "title": "Jour de référence"
+    },
+    {
+     "key": "minimumAge",
+     "title": "Âge minimal (années)"
+    },
+    {
+     "key": "barcodeText",
+     "title": "Texte du code-barres"
+    }
+   ],
+   "steps": 2,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 30
   }
  ]
 }
@@ -1289,6 +1838,72 @@ capability rows, a price, catalogue entries — and changes no code.
 }
 ```
 
+### Tenant screening, Québec
+
+```pack
+{
+ "key": "tenant-screening-qc",
+ "title": "Tenant screening, Québec",
+ "tagline": "A rental applicant check, one stage at a time, stopped by the manager's rules.",
+ "description": "Documents, then court records (TAL and plumitifs), then credit. A stage runs and is charged only if the one before it passed its cut-off, and each cut-off is the manager's rule. Consent is checked per purpose before each paid stage. Codes only: the landlord decides.",
+ "version": "2.0.0",
+ "tier": "WORKER",
+ "kind": null,
+ "distribution": "CLOUD",
+ "regulatoryClass": "SENSITIVE",
+ "category": null,
+ "listed": false,
+ "workers": [
+  "orazaka-worker-screening"
+ ],
+ "controls": {
+  "scopeGuard": true,
+  "consent": false,
+  "safety": false
+ },
+ "rulesets": [],
+ "studios": [
+  {
+   "key": "tenant-screening-qc",
+   "label": "Tenant screening, Québec",
+   "summary": "A gated check that stops where the manager's rules say, and charges only what ran.",
+   "description": "Three stages with a cut-off after each, a consent check before each paid stage, credits debited per stage, and a report that says where it stopped and why. The applicant pays nothing by default.",
+   "inputs": [
+    {
+     "key": "subject",
+     "title": "La personne à vérifier"
+    },
+    {
+     "key": "consentedPurposes",
+     "title": "Consentements du candidat"
+    },
+    {
+     "key": "authenticityReport",
+     "title": "Authenticité des documents"
+    },
+    {
+     "key": "leaseReport",
+     "title": "Contrôle du bail (facultatif)"
+    },
+    {
+     "key": "cutoffs",
+     "title": "Règles d'arrêt (facultatif)"
+    },
+    {
+     "key": "creditCap",
+     "title": "Plafond de crédits (facultatif)"
+    }
+   ],
+   "steps": 11,
+   "stepKinds": [
+    "CAPABILITY"
+   ],
+   "credits": 60
+  }
+ ]
+}
+```
+
 ### Trade Showcase
 
 ```pack
@@ -1343,15 +1958,21 @@ Kept off the shelf (`catalog.status: DRAFT`): `echo-toolkit` — installable for
 
 | Pack | Version | Studios |
 |:---|:---|:---|
+| `bill96-french-first` | 1.0.0 | `french-version` · `bilingual-consistency-check` · `french-first-copy` · `firm-glossary` |
+| `business-brief` | 1.0.0 | `invitation-writer` |
+| `code-contributor` | 1.1.0 | `code-issue-to-pr` · `code-read-write` |
 | `data-analytics` | 1.6.0 | `data-driven-ui` · `video-understanding` · `creator-suggestions` |
-| `document-validation` | 1.7.3 | `document-authenticity` · `compliance-check` |
+| `document-validation` | 1.12.0 | `document-authenticity` · `compliance-check` |
 | `echo-toolkit` | 1.2.0 | `echo-reverse` |
+| `identity-document-check` | 1.0.0 | `identity-document-check` |
 | `media-safety` | 1.2.0 | `media-safety` |
 | `message-authenticity` | 1.3.0 | `message-authenticity` |
 | `orazaka-media` | 1.13.0 | `image-generation` · `art-golden-hour` · `art-miniature` · `art-still-life` · `art-montreal-night` · `video-generation` · `cinematic-treatment` · `cinematic-critique` · `cinematic-script` · `cinematic-cut` · `video-with-sound` · `video-sound` · `speech-synthesis` · `image-analysis` · `audio-analysis` · `video-analysis` |
 | `outbound-prospection` | 1.3.0 | `outbound-prospection` · `lead-research` · `followup-sequences` |
+| `privacy-law25` | 1.0.0 | `personal-information-inventory` · `privacy-impact-assessment` · `confidentiality-incident` · `privacy-governance-policy` |
 | `profile-photo-check` | 1.2.0 | `profile-photo-check` |
 | `realestate-studio` | 1.3.0 | `realestate-reels` |
+| `tenant-screening-qc` | 2.0.0 | `tenant-screening-qc` |
 | `trade-showcase` | 1.2.0 | `trade-showcase` |
 | `bien-etre` | 1.6.0 | `guided-journaling` · `session-preparation` · `mood-tracking` · `session-summary` |
 
@@ -1537,7 +2158,7 @@ not a filter, and the engine never adds terms of its own.
 > on the first run, not at install.
 
 **Step kinds**: `CAPABILITY` (runs a model), `TRANSFORM` (reshapes values), `APPROVAL` (parks for a
-human), `CONNECTOR` (calls out), `KNOWLEDGE`. **`onError`**: `FAIL` | `SKIP` | `RETRY` — and a
+human), `CONNECTOR` (calls out), `KNOWLEDGE`, `SESSION` (stays open while a client posts its turns; closes on « finish » or an idle TTL). **`onError`**: `FAIL` | `SKIP` | `RETRY` — and a
 `SKIP` needs a written `skipRationale`, which a fitness function checks.
 
 **Templates.** `{{inputs.x}}`, `{{config.x}}`, `{{steps.<out>}}`, `{{item}}` inside a `forEach`. A
@@ -1677,6 +2298,90 @@ ORAZAKA_PACKS_SOURCES=~/packs,registry:https://…          # plus a hosted regi
 `orazaka pack list` shows the configured sources and what they offer. A registry source is listed
 and marked unavailable on a local deployment rather than silently ignored.
 
-### 8. Licence
+### 8. Golden cases
+
+Every Studio ships `tests/golden/<studio-key>.json` in its pack. Use 3–5 distinct fictional
+inputs: an ordinary request, a boundary/negative case, and another language or safety case.
+The shared harness checks inputs against the shipped `inputSchema`; expected outputs are
+illustrative examples, not snapshots to regenerate from the same code being tested.
+
+```json
+{
+  "studio": "echo-reverse",
+  "cases": [
+    {
+      "id": "french-greeting",
+      "input": { "text": "Bonjour" },
+      "expected": { "reversed": "ruojnoB" },
+      "assertions": [{ "path": ["reversed"], "equals": "ruojnoB" }]
+    }
+  ]
+}
+```
+
+The abbreviated example needs two more cases before it passes. Assertion paths start at the
+blueprint's declared output key. Supported operators are `equals` (deep equality), `includes`
+(substring/array member), `type`, `atLeast` (numeric lower bound), and `nonEmpty: true`.
+Exactly one operator is required.
+Nested JSON stored in a TEXT artefact is decoded when traversing its path. Assert stable facts,
+verdicts and safety limitations rather than exact nondeterministic prose or generated URLs.
+Never remove an assertion merely to accommodate an unexplained model/prompt regression.
+
+`npm run test:golden` runs offline schema/coverage/assertion tests and the HTTP adapter integration
+tests. This does **not** execute inference. Existing document-validation goldens remain in
+`worker/fixtures/` and run with `python worker/test_golden.py`; the two Studio-level gaps are
+listed in `golden-ratchet.json`. Remove an exception when covering it. PR CI forbids adding any.
+
+#### Against a provisioned local stack
+
+Install the packs/blueprint versions under test through `orazaka pack install` first. The operator
+provisions the account, credits, models, consent and installations through the normal platform
+controls. The runner never bypasses authentication, grants entitlements, chooses a vendor/model,
+or automatically approves a regulated run.
+
+Create a configuration **outside the repository** (do not commit credentials):
+
+```json
+{
+  "baseUrl": "http://127.0.0.1:8088",
+  "tokenFile": "/absolute/path/to/test-account-token",
+  "assetsFile": "/absolute/path/to/orazaka-packs/tests/golden/assets.json",
+  "timeoutMs": 600000,
+  "pollIntervalMs": 1000,
+  "installations": {}
+}
+```
+
+Obtain the token through the normal login flow. For installed/regulated Studios, map their Studio
+key to the configured installation UUID in `installations`. Otherwise the runner uses key-addressed
+execution. Config paths are relative to the configuration file; the endpoint must be HTTPS unless
+it is loopback. Timeout/polling values are test infrastructure wiring, not domain configuration.
+
+```bash
+npm run golden:run -- --config /absolute/path/to/stack.json
+npm run golden:run -- --config /absolute/path/to/stack.json --pack echo-toolkit
+```
+
+`asset:scene`, `asset:scene-two`, `asset:audio`, and `asset:video` refer to the synthetic asset registry;
+`base64:scene` embeds its bytes. The runner uploads assets as the same actor, executes the real
+Studio DAG through the public API, polls terminal states, rejects stale blueprint versions,
+asserts actual outputs, and deletes temporary uploads. Failures exit nonzero. Operator-action
+states fail and cancel instead of approving themselves. Output/response bodies are not logged.
+Fixture validation in standalone CI is always on. For actual inference in CI, provision a dedicated,
+isolated self-hosted runner labelled `orazaka-golden` with a local stack and a least-privileged test
+account. Configure the `golden-stack` environment's protection/approvals, set `GOLDEN_STACK_CONFIG`
+to the runner-local configuration path, and set repository variable `GOLDEN_STACK_ENABLED=true`.
+The `golden-stack` job then executes the same cases after pushes to `main`, including prompt/model
+manifest changes. Alternatively dispatch CI on `main` with `golden_stack=true` after changing a
+runtime model. It deliberately never runs PR code against a credentialed self-hosted stack.
+Provision/update the installed blueprints before execution and use a fresh, isolated seeded test
+stack; stale versions, cached runs, or idempotent replays fail, not pass. No cache-bypass API is
+assumed, and lower-level model caches are outside this runner's visibility.
+The shared component workflow itself does not start that stack.
+
+Generated platform documentation lives in the Orazaka workspace, not this repository. After
+assembling the workspace, regenerate it with `orazaka docs build`: generated pages change only through their generator.
+
+### 9. Licence
 
 Your pack is yours. See [docs/LICENSING.md](../LICENSING.md).
