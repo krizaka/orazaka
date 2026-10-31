@@ -44,6 +44,7 @@ build fails when it is violated. Treat an empty cell as a defect, not as a gap.
 | `assertMappersFinal` | `InterceptorsGovernanceTest`<br/>`PersistenceBridgeGovernanceTest` | *Mapper classes are final [ERR-107]. |
 | `assertMappersPackagePrivate` | `InterceptorsGovernanceTest`<br/>`PersistenceBridgeGovernanceTest` | *Mapper classes are not public [ERR-107]. |
 | `assertNoAnonymousClasses` | `BusinessGovernanceTest`<br/>`InterceptorsGovernanceTest`<br/>`PersistenceBridgeGovernanceTest`<br/>`PersistenceGovernanceTest`<br/>`ToolsGovernanceTest` | No anonymous class in production [GOV-001]. |
+| `assertNoClassAtPackageRoot` | `PackageRootRulesTest` | Asserts nothing sits at a module's package root: a class there belongs in domain, application or infrastructure (repository layout standard, krizaka/.github docs/standards/repo-layout.md). |
 | `assertNoDependencyOn` | `BusinessBoundaryTest`<br/>`InterceptorsBoundaryTest` | Asserts that classes in modulePackage do not depend on forbiddenPackage. |
 | `assertNoFieldInjection` | `BusinessBoundaryTest`<br/>`InterceptorsBoundaryTest`<br/>`JobServiceGovernanceTest`<br/>`PersistenceBridgeGovernanceTest`<br/>`StudioServiceGovernanceTest` | No @Autowired field injection [GOV-005] — krizaka-test-support's rule. |
 | `assertNoForeignTier3Dependency` | `AutomationServiceGovernanceTest`<br/>`JobServiceGovernanceTest`<br/>`KnowledgeServiceGovernanceTest`<br/>`StudioServiceGovernanceTest` | [SEAM-002] Asserts an autonomous service depends on no bounded context's Tier-3 (owned-domain) implementation. |
