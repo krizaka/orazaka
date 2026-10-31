@@ -44,6 +44,7 @@ async function stub({ pods = [], failCreateFor = [], cost = 0.5 } = {}) {
     });
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  server.unref(); // a test that fails before its close() must not keep the runner alive (a CI hang of 90 min, orazaka#530)
   const base = `http://127.0.0.1:${server.address().port}`;
   return { state, base, close: () => { server.close(); server.closeAllConnections(); } };
 }
@@ -123,7 +124,7 @@ test("a failing call prints the API's message and exits 1 (no traceback, no key)
 async function batch(s, renderScript) {
   const dir = mkdtempSync(join(tmpdir(), "rp-batch-"));
   const bin = join(dir, "bin"); mkdirSync(bin);
-  writeFileSync(join(bin, "node"), `#!/bin/sh\n${renderScript}\n`); chmodSync(join(bin, "node"), 0o755);
+  writeFileSync(join(bin, "node"), `#!/bin/sh\ncase " $*" in *" --validate-only"*) exit 0;; esac\n${renderScript}\n`); chmodSync(join(bin, "node"), 0o755);
   writeFileSync(join(bin, "ssh-keygen"), `#!/bin/sh\nwhile [ $# -gt 0 ]; do [ "$1" = -f ] && f="$2"; shift; done\necho k > "$f"; echo "ssh-ed25519 AAA" > "$f.pub"\n`); chmodSync(join(bin, "ssh-keygen"), 0o755);
   writeFileSync(join(dir, "prompts.txt"), "# a comment\na red kite\n\na green kite\n");
   writeFileSync(join(dir, "driver.sh"), `set -euo pipefail
