@@ -58,8 +58,10 @@ runpod_start() {
   local dc gpu_list; gpu_list="$RP_GPUS"
   [[ -z "${1:-}" ]] || gpu_list="$1"
   for dc in $RP_DCS; do
-    local volume; volume=$(rp_py volume-id "$RP_VOLUME" "$dc")
-    if [[ -z "$volume" ]]; then
+    local volume=""
+    # GPU_RUNPOD_VOLUME=none: no network volume (a monthly cost); the weights are downloaded to the container disk at each start.
+    [[ "$RP_VOLUME" == "none" ]] || volume=$(rp_py volume-id "$RP_VOLUME" "$dc")
+    if [[ -z "$volume" && "$RP_VOLUME" != "none" ]]; then
       # A volume pins its pods to one datacentre: it is created only when asked (GPU_RUNPOD_CREATE_VOLUME=1), never as a side effect.
       [[ -n "${GPU_RUNPOD_CREATE_VOLUME:-}" ]] || { say "  $dc: no models volume"; continue; }
       say "creating the models volume $RP_VOLUME (${RP_VOLUME_GB} GB in $dc, kept between pods)"
@@ -178,6 +180,10 @@ runpod_batch() {
   python3 -c "import sys; sys.exit(0 if float('$cap') > 0 else 1)" || die "runpod batch: --cap must be a positive dollar amount"
   out="${out:-$LOCAL/batch-$(date -u +%Y%m%dT%H%M%SZ)}"
   trap runpod_batch_cleanup EXIT INT TERM HUP
+  # FREE preflight (orazaka#508): the Studio is asked the exact run BEFORE any GPU is rented; a refusal a booted pod cannot fix stops here.
+  if [[ -z "${GPU_BATCH_SKIP_PREFLIGHT:-}" ]]; then
+    node "$ROOT/scripts/studio-preflight.mjs" ${model:+--model "$model"} ${model:+--worker-ref "${GPU_WORKER_REF:-$(git ls-remote https://github.com/krizaka/orazaka-worker-media.git refs/heads/main | cut -c1-40)}"} ${size:+--size "$size"} || die "preflight refused: no GPU was rented"
+  fi
   # The pod's own watchdog gets the cap too: at the dearest rate we would ever start (GPU_BATCH_MAX_RATE), the hours the cap pays for.
   GPU_MAX_HOURS="$(python3 -c "print(max(0.25, round(float('$cap') / float('${GPU_BATCH_MAX_RATE:-4}'), 2)))")" runpod_start ${gpu:+"$gpu"}
   python3 -c "import sys; sys.exit(0 if float('$RP_RATE') <= float('$cap') else 1)" || die "the pod costs \$$RP_RATE/hour: more than the whole cap (\$$cap)"
