@@ -6,5 +6,11 @@
       "class": "com.krizaka.orazaka.interceptor.cache.SemanticCacheLiveIT",
       "reason": "Live test of the semantic cache: it needs a real embedding model (bge-m3 through Ollama, ORAZAKA_LIVE_OLLAMA_URL) that no CI runner has; it skips itself by design and runs by hand against a real Ollama. Its container-backed twin PgVectorSemanticCacheStoreIT runs in CI."
     }
+  ],
+  "noIntegrationTests": [
+    {
+      "component": "orazaka-contracts",
+      "reason": "Contract libraries (jobs-api, persistence-app-api, crypto): interfaces, records and pure functions covered by unit tests; no container or service to integrate. A new IT makes this entry stale."
+    }
   ]
 }
