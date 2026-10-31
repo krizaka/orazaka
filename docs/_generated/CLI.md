@@ -95,7 +95,7 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 ## Commands
 
 ```cli-commands
-34 commands, 45 subcommands — every one in the table below.
+33 commands, 39 subcommands — every one in the table below.
 ```
 
 | Command | Description |
@@ -157,13 +157,6 @@ hands-off boot. Tear everything down with `orazaka stop`. On a local stack,
 | `orazaka release` | Release bundles — check a release manifest and an offline bundle before installing it |
 | `orazaka release verify <manifest>` | Check a release manifest, and with --dir the artefacts of an offline bundle against it |
 | `orazaka reset [token]` | Reset account password using a valid reset token |
-| `orazaka runs` | Runs as background tasks: list and inspect them by name or id |
-| `orazaka runs ls` (alias `list`) | List the runs: name, status, current step, elapsed time, cost against the budget |
-| `orazaka runs show <ref> <ref>` | Show one run, by name or id |
-| `orazaka runs send <ref> <message>` | Answer a run that is waiting for input: the message becomes the output of the step it waits on |
-| `orazaka runs deny <ref>` | Refuse the approval a run is waiting on: the run stops without the step and its hold is released |
-| `orazaka runs wait <ref>` | Follow a run until it ends or needs your approval |
-| `orazaka runs resume <ref>` | Start a new run from a step of a finished one; the steps before it keep their outputs |
 | `orazaka settings` | Manage user settings and preferences |
 | `orazaka settings get` | Get all settings and preferences |
 | `orazaka settings set <key> <value>` | Set a user preference key-value pair |
@@ -559,66 +552,6 @@ Reset account password using a valid reset token
 |:---|:---|
 | `[token]` | Password reset token |
 
-### `orazaka runs ls`
-
-List the runs: name, status, current step, elapsed time, cost against the budget
-
-| Argument / option | Description |
-|:---|:---|
-| `--watch` | Refresh the list every few seconds |
-| `--json` | Output the rows as JSON |
-
-### `orazaka runs show <ref> <ref>`
-
-Show one run, by name or id
-
-| Argument / option | Description |
-|:---|:---|
-| `<ref>` | The run name or id |
-| `<ref>` | The run name or id |
-| `--steps` | Show the folded timeline, one line per step |
-| `--json` | Output the run as JSON |
-| `--json` | Output the result as JSON |
-
-### `orazaka runs send <ref> <message>`
-
-Answer a run that is waiting for input: the message becomes the output of the step it waits on
-
-| Argument / option | Description |
-|:---|:---|
-| `<ref>` | The run name or id |
-| `<message>` | What to say to the run |
-| `--json` | Output the run as JSON |
-
-### `orazaka runs deny <ref>`
-
-Refuse the approval a run is waiting on: the run stops without the step and its hold is released
-
-| Argument / option | Description |
-|:---|:---|
-| `<ref>` | The run name or id |
-| `--reason <text>` | Why the approval is refused |
-| `--json` | Output the run as JSON |
-
-### `orazaka runs wait <ref>`
-
-Follow a run until it ends or needs your approval
-
-| Argument / option | Description |
-|:---|:---|
-| `<ref>` | The run name or id |
-| `--notify` | Send a desktop notification when it ends or needs approval |
-| `--json` | Output the final row as JSON |
-
-### `orazaka runs resume <ref>`
-
-Start a new run from a step of a finished one; the steps before it keep their outputs
-
-| Argument / option | Description |
-|:---|:---|
-| `<ref>` | The run name or id |
-| `--json` | Output the new run as JSON |
-
 ### `orazaka settings set <key> <value>`
 
 Set a user preference key-value pair
@@ -687,8 +620,6 @@ Run an installed Studio — or, with --studio, a toolkit Studio by its key
 | `-i, --inputs <pairs>` | Inputs as key=value,key2=a\|b\|c (pipes make a list) |
 | `-f, --inputs-file <file>` | Inputs as one JSON object (for prose with commas); --inputs pairs apply on top |
 | `-s, --studio` | The target is a Studio key: a toolkit Studio (media, art direction) has no installation |
-| `--background` | Print the run id and return at once; follow it with `orazaka runs ls` or `runs wait` |
-| `--notify` | Send a desktop notification when the run ends or needs your approval |
 
 ### `orazaka studio logs <runId>`
 
