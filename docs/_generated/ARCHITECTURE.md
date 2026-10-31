@@ -35,7 +35,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-studio-service` | service | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-worker-media` | service | `orazaka-worker-media` | — | — | — |
 | `krizaka-billing-service` | service | `krizaka-billing` | 0.3.4 | — | — |
-| `krizaka-notifications-service` | service | `krizaka-platform-kit` | 0.4.3 | — | — |
+| `krizaka-notifications-service` | service | `krizaka-platform-kit` | 0.5.0 | — | — |
 | `krizaka-users-service` | service | `krizaka-users` | 0.2.1 | — | — |
 | `orazaka-adapter-spring-ai` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-architecture` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
@@ -46,9 +46,9 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-rewrite-style` | adapter | `orazaka-build` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-studio-client` | adapter | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
 | `krizaka-billing-client` | adapter | `krizaka-billing` | 0.3.4 | — | — |
-| `krizaka-payments` | adapter | `krizaka-build` | 0.3.4 | — | — |
-| `krizaka-quality` | adapter | `krizaka-build` | 0.3.4 | — | — |
-| `krizaka-rewrite-style` | adapter | `krizaka-build` | 0.3.4 | — | — |
+| `krizaka-payments` | adapter | `krizaka-build` | 0.3.5 | — | — |
+| `krizaka-quality` | adapter | `krizaka-build` | 0.3.5 | — | — |
+| `krizaka-rewrite-style` | adapter | `krizaka-build` | 0.3.5 | — | — |
 | `krizaka-users-client` | adapter | `krizaka-users` | 0.2.1 | — | — |
 | `krizaka-users-persistence` | adapter | `krizaka-users` | 0.2.1 | — | — |
 | `orazaka-business` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
@@ -61,25 +61,25 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-studio-api` | contract | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
 | `krizaka-billing-api` | contract | `krizaka-billing` | 0.3.4 | — | — |
 | `krizaka-users-api` | contract | `krizaka-users` | 0.2.1 | — | — |
-| `krizaka-app-config` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-idempotency` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-messaging` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-notifications-api` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-observability` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-persistence` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-ratelimit` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-security` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-spring-boot-starter-app-config` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-spring-boot-starter-idempotency` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-spring-boot-starter-observability` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-spring-boot-starter-persistence` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-spring-boot-starter-ratelimit` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-spring-boot-starter-security` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-spring-boot-starter-web` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-spring-boot-starter-webhooks` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-web` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
-| `krizaka-webhooks` | platform | `krizaka-platform-kit` | 0.4.3 | — | — |
+| `krizaka-app-config` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-idempotency` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-messaging` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-notifications-api` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-observability` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-persistence` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-ratelimit` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-security` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-spring-boot-starter-app-config` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-spring-boot-starter-idempotency` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-spring-boot-starter-observability` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-spring-boot-starter-persistence` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-spring-boot-starter-ratelimit` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-spring-boot-starter-security` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-spring-boot-starter-web` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-spring-boot-starter-webhooks` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-web` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
+| `krizaka-webhooks` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
 
 ## Dependencies
 
