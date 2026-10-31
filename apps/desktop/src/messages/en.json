@@ -252,6 +252,17 @@
       "output": "Output",
       "exit": "Exit {code} in {ms} ms",
       "timedOut": "Timed out"
+    },
+    "github": {
+      "title": "GitHub",
+      "lead": "Connect GitHub to carry an issue to a pull request. The token stays in the macOS Keychain; this page never sees it.",
+      "connect": "Connect GitHub",
+      "connected": "GitHub is connected",
+      "signOut": "Disconnect",
+      "revokeHint": "To revoke the app entirely, use your GitHub settings (Applications).",
+      "enter": "Enter this code at {uri}",
+      "open": "Open GitHub",
+      "waiting": "Waiting for you to approve in the browser…"
     }
   }
 }
