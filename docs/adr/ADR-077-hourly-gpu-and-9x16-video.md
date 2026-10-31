@@ -51,5 +51,5 @@ render.
 
 - Dev costs $13/month more (relay + Volume) and the GPU by the hour; the ledger (`gpu-dev.sh cost`) is the record.
 - `infra/migrations/2026-10-14-wan-9x16.sql` for existing databases.
-- The design is product-agnostic: Orochia and Yasakia reach these models through Orazaka's API and Studios (dogfooding,
+- The design is product-agnostic: the former products reach these models through Orazaka's API and Studios (dogfooding,
   2026-10-14) — the worker sees routing keys, never a product.
