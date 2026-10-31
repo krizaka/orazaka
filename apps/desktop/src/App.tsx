@@ -85,9 +85,9 @@ function Shell({ snap, error, refresh, setSnap }: { snap: Snapshot | null; error
       )}
       <TabsRoot value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col">
         <TabsList className="px-5">
-          <TabsTrigger value="stack">{t("tabs.stack")}</TabsTrigger>
-          <TabsTrigger value="files">{t("tabs.files")}</TabsTrigger>
-          <TabsTrigger value="automations">{t("tabs.automations")}</TabsTrigger>
+          <TabsTrigger value="stack" data-testid="tab-stack">{t("tabs.stack")}</TabsTrigger>
+          <TabsTrigger value="files" data-testid="tab-files">{t("tabs.files")}</TabsTrigger>
+          <TabsTrigger value="automations" data-testid="tab-automations">{t("tabs.automations")}</TabsTrigger>
           <TabsTrigger value="code">{t("tabs.code")}</TabsTrigger>
           <TabsTrigger value="settings">{t("tabs.settings")}</TabsTrigger>
         </TabsList>

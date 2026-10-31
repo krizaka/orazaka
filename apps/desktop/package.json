@@ -15,9 +15,10 @@
     "test": "vitest run",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
     "sidecar": "node scripts/build-sidecar.mjs",
-    "check": "pnpm typecheck && pnpm test && pnpm test:rust",
+    "check": "pnpm typecheck && pnpm test && pnpm test:journey && pnpm test:rust",
     "tauri": "tauri",
-    "build:app": "pnpm sidecar && tauri build --bundles dmg --target aarch64-apple-darwin"
+    "build:app": "pnpm sidecar && tauri build --bundles dmg --target aarch64-apple-darwin",
+    "test:journey": "node --test scripts/test/*.test.mjs"
   },
   "dependencies": {
     "@krizaka/i18n": "0.2.1",

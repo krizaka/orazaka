@@ -38,7 +38,7 @@ export function AutomationCard({ automation: a, running, halted, act }: { automa
           <dd>{a.lastRun ? <RunStatusBadge status={a.lastRun.status} /> : t("automations.card.noRun")}</dd>
         </dl>
         <Card.Footer className="flex-wrap">
-          <Button size="sm" variant="primary" disabled={running || halted} onClick={() => act(automationsApi.runNow(a.id))}>
+          <Button size="sm" variant="primary" data-testid="automation-run" disabled={running || halted} onClick={() => act(automationsApi.runNow(a.id))}>
             {t("automations.card.runNow")}
           </Button>
           <Button size="sm" variant="secondary" onClick={() => act(automationsApi.setEnabled(a.id, !a.enabled))}>
