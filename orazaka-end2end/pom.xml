@@ -48,7 +48,6 @@
         <dependency>
             <groupId>com.krizaka</groupId>
             <artifactId>krizaka-users-core</artifactId>
-            <version>${krizaka.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -66,7 +65,6 @@
         <dependency>
             <groupId>com.krizaka</groupId>
             <artifactId>krizaka-users-persistence</artifactId>
-            <version>${krizaka.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -485,7 +483,7 @@
                                              (orazaka.events.{user,password}.notifications) and
                                              orazaka.notifications.requests, each with its DLQ — asserted by
                                              AmqpContractIT. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-notifications/krizaka-notifications-service/target/orazaka-notification-service-${project.version}.jar --server.port=8097</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-platform-kit/krizaka-notifications-service/target/orazaka-notification-service-${project.version}.jar --server.port=8097</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -530,7 +528,7 @@
                                         <!-- Dual-run window: the identity service boots in the constellation
                                              (smoked by its healthcheck) while the router still serves the
                                              identity routes; the Phase 2f cutover flips the edge route table. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-users/krizaka-users-service/target/krizaka-users-service-${krizaka.version}.jar</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-users/krizaka-users-service/target/krizaka-users-service-*.jar</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -723,7 +721,7 @@
                                             <arg value="orazaka-apps/services/orazaka-job-service=http://localhost:8090" />
                                             <arg value="orazaka-apps/services/orazaka-studio/orazaka-studio-service=http://localhost:8096" />
                                             <arg value="orazaka-apps/services/orazaka-edge=http://localhost:8089" />
-                                            <arg value="krizaka/krizaka-notifications/krizaka-notifications-service=http://localhost:8097" />
+                                            <arg value="krizaka/krizaka-platform-kit/krizaka-notifications-service=http://localhost:8097" />
                                         </exec>
                                     </target>
                                 </configuration>
