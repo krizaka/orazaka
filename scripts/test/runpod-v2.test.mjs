@@ -187,3 +187,10 @@ test("batch plan: one clip per prompt, comments and blank lines dropped, ids sor
   assert.equal(t.cdn, "https://cdn.example/site/renders/2026-10-30-kites/r01.png");
   assert.throws(() => bunnyTarget("../x", "r01", {}), /slug/);
 });
+
+test("planFromPrompts: a [name] prefix resolves reference pictures; an unknown name stops before any pod time", () => {
+  const plan = planFromPrompts("# c\n[owl, cahier] An owl reads.\nPlain shot", { owl: "asset-1", cahier: "asset-2" });
+  assert.deepEqual(plan.clips[0], { id: "r01", scene: "An owl reads.", references: ["asset-1", "asset-2"] });
+  assert.deepEqual(plan.clips[1], { id: "r02", scene: "Plain shot" });
+  assert.throws(() => planFromPrompts("[duck] x", {}), /reference "duck" is not in --refs/);
+});

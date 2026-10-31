@@ -30,7 +30,14 @@ async function call(method, path, body, raw) {
 }
 
 /** The inputs of one image run: the Studio's own fields, nothing the script invents. */
-export const imageInputs = (clip, model, size) => ({ prompt: clip.scene, size: clip.size ?? size, model: clip.imageModel ?? model, ...(clip.imageSeed ? { seed: String(clip.imageSeed) } : {}) });
+export const imageInputs = (clip, model, size) => ({
+  prompt: clip.scene,
+  size: clip.size ?? size,
+  model: clip.imageModel ?? model,
+  ...(clip.imageSeed ? { seed: String(clip.imageSeed) } : {}),
+  // The same character in every shot (krizaka-internal#158): up to 4 assets (the outputs of earlier runs) the image follows.
+  ...(clip.references?.length ? { references: clip.references } : {}),
+});
 
 async function main() {
   const plan = JSON.parse(readFileSync(resolve(arg("plan")), "utf8"));
