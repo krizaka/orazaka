@@ -10,7 +10,7 @@
 #   gpu-dev.sh runpod status        what runs, since when, what it has cost so far
 #   gpu-dev.sh runpod count         « pods: N running » (exit 3 when N > 0)
 #   gpu-dev.sh runpod logs          the pod's boot and worker logs (ssh, read-only)
-#   gpu-dev.sh runpod batch FILE [--cap USD] [--model M] [--size WxH] [--batch NAME] [--gpu G] [--out DIR]
+#   gpu-dev.sh runpod batch FILE [--cap USD] [--model M] [--size WxH] [--refs refs.json] [--batch NAME] [--gpu G] [--out DIR]
 #                                    the unattended render batch: a pod, N prompts (one per line) → images → Bunny, the dollar
 #                                    cap enforced, the pod terminated in a trap whatever happens, then « pods: 0 running »
 #
@@ -168,17 +168,19 @@ runpod_batch_cleanup() {
 
 runpod_batch() {
   local prompts="${1:-}"; shift || true
-  [[ -f "$prompts" ]] || die "usage: runpod batch PROMPTS.txt [--cap USD] [--model M] [--size WxH] [--batch NAME] [--gpu G] [--out DIR]"
-  local cap="${GPU_BATCH_CAP:-1}" model="" size="" batch="" gpu="" out=""
+  [[ -f "$prompts" ]] || die "usage: runpod batch PROMPTS.txt [--cap USD] [--model M] [--size WxH] [--refs refs.json] [--batch NAME] [--gpu G] [--out DIR]"
+  local cap="${GPU_BATCH_CAP:-1}" model="" size="" batch="" gpu="" out="" refs=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --cap) cap="$2" ;; --model) model="$2" ;; --size) size="$2" ;; --batch) batch="$2" ;; --gpu) gpu="$2" ;; --out) out="$2" ;;
+      --cap) cap="$2" ;; --model) model="$2" ;; --size) size="$2" ;; --batch) batch="$2" ;; --gpu) gpu="$2" ;; --out) out="$2" ;; --refs) refs="$2" ;;
       *) die "runpod batch: unknown option $1" ;;
     esac
     shift 2
   done
   python3 -c "import sys; sys.exit(0 if float('$cap') > 0 else 1)" || die "runpod batch: --cap must be a positive dollar amount"
   out="${out:-$LOCAL/batch-$(date -u +%Y%m%dT%H%M%SZ)}"
+  # Free preflight: the prompts and their reference names are read BEFORE a pod is created (an unknown name must cost nothing).
+  node "$ROOT/scripts/runpod-batch.mjs" --prompts "$prompts" --validate-only ${refs:+--refs "$refs"} || die "runpod batch: the prompts file is not valid"
   trap runpod_batch_cleanup EXIT INT TERM HUP
   # FREE preflight (orazaka#508): the Studio is asked the exact run BEFORE any GPU is rented; a refusal a booted pod cannot fix stops here.
   if [[ -z "${GPU_BATCH_SKIP_PREFLIGHT:-}" ]]; then
@@ -190,7 +192,7 @@ runpod_batch() {
   local started; started=$(date -u +%s)
   say "batch: $(grep -cv '^\s*\(#\|$\)' "$prompts") prompts, cap \$$cap, results in $out"
   node "$ROOT/scripts/runpod-batch.mjs" --prompts "$prompts" --out "$out" --rate "$RP_RATE" --started "$started" --cap "$cap" \
-    ${model:+--model "$model"} ${size:+--size "$size"} ${batch:+--batch "$batch"}
+    ${model:+--model "$model"} ${size:+--size "$size"} ${batch:+--batch "$batch"} ${refs:+--refs "$refs"}
 }
 
 runpod() {
