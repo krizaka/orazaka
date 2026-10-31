@@ -54,7 +54,7 @@ export function RunHistory({ runs }: { runs: RunSummary[] }) {
                     {format(t("automations.runs.tokens"), { prompt: r.usage.promptTokens, completion: r.usage.completionTokens })}
                     {r.written > 0 && ` · ${format(t("automations.runs.written"), { count: r.written })}`}
                   </span>
-                  <Button size="sm" variant="ghost" className="ml-auto" aria-expanded={open === r.id} onClick={() => setOpen(open === r.id ? null : r.id)}>
+                  <Button size="sm" variant="ghost" className="ml-auto" data-testid="run-trace" aria-expanded={open === r.id} onClick={() => setOpen(open === r.id ? null : r.id)}>
                     {open === r.id ? t("automations.runs.close") : t("automations.runs.trace")}
                   </Button>
                 </div>

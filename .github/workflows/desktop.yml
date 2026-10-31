@@ -49,6 +49,8 @@ jobs:
         run: pnpm check
       - name: Frontend build
         run: pnpm build:ui
+      - name: The journey's debug build compiles (embedded WebDriver, never in a release)
+        run: cargo check --manifest-path src-tauri/Cargo.toml --features webdriver
 
   release:
     name: desktop dmg
