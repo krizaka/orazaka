@@ -48,7 +48,6 @@
         <dependency>
             <groupId>com.krizaka</groupId>
             <artifactId>krizaka-users-core</artifactId>
-            <version>${krizaka.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -66,7 +65,6 @@
         <dependency>
             <groupId>com.krizaka</groupId>
             <artifactId>krizaka-users-persistence</artifactId>
-            <version>${krizaka.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -530,7 +528,7 @@
                                         <!-- Dual-run window: the identity service boots in the constellation
                                              (smoked by its healthcheck) while the router still serves the
                                              identity routes; the Phase 2f cutover flips the edge route table. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-users/krizaka-users-service/target/krizaka-users-service-${krizaka.version}.jar</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-users/krizaka-users-service/target/krizaka-users-service-*.jar</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
