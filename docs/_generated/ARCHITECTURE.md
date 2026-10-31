@@ -36,7 +36,7 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-worker-media` | service | `orazaka-worker-media` | — | — | — |
 | `krizaka-billing-service` | service | `krizaka-billing` | 0.3.4 | — | — |
 | `krizaka-notifications-service` | service | `krizaka-platform-kit` | 0.5.0 | — | — |
-| `krizaka-users-service` | service | `krizaka-users` | 0.2.1 | — | — |
+| `krizaka-users-service` | service | `krizaka-users` | 0.3.0 | — | — |
 | `orazaka-adapter-spring-ai` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-architecture` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-assets` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
@@ -49,18 +49,18 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `krizaka-payments` | adapter | `krizaka-build` | 0.3.5 | — | — |
 | `krizaka-quality` | adapter | `krizaka-build` | 0.3.5 | — | — |
 | `krizaka-rewrite-style` | adapter | `krizaka-build` | 0.3.5 | — | — |
-| `krizaka-users-client` | adapter | `krizaka-users` | 0.2.1 | — | — |
-| `krizaka-users-persistence` | adapter | `krizaka-users` | 0.2.1 | — | — |
+| `krizaka-users-client` | adapter | `krizaka-users` | 0.3.0 | — | — |
+| `krizaka-users-persistence` | adapter | `krizaka-users` | 0.3.0 | — | — |
 | `orazaka-business` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-interceptors` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-tools` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AgentTurns, AiClient, CatalogModelService, ChatSessionService, CitationVerifier, ExternalCheckCapability, JobService, McpService, StepRouter | AccessAudit, AudioGeneratorClient, AudioTranscriber, CapabilityProvider, ChatGeneratorClient, ChatInvocation, ChatMemoryStore, CheckAuditLog, CheckHttp, CheckKeyStore, CheckMeter, CheckProviderCatalog, CheckSubjectPepper, CodeSandboxPort, ConsentRegistry, ControlVerdictRecorder, ConversationMemory, DomainEventPublisher, EmbeddingClient, ExternalCheckConnector, FeatureModelRoutes, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, OutputJudge, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, PromptAssembly, PromptCachePolicy, ProviderChatClient, SemanticClassifierPort, SpeechSynthesis, StepModelRecorder, StepRouteProvider, StructuredOutputBounds, StructuredOutputClient, TestShaperPort, ToolAnswerCodec, ToolLoopBounds, ToolOptions, ToolPermissionProvider, ToolRegistry, ToolResolution, ToolResultCache, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
-| `krizaka-users-core` | domain | `krizaka-users` | 0.2.1 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, LoginLockoutService, OrganizationService, PasswordPolicyService, PasswordRecoveryService, RateLimitProvider, SocialConnectionService, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, BreachedPasswordPort, CryptographyPort, LockoutRepositoryPort, OAuth2ProviderVerifier, OrganizationRepositoryPort, PasswordEventPublisher, PasswordResetTokenRepositoryPort, SecretSealPort, SocialConnectionRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
+| `krizaka-users-core` | domain | `krizaka-users` | 0.3.0 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, LoginLockoutService, OrganizationService, PasswordPolicyService, PasswordRecoveryService, RateLimitProvider, SocialConnectionService, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, BreachedPasswordPort, CryptographyPort, LockoutRepositoryPort, OAuth2ProviderVerifier, OrganizationRepositoryPort, PasswordEventPublisher, PasswordResetTokenRepositoryPort, SecretSealPort, SocialConnectionRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
 | `orazaka-jobs-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-persistence-app-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | CapabilityManager, CatalogModelManager, ChatMemoryPersistenceProvider, ChatSessionPersistenceProvider, FeatureCachePolicyManager, FeatureRouteManager, FeatureStructuredBoundManager, FeatureToolBoundManager, JobPersistenceProvider, OutboxStore, PipelineConfigManager, PlatformMcpServerPersistenceProvider, PlatformToolConfigPersistenceProvider, RuntimeConfigProvider, SpeechVoiceManager, UserMcpServerPersistenceProvider, ValidationPipelineManager | — |
 | `orazaka-studio-api` | contract | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
 | `krizaka-billing-api` | contract | `krizaka-billing` | 0.3.4 | — | — |
-| `krizaka-users-api` | contract | `krizaka-users` | 0.2.1 | — | — |
+| `krizaka-users-api` | contract | `krizaka-users` | 0.3.0 | — | — |
 | `krizaka-app-config` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
 | `krizaka-idempotency` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |
 | `krizaka-messaging` | platform | `krizaka-platform-kit` | 0.5.0 | — | — |

@@ -447,7 +447,7 @@
       "role": "service",
       "layer": "app",
       "runtime": "jvm",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "description": "Identity service — the trust root: authN, RBAC, profile, credentials, API keys (hosts the krizaka-users-core + persistence-identity libraries)",
       "ports": {
         "inbound": [],
@@ -642,7 +642,7 @@
       "role": "adapter",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "description": "Typed HTTP client of the users service's internal API (UserDirectoryClient): user, profile, provider keys and rate-limit tiers, authenticated with a SERVICE token and cached per entry. A Spring Boot auto-configuration.",
       "ports": {
         "inbound": [],
@@ -657,7 +657,7 @@
       "role": "adapter",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "description": "Orazaka User and Identity Persistence Block",
       "ports": {
         "inbound": [],
@@ -794,7 +794,7 @@
       "role": "domain",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "description": "Orazaka Identity and Access Management Domain",
       "ports": {
         "inbound": [
@@ -919,7 +919,7 @@
       "role": "contract",
       "layer": "framework",
       "runtime": "jvm",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "description": "Identity principal contract (the User record) — the only identity type downstream services keep after the Phase 2 extraction; pure JDK, no dependencies",
       "ports": {
         "inbound": [],
@@ -2570,7 +2570,7 @@
         "repository": "krizaka-users",
         "role": "service",
         "packaging": "jar",
-        "version": "0.2.1",
+        "version": "0.3.0",
         "description": "Identity service — the trust root: authN, RBAC, profile, credentials, API keys (hosts the krizaka-users-core + persistence-identity libraries)"
       },
       {
@@ -2588,7 +2588,7 @@
         "repository": "krizaka-users",
         "role": "adapter",
         "packaging": "jar",
-        "version": "0.2.1",
+        "version": "0.3.0",
         "description": "Typed HTTP client of the users service's internal API (UserDirectoryClient): user, profile, provider keys and rate-limit tiers, authenticated with a SERVICE token and cached per entry. A Spring Boot auto-configuration."
       },
       {
@@ -2597,7 +2597,7 @@
         "repository": "krizaka-users",
         "role": "adapter",
         "packaging": "jar",
-        "version": "0.2.1",
+        "version": "0.3.0",
         "description": "Orazaka User and Identity Persistence Block"
       },
       {
@@ -2606,7 +2606,7 @@
         "repository": "krizaka-users",
         "role": "domain",
         "packaging": "jar",
-        "version": "0.2.1",
+        "version": "0.3.0",
         "description": "Orazaka Identity and Access Management Domain"
       },
       {
@@ -2624,7 +2624,7 @@
         "repository": "krizaka-users",
         "role": "contract",
         "packaging": "jar",
-        "version": "0.2.1",
+        "version": "0.3.0",
         "description": "Identity principal contract (the User record) — the only identity type downstream services keep after the Phase 2 extraction; pure JDK, no dependencies"
       },
       {
