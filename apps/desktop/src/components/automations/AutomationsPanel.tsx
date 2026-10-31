@@ -71,7 +71,7 @@ export function AutomationsPanel({ snap }: { snap: Snapshot }) {
         <div className="flex items-center gap-3">
           <h3 id="automations-list" className="text-sm font-semibold">{t("automations.title")}</h3>
           {!creating && (
-            <Button size="sm" variant="primary" shape="cut" className="ml-auto" onClick={() => setCreating(true)}>{t("automations.new")}</Button>
+            <Button size="sm" variant="primary" shape="cut" className="ml-auto" data-testid="automation-new" onClick={() => setCreating(true)}>{t("automations.new")}</Button>
           )}
         </div>
         {creating && (
