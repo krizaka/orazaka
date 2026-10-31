@@ -1,5 +1,5 @@
 import { defineKeys, keepPreviousData, queryOptions } from "@krizaka/query";
-import { api, codeApi } from "./api";
+import { api, codeApi, githubApi } from "./api";
 
 /** Keys of the snapshot (settings, shared folders, probe) and of the file browser. */
 export const snapshotKeys = defineKeys("snapshot", {});
@@ -35,6 +35,10 @@ export const previewQuery = (path: string | null) =>
   });
 
 /** The checks of the open repository: suggestions, confirmations, and whether the next run needs an approval. */
+export const githubKeys = defineKeys("github", { status: () => ["status"] });
+/** Polled while a sign-in waits for the person to approve in the browser. */
+export const githubStatusQuery = (waiting = false) =>
+  queryOptions({ queryKey: githubKeys.status(), queryFn: () => githubApi.status(), staleTime: 0, retry: false, throwOnError: false, refetchInterval: waiting ? 3000 : false });
 export const codeKeys = defineKeys("code", { checks: () => ["checks"] });
 export const checksQuery = () =>
   queryOptions({ queryKey: codeKeys.checks(), queryFn: () => codeApi.checks(), staleTime: 0, retry: false, throwOnError: false });

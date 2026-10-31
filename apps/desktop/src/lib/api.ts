@@ -144,6 +144,14 @@ export type CodeCheck = { name: string; argv: string[]; cwd: string; timeoutSecs
 export type CodeCheckGrant = { id: string; repo: string; check: CodeCheck; argvHash: string; createdAt: string; revokedAt: string | null };
 export type CodeChecksOverview = { suggested: CodeCheck[]; confirmed: CodeCheckGrant[]; needsApproval: boolean };
 export type CodeCheckRun = { name: string; exitCode: number | null; durationMs: number; timedOut: boolean; argvHash: string; output: string; truncated: boolean };
+export type GithubDeviceCode = { user_code: string; verification_uri: string; expires_in: number; interval: number };
+export type GithubStatus = { connected: boolean; pending: GithubDeviceCode | null; failure: string | null };
+export const githubApi = {
+  status: () => invoke<GithubStatus>("github_status"),
+  signIn: () => invoke<GithubDeviceCode>("github_sign_in"),
+  signOut: () => invoke<void>("github_sign_out"),
+};
+
 export const codeApi = {
   open: (path: string) => invoke<CodeRepoInfo>("code_open", { path }),
   propose: (path: string, newText: string) => invoke<CodeFileProposal>("code_propose", { path, newText }),
