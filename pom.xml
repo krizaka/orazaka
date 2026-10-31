@@ -60,7 +60,6 @@
         <module>orazaka-libs/orazaka-build</module>
         <module>orazaka-libs/orazaka-contracts</module>
         <module>krizaka/krizaka-users</module>
-        <module>krizaka/krizaka-notifications</module>
         <module>krizaka/krizaka-billing</module>
         <module>orazaka-apps/services/orazaka-studio</module>
         <module>orazaka-libs/orazaka-ai-engine</module>

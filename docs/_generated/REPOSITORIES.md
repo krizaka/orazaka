@@ -8,7 +8,7 @@ generated: true
 
 # Repositories
 
-Orazaka is published as **21 repositories** in the [`krizaka`](https://github.com/krizaka) organisation: one per component, plus the workspace [`orazaka`](https://github.com/krizaka/orazaka) that assembles them (governance contract, `orazaka.workspace.json`, local infrastructure, end-to-end tests, these docs).
+Orazaka is published as **20 repositories** in the [`krizaka`](https://github.com/krizaka) organisation: one per component, plus the workspace [`orazaka`](https://github.com/krizaka/orazaka) that assembles them (governance contract, `orazaka.workspace.json`, local infrastructure, end-to-end tests, these docs).
 
 ```bash
 git clone https://github.com/krizaka/orazaka.git && cd orazaka

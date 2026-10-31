@@ -69,7 +69,7 @@ Every component is its **own GitHub repository** so that any Krizaka application
 
 | Layer | Repositories |
 |:---|:---|
-| **Krizaka building blocks** (`krizaka/`, `com.krizaka:*` on Maven Central — Orazaka consumes them, does not own them) | `krizaka-build` (parent POM, BOM, generic test kit) · `krizaka-platform-kit` (`krizaka-security`, `krizaka-messaging`) · `krizaka-users` (register, verify, login, OAuth, forgot/reset password, profile, API keys; `-api`, `-client`) · `krizaka-notifications` (e-mail · SMS · webhook per channel) · `krizaka-billing` (credits, plans, metering; `-api`, `-client`) |
+| **Krizaka building blocks** (`krizaka/`, `com.krizaka:*` on Maven Central — Orazaka consumes them, does not own them) | `krizaka-build` (parent POM, BOM, generic test kit) · `krizaka-platform-kit` (`krizaka-security`, `krizaka-messaging`) · `krizaka-users` (register, verify, login, OAuth, forgot/reset password, profile, API keys; `-api`, `-client`) · `krizaka-notifications` (modules of `krizaka-platform-kit`) · `krizaka-billing` (credits, plans, metering; `-api`, `-client`) |
 | Foundation (Orazaka) | `orazaka-build` (parent POM + BOM + governance kit) · `orazaka-contracts` (platform Tier-1) · `orazaka-edge` · `orazaka-ui-kit` (`@krizaka/orazaka-shared`, `@krizaka/orazaka-design-system`) |
 | AI engine | `orazaka-ai-engine` (core, interceptors, tools, business, persistence) · `orazaka-studio` · `orazaka-conversation-service` · `orazaka-job-service` · `orazaka-knowledge-service` · `orazaka-automation-service` · `orazaka-worker-media` |
 | Apps & content | `orazaka-web-client` (with its operator console) · `orazaka-mobile-client` · `orazaka-cli` · `orazaka-packs` |
