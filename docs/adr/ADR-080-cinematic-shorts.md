@@ -263,8 +263,8 @@ the foley coverage, the titles (rendered at both aspects).
 
 ### v2.8 No children, no child-like figures, no dolls or toys (2026-10-21)
 
-A hard rule for every Orochia or brand film, after a FLUX plate put a child-like doll in the flamingo's bed
-(« Orochia : la première livraison », keyframe 03; its Wan take was rejected and reshot from a clean plate).
+A hard rule for every former product's or brand film, after a FLUX plate put a child-like doll in the flamingo's bed
+(« a former product : la première livraison », keyframe 03; its Wan take was rejected and reshot from a clean plate).
 - **Prompts:** every plate, keyframe, character and shot prompt carries « No children, no child-like figures, no dolls or toys »,
   with or without a treatment's keep lines (`NO_CHILDREN`, orazaka-cli `cinema.production.ts`; krizaka-ui
   `tools/brand-films/dawn/keyframes.py`). The keyframe and Wan negatives name child, children, child-like figure, doll and toy.
