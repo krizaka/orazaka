@@ -1,6 +1,6 @@
 ---
 title: "ADR-078 — Retention none: a turn that is processed and forgotten, a plan that says so"
-description: "Does Orazaka store a turn's inputs? Yes, by default: conversation memory writes the prompt and the completion to Postgres. A plan entitlement, retention.none, puts a turn in no-storage mode — memory neither read nor written, no content in logs — and the Yororis plan has it."
+description: "Does Orazaka store a turn's inputs? Yes, by default: conversation memory writes the prompt and the completion to Postgres. A plan entitlement, retention.none, puts a turn in no-storage mode — memory neither read nor written, no content in logs — and a former product's plan has it."
 category: ADR
 order: 78
 ---
@@ -10,9 +10,9 @@ order: 78
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Scope**: `Context.RETENTION_KEY`/`retentionNone()`, `MemoryInterceptor`, `EngineStreamBridge`
-  (orazaka-ai-engine); `ContextService`, `VoiceTurnService` (conversation service); the `yororis` plan
-  (`70-billing.sql`, `infra/migrations/2026-10-22-yororis-plan.sql`)
-- **Consumer**: Yororis (krizaka/yororis#99): its landing promises that nothing said in a moment is kept
+  (orazaka-ai-engine); `ContextService`, `VoiceTurnService` (conversation service); a retired plan
+  (`70-billing.sql`, a retired export)
+- **Consumer**: a former product (a former product's issue): its landing promises that nothing said in a moment is kept
 - **Amends**: [ADR-076](ADR-076-the-voice-turn.md) §2 (a typed turn needs no audio capability)
 
 ## 1. The question, and the answer from the code
@@ -43,17 +43,17 @@ So the claim « nothing is kept » was **not** true of a turn taken with a `conv
   (ADR-064). An unresolved plan (billing unreachable) keeps the default: it says nothing about the actor.
 - **In the mode**: `MemoryInterceptor` neither reads the stored history nor writes the prompt and the
   completion; the engine keeps what billing needs (counters, capability, model, credits) and nothing
-  else. A caller that wants context sends it with each turn (`context`, ≤ 2 000 tokens), as Yororis does.
+  else. A caller that wants context sends it with each turn (`context`, ≤ 2 000 tokens), as a former product does.
 - **Logs.** No log statement of the bridge mentions a prompt or a completion, in any mode
   (`EngineStreamBridgeTest.shouldNeverLogWhatThePersonSaidEvenAtDebug`). Exceptions of a model client
   can still quote a fragment; the voice turn logs the class only.
 - **Not covered**: rows written *before* the plan had the flag stay in the cluster and its backups
   until deleted; a Studio run is a different mechanism (retention by class, ADR-065).
 
-## 3. The Yororis plan
+## 3. The former product's plan
 
-`yororis` (not public, tier 10): `capability.chat`, `studio.guided-journaling`, **`retention.none`**,
-`capability.audio = false`. The Yororis service account is subscribed to it.
+a retired export (not public, tier 10): `capability.chat`, `studio.guided-journaling`, **`retention.none`**,
+`capability.audio = false`. The former product's service account is subscribed to it.
 
 ## 4. A typed turn needs no audio capability (amends ADR-076 §2)
 
@@ -81,6 +81,6 @@ fixed reply and the lines are unchanged and still answer before the model.
   accepts `text/event-stream` (the voice turn) it had no content type of its own and failed with a 500
   (orazaka-conversation-service#49).
 - A consent bump (`bien-etre` 2.1) makes the **installation** of a service account answer 451 until it
-  is re-posted with the new `consentVersion`; the Yororis service account was re-consented to 2.1.
-- Proof of the mode, on a Yororis moment taken live: `orazaka_chat_messages`, `orazaka_jobs`,
+  is re-posted with the new `consentVersion`; a former product's service account was re-consented to 2.1.
+- Proof of the mode, on a former product's moment taken live: `orazaka_chat_messages`, `orazaka_jobs`,
   `outbox_events` unchanged; billing wrote its hold and `usage_event` (ids, capability, quantities).
