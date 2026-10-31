@@ -5,7 +5,7 @@
  * started → the results to Bunny under `site/renders/<batch>/`. The dollar cap is enforced HERE between every prompt and by the
  * shell around it (the pod is terminated in a trap whatever happens: this script never touches the pod).
  *
- *   node scripts/runpod-batch.mjs --prompts prompts.txt --out <dir> --rate <usd/h> --started <epoch s> --cap <usd> [--model m] [--size WxH] [--batch name] [--no-upload]
+ *   node scripts/runpod-batch.mjs --prompts prompts.txt --out <dir> --rate <usd/h> --started <epoch s> --cap <usd> [--refs refs.json] [--model m] [--size WxH] [--batch name] [--no-upload]
  *
  * prompts.txt: one prompt per line (blank lines and `#` comments ignored). The Studio login and the Bunny keys are read from the
  * process settings by name (ORAZAKA_QA_*, MEDIA_STORAGE_*, MEDIA_CDN_HOSTNAME as scripts/pr-assets.mjs), never printed.
@@ -15,11 +15,26 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** One clip per prompt, ids `r01`, `r02`… (the plan format of gpu-i2v-run.mjs, only `scene` is read by the image step). */
-export function planFromPrompts(text) {
+/**
+ * One clip per prompt, ids `r01`, `r02`… (the plan format of gpu-i2v-run.mjs, only `scene` and `references` are read by the image step).
+ * A line may start with `[owl, cahier]`: the names of reference pictures, resolved by `refs` (name → asset id of an earlier run's output)
+ * so the same character comes back from shot to shot (krizaka-internal#158). An unknown name stops the batch before any pod time is spent.
+ */
+export function planFromPrompts(text, refs = {}) {
   const prompts = text.split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
   const width = Math.max(2, String(prompts.length).length);
-  return { clips: prompts.map((scene, i) => ({ id: `r${String(i + 1).padStart(width, "0")}`, scene })) };
+  return {
+    clips: prompts.map((line, i) => {
+      const id = `r${String(i + 1).padStart(width, "0")}`;
+      const m = /^\[([^\]]*)\]\s*(.+)$/.exec(line);
+      if (!m) return { id, scene: line };
+      const references = m[1].split(",").map((n) => n.trim()).filter(Boolean).map((name) => {
+        if (!refs[name]) throw new Error(`${id}: the reference "${name}" is not in --refs`);
+        return refs[name];
+      });
+      return { id, scene: m[2], ...(references.length ? { references } : {}) };
+    }),
+  };
 }
 
 /** What the pod has cost by `nowMs` (dollars): hours × rate, from the epoch-seconds `startedS`. */
@@ -47,7 +62,9 @@ const arg = (name, fallback) => {
 };
 
 async function main() {
-  const plan = planFromPrompts(readFileSync(resolve(arg("prompts")), "utf8"));
+  const refs = arg("refs") ? JSON.parse(readFileSync(resolve(arg("refs")), "utf8")) : {};
+  const plan = planFromPrompts(readFileSync(resolve(arg("prompts")), "utf8"), refs);
+  if (process.argv.includes("--validate-only")) { console.log(`batch: ${plan.clips.length} prompts, ${plan.clips.filter((c) => c.references).length} with references — valid`); return; }
   const out = resolve(arg("out"));
   const rate = Number(arg("rate")), started = Number(arg("started")), cap = Number(arg("cap"));
   if (![rate, started, cap].every(Number.isFinite) || cap <= 0) throw new Error("--rate, --started and --cap are required numbers");

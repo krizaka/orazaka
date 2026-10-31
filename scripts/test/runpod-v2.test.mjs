@@ -200,3 +200,10 @@ test("without a volume the body mounts nothing and sizes the container disk (ora
   assert.equal(made.disk, 100);
   s.close();
 });
+
+test("planFromPrompts: a [name] prefix resolves reference pictures; an unknown name stops before any pod time", () => {
+  const plan = planFromPrompts("# c\n[owl, cahier] An owl reads.\nPlain shot", { owl: "asset-1", cahier: "asset-2" });
+  assert.deepEqual(plan.clips[0], { id: "r01", scene: "An owl reads.", references: ["asset-1", "asset-2"] });
+  assert.deepEqual(plan.clips[1], { id: "r02", scene: "Plain shot" });
+  assert.throws(() => planFromPrompts("[duck] x", {}), /reference "duck" is not in --refs/);
+});
