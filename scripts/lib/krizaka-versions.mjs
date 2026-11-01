@@ -79,17 +79,48 @@ export async function onCentral({ group, artifactId, version }, fetchImpl = fetc
   }
 }
 
-/** The claims nobody provides: the reactor builds another version and Central does not carry the one named. */
-export async function unprovided(list, centralCheck = onCentral) {
+/** GitHub Packages repositories that hold the Krizaka blocks (ADR-019: published there first, Central last; ADR-021: krizaka-build). */
+export const PACKAGE_REPOSITORIES = ["krizaka-build", "krizaka-platform-kit"];
+
+/**
+ * True when the pom is on GitHub Packages (maven.pkg.github.com/krizaka/<repository>), false when no repository has it,
+ * null without a credential or when GitHub cannot be reached (never a failure).
+ */
+export async function onGitHubPackages({ group, artifactId, version }, { credential, actor = "krizaka", repositories = PACKAGE_REPOSITORIES } = {}, fetchImpl = fetch) {
+  if (!credential) return null;
+  const path = `${group.replaceAll(".", "/")}/${artifactId}/${version}/${artifactId}-${version}.pom`;
+  const headers = { Authorization: `Basic ${Buffer.from(`${actor}:${credential}`).toString("base64")}` };
+  let unknown = false;
+  for (const repository of repositories) {
+    try {
+      const res = await fetchImpl(`https://maven.pkg.github.com/krizaka/${repository}/${path}`, { method: "HEAD", headers });
+      if (res.status === 200) return true;
+      if (res.status !== 404) unknown = true;
+    } catch {
+      unknown = true;
+    }
+  }
+  return unknown ? null : false;
+}
+
+/** Provided by a registry: true on Central or GitHub Packages, false only when both say no, null when one could not tell. */
+export async function onRegistry(claim, credentials = {}, { central = onCentral, packages = onGitHubPackages } = {}) {
+  const answers = [await central(claim), await packages(claim, credentials)];
+  if (answers.includes(true)) return true;
+  return answers.includes(null) ? null : false;
+}
+
+/** The claims nobody provides: the reactor builds another version and no registry carries the one named. */
+export async function unprovided(list, check = onCentral) {
   const missing = [];
   for (const c of list) {
     if (c.reactor === c.version) continue;
-    if ((await centralCheck(c)) === false) missing.push(c);
+    if ((await check(c)) === false) missing.push(c);
   }
   return missing;
 }
 
 export function explain(c) {
   const built = c.reactor ? `the workspace builds it at ${c.reactor}` : "no repository of the workspace builds it";
-  return `${c.what} ${c.group}:${c.artifactId}:${c.version}, which is not on Maven Central and ${built}. Set the version in the BOM (krizaka-build) to the one the repository carries on main.`;
+  return `${c.what} ${c.group}:${c.artifactId}:${c.version}, which is on neither Maven Central nor GitHub Packages and ${built}. Set the version in the BOM (krizaka-build) to the one the repository carries on main.`;
 }

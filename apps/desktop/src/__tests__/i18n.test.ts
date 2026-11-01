@@ -9,6 +9,10 @@ const leaves = (o: unknown, p = ""): Record<string, string> =>
 const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
 describe("catalogues", () => {
+  it("says Orazaka is in development, in both languages (orazaka#516)", () => {
+    expect(en.app.development).toMatch(/^In development/);
+    expect(fr.app.development).toMatch(/^En développement/);
+  });
   it("fr has exactly the keys of en", () => {
     expect(keys(fr).sort()).toEqual(keys(en).sort());
   });

@@ -76,6 +76,8 @@ jobs:
       - name: Krizaka versions are provided
         # The BOM may only name a com.krizaka release that a cloned repository builds or Maven Central carries
         # (Central's free quota can be out, a tag unpublished): fails here, by artifact, not deep in the reactor.
+        env:
+          PACKAGES_READ_CREDENTIAL: ${{ github.token }} # `packages: read`: blocks published on GitHub Packages only (ADR-019)
         run: node scripts/check-krizaka-versions.mjs
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7

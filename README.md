@@ -189,7 +189,7 @@ orazaka/                               ← this repository
 ├── docs/         architecture, ADRs, generated references
 ├── orazaka-end2end/                   hermetic E2E
 ├── orazaka-libs/                      ← cloned: orazaka-build, orazaka-contracts, orazaka-ai-engine
-├── krizaka/                           ← cloned: krizaka-build, krizaka-platform-kit, krizaka-users, krizaka-billing
+├── krizaka/                           ← cloned: krizaka-build (with the platform kit), krizaka-users, krizaka-billing
 ├── orazaka-apps/services/             ← cloned: orazaka-studio, conversation, job, knowledge, automation, edge
 ├── orazaka-apps/workers/              ← cloned: orazaka-worker-media
 ├── orazaka-apps/ui/                   ← npm workspace root; cloned: orazaka-ui-kit, web, mobile, cli

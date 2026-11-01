@@ -112,6 +112,8 @@ services:
     envs:
       # Databases (krizaka-dev-pg). orazaka_db holds conversation, jobs and governance.
       - { key: CORE_REBUILD, scope: BUILD_TIME, value: "__CORE_REBUILD__" }
+      # The Krizaka building blocks are on GitHub Packages (ADR-019): the image build reads them with this read:packages credential, a build secret (infra/deploy/Dockerfile).
+      - { key: MAVEN_GITHUB_PACKAGES_TOKEN, scope: BUILD_TIME, type: SECRET, value: "__MAVEN_GITHUB_PACKAGES_TOKEN__" }
       - { key: SPRING_DATASOURCE_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-orazaka?sslmode=require&prepareThreshold=0" }
       # Connection budget (docs/DEV_DATABASE.md, "Connection budget"): the cluster allows 22 usable connections for
       # every dev service. Every JVM of this container goes through its PgBouncer pool (port 25061, transaction mode:

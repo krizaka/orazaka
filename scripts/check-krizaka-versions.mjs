@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-/** Fails when the BOM (or orazaka-parent) names a com.krizaka version that neither the reactor nor Maven Central provides. */
+/** Fails when the BOM (or orazaka-parent) names a com.krizaka version that neither the reactor, GitHub Packages (ADR-019) nor Maven Central provides. */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { claims, explain, projectCoordinates, unprovided } from "./lib/krizaka-versions.mjs";
+import { claims, explain, onRegistry, projectCoordinates, unprovided } from "./lib/krizaka-versions.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => (existsSync(join(ROOT, path)) ? readFileSync(join(ROOT, path), "utf8") : null);
@@ -29,7 +29,8 @@ export async function check() {
   const bom = read("krizaka/krizaka-build/krizaka-bom/pom.xml");
   const parent = read("orazaka-libs/orazaka-build/orazaka-parent/pom.xml");
   if (!bom || !parent) return [];
-  return unprovided(claims({ bom, parent, built }));
+  const credentials = { credential: process.env.PACKAGES_READ_CREDENTIAL, actor: process.env.GITHUB_ACTOR };
+  return unprovided(claims({ bom, parent, built }), (c) => onRegistry(c, credentials));
 }
 
 const missing = await check();
