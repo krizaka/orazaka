@@ -91,3 +91,16 @@ test("the watchdog's lifetime survives fractional hours (a batch gives MAX_HOURS
     assert.match(src, /MAXMIN=\$\(awk/, f);
   }
 });
+
+// Guard (c), krizaka-internal#138: a run the Studio FAILS for a reason no wait fixes (« a reference image must be PNG… ») was re-sent
+// every 30 s for ten minutes of B200 time. Three failed runs of the same prompt in a row stop the batch.
+import { RUN_FAILED } from "../runpod-batch.mjs";
+test("a failed run is recognised in the image step's output", () => {
+  assert.match("image: r01              FAILED 1 s  251af40f-7cfe-4dd0-9c2f-471d4c154b07", RUN_FAILED);
+  assert.doesNotMatch("image: r01              SUCCEEDED 9 s  251af40f", RUN_FAILED);
+});
+test("the batch stops after three failed runs of one prompt", () => {
+  const src = read("../runpod-batch.mjs");
+  assert.match(src, /failed = engineStreak\(failed, [^\n]*RUN_FAILED\.test\(/);
+  assert.match(src, /if \(failed\.abort\)/);
+});

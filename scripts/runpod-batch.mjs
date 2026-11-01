@@ -46,6 +46,9 @@ export const capReached = (spent, cap, perPromptUsd = 0) => spent + perPromptUsd
 /** The Studio's answer while the pod's engine is not reachable (guard (b) reads it in the image step's error). */
 export const ENGINE_DOWN = /is not running \(its engine could not be reached\)/;
 
+/** A run the Studio ended FAILED (the image step prints `image: <id>  FAILED <s> s <runId>`): guard (c) counts them per prompt. */
+export const RUN_FAILED = /^image: \S+\s+FAILED\b/m;
+
 /** True once the engine wait (guard (a)) has used its `minutes`, counted from the pod's start `startedS` (epoch seconds). */
 export const engineWaitOver = (startedS, nowMs, minutes) => nowMs / 1000 - startedS >= minutes * 60;
 
@@ -126,6 +129,7 @@ async function main() {
   for (const clip of plan.clips) {
     const png = join(out, `${clip.id}.image.png`);
     // The pod boots for minutes before its worker answers: a prompt is retried until it succeeds; the cap or the boot window stops it.
+    let failed;
     while (!existsSync(png)) {
       const spent = spentUsd(rate, started, Date.now());
       if (capReached(spent, cap, perPrompt)) {
@@ -135,8 +139,12 @@ async function main() {
       if (results.length === 0 && Date.now() / 1000 - started > bootMinutes * 60) throw new Error(`no render after ${bootMinutes} min of boot — giving up`);
       const t0 = Date.now();
       const args = [join(here, "showcase-image-run.mjs"), "--plan", join(out, "plan.json"), "--out", out, "--only", clip.id, "--redo", ...(arg("model") ? ["--model", arg("model")] : []), ...(arg("size") ? ["--size", arg("size")] : [])];
-      const run = spawnSync("node", args, { env: process.env, encoding: "utf8", stdio: ["ignore", "inherit", "pipe"] });
+      const run = spawnSync("node", args, { env: process.env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+      if (run.stdout) process.stdout.write(run.stdout);
       if (run.stderr) process.stderr.write(run.stderr);
+      // Guard (c): the same prompt FAILED three times in a row — a refusal no wait fixes (a reference, the prompt): stop paying.
+      failed = engineStreak(failed, !existsSync(png) && RUN_FAILED.test(run.stdout ?? ""), Date.now(), { minutes: Infinity });
+      if (failed.abort) throw new Error(`${clip.id} failed ${failed.count} times in a row — read the run's error in the Studio; ending the pod`);
       streak = engineStreak(streak, !existsSync(png) && ENGINE_DOWN.test(run.stderr ?? ""), Date.now());
       if (streak.abort) throw new Error(`the engine stopped answering (${streak.count} × « could not be reached ») — ending the pod`);
       if (existsSync(png)) perPrompt = Math.max(perPrompt, spentUsd(rate, 0, Date.now()) - spentUsd(rate, 0, t0));
