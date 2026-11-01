@@ -114,6 +114,44 @@ generated: true
 - `UserRepositoryPort`
 - `VerificationTokenRepositoryPort`
 
+## `krizaka-users-core`
+
+**Inbound ports**
+
+- `AdminUserService`
+- `ApiKeyService`
+- `IdentityReconciliationService`
+- `IdentityService`
+- `LoginLockoutService`
+- `OrganizationService`
+- `PasswordPolicyService`
+- `PasswordRecoveryService`
+- `RateLimitProvider`
+- `SocialConnectionService`
+- `TokenService`
+- `UserProfileProvider`
+
+**Outbound ports**
+
+- `AdminUserRepositoryPort`
+- `ApiKeyRepositoryPort`
+- `AuthorityRepositoryPort`
+- `BreachedPasswordPort`
+- `CryptographyPort`
+- `LockoutRepositoryPort`
+- `OAuth2ProviderVerifier`
+- `OrganizationRepositoryPort`
+- `PasswordEventPublisher`
+- `PasswordResetTokenRepositoryPort`
+- `SecretSealPort`
+- `SocialConnectionRepositoryPort`
+- `UserCredentialRepositoryPort`
+- `UserEventPublisher`
+- `UserInterceptionRepositoryPort`
+- `UserProfileRepositoryPort`
+- `UserRepositoryPort`
+- `VerificationTokenRepositoryPort`
+
 ## `orazaka-persistence-app-api`
 
 **Inbound ports**
