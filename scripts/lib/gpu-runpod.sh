@@ -68,6 +68,11 @@ runpod_start() {
       volume=$(rp_py volume-create "$RP_VOLUME" "$dc" "$RP_VOLUME_GB") || continue
     fi
     local gpu gpus
+    # Before paying: do the weights fit, and what does fetching them cost? (GPU_DOWNLOAD_GB = the model's `downloadGb` in models.yaml)
+    if [[ -n "${GPU_DOWNLOAD_GB:-}" ]]; then
+      node "$ROOT/scripts/gpu-boot-preflight.mjs" --download-gb "$GPU_DOWNLOAD_GB" --disk-gb "${GPU_RUNPOD_DISK_GB:-60}" \
+        --volume "${GPU_RUNPOD_VOLUME:-}" --rate "${GPU_PREFLIGHT_RATE:-5.5}" || die "the weights do not fit: nothing was created"
+    fi
     # v2 takes one GPU type per create: the priority list is walked here.
     IFS='|' read -ra gpus <<<"$gpu_list"
     for gpu in "${gpus[@]}"; do
