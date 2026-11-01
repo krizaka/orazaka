@@ -46,6 +46,8 @@ destroy_pod() {
 }
 if [[ "${1:-}" == "--destroy" ]]; then destroy_pod "${2:-requested}"; exit $?; fi
 STATE=/var/lib/orazaka-gpu; IDLE=${IDLE_MINUTES:-30}; MAX=${MAX_HOURS:-10}; SETUP=${SETUP_MAX_MINUTES:-120}
+# The lifetime in whole minutes: a batch gives fractional hours (0.6), which bash arithmetic refuses (the cap never fired).
+MAXMIN=$(awk -v h="$MAX" 'BEGIN { printf "%d", h * 60 }')
 boot=$(cat /var/lib/orazaka-gpu/boot-epoch)
 while sleep 60; do
   now=$(date +%s)
@@ -55,7 +57,7 @@ while sleep 60; do
   last=$(stat -c %Y $STATE/state/last-activity); idle=$(( (now - last) / 60 )); age=$(( (now - boot) / 60 ))
   reason=""
   (( idle >= IDLE )) && reason="idle for ${idle} min"
-  (( age >= MAX * 60 )) && reason="lifetime of ${MAX} h reached"
+  (( age >= MAXMIN )) && reason="lifetime of ${MAX} h reached"
   [[ ! -e $STATE/ready ]] && (( age >= SETUP )) && reason="setup unfinished after ${age} min"
   [[ -z "$reason" ]] && continue
   destroy_pod "$reason" && exit 0

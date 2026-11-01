@@ -54,6 +54,8 @@ destroy_pod() {
 }
 if [[ "${1:-}" == "--destroy" ]]; then destroy_pod "${2:-requested}"; exit $?; fi
 STATE=/var/lib/orazaka-gpu; IDLE=${IDLE_MINUTES:-30}; MAX=${MAX_HOURS:-10}; SETUP=${SETUP_MAX_MINUTES:-120}
+# The lifetime in whole minutes: a batch gives fractional hours (0.6), which bash arithmetic refuses (the cap never fired).
+MAXMIN=$(awk -v h="$MAX" 'BEGIN { printf "%d", h * 60 }')
 boot=$(cat /var/lib/orazaka-gpu/boot-epoch)
 while sleep 60; do
   now=$(date +%s)
@@ -63,7 +65,7 @@ while sleep 60; do
   last=$(stat -c %Y $STATE/state/last-activity); idle=$(( (now - last) / 60 )); age=$(( (now - boot) / 60 ))
   reason=""
   (( idle >= IDLE )) && reason="idle for ${idle} min"
-  (( age >= MAX * 60 )) && reason="lifetime of ${MAX} h reached"
+  (( age >= MAXMIN )) && reason="lifetime of ${MAX} h reached"
   [[ ! -e $STATE/ready ]] && (( age >= SETUP )) && reason="setup unfinished after ${age} min"
   [[ -z "$reason" ]] && continue
   destroy_pod "$reason" && exit 0
@@ -73,6 +75,62 @@ WD
 chmod +x /usr/local/bin/orazaka-watchdog
 nohup /usr/local/bin/orazaka-watchdog > /var/log/orazaka-watchdog.log 2>&1 &
 step "watchdog armed (idle ${IDLE_MINUTES:-30} min, lifetime ${MAX_HOURS:-10} h)"
+
+# sd-server (stable-diffusion.cpp, the Dockerfile.cuda ref), built once per card onto /models for THIS card's compute capability:
+# a fixed "80;89;90" list had no sm_100 kernels for a B200 and compiled three architectures for nothing. Prints the binary.
+SDCPP_REF=a397e03488cc27e1a42da646b82dfce9f50741c0
+build_sd_server() {
+  local cc binary
+  cc=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1 | tr -d ' .')
+  binary="/models/bin/sd-server-${SDCPP_REF:0:12}-sm${cc}"
+  if [[ ! -x "$binary" ]]; then
+    step "building sd-server (stable-diffusion.cpp ${SDCPP_REF:0:12}, CUDA sm_${cc}) once onto /models" >&2
+    apt-get install -y -qq cmake build-essential >/dev/null 2>&1
+    rm -rf /tmp/sdcpp && git clone -q https://github.com/leejet/stable-diffusion.cpp /tmp/sdcpp \
+      && git -C /tmp/sdcpp checkout -q "$SDCPP_REF" && git -C /tmp/sdcpp submodule update -q --init --recursive \
+      && cmake -S /tmp/sdcpp -B /tmp/sdcpp/build -DCMAKE_BUILD_TYPE=Release -DSD_CUDA=ON \
+           -DCMAKE_CUDA_ARCHITECTURES="$cc" -DSD_SERVER_BUILD_FRONTEND=OFF >/dev/null \
+      && cmake --build /tmp/sdcpp/build --config Release -j"$(nproc)" --target sd-server >/dev/null \
+      && mkdir -p /models/bin && cp "$(find /tmp/sdcpp/build -type f -name sd-server -perm -u+x | head -1)" "$binary" \
+      || { step "sd-server build FAILED: images will not be served" >&2; return 1; }
+  fi
+  echo "$binary"
+}
+
+# --- STILLS=1 (runpod batch): the image engine only, up in minutes ------------------------------------
+# krizaka-internal#138: a render batch's pod fetched every video weight of its profile (~49 GB for `small`, onto a 60 GB disk
+# without a volume), installed torch and the upscaler, then compiled sd-server — and its image engine never listened inside the
+# batch's boot window. A stills pod needs none of that: the worker's manifest, the image files, sd-server, the tunnel to :8086.
+if [[ -n "${STILLS:-}" ]]; then
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -qq >/dev/null 2>&1; apt-get install -y -qq curl git ca-certificates >/dev/null 2>&1
+  rm -rf /app-src && git clone -q https://github.com/krizaka/orazaka-worker-media.git /app-src && git -C /app-src checkout -q "${WORKER_REF:-main}"
+  python3 -m venv /opt/stills && /opt/stills/bin/pip install -q --no-cache-dir pyyaml
+  export MEDIA_MODELS_DIR=/models
+  IMAGE_MODEL=$(cd /app-src && /opt/stills/bin/python -c "from app.video_models import load_manifest; print(load_manifest()['profiles']['${PROFILE:-big}'].get('image') or '')")
+  [[ -n "$IMAGE_MODEL" ]] || { step "profile ${PROFILE:-big} declares no image model: nothing to serve"; exit 1; }
+  started=$(date +%s)
+  (cd /app-src && /opt/stills/bin/python -c "
+from pathlib import Path
+from app.fetch_models import fetch_file
+from app.video_models import load_manifest
+for spec in load_manifest()['image']['$IMAGE_MODEL']['files']:
+    fetch_file(spec, Path('/models') / 'sd')") || { step "image weights FAILED"; exit 1; }
+  step "image weights ready in $(( $(date +%s) - started ))s"
+  binary=$(build_sd_server) || exit 1
+  if ! command -v chisel >/dev/null; then
+    curl -fsSL "https://github.com/jpillora/chisel/releases/download/v1.10.1/chisel_1.10.1_linux_amd64.gz" | gunzip > /usr/local/bin/chisel && chmod +x /usr/local/bin/chisel
+  fi
+  (cd /app-src && MEDIA_SD_SERVER="$binary" MEDIA_IMAGE_PORT=8086 MEDIA_IMAGE_LISTEN_IP=127.0.0.1 \
+    nohup /opt/stills/bin/python -m app.sd_server "$IMAGE_MODEL" > /var/log/orazaka-sd-server.log 2>&1 < /dev/null &)
+  for _ in $(seq 1 60); do curl -s -o /dev/null --max-time 2 http://127.0.0.1:8086/ && break; sleep 5; done
+  curl -s -o /dev/null --max-time 2 http://127.0.0.1:8086/ || { step "sd-server did not listen on :8086"; tail -n 20 /var/log/orazaka-sd-server.log; exit 1; }
+  AUTH="$RELAY_AUTH" nohup chisel client --keepalive 25s --max-retry-interval 30s "$RELAY_URL" R:0.0.0.0:8086:127.0.0.1:8086 \
+    > /var/log/orazaka-relay.log 2>&1 &
+  touch "$STATE/ready" "$STATE/state/last-activity"
+  step "serving: images $IMAGE_MODEL on :8086 (stills), relay → ${RELAY_URL}, $(( $(date +%s) - boot ))s after boot"
+  wait
+fi
 
 # --- 1. the runtime (once per container disk; the weights are on the volume) --------------------------
 export DEBIAN_FRONTEND=noninteractive
@@ -125,21 +183,9 @@ IMAGE_MODEL=$(cd /app-src && /opt/venv/bin/python -c "from app.video_models impo
 SOUND_MODELS=$(cd /app-src && /opt/venv/bin/python -c "from app.video_models import load_manifest; print(','.join(load_manifest()['profiles']['${PROFILE:-big}'].get('sound') or []))")
 
 # --- 3b. sd-server for the profile's image model: built once for CUDA (stable-diffusion.cpp, the Dockerfile.cuda ref) --
-SDCPP_REF=a397e03488cc27e1a42da646b82dfce9f50741c0
 IMAGE_REMOTE=""
 if [[ -n "$IMAGE_MODEL" ]]; then
-  binary="/models/bin/sd-server-${SDCPP_REF:0:12}"
-  if [[ ! -x "$binary" ]]; then
-    step "building sd-server (stable-diffusion.cpp ${SDCPP_REF:0:12}, CUDA) once onto the volume"
-    apt-get install -y -qq cmake build-essential >/dev/null 2>&1
-    rm -rf /tmp/sdcpp && git clone -q https://github.com/leejet/stable-diffusion.cpp /tmp/sdcpp \
-      && git -C /tmp/sdcpp checkout -q "$SDCPP_REF" && git -C /tmp/sdcpp submodule update -q --init --recursive \
-      && cmake -S /tmp/sdcpp -B /tmp/sdcpp/build -DCMAKE_BUILD_TYPE=Release -DSD_CUDA=ON \
-           -DCMAKE_CUDA_ARCHITECTURES="80;89;90" -DSD_SERVER_BUILD_FRONTEND=OFF >/dev/null \
-      && cmake --build /tmp/sdcpp/build --config Release -j"$(nproc)" --target sd-server >/dev/null \
-      && mkdir -p /models/bin && cp "$(find /tmp/sdcpp/build -type f -name sd-server -perm -u+x | head -1)" "$binary" \
-      || step "sd-server build FAILED: images will not be served"
-  fi
+  binary=$(build_sd_server) || binary=""
   if [[ -x "$binary" ]]; then
     # A profile with a speech model puts the speech server on the relay's engine port (8086) and sd-server behind it.
     SPEECH_MODEL=$(cd /app-src && /opt/venv/bin/python -c "from app.video_models import load_manifest; print(load_manifest()['profiles']['${PROFILE:-big}'].get('speech') or '')")
