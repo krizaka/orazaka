@@ -19,7 +19,6 @@ COPY . .
 # yesterday's code (2026-10-16: a krizaka-users security fix did not reach dev). One line per repository of
 # orazaka.workspace.json; scripts/test/dockerfile-clone-cache.test.mjs keeps them in step.
 ADD https://github.com/krizaka/krizaka-build.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-build
-ADD https://github.com/krizaka/krizaka-platform-kit.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-platform-kit
 ADD https://github.com/krizaka/krizaka-users.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-users
 ADD https://github.com/krizaka/krizaka-billing.git/info/refs?service=git-upload-pack /tmp/workspace-refs/krizaka-billing
 ADD https://github.com/krizaka/orazaka-build.git/info/refs?service=git-upload-pack /tmp/workspace-refs/orazaka-build
@@ -47,7 +46,7 @@ RUN node scripts/workspace.mjs clone --depth 1
 # so nothing secret is in a layer. The token itself arrives as a build secret in stage 2.
 ARG GITHUB_ORG_SHA=99281c3f4b46dbe4c645dff053b4bfb387a1403d
 RUN mkdir /org && cd /org && git init -q && git fetch -q --depth 1 https://github.com/krizaka/.github.git "$GITHUB_ORG_SHA" && git checkout -q FETCH_HEAD \
- && node scripts/maven-github-packages-settings.mjs --settings /m2/settings.xml --repositories "krizaka-build krizaka-platform-kit krizaka-users krizaka-billing" --username krizaka-agents \
+ && node scripts/maven-github-packages-settings.mjs --settings /m2/settings.xml --repositories "krizaka-build krizaka-users krizaka-billing" --username krizaka-agents \
  && ! grep -q -E '<password>[^$]' /m2/settings.xml
 
 # ── 2. Build the eight services and what they depend on ──────────────────────

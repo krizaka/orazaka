@@ -483,7 +483,7 @@
                                              (orazaka.events.{user,password}.notifications) and
                                              orazaka.notifications.requests, each with its DLQ — asserted by
                                              AmqpContractIT. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-platform-kit/krizaka-notifications-service/target/orazaka-notification-service-${project.version}.jar --server.port=8097</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/krizaka/krizaka-build/krizaka-platform-kit/krizaka-notifications-service/target/orazaka-notification-service-${project.version}.jar --server.port=8097</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -721,7 +721,7 @@
                                             <arg value="orazaka-apps/services/orazaka-job-service=http://localhost:8090" />
                                             <arg value="orazaka-apps/services/orazaka-studio/orazaka-studio-service=http://localhost:8096" />
                                             <arg value="orazaka-apps/services/orazaka-edge=http://localhost:8089" />
-                                            <arg value="krizaka/krizaka-platform-kit/krizaka-notifications-service=http://localhost:8097" />
+                                            <arg value="krizaka/krizaka-build/krizaka-platform-kit/krizaka-notifications-service=http://localhost:8097" />
                                         </exec>
                                     </target>
                                 </configuration>

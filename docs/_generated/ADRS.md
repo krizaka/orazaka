@@ -24,6 +24,7 @@ generated: true
 | ADR-016 | _(cited in code, no dedicated file)_ | — |
 | ADR-017 | _(cited in code, no dedicated file)_ | — |
 | ADR-019 | _(cited in code, no dedicated file)_ | — |
+| ADR-021 | _(cited in code, no dedicated file)_ | — |
 | ADR-027 | ADR-027 — Single-source `application.yaml`: domain config lives in the database | `adr/ADR-027-db-driven-configuration.md` |
 | ADR-028 | ADR-028 — Transport selection: when an operation is REST vs GraphQL vs AMQP | `adr/ADR-028-transport-selection-rest-graphql-amqp.md` |
 | ADR-029 | ADR-029 — AI providers are DB-driven; `application.yml` only bootstraps the framework default bean | `adr/ADR-029-db-driven-ai-providers.md` |
