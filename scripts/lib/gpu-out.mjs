@@ -68,13 +68,13 @@ export function expiredDays(keys, today, days) {
     const day = key.split("/")[0];
     if (DAY.test(day) && Date.parse(`${day}T00:00:00Z`) <= limit) out.add(day);
   }
-  return [...out].sort();
+  return [...out].sort((a, b) => a.localeCompare(b));
 }
 
 /** A clip is promoted only when it is a non-empty mp4 or webm by its first bytes (never by its name). */
 export function clipKind(bytes) {
   if (!bytes || bytes.length < 12) return null;
-  if (String.fromCharCode(...bytes.slice(4, 8)) === "ftyp") return "mp4";
+  if (String.fromCodePoint(...bytes.slice(4, 8)) === "ftyp") return "mp4";
   if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) return "webm";
   return null;
 }

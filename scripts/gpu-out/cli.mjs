@@ -44,7 +44,7 @@ if (cmd === "pod-env") {
 } else if (cmd === "promote") {
   const key = args[0];
   const to = args[args.indexOf("--to") + 1];
-  if (!key || !to || args.indexOf("--to") < 0) throw new Error("promote <key> --to <cdn path, e.g. products/orazaka/tour/clip.mp4>");
+  if (!key || !to || !args.includes("--to")) throw new Error("promote <key> --to <cdn path, e.g. products/orazaka/tour/clip.mp4>");
   const got = await (await openStore()).get(key);
   if (!got) throw new Error(`gpu-out: ${key} is not in the zone`);
   const kind = clipKind(got.bytes);
@@ -54,7 +54,7 @@ if (cmd === "pod-env") {
   writeFileSync(file, got.bytes, { mode: 0o600 });
   const cdn = join(process.env.KRIZAKA_COM_DIR ?? join(homedir(), "krizaka-com"), "scripts/cdn-assets.mjs");
   const envFile = args.includes("--env-file") ? ["--env-file", args[args.indexOf("--env-file") + 1]] : [];
-  const r = spawnSync("node", [cdn, "upload", file, "--to", to, ...envFile], { stdio: "inherit" });
+  const r = spawnSync(process.execPath, [cdn, "upload", file, "--to", to, ...envFile], { stdio: "inherit" });
   process.exit(r.status ?? 1);
 } else if (cmd === "expire") {
   const store = await openStore();

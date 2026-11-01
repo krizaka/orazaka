@@ -39,7 +39,7 @@ rp_balance() { rp_py balance; }
 rp_live() { rp_py list orazaka-gpu 2>/dev/null | awk '$2 != "EXITED" && $2 != "TERMINATED"' || true; }
 
 # KEY=value lines of the pod's output zone (a driver may define its own before sourcing this file: the tests do).
-declare -F gpu_out_env >/dev/null || gpu_out_env() { node "$ROOT/scripts/gpu-out/cli.mjs" pod-env "$1"; }
+declare -F gpu_out_env >/dev/null || gpu_out_env() { local pod="$1"; node "$ROOT/scripts/gpu-out/cli.mjs" pod-env "$pod"; }
 
 runpod_start() {
   [[ -n "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || die "no AI_GPU_RUNPOD_API_KEY in ${ENV_FILE:-$SECRET_SOURCE}"
