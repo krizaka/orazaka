@@ -88,6 +88,7 @@ the service's `application.yml` or environment.
 | Repository | Task | Schedule | What it does |
 |:---|:---|:---|:---|
 | `krizaka-billing` | `HoldSweeper.sweep` | every 60 s (`krizaka.billing-service.sweeper.interval`) | Time-triggered inbound adapter: releases `ACTIVE` holds that outlived their TTL. |
+| `krizaka-build` | `HoldSweeper.sweep` | every 60 s (`krizaka.billing-service.sweeper.interval`) | Time-triggered inbound adapter: releases `ACTIVE` holds that outlived their TTL. |
 | `orazaka-ai-engine` | `InfrastructureProber.probeVideoInfrastructure` | every 5 s (`orazaka.core.video.probing.interval-ms`) | Periodically pings the configured video port to check if the video inference engine is responsive. |
 | `orazaka-ai-engine` | `InfrastructureProber.probeImageInfrastructure` | every 5 s (`orazaka.core.image.probing.interval-ms`) | Periodically pings the configured image port to check if the image inference engine (Stable Diffusion) is responsive. |
 | `orazaka-ai-engine` | `LawWatchJob.run` | cron `0 0 6 * * MON` (`orazaka.law.watcher.cron`) | The scheduled run of the law watcher. |
