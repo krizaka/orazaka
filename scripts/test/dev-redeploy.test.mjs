@@ -1,7 +1,7 @@
 // node --test scripts/test — the dev core image follows the repositories it clones (no merge left unbuilt, no rebuild for nothing).
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { decide, rollbackVerdict } from "../dev-redeploy.mjs";
+import { decide, rollbackVerdict, staleSourceVerdict } from "../dev-redeploy.mjs";
 
 const manual = { created_at: "2026-10-27T10:47:33Z", cause: "manual", phase: "ACTIVE" };
 
@@ -40,4 +40,17 @@ test("rollbackVerdict fails when a newer deployment errored, passes when the act
   assert.equal(rollbackVerdict([{ id: "b", created_at: "2026-10-29T11:00:00Z", cause: "manual", phase: "ERROR" }, active]).ok, false);
   assert.equal(rollbackVerdict([active]).ok, true);
   assert.equal(rollbackVerdict([{ ...active, phase: "ERROR" }]).ok, false);
+});
+
+test("staleSourceVerdict fails when the newest deployment of core built a commit behind main (2026-11-01: three builds of the commit before the fix)", () => {
+  const dep = (id, sha, phase = "ERROR") => ({ id, created_at: "2026-11-01T01:30:12Z", cause: "app spec updated", phase, services: [{ name: "web", source_commit_hash: "w" }, { name: "core", source_commit_hash: sha }] });
+  const stale = staleSourceVerdict([dep("59596535", "157c5b9"), dep("old", "aaaaaaa", "ACTIVE")], "ea4a19c");
+  assert.equal(stale.ok, false);
+  assert.match(stale.message, /59596535.*157c5b9.*ea4a19c.*--force-rebuild/);
+  assert.equal(staleSourceVerdict([dep("new", "ea4a19c", "ACTIVE")], "ea4a19c").ok, true);
+});
+
+test("staleSourceVerdict ignores a deployment still building and one without a recorded commit", () => {
+  assert.equal(staleSourceVerdict([{ id: "b", phase: "BUILDING", services: [{ name: "core", source_commit_hash: "x" }] }], "ea4a19c").ok, true);
+  assert.equal(staleSourceVerdict([{ id: "n", phase: "ACTIVE", services: [] }], "ea4a19c").ok, true);
 });
