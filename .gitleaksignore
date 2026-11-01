@@ -4,3 +4,5 @@ c06801b94cc4d9a7bdf01edf43f6dad92a384a6b:apps/desktop/src-tauri/src/code/tests.r
 d49cb864160ecbe4db78fd5be4a2fdda7819374a:docs/_generated/PACKS.md:generic-api-key:1160
 d49cb864160ecbe4db78fd5be4a2fdda7819374a:docs/_generated/PACKS.md:generic-api-key:73
 d49cb864160ecbe4db78fd5be4a2fdda7819374a:docs/_generated/architecture.json:generic-api-key:4961
+# The same fixture, in the commit the scan flagged (2026-11-01): a test value, now built at runtime so no literal remains.
+34769ec91adcc800ca8691da21b191ac2379ce08:apps/desktop/src-tauri/src/code/tests.rs:aws-access-token:247
