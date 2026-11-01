@@ -1,0 +1,7 @@
+{
+  "name": "orazaka-gpu-out-tools",
+  "private": true,
+  "type": "module",
+  "description": "Mac/server side of the GPU output store: promote a validated clip to krizaka-assets, expire old pod outputs (krizaka-internal#2121). The store is @krizaka/storage's port.",
+  "dependencies": { "@krizaka/storage": "0.11.1" }
+}

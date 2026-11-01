@@ -60,3 +60,15 @@ credits.
 The shots, keyframes, cut, music and voice run on one 80 GB GPU host with the `cinema` profile (`scripts/gpu-dev.sh
 runpod start`, `GPU_RUNPOD_PROFILE=cinema GPU_RUNPOD_DISK_GB=250`): Wan 2.2 I2V A14B with its distill LoRAs, FLUX.2 klein
 on sd-server, SeedVR2, ACE-Step and Kokoro side by side. The script runs on the platform's chat model.
+
+### Where a pod's outputs go
+
+A rented pod is a third-party machine: it holds **one** storage credential, the key of a dedicated zone (`krizaka-gpu-out`), and
+nothing of the sites. It writes `end.json`, the boot log tail and its outputs straight there, under `<day>/<run>/<pod>/`
+(`infra/gpu/runpod-bootstrap.sh`), so a pod that has gone is still explained and no output travels through the tunnel to be
+stored. The store is the port of `@krizaka/storage`; its provider, zone and the **name** of the credential (never the value) are
+settings (`infra/gpu/gpu-out.settings.json` today, the Studio admin's storage settings next). Bunny is the dev adapter; a Canadian S3
+kind is a setting, not a code change. The server or the Mac batch then reads from the zone with `scripts/gpu-out/cli.mjs`:
+`promote <key> --to <cdn path>` checks the bytes (mp4 or webm) and hands the clip to `krizaka-com`'s `cdn-assets.mjs` (layout v2);
+`expire [--yes]` deletes the date folders older than `retentionDays`. This zone is separate from `krizaka-assets` and is not one of
+the layout-v2 roots.

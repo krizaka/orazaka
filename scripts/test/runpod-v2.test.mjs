@@ -130,6 +130,7 @@ async function batch(s, renderScript) {
   writeFileSync(join(dir, "driver.sh"), `set -euo pipefail
 ROOT="${root}"; LOCAL="${dir}/local"; LEDGER="${dir}/ledger.tsv"; ENV_FILE=x; RELAY_URL=u
 die() { echo "gpu-dev: $*" >&2; exit 1; }; say() { echo "gpu-dev: $*"; }
+gpu_out_env() { printf "GPU_OUT_URL=https://z.example/krizaka-gpu-out/d/%s\\nGPU_OUT_HEADER=AccessKey\\nGPU_OUT_KEY=zone-key\\n" "$1"; }
 secret() { echo "s3cret-$1"; }; mint_service_token() { echo tok; }; broker_ca_b64() { echo ca; }; ledger_add() { :; }
 source "$ROOT/scripts/lib/gpu-runpod.sh"
 runpod batch "${dir}/prompts.txt" --cap 1 --out "${dir}/out" --gpu "NVIDIA L40S"
