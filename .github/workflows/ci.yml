@@ -7,6 +7,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  merge_group: # the queue runs the full reactor; a pull request runs the plan of scripts/ci-plan.mjs
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * *" # nightly: the default branches of every repository, together
@@ -46,6 +47,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+          fetch-depth: 2 # HEAD^1 = the base of the pull request's merge commit (the changed-files plan)
 
       - name: Clone every repository
         run: node scripts/workspace.mjs clone --depth 1
@@ -95,10 +97,43 @@ jobs:
         working-directory: orazaka-apps/ui
         run: npm install --package-lock-only --legacy-peer-deps --no-audit --no-fund
 
-      - name: Build and test the platform
+      # ADR-018 budgets (krizaka-internal#2024): PR feedback < 10 min, merge_group < 15 min. Every other repository is
+      # cloned at its main and verified by its own CI, so a pull request compiles the whole reactor (tests deferred) and
+      # tests the changed modules + their dependents; merge_group, main, the nightly, dispatch and anything shared
+      # (scripts/ci-plan.mjs) run every test. The deferred build also defers the static analysis (SpotBugs, PMD, Spotless,
+      # JaCoCo) of modules the pull request does not touch; the changed modules below run the whole lifecycle. Modules build in parallel (-T): Testcontainers pick random ports.
+      - name: Plan (what this event must test)
+        id: plan
         if: ${{ needs.maven-changes.outputs.code != 'false' }}
+        env:
+          EVENT: ${{ github.event_name }}
+        run: node scripts/ci-plan.mjs --event "$EVENT" --diff HEAD^1
+
+      - name: Build and test the platform
+        if: ${{ needs.maven-changes.outputs.code != 'false' && steps.plan.outputs.mode == 'full' }}
         run: >
-          ./mvnw -B -ntp install
+          ./mvnw -B -ntp -T 4 install
+          -Dpython.executable=python
+          -Dexec.skip=true
+          -Dskip.npm=true
+          -Dskip.installnodenpm=true
+
+      - name: Build the platform (tests of the changed modules follow)
+        if: ${{ needs.maven-changes.outputs.code != 'false' && steps.plan.outputs.mode == 'changed' }}
+        run: >
+          ./mvnw -B -ntp -T 4 install -DskipTests
+          -Dspotbugs.skip=true -Dpmd.skip=true -Dcpd.skip=true -Dspotless.check.skip=true -Djacoco.skip=true
+          -Dpython.executable=python
+          -Dexec.skip=true
+          -Dskip.npm=true
+          -Dskip.installnodenpm=true
+
+      - name: Test the changed modules and their dependents
+        if: ${{ needs.maven-changes.outputs.code != 'false' && steps.plan.outputs.mode == 'changed' && steps.plan.outputs.pl != '' }}
+        env:
+          MODULES: ${{ steps.plan.outputs.pl }}
+        run: >
+          ./mvnw -B -ntp verify -pl "$MODULES" -amd
           -Dpython.executable=python
           -Dexec.skip=true
           -Dskip.npm=true
