@@ -257,6 +257,14 @@ capability rows, a price, catalogue entries — and changes no code.
     {
      "key": "model",
      "title": "Modèle"
+    },
+    {
+     "key": "references",
+     "title": "Images de référence (facultatif)"
+    },
+    {
+     "key": "referenceWeight",
+     "title": "Force des références"
     }
    ],
    "steps": 1,
