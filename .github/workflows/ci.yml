@@ -166,6 +166,30 @@ jobs:
           fi
           echo "::warning::docs/_generated drifted from the workspace; the docs-sync workflow opens the pull request"
 
+  # The required « SonarCloud Code Analysis » is posted by the SonarCloud app once this scan has run. The app's automatic analysis
+  # never sees a merge queue SHA, so the scan runs on every event the required checks run on, merge_group included
+  # (krizaka-internal#2000). The Java and Python sources are analysed by the CI of their own repositories.
+  sonar:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - name: The token is there
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then echo "::error::SONAR_TOKEN is empty: it is an org secret (a Dependabot secret too)"; exit 1; fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0 # blame and new-code detection need the history
+          persist-credentials: false
+      - uses: krizaka/.github/actions/sonar-scan@99281c3f4b46dbe4c645dff053b4bfb387a1403d # main
+        with:
+          token: ${{ secrets.SONAR_TOKEN }}
+          args: -Dsonar.qualitygate.wait=true
+
   # Main must not go red unnoticed: a failed run on main opens (or updates) a single issue.
   red-main:
     needs: workspace
