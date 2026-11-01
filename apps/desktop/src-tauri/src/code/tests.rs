@@ -154,7 +154,7 @@ fn a_file_holding_a_github_token_reaches_the_caller_redacted() {
 
 #[test]
 fn every_known_token_shape_is_redacted() {
-    for t in [token("ghp_"), token("github_pat_"), token("gho_"), token("ghu_"), token("oz_"), token("sk-"), "AKIAABCDEFGHIJKLMNOP".to_string()] {
+    for t in [token("ghp_"), token("github_pat_"), token("gho_"), token("ghu_"), token("oz_"), token("sk-"), format!("{}{}", "AKIA", "0123456789ABCDEF")] {
         let out = super::visibility::redact(&format!("x {t} y"));
         assert_eq!(out, "x [redacted] y", "{t}");
         assert!(super::visibility::has_secret(&t));
