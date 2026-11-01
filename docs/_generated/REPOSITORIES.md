@@ -8,7 +8,7 @@ generated: true
 
 # Repositories
 
-Orazaka is published as **20 repositories** in the [`krizaka`](https://github.com/krizaka) organisation: one per component, plus the workspace [`orazaka`](https://github.com/krizaka/orazaka) that assembles them (governance contract, `orazaka.workspace.json`, local infrastructure, end-to-end tests, these docs).
+Orazaka is published as **19 repositories** in the [`krizaka`](https://github.com/krizaka) organisation: one per component, plus the workspace [`orazaka`](https://github.com/krizaka/orazaka) that assembles them (governance contract, `orazaka.workspace.json`, local infrastructure, end-to-end tests, these docs).
 
 ```bash
 git clone https://github.com/krizaka/orazaka.git && cd orazaka
@@ -22,7 +22,7 @@ node scripts/workspace.mjs clone   # every repository at its workspace path
 |:---|:---|:---|:---|
 | [`orazaka-build`](https://github.com/krizaka/orazaka-build) | maven | Parent POM (Spring Boot / Spring AI BOMs, plugin management, Orazaka BOM) and the shared governance test kit (ArchUnit rules, Testcontainers base) for every Orazaka JVM repository. Modules: `orazaka-rewrite-style`. | `krizaka-build` |
 | [`orazaka-contracts`](https://github.com/krizaka/orazaka-contracts) | maven | Tier-1 platform contracts shared by every Orazaka service: the job plane (jobs-api) and the application-persistence ports (persistence-app-api). Pure interfaces and records, zero implementation. Modules: `orazaka-crypto`, `orazaka-jobs-api`, `orazaka-persistence-app-api`. | `orazaka-build` |
-| [`orazaka-edge`](https://github.com/krizaka/orazaka-edge) | maven | Transparent HTTP edge in front of every Orazaka service: routing, API-key → JWT exchange, CORS and tracing. Spring MVC + virtual threads. Modules: `orazaka-edge`. | `krizaka-platform-kit`, `orazaka-build` |
+| [`orazaka-edge`](https://github.com/krizaka/orazaka-edge) | maven | Transparent HTTP edge in front of every Orazaka service: routing, API-key → JWT exchange, CORS and tracing. Spring MVC + virtual threads. Modules: `orazaka-edge`. | `krizaka-build`, `orazaka-build` |
 | [`orazaka-ui-kit`](https://github.com/krizaka/orazaka-ui-kit) | npm | @krizaka/orazaka-shared (TypeScript types, Zod schemas, design tokens) and @krizaka/orazaka-design-system (React components, Tailwind preset, theme, icon registry) for Next.js and React Native apps. | — |
 
 ## Orazaka AI engine
@@ -33,7 +33,7 @@ node scripts/workspace.mjs clone   # every repository at its workspace path
 | [`orazaka-ai-engine`](https://github.com/krizaka/orazaka-ai-engine) | maven | The Orazaka cognitive SDK: AiClient & provider mesh (core), the interceptor pipeline, tools (MCP · RAG · sandbox), use-case orchestration (business), application persistence and asset encryption. Modules: `orazaka-adapter-spring-ai`, `orazaka-architecture`, `orazaka-assets`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-business`, `orazaka-interceptors`, `orazaka-tools`, `orazaka-core`. Owns `60-governance.sql`. | `orazaka-build`, `orazaka-contracts`, `krizaka-billing`, `orazaka-studio` |
 | [`orazaka-conversation-service`](https://github.com/krizaka/orazaka-conversation-service) | maven | Interactive ingress of the Orazaka engine: chat (SSE streaming), intents, models, pipeline, MCP and job APIs — translates transport into Intentions, never business logic. Modules: `orazaka-conversation-service`. Owns `20-conversation.sql`. | `orazaka-build`, `orazaka-contracts`, `krizaka-users`, `krizaka-billing`, `orazaka-ai-engine` |
 | [`orazaka-job-service`](https://github.com/krizaka/orazaka-job-service) | maven | Asynchronous job executor of the Orazaka engine: drains the interactive and batch lanes, owns the capability registry and the worker registry. Modules: `orazaka-job-service`. Owns `30-jobs-config.sql`. | `orazaka-build`, `orazaka-contracts`, `krizaka-users`, `krizaka-billing`, `orazaka-ai-engine` |
-| [`orazaka-knowledge-service`](https://github.com/krizaka/orazaka-knowledge-service) | maven | Knowledge & RAG retrieval service (pgvector) with asynchronous indexing. Modules: `orazaka-knowledge-service`. Owns `40-knowledge.sql`. | `krizaka-platform-kit`, `orazaka-build` |
+| [`orazaka-knowledge-service`](https://github.com/krizaka/orazaka-knowledge-service) | maven | Knowledge & RAG retrieval service (pgvector) with asynchronous indexing. Modules: `orazaka-knowledge-service`. Owns `40-knowledge.sql`. | `krizaka-build`, `orazaka-build` |
 | [`orazaka-automation-service`](https://github.com/krizaka/orazaka-automation-service) | maven | Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry. Modules: `orazaka-automation-service`. Owns `50-automation.sql`. | `orazaka-build`, `krizaka-billing`, `orazaka-ai-engine` |
 
 ## Native workers
