@@ -8,3 +8,8 @@ test("a clip's still is made at its own size and model, else at the run's defaul
   assert.deepEqual(imageInputs({ scene: "a walk", size: "768x1360", imageSeed: 7 }, "flux-2-klein-4b", "1360x768"), { prompt: "a walk", size: "768x1360", model: "flux-2-klein-4b", seed: "7" });
   assert.equal(imageInputs({ scene: "x", imageModel: "stable-diffusion-3.5-large" }, "flux-2-klein-4b", "1024x1024").model, "stable-diffusion-3.5-large");
 });
+
+test("references are passed as the Studio's list, and only when the clip has some", () => {
+  assert.deepEqual(imageInputs({ scene: "x", references: ["a1", "b2"] }, "flux-2-klein-4b", "1360x768").references, ["a1", "b2"]);
+  assert.equal("references" in imageInputs({ scene: "x", references: [] }, "flux-2-klein-4b", "1360x768"), false);
+});

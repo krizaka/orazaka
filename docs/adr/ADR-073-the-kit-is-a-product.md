@@ -23,7 +23,7 @@ the alternative was "a new Tier-2 artifact, five new dependency declarations and
 lines". That cost was real **for a module that only Orazaka would ever import**.
 
 The premise is no longer true. Krizaka publishes its building blocks as open source: npm `@krizaka/*` already, Maven
-Central `com.krizaka` now, so that any application — Orochia, a customer, a stranger — can take the users, notifications
+Central `com.krizaka` now, so that any application — a former product, a customer, a stranger — can take the users, notifications
 or billing service and the code they stand on. A shared module stops being an internal coupling and becomes a
 **dependency on a released, versioned, documented product**, with its own tests, its own changelog and one place where a
 security fix lands. ADR-057 §4 had already said the argument for consolidation was "the same shape and stronger"; the
