@@ -115,6 +115,13 @@
         "label": "flux-2-klein-4b declares maxReferences",
         "sql": "EXISTS (SELECT 1 FROM orazaka_models WHERE model_name = 'flux-2-klein-4b' AND options LIKE '%maxReferences%')"
       }
+    ],
+    "infra/migrations/2026-11-01-image-capability-references.sql": [
+      {
+        "db": "orazaka_db",
+        "label": "the image capability declares references and referenceWeight",
+        "sql": "EXISTS (SELECT 1 FROM orazaka_capabilities WHERE feature_key = 'orazaka.core.media.image' AND (input_schema -> 'properties') ?& ARRAY['references', 'referenceWeight'])"
+      }
     ]
   },
   "declaredOnly": [
