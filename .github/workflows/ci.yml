@@ -98,7 +98,8 @@ jobs:
       # ADR-018 budgets (krizaka-internal#2024): PR feedback < 10 min, merge_group < 15 min. Every other repository is
       # cloned at its main and verified by its own CI, so a pull request compiles the whole reactor (tests deferred) and
       # tests the changed modules + their dependents; merge_group, main, the nightly, dispatch and anything shared
-      # (scripts/ci-plan.mjs) run every test. Modules build in parallel (-T): Testcontainers pick random ports.
+      # (scripts/ci-plan.mjs) run every test. The deferred build also defers the static analysis (SpotBugs, PMD, Spotless,
+      # JaCoCo) of modules the pull request does not touch; the changed modules below run the whole lifecycle. Modules build in parallel (-T): Testcontainers pick random ports.
       - name: Plan (what this event must test)
         id: plan
         if: ${{ needs.maven-changes.outputs.code != 'false' }}
@@ -119,6 +120,7 @@ jobs:
         if: ${{ needs.maven-changes.outputs.code != 'false' && steps.plan.outputs.mode == 'changed' }}
         run: >
           ./mvnw -B -ntp -T 4 install -DskipTests
+          -Dspotbugs.skip=true -Dpmd.skip=true -Dcpd.skip=true -Dspotless.check.skip=true -Djacoco.skip=true
           -Dpython.executable=python
           -Dexec.skip=true
           -Dskip.npm=true
