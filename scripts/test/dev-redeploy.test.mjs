@@ -54,3 +54,8 @@ test("staleSourceVerdict ignores a deployment still building and one without a r
   assert.equal(staleSourceVerdict([{ id: "b", phase: "BUILDING", services: [{ name: "core", source_commit_hash: "x" }] }], "ea4a19c").ok, true);
   assert.equal(staleSourceVerdict([{ id: "n", phase: "ACTIVE", services: [] }], "ea4a19c").ok, true);
 });
+
+test("a finished deployment whose core has no recorded commit is not judged stale", () => {
+  const v = staleSourceVerdict([{ id: "d1", phase: "ACTIVE", services: [{ name: "core" }] }], "abcdef1234");
+  assert.equal(v.ok, true);
+});

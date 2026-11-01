@@ -64,9 +64,10 @@ export function rollbackVerdict(deployments) {
  * @returns {{ ok: boolean, message: string }}
  */
 export function staleSourceVerdict(deployments, mainSha) {
-  const last = deployments.find((d) => !BUSY.has(d.phase) && d.services?.some((s) => s.name === "core" && s.source_commit_hash));
-  if (!last) return { ok: true, message: "no finished deployment with a recorded source commit" };
-  const built = last.services.find((s) => s.name === "core").source_commit_hash;
+  const coreCommit = (d) => d.services?.find((s) => s.name === "core")?.source_commit_hash;
+  const last = deployments.find((d) => !BUSY.has(d.phase) && coreCommit(d));
+  const built = last && coreCommit(last);
+  if (!last || !built) return { ok: true, message: "no finished deployment with a recorded source commit" };
   if (mainSha.startsWith(built) || built.startsWith(mainSha)) return { ok: true, message: `core was built from main's head (${built.slice(0, 7)})` };
   return { ok: false, message: `deployment ${last.id} built core from ${built.slice(0, 7)}, behind main (${mainSha.slice(0, 7)}): a spec apply reuses the old commit, start doctl apps create-deployment <app> --force-rebuild` };
 }
