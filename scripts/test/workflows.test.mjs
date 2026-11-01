@@ -79,3 +79,12 @@ test("no workflow repeats a key inside a job (a merge once left two `permissions
   assert.deepEqual(bad, []);
   assert.equal(duplicateJobKeys("t.yml", "jobs:\n  a:\n    permissions:\n      contents: read\n    runs-on: x\n    permissions:\n      contents: write\n").length, 1);
 });
+
+test("a workflow that mints the app token skips Dependabot pull requests (Dependabot reads no secrets: the job failed on « private-key must be set »)", () => {
+  const bad = readdirSync(dir)
+    .filter((f) => /\.ya?ml$/.test(f))
+    .map((f) => [f, readFileSync(new URL(f, dir), "utf8")])
+    .filter(([, t]) => /on:\s*\n\s+pull_request:/.test(t) && t.includes("create-github-app-token") && !t.includes("dependabot[bot]"))
+    .map(([f]) => f);
+  assert.deepEqual(bad, []);
+});
