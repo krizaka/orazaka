@@ -55,6 +55,22 @@ export function rollbackVerdict(deployments) {
   return { ok: true, message: `the active deployment ${active.id} is the latest` };
 }
 
+/**
+ * "app spec updated" (and a spec apply in general) redeploys the commit App Platform already had, not main's head: on 2026-11-01 three
+ * builds in a row compiled the commit BEFORE the fix that would have made them pass. Fails when the newest finished deployment's `core`
+ * source commit is not the head of krizaka/orazaka main.
+ * @param {{ id: string, phase: string, services?: {name: string, source_commit_hash?: string}[] }[]} deployments newest first
+ * @param {string} mainSha head of krizaka/orazaka main
+ * @returns {{ ok: boolean, message: string }}
+ */
+export function staleSourceVerdict(deployments, mainSha) {
+  const last = deployments.find((d) => !BUSY.has(d.phase) && d.services?.some((s) => s.name === "core" && s.source_commit_hash));
+  if (!last) return { ok: true, message: "no finished deployment with a recorded source commit" };
+  const built = last.services.find((s) => s.name === "core").source_commit_hash;
+  if (mainSha.startsWith(built) || built.startsWith(mainSha)) return { ok: true, message: `core was built from main's head (${built.slice(0, 7)})` };
+  return { ok: false, message: `deployment ${last.id} built core from ${built.slice(0, 7)}, behind main (${mainSha.slice(0, 7)}): a spec apply reuses the old commit, start doctl apps create-deployment <app> --force-rebuild` };
+}
+
 const run = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "inherit"] });
 
 function main(dryRun, check) {
@@ -72,6 +88,10 @@ function main(dryRun, check) {
     const v = rollbackVerdict(deployments);
     console.log(`${APP}: ${v.message}`);
     if (!v.ok) process.exitCode = 1;
+    const mainSha = run("gh", ["api", `repos/${manifest.org}/orazaka/commits/main`, "--jq", ".sha"]).trim();
+    const stale = staleSourceVerdict(deployments, mainSha);
+    console.log(`${APP}: ${stale.message}`);
+    if (!stale.ok) process.exitCode = 1;
     return;
   }
   const verdict = decide({ deployments, heads });
