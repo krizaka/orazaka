@@ -61,15 +61,20 @@ async function call(method, path, body, token) {
   return { status: res.status, body: parsed };
 }
 
+const ENGINE_EXIT = { up: 0, down: 3 };
+
+/** Refuses (exit 1) a worker ref that does not list the model: the pod would never serve it. */
+function checkWorkerRef(workerRef, model) {
+  let yaml;
+  try { yaml = workerModelsAt(workerRef); } catch { console.log(`preflight: REFUSED — worker ref ${workerRef.slice(0, 12)} cannot be read from GitHub`); process.exit(1); }
+  if (!workerListsModel(yaml, model)) { console.log(`preflight: REFUSED — worker ref ${workerRef.slice(0, 12)} does not list ${model} in models.yaml (it would never serve it)`); process.exit(1); }
+  console.log(`preflight: worker ref ${workerRef.slice(0, 12)} lists ${model}`);
+}
+
 async function main() {
   const arg = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return i > 0 ? process.argv[i + 1] : fallback; };
   const workerRef = arg("worker-ref");
-  if (workerRef) {
-    let yaml;
-    try { yaml = workerModelsAt(workerRef); } catch { console.log(`preflight: REFUSED — worker ref ${workerRef.slice(0, 12)} cannot be read from GitHub`); process.exit(1); }
-    if (!workerListsModel(yaml, arg("model"))) { console.log(`preflight: REFUSED — worker ref ${workerRef.slice(0, 12)} does not list ${arg("model")} in models.yaml (it would never serve it)`); process.exit(1); }
-    console.log(`preflight: worker ref ${workerRef.slice(0, 12)} lists ${arg("model")}`);
-  }
+  if (workerRef) checkWorkerRef(workerRef, arg("model"));
   const { ORAZAKA_QA_EMAIL: email, ORAZAKA_QA_PASSWORD: password } = process.env;
   if (!email || !password) throw new Error("ORAZAKA_QA_EMAIL / ORAZAKA_QA_PASSWORD are not set");
   const login = await call("POST", "/api/v1/auth/login", { email, password });
@@ -80,7 +85,7 @@ async function main() {
   if (process.argv.includes("--require-engine")) {
     const state = engineState(answer.status, answer.body);
     console.log(`preflight: engine ${state}`);
-    process.exit(state === "up" ? 0 : state === "down" ? 3 : 1);
+    process.exit(ENGINE_EXIT[state] ?? 1);
   }
   const verdict = judge(answer.status, answer.body);
   console.log(`preflight: ${verdict.ok ? "ok" : "REFUSED"} — ${verdict.reason}`);

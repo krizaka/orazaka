@@ -36,7 +36,7 @@ export function plan({ event, files, modules }) {
     const m = modules.find((d) => f === d || f.startsWith(`${d}/`));
     if (m) touched.add(m);
   }
-  return { mode: "changed", pl: [...touched].sort().join(","), reason: "changed modules and their dependents" };
+  return { mode: "changed", pl: [...touched].sort((a, b) => a.localeCompare(b)).join(","), reason: "changed modules and their dependents" };
 }
 
 function arg(name) {
