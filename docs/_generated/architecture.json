@@ -3620,6 +3620,14 @@
             {
               "key": "model",
               "title": "Modèle"
+            },
+            {
+              "key": "references",
+              "title": "Images de référence (facultatif)"
+            },
+            {
+              "key": "referenceWeight",
+              "title": "Force des références"
             }
           ],
           "outputs": [
