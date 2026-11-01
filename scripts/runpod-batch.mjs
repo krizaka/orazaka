@@ -108,31 +108,38 @@ async function main() {
   const engineMinutes = Number(process.env.GPU_BATCH_ENGINE_MINUTES ?? 15);
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, "plan.json"), JSON.stringify(plan));
-  let perPrompt = 0;
   const results = [];
   const done = () => finishBatch({ results, plan, out, batch, rate, started, cap });
 
   await waitForEngine({ started, rate, cap, minutes: engineMinutes });
-  const state = { streak: undefined, failed: undefined };
+  const run = { rate, started, cap, bootMinutes, out, perPrompt: 0, streak: undefined, failed: undefined, rendered: 0 };
   for (const clip of plan.clips) {
-    const png = join(out, `${clip.id}.image.png`);
-    state.failed = undefined;
-    // The pod boots for minutes before its worker answers: a prompt is retried until it succeeds; the cap or the boot window stops it.
-    while (!existsSync(png)) {
-      const spent = spentUsd(rate, started, Date.now());
-      if (capReached(spent, cap, perPrompt)) {
-        console.log(`batch: cap $${cap} reached at $${spent.toFixed(2)} — stopping before ${clip.id}`);
-        return done();
-      }
-      if (results.length === 0 && Date.now() / 1000 - started > bootMinutes * 60) throw new Error(`no render after ${bootMinutes} min of boot — giving up`);
-      const t0 = Date.now();
-      renderAttempt({ clip, png, out, state });
-      if (existsSync(png)) perPrompt = Math.max(perPrompt, spentUsd(rate, 0, Date.now()) - spentUsd(rate, 0, t0));
-      else await new Promise((res) => setTimeout(res, 30_000));
-    }
+    const png = await renderClip(clip, run);
+    if (!png) return done();
     results.push({ id: clip.id, file: png });
+    run.rendered = results.length;
   }
   return done();
+}
+
+/** Renders one prompt, retrying until it succeeds. Returns its file, or null when the cap stops the batch before it. */
+async function renderClip(clip, run) {
+  const png = join(run.out, `${clip.id}.image.png`);
+  run.failed = undefined;
+  // The pod boots for minutes before its worker answers: a prompt is retried until it succeeds; the cap or the boot window stops it.
+  while (!existsSync(png)) {
+    const spent = spentUsd(run.rate, run.started, Date.now());
+    if (capReached(spent, run.cap, run.perPrompt)) {
+      console.log(`batch: cap $${run.cap} reached at $${spent.toFixed(2)} — stopping before ${clip.id}`);
+      return null;
+    }
+    if (run.rendered === 0 && Date.now() / 1000 - run.started > run.bootMinutes * 60) throw new Error(`no render after ${run.bootMinutes} min of boot — giving up`);
+    const t0 = Date.now();
+    renderAttempt({ clip, png, out: run.out, state: run });
+    if (existsSync(png)) run.perPrompt = Math.max(run.perPrompt, spentUsd(run.rate, 0, Date.now()) - spentUsd(run.rate, 0, t0));
+    else await new Promise((res) => setTimeout(res, 30_000));
+  }
+  return png;
 }
 
 /** Sends the results to Bunny (unless --no-upload) and writes results.tsv. */

@@ -67,13 +67,14 @@ sizes_for() {
 
 # One value of the secrets file, into stdout for a $(…) — never echoed by this script.
 secret() {
+  local key="$1"
   if [[ -z "$ENV_FILE" ]]; then
     [[ -x "$SECRET_TOOL" ]] || die "no secret tool at $SECRET_TOOL (set KRIZAKA_SECRET_TOOL or ORAZAKA_DEV_ENV_FILE)"
-    "$SECRET_TOOL" "$SECRET_SOURCE" "$1" 2>/dev/null
+    "$SECRET_TOOL" "$SECRET_SOURCE" "$key" 2>/dev/null
     return
   fi
   [[ -f "$ENV_FILE" ]] || die "no secrets file at $ENV_FILE"
-  python3 - "$ENV_FILE" "$1" <<'PY'
+  python3 - "$ENV_FILE" "$key" <<'PY'
 import sys
 path, key = sys.argv[1], sys.argv[2]
 for line in open(path, encoding="utf-8"):
