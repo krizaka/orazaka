@@ -226,6 +226,13 @@ than the last manual deployment, and none is building, it starts the `--force-re
 secret `OPERATOR_DEPLOY_TOKEN` (named by context, not vendor; its value is a DigitalOcean API token; without it the job says so and stops). It never changes the spec and never
 applies a migration (`scripts/dev-migrations.mjs check`, docs/DEV_DATABASE.md).
 
+The build reads the Krizaka building blocks (`krizaka-parent`…) from GitHub Packages (ADR-019, krizaka-internal#1879), not from
+Maven Central: `infra/deploy/Dockerfile` writes the repositories into the build's Maven settings (the org generator, no
+credential in the file) and takes the read credential from the build argument `MAVEN_GITHUB_PACKAGES_TOKEN`, a `BUILD_TIME`
+secret of the `core` component (`__MAVEN_GITHUB_PACKAGES_TOKEN__` in the spec, filled by `scripts/dev-deploy.mjs` from `@orazaka`;
+a classic token with `read:packages`). The build stage is not shipped, so the value is in no image layer. `.github/workflows/dev-image-build.yml`
+builds the image (no push) on a pull request that touches the image or the build configuration, so a resolution break fails the PR.
+
 Logs: `doctl apps logs <id> core --type run` (each line prefixed by its service: `[users]`, `[conversation]`…).
 
 ## Broker — reachable from the GPU workers, safely

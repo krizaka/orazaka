@@ -42,15 +42,28 @@ ADD https://github.com/krizaka/orazaka-packs.git/info/refs?service=git-upload-pa
 ARG CORE_REBUILD=0
 RUN echo "sources ${CORE_REBUILD}" > /tmp/sources-stamp
 RUN node scripts/workspace.mjs clone --depth 1
+# The Maven settings of the build: the GitHub Packages repositories of the Krizaka building blocks (ADR-019, krizaka-internal#1879).
+# Written by the org's own generator (krizaka/.github, pinned), WITHOUT a credential: the server reads ${env.MAVEN_GITHUB_PACKAGES_TOKEN},
+# so nothing secret is in a layer. The token itself arrives as a build secret in stage 2.
+ARG GITHUB_ORG_SHA=99281c3f4b46dbe4c645dff053b4bfb387a1403d
+RUN mkdir /org && cd /org && git init -q && git fetch -q --depth 1 https://github.com/krizaka/.github.git "$GITHUB_ORG_SHA" && git checkout -q FETCH_HEAD \
+ && node scripts/maven-github-packages-settings.mjs --settings /m2/settings.xml --repositories "krizaka-build krizaka-platform-kit krizaka-users krizaka-billing" --username krizaka-agents \
+ && ! grep -q -E '<password>[^$]' /m2/settings.xml
 
 # ── 2. Build the eight services and what they depend on ──────────────────────
 FROM eclipse-temurin:21-jdk@sha256:f9bf7e9fe2f9bc4657537c1a7e20c768f0c3bafca41598263be4714783dd62eb AS build
 WORKDIR /workspace
 COPY --from=sources /workspace /workspace
+COPY --from=sources /m2/settings.xml /root/.m2/settings.xml
 # The cloned repositories change under an unchanged Dockerfile: App Platform's layer cache then reuses yesterday's
 # build (a merged route or endpoint never reaches the image). CORE_REBUILD is a BUILD_TIME variable of the core
 # component (deploy/orazaka-dev.app.yaml); changing its value — `scripts/dev-deploy.mjs` sets the date — busts it.
 ARG CORE_REBUILD=0
+# The read credential of GitHub Packages (read:packages), a BUILD SECRET: a BUILD_TIME secret of the App Platform component
+# (deploy/orazaka-dev.app.yaml) or `docker build --build-arg MAVEN_GITHUB_PACKAGES_TOKEN` (the value from the environment,
+# never typed). This stage is not shipped (stage 3 copies /out only), and the settings above never held the value.
+ARG MAVEN_GITHUB_PACKAGES_TOKEN
+RUN test -n "$MAVEN_GITHUB_PACKAGES_TOKEN" || { echo "MAVEN_GITHUB_PACKAGES_TOKEN is not set: the Krizaka building blocks are on GitHub Packages (docs/DEPLOY_DEV.md)" >&2; exit 1; }
 RUN echo "core build ${CORE_REBUILD}" \
  && \
     ./mvnw -B -ntp -q install \
