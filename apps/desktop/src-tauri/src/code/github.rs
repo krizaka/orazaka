@@ -238,7 +238,7 @@ mod tests {
     }
 
     fn inline(job: Box<dyn FnOnce() + Send>) {
-        job()
+        job();
     }
 
     #[test]
@@ -276,7 +276,7 @@ mod tests {
         let h = held.clone();
         let code = conn
             .begin(t, s.clone(), &GithubConfig::default(), move |job| {
-                *h.lock().unwrap() = Some(job)
+                *h.lock().unwrap() = Some(job);
             })
             .unwrap();
         assert_eq!(code.user_code, "ABCD-1234");
@@ -322,7 +322,7 @@ mod tests {
             json!({"access_token": "ghu_late", "refresh_token": "ghr_late", "expires_in": 60}),
         ]);
         conn.begin(t, s.clone(), &GithubConfig::default(), move |job| {
-            *h.lock().unwrap() = Some(job)
+            *h.lock().unwrap() = Some(job);
         })
         .unwrap();
         conn.sign_out(&*s).unwrap();

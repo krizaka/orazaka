@@ -912,7 +912,7 @@ fn grant_revoke(state: State<'_, AppState>, id: String) -> Res<()> {
 
 #[tauri::command]
 fn kill_switch_set(state: State<'_, AppState>, halted: bool) {
-    state.automations.set_halted(halted)
+    state.automations.set_halted(halted);
 }
 
 #[tauri::command]

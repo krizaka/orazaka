@@ -14,7 +14,7 @@
   "clippy:clippy::map_unwrap_or": 8,
   "clippy:clippy::needless_pass_by_value": 137,
   "clippy:clippy::redundant_closure_for_method_calls": 7,
-  "clippy:clippy::semicolon_if_nothing_returned": 6,
+  "clippy:clippy::semicolon_if_nothing_returned": 0,
   "clippy:clippy::similar_names": 4,
   "clippy:clippy::type_complexity": 2,
   "clippy:clippy::unnecessary_wraps": 4,
