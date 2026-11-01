@@ -32,7 +32,7 @@ Orazaka holds the load?* Before choosing, this is what the code and the running 
 
 | Client | How it connects today | Auth | Evidence |
 |:---|:---|:---|:---|
-| **Products** (Orochia, Yomizaka, Yasakia, Yororis, Kachizaka, Akinaza) | Server to server: HTTPS to `…/edge` (`POST /api/v1/studios/{key}/runs` → **202 + run id**, then signed run webhooks; SSE is the fallback); embeddings, recommendations and analytics are plain POST/GET | a **service key** `oz_…` with scopes (`ai:embed`, `reco:*`, `analytics:*`) | the integrations post; `ApiKeyScopes`; `docs/DEPLOY_DEV.md` |
+| **Products** (a former product, Yomizaka, the former products, Akinaza) | Server to server: HTTPS to `…/edge` (`POST /api/v1/studios/{key}/runs` → **202 + run id**, then signed run webhooks; SSE is the fallback); embeddings, recommendations and analytics are plain POST/GET | a **service key** `oz_…` with scopes (`ai:embed`, `reco:*`, `analytics:*`) | the integrations post; `ApiKeyScopes`; `docs/DEPLOY_DEV.md` |
 | **Web client / admin** | Next.js BFF → edge; chat tokens over **SSE** (`GET/POST /api/v1/chat/stream/{id}`), the voice turn over SSE (ADR-076), per-user job events over SSE (`GET /api/v1/jobs/stream`) | session JWT | `ChatController`, `VoiceController`, `JobStreamService` |
 | **Mobile** | REST with a bearer token to the same edge; a compatibility and forced-update rule is a proposal ([#187](https://github.com/krizaka/orazaka/pull/187)) | session JWT | `docs/MOBILE.md` |
 | **Desktop** (Tauri) | two connection modes (local engine, account), REST | session JWT / key | [#173](https://github.com/krizaka/orazaka/pull/173), [#193](https://github.com/krizaka/orazaka/pull/193) (open) |
@@ -98,7 +98,7 @@ by a restart). Everything else is the services'.
   breaking change inside `/api/v1`. The SDK, the docs and the contract fixtures below are all derived from it.
 - **A test that compares the copies.** Producers and consumers share *fixtures*, not a jar: `contracts/fixtures/*.json`
   holds the recorded request/response bodies (the key exchange with its tier, a run, a run event, a webhook body). The
-  producer's test asserts it emits every fixture field; each consumer's test (edge, Orochia's client, the SDK) asserts its
+  producer's test asserts it emits every fixture field; each consumer's test (edge, a former product's client, the SDK) asserts its
   parser accepts the fixtures and ignores what it does not know. This is what the integrations post called "the comparison
   test I have not written yet". (Slice 7.)
 - **Within `/api/v1` only additive change**: new optional fields, new endpoints, enum values documented as open sets. A
@@ -261,7 +261,7 @@ Nothing here is bought by this ADR. No paid resource above $5/month is created w
 - Retrying a run start is safe; products can retry on 429/5xx. SSE delivers progress without one API request per event;
   webhook delivery is at-least-once, signed, and inspectable in the endpoint's delivery log.
 - The rate limit ships in `observe` mode on purpose: the service accounts of the products are on the `free` tier (60/min)
-  today and would be throttled by an immediate `enforce` (Orochia's seeding alone polled ~360 jobs a pass). Slice 2 moves
+  today and would be throttled by an immediate `enforce` (a former product's seeding alone polled ~360 jobs a pass). Slice 2 moves
   service accounts to a fitting tier and flips dev to `enforce`.
 - The in-memory limiter is per edge instance. One edge today; a second edge needs the shared store before it ships.
 - A new weekly CI run and a PR check on the edge: a few minutes of runner time, no cost.

@@ -98,7 +98,7 @@ export function NewAutomationForm({ roots, defaults, onCancel, onCreated }: { ro
         </span>
         {error && <Alert tone="danger">{error}</Alert>}
         <div className="flex gap-2">
-          <Button variant="primary" shape="cut" disabled={!folder || !model} onClick={() => void create()}>{t("automations.form.create")}</Button>
+          <Button variant="primary" shape="cut" data-testid="automation-create" disabled={!folder || !model} onClick={() => void create()}>{t("automations.form.create")}</Button>
           <Button variant="ghost" onClick={onCancel}>{t("automations.form.cancel")}</Button>
         </div>
       </Card.Body>

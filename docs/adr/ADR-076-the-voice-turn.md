@@ -15,7 +15,7 @@ order: 76
   `BlueprintOutput.schema`, `OutputContract` (studio); `SpeechVoiceManager`, `SpeechVoice`
   (contracts, persistence-app); `AudioRequest.RESPONSE_FORMAT`, `LocalProcessorUtil` (core);
   `orazaka_models.locale/locale_default`; `orazaka-packs/wellbeing`; the e2e `VoiceTurnIT`
-- **Consumer**: Yororis (`prompts-yororis.md` §3.4) — and any Orazaka client: the capability is generic
+- **Consumer**: a former product (a retired export §3.4) — and any Orazaka client: the capability is generic
 - **Bound by**: [ADR-055](ADR-055-regulated-controls-and-the-wellbeing-pack.md) (REGULATED, the
   wellbeing pack), [ADR-068](ADR-068-one-door.md) / [ADR-070](ADR-070-the-run-surface-is-sealed.md)
   (one door), [ADR-044](ADR-044-deferred-metering.md) / [ADR-045](ADR-045-metering-marker-guard.md) (metering), [ADR-035](ADR-035-service-to-service-authentication.md) (service tokens)
@@ -82,7 +82,7 @@ would give it a life nothing purges by data class.
 **No `words`.** Piper, as LocalAI serves it, returns no word timings. An alignment computed here —
 characters spread over the duration — would be a lip-sync track that lies, so the field is absent
 and documented absent. A client drives its captions from `text` and its mouth from the signal
-(Yororis' `LipSyncTrack { source: ENERGY }`).
+(a former product's `LipSyncTrack { source: ENERGY }`).
 
 ## 3. Under an installation, the pack is the law of the turn
 
@@ -143,7 +143,7 @@ Twelve warm audio turns, a 6.5 s French utterance (the e2e fixture), through the
 
 Before the first-breath cut, ten turns gave median 1 686 ms and **max 2 502 ms** — on the budget.
 Text turns skip transcription (~0.3 s less). A **cold** turn (model not loaded) took 5.4 s to the
-first sentence; Ollama keeps a model five minutes. The target of `prompts-yororis.md` §3.7 —
+first sentence; Ollama keeps a model five minutes. The target of a retired export §3.7 —
 *< 2.5 s on the Mac* — holds warm.
 
 ## 5. Voices: a locale is declared, never read off a name
@@ -185,7 +185,7 @@ unmeasured leg is absent, never zero. One hold, one settlement, one ledger entry
 is charged for being given a crisis line. A failure after the stream opened releases too. Silence
 (an empty transcript) settles the transcription and generates nothing.
 
-## 7. The wellbeing pack, for Yororis
+## 7. The wellbeing pack, for a former product
 
 - **CA-QC**, read at the source on 2026-10-11: *1 866 APPELLE (277-3553), texto 535353* — « en tout
   temps, de partout au Québec » ([quebec.ca](https://www.quebec.ca/sante/conseils-et-prevention/sante-mentale/obtenir-aide-en-sante-mentale/ressources-aide-et-soutien-en-sante-mentale),
@@ -233,7 +233,7 @@ whole answer is packaging and is removed; text around the object is not, and fai
 - **VAD.** The client decides when an utterance ends; nothing here detects speech or silence.
 - **Phoneme alignment.** No word or phoneme timings (§2). Piper can emit phoneme durations when run
   directly; LocalAI does not expose them. A server-side aligner (or Piper outside LocalAI) is the
-  V2 of Yororis' `LipSyncTrack { source: PHONEME }`.
+  V2 of a former product's `LipSyncTrack { source: PHONEME }`.
 - **Streaming synthesis.** Each sentence is synthesised whole; audio could start mid-sentence.
 - **A Québec voice.** `fr-CA` is spoken in `fr-FR` and says so.
 - **Cancellation on disconnect.** A caller that goes away does not stop the turn; it finishes and
