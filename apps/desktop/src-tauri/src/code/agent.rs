@@ -391,143 +391,160 @@ fn execute(
     call: &ToolCall,
 ) -> Outcome {
     let a = &call.args;
-    let text = match call.name.as_str() {
-        "read_file" | "outline" | "list_dir" | "search_text" => {
-            if call.name == "read_file" {
-                if report.files_read >= cx.budgets.files_read {
-                    return Outcome::Budget("files read");
-                }
-                report.files_read += 1;
-            }
-            let res: Result<String, String> = (|| match call.name.as_str() {
-                "read_file" => {
-                    let p = arg(a, "path")?;
-                    let f = tools::read_file(cx.repo, p).map_err(refusal)?;
-                    Ok(data::untrusted(
-                        "file",
-                        &[("path", p)],
-                        &f.text,
-                        data::PART_CAP,
-                    ))
-                }
-                "outline" => {
-                    let p = arg(a, "path")?;
-                    let s = tools::outline(cx.repo, p).map_err(refusal)?;
-                    let lines: Vec<String> = s
-                        .iter()
-                        .map(|x| format!("{}: {}", x.line, x.text))
-                        .collect();
-                    Ok(data::untrusted(
-                        "outline",
-                        &[("path", p)],
-                        &lines.join("\n"),
-                        data::PART_CAP,
-                    ))
-                }
-                "list_dir" => {
-                    let p = a["path"].as_str().unwrap_or("");
-                    let e = tools::list_dir(cx.repo, p).map_err(refusal)?;
-                    let lines: Vec<String> = e
-                        .iter()
-                        .map(|x| {
-                            if x.dir {
-                                format!("{}/", x.name)
-                            } else {
-                                x.name.clone()
-                            }
-                        })
-                        .collect();
-                    Ok(data::untrusted(
-                        "listing",
-                        &[("path", p)],
-                        &lines.join("\n"),
-                        data::PART_CAP,
-                    ))
-                }
-                _ => {
-                    let m = tools::search_text(cx.repo, arg(a, "query")?).map_err(refusal)?;
-                    let lines: Vec<String> = m
-                        .iter()
-                        .map(|x| format!("{}:{}: {}", x.path, x.line, x.text))
-                        .collect();
-                    Ok(data::untrusted(
-                        "search",
-                        &[],
-                        &lines.join("\n"),
-                        data::PART_CAP,
-                    ))
-                }
-            })();
-            res.unwrap_or_else(|e| e)
-        }
-        "propose_diff" => {
-            let (path, new_text) = match (arg(a, "path"), arg(a, "new_text")) {
-                (Ok(p), Ok(t)) => (p, t),
-                (Err(e), _) | (_, Err(e)) => return Outcome::Result(e),
-            };
-            match diff::propose(cx.repo, path, new_text) {
-                Err(e) => refusal(e),
-                Ok(p) => {
-                    let others: usize = report
-                        .proposals
-                        .iter()
-                        .filter(|q| q.path != p.path)
-                        .map(|q| q.hunks.len())
-                        .sum();
-                    if others + p.hunks.len() > cx.budgets.hunks {
-                        return Outcome::Budget("hunks");
-                    }
-                    let msg = format!(
-                        "proposed {} hunk(s) for {} — pending: a person approves each hunk before anything is written{}",
-                        p.hunks.len(),
-                        p.path,
-                        if p.hunks.iter().any(|h| h.adds_secret) { "; a hunk holds a token-shaped string and is flagged" } else { "" }
-                    );
-                    report.proposals.retain(|q| q.path != p.path);
-                    report.proposals.push(p);
-                    msg
-                }
-            }
-        }
-        "run_check" => {
-            let name = match arg(a, "name") {
-                Ok(n) => n,
-                Err(e) => return Outcome::Result(e),
-            };
-            let mut result = checks::run(cx.repo, book, name, false, cx.limits);
-            if matches!(result, Err(CheckError::ApprovalRequired)) {
-                result = if approver.approve_check(name) {
-                    checks::run(cx.repo, book, name, true, cx.limits)
-                } else {
-                    Err(CheckError::LimitReached(
-                        "the person did not approve this run".into(),
-                    ))
-                };
-            }
-            match result {
-                Ok(run) => {
-                    let head = format!(
-                        "check {} finished: exit {:?}, {} ms, timed out: {}",
-                        run.name, run.exit_code, run.duration_ms, run.timed_out
-                    );
-                    let body = data::untrusted(
-                        "check-output",
-                        &[("name", &run.name)],
-                        &run.output,
-                        data::PART_CAP,
-                    );
-                    report.checks.push(run);
-                    format!("{head}\n{body}")
-                }
-                Err(CheckError::LimitReached(m)) if m.contains("runs in this session") => {
-                    return Outcome::Budget("check runs")
-                }
-                Err(e) => refusal(e),
-            }
-        }
+    match call.name.as_str() {
+        "read_file" | "outline" | "list_dir" | "search_text" => run_read_tool(cx, report, call),
+        "propose_diff" => run_propose_diff(cx, report, a),
+        "run_check" => run_check_tool(cx, book, approver, report, a),
         _ => unreachable!("only listed tools reach execute"),
-    };
+    }
+}
+
+fn run_read_tool(cx: &Ctx, report: &mut RunReport, call: &ToolCall) -> Outcome {
+    if call.name == "read_file" {
+        if report.files_read >= cx.budgets.files_read {
+            return Outcome::Budget("files read");
+        }
+        report.files_read += 1;
+    }
+    let text = read_tool(cx, &call.name, &call.args).unwrap_or_else(|e| e);
     Outcome::Result(text)
+}
+
+fn read_tool(cx: &Ctx, name: &str, a: &Value) -> Result<String, String> {
+    match name {
+        "read_file" => {
+            let p = arg(a, "path")?;
+            let f = tools::read_file(cx.repo, p).map_err(refusal)?;
+            Ok(data::untrusted(
+                "file",
+                &[("path", p)],
+                &f.text,
+                data::PART_CAP,
+            ))
+        }
+        "outline" => {
+            let p = arg(a, "path")?;
+            let s = tools::outline(cx.repo, p).map_err(refusal)?;
+            let lines: Vec<String> = s
+                .iter()
+                .map(|x| format!("{}: {}", x.line, x.text))
+                .collect();
+            Ok(data::untrusted(
+                "outline",
+                &[("path", p)],
+                &lines.join("\n"),
+                data::PART_CAP,
+            ))
+        }
+        "list_dir" => {
+            let p = a["path"].as_str().unwrap_or("");
+            let e = tools::list_dir(cx.repo, p).map_err(refusal)?;
+            let lines: Vec<String> = e.iter().map(list_entry).collect();
+            Ok(data::untrusted(
+                "listing",
+                &[("path", p)],
+                &lines.join("\n"),
+                data::PART_CAP,
+            ))
+        }
+        _ => {
+            let m = tools::search_text(cx.repo, arg(a, "query")?).map_err(refusal)?;
+            let lines: Vec<String> = m
+                .iter()
+                .map(|x| format!("{}:{}: {}", x.path, x.line, x.text))
+                .collect();
+            Ok(data::untrusted(
+                "search",
+                &[],
+                &lines.join("\n"),
+                data::PART_CAP,
+            ))
+        }
+    }
+}
+
+fn list_entry(x: &tools::Entry) -> String {
+    if x.dir {
+        format!("{}/", x.name)
+    } else {
+        x.name.clone()
+    }
+}
+
+fn run_propose_diff(cx: &Ctx, report: &mut RunReport, a: &Value) -> Outcome {
+    let (path, new_text) = match (arg(a, "path"), arg(a, "new_text")) {
+        (Ok(p), Ok(t)) => (p, t),
+        (Err(e), _) | (_, Err(e)) => return Outcome::Result(e),
+    };
+    let p = match diff::propose(cx.repo, path, new_text) {
+        Err(e) => return Outcome::Result(refusal(e)),
+        Ok(p) => p,
+    };
+    let others: usize = report
+        .proposals
+        .iter()
+        .filter(|q| q.path != p.path)
+        .map(|q| q.hunks.len())
+        .sum();
+    if others + p.hunks.len() > cx.budgets.hunks {
+        return Outcome::Budget("hunks");
+    }
+    let flagged = if p.hunks.iter().any(|h| h.adds_secret) {
+        "; a hunk holds a token-shaped string and is flagged"
+    } else {
+        ""
+    };
+    let msg = format!(
+        "proposed {} hunk(s) for {} — pending: a person approves each hunk before anything is written{flagged}",
+        p.hunks.len(),
+        p.path
+    );
+    report.proposals.retain(|q| q.path != p.path);
+    report.proposals.push(p);
+    Outcome::Result(msg)
+}
+
+fn run_check_tool(
+    cx: &Ctx,
+    book: &mut Book,
+    approver: &mut dyn Approver,
+    report: &mut RunReport,
+    a: &Value,
+) -> Outcome {
+    let name = match arg(a, "name") {
+        Ok(n) => n,
+        Err(e) => return Outcome::Result(e),
+    };
+    let mut result = checks::run(cx.repo, book, name, false, cx.limits);
+    if matches!(result, Err(CheckError::ApprovalRequired)) {
+        result = if approver.approve_check(name) {
+            checks::run(cx.repo, book, name, true, cx.limits)
+        } else {
+            Err(CheckError::LimitReached(
+                "the person did not approve this run".into(),
+            ))
+        };
+    }
+    match result {
+        Ok(run) => {
+            let head = format!(
+                "check {} finished: exit {:?}, {} ms, timed out: {}",
+                run.name, run.exit_code, run.duration_ms, run.timed_out
+            );
+            let body = data::untrusted(
+                "check-output",
+                &[("name", &run.name)],
+                &run.output,
+                data::PART_CAP,
+            );
+            report.checks.push(run);
+            Outcome::Result(format!("{head}\n{body}"))
+        }
+        Err(CheckError::LimitReached(m)) if m.contains("runs in this session") => {
+            Outcome::Budget("check runs")
+        }
+        Err(e) => Outcome::Result(refusal(e)),
+    }
 }
 
 /// Runs the loop, then says « finish » to the engine: the end of a task closes the server's session (whatever the stop).
