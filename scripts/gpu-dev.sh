@@ -23,8 +23,8 @@
 # dev.orazaka.com (https://dev.orazaka.com/gpu-relay): no public port, RabbitMQ never exposed. A watchdog on
 # the droplet destroys it after 30 min without a job (and after GPU_MAX_HOURS whatever it does).
 #
-# Requires doctl (authenticated), python3, curl, ssh-keygen. Secrets come from ORAZAKA_DEV_ENV_FILE (default
-# ~/Documents/krizaka/env/dev.env) and are never printed. Each session is appended to the ledger
+# Requires doctl (authenticated), python3, curl, ssh-keygen. Secrets come from ORAZAKA_DEV_ENV_FILE (else
+# `secret.sh @dev KEY` through KRIZAKA_SECRET_TOOL) and are never printed. Each session is appended to the ledger
 # (GPU_LEDGER, default ~/Documents/krizaka/orazaka-gpu-ledger.tsv) for `cost`.
 # A deployment exception to [ERR-125]: it drives a cloud resource, not the local workspace.
 # ==============================================================================
@@ -45,7 +45,11 @@ RELAY_URL="${GPU_RELAY_URL:-https://dev.orazaka.com/gpu-relay}"
 VOLUME_GB="${GPU_VOLUME_GB:-80}"
 IDLE_MINUTES="${GPU_IDLE_MINUTES:-30}"
 MAX_HOURS="${GPU_MAX_HOURS:-8}"
-ENV_FILE="${ORAZAKA_DEV_ENV_FILE:-$HOME/Documents/krizaka/env/dev.env}"
+# Secrets: an explicit file (ORAZAKA_DEV_ENV_FILE, the tests), else the org's secret tool by logical source (`secret.sh @dev KEY`,
+# the vault in ~/.krizaka-private since 2026-10-27). Never a path under ~/Documents, never printed.
+ENV_FILE="${ORAZAKA_DEV_ENV_FILE:-}"
+SECRET_TOOL="${KRIZAKA_SECRET_TOOL:-$HOME/.krizaka-worktrees/tools/secret.sh}"
+SECRET_SOURCE="${GPU_SECRET_SOURCE:-@dev}"
 LEDGER="${GPU_LEDGER:-$HOME/Documents/krizaka/orazaka-gpu-ledger.tsv}"
 LOCAL="${GPU_LOCAL_DIR:-$HOME/.orazaka/gpu-dev}"
 
@@ -63,8 +67,14 @@ sizes_for() {
 
 # One value of the secrets file, into stdout for a $(…) — never echoed by this script.
 secret() {
+  local key="$1"
+  if [[ -z "$ENV_FILE" ]]; then
+    [[ -x "$SECRET_TOOL" ]] || die "no secret tool at $SECRET_TOOL (set KRIZAKA_SECRET_TOOL or ORAZAKA_DEV_ENV_FILE)"
+    "$SECRET_TOOL" "$SECRET_SOURCE" "$key" 2>/dev/null
+    return
+  fi
   [[ -f "$ENV_FILE" ]] || die "no secrets file at $ENV_FILE"
-  python3 - "$ENV_FILE" "$1" <<'PY'
+  python3 - "$ENV_FILE" "$key" <<'PY'
 import sys
 path, key = sys.argv[1], sys.argv[2]
 for line in open(path, encoding="utf-8"):
@@ -79,7 +89,7 @@ PY
 broker_ca_b64() {
   local inline; inline="$(secret RABBITMQ_CA_CERT_BASE64 || true)"
   if [[ -n "$inline" ]]; then printf '%s' "$inline"; return; fi
-  local file; file="$(dirname "$ENV_FILE")/orazaka-broker/ca.pem"
+  local file; file="$(dirname "${ENV_FILE:-$HOME/.krizaka-private/env/dev.env}")/orazaka-broker/ca.pem"
   [[ -f "$file" ]] || die "no broker CA (RABBITMQ_CA_CERT_BASE64 or $file) — node scripts/dev-deploy.mjs broker"
   base64 < "$file" | tr -d '\n'
 }
@@ -121,6 +131,7 @@ PY
 }
 
 relay_secret() {
+  [[ -n "$ENV_FILE" ]] || die "relay-secret writes to a file: set ORAZAKA_DEV_ENV_FILE to the vault's dev.env"
   local current; current="$(secret AI_GPU_RELAY_PASSWORD || true)"
   if [[ -n "$current" ]]; then say "AI_GPU_RELAY_PASSWORD already in $ENV_FILE"; return; fi
   python3 -c 'import secrets; print("AI_GPU_RELAY_PASSWORD=" + secrets.token_urlsafe(32))' >> "$ENV_FILE"
