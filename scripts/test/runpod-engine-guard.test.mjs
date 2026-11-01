@@ -101,6 +101,6 @@ test("a failed run is recognised in the image step's output", () => {
 });
 test("the batch stops after three failed runs of one prompt", () => {
   const src = read("../runpod-batch.mjs");
-  assert.match(src, /failed = engineStreak\(failed, [^\n]*RUN_FAILED\.test\(/);
-  assert.match(src, /if \(failed\.abort\)/);
+  assert.match(src, /state\.failed = engineStreak\(state\.failed, [^\n]*RUN_FAILED\.test\(/);
+  assert.match(src, /if \(state\.failed\.abort\)/);
 });

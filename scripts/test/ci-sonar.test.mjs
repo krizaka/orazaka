@@ -33,3 +33,16 @@ test("sonar-project.properties names the project", () => {
   assert.match(p, /^sonar\.projectKey=krizaka_orazaka$/m);
   assert.match(p, /^sonar\.organization=krizaka$/m);
 });
+
+// The scan analyses the files of krizaka/orazaka only: every cloned component repository has its own Sonar project, and
+// attributing its sources here makes them « new code » of this one.
+test("every cloned component repository is excluded from the scan", () => {
+  const p = readFileSync(new URL("../../sonar-project.properties", import.meta.url), "utf8");
+  const exclusions = (p.match(/^sonar\.exclusions=(.*)$/m)?.[1] ?? "").split(",").map((s) => s.trim());
+  const { repositories } = JSON.parse(readFileSync(new URL("../../orazaka.workspace.json", import.meta.url), "utf8"));
+  const clones = repositories.filter(({ path }) => path !== ".");
+  assert.ok(clones.length > 0, "the workspace lists component repositories");
+  for (const { name, path } of clones) {
+    assert.ok(exclusions.includes(`${path.replace(/\/$/, "")}/**`), `sonar.exclusions must list ${path}/** (component ${name})`);
+  }
+});

@@ -67,7 +67,7 @@ export function engineStreak(previous, unreachable, nowMs, { max = 3, minutes = 
 async function waitForEngine({ started, rate, cap, minutes }) {
   for (let attempt = 1; ; attempt++) {
     const args = [join(here, "studio-preflight.mjs"), "--require-engine", ...(arg("model") ? ["--model", arg("model")] : []), ...(arg("size") ? ["--size", arg("size")] : [])];
-    const probe = spawnSync("node", args, { env: process.env, encoding: "utf8", timeout: 90_000 });
+    const probe = spawnSync(process.execPath, args, { env: process.env, encoding: "utf8", timeout: 90_000 });
     if (probe.status === 0) { console.log(`batch: engine reachable after ${Math.round(Date.now() / 1000 - started)} s`); return; }
     if (probe.status === 1) throw new Error(`the Studio refuses the run: ${(probe.stdout + probe.stderr).trim().slice(0, 300)}`);
     if (engineWaitOver(started, Date.now(), minutes)) throw new Error(`the engine was not reachable after ${minutes} min — ending the pod`);
@@ -110,49 +110,56 @@ async function main() {
   writeFileSync(join(out, "plan.json"), JSON.stringify(plan));
   let perPrompt = 0;
   const results = [];
-
-  async function finish() {
-    const lines = [];
-    for (const r of results) {
-      if (process.argv.includes("--no-upload")) { lines.push(`${r.id}\t${r.file}`); continue; }
-      const target = bunnyTarget(batch, r.id, process.env);
-      await upload(r.file, target, process.env);
-      lines.push(`${r.id}\t${target.cdn}`);
-    }
-    writeFileSync(join(out, "results.tsv"), lines.join("\n") + "\n");
-    console.log(lines.join("\n"));
-    console.log(`batch: ${results.length}/${plan.clips.length} rendered, spent ≈ $${spentUsd(rate, started, Date.now()).toFixed(2)} of the $${cap} cap`);
-  }
+  const done = () => finishBatch({ results, plan, out, batch, rate, started, cap });
 
   await waitForEngine({ started, rate, cap, minutes: engineMinutes });
-  let streak;
+  const state = { streak: undefined, failed: undefined };
   for (const clip of plan.clips) {
     const png = join(out, `${clip.id}.image.png`);
+    state.failed = undefined;
     // The pod boots for minutes before its worker answers: a prompt is retried until it succeeds; the cap or the boot window stops it.
-    let failed;
     while (!existsSync(png)) {
       const spent = spentUsd(rate, started, Date.now());
       if (capReached(spent, cap, perPrompt)) {
         console.log(`batch: cap $${cap} reached at $${spent.toFixed(2)} — stopping before ${clip.id}`);
-        return finish();
+        return done();
       }
       if (results.length === 0 && Date.now() / 1000 - started > bootMinutes * 60) throw new Error(`no render after ${bootMinutes} min of boot — giving up`);
       const t0 = Date.now();
-      const args = [join(here, "showcase-image-run.mjs"), "--plan", join(out, "plan.json"), "--out", out, "--only", clip.id, "--redo", ...(arg("model") ? ["--model", arg("model")] : []), ...(arg("size") ? ["--size", arg("size")] : [])];
-      const run = spawnSync("node", args, { env: process.env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-      if (run.stdout) process.stdout.write(run.stdout);
-      if (run.stderr) process.stderr.write(run.stderr);
-      // Guard (c): the same prompt FAILED three times in a row — a refusal no wait fixes (a reference, the prompt): stop paying.
-      failed = engineStreak(failed, !existsSync(png) && RUN_FAILED.test(run.stdout ?? ""), Date.now(), { minutes: Infinity });
-      if (failed.abort) throw new Error(`${clip.id} failed ${failed.count} times in a row — read the run's error in the Studio; ending the pod`);
-      streak = engineStreak(streak, !existsSync(png) && ENGINE_DOWN.test(run.stderr ?? ""), Date.now());
-      if (streak.abort) throw new Error(`the engine stopped answering (${streak.count} × « could not be reached ») — ending the pod`);
+      renderAttempt({ clip, png, out, state });
       if (existsSync(png)) perPrompt = Math.max(perPrompt, spentUsd(rate, 0, Date.now()) - spentUsd(rate, 0, t0));
       else await new Promise((res) => setTimeout(res, 30_000));
     }
     results.push({ id: clip.id, file: png });
   }
-  return finish();
+  return done();
+}
+
+/** Sends the results to Bunny (unless --no-upload) and writes results.tsv. */
+async function finishBatch({ results, plan, out, batch, rate, started, cap }) {
+  const lines = [];
+  for (const r of results) {
+    if (process.argv.includes("--no-upload")) { lines.push(`${r.id}\t${r.file}`); continue; }
+    const target = bunnyTarget(batch, r.id, process.env);
+    await upload(r.file, target, process.env);
+    lines.push(`${r.id}\t${target.cdn}`);
+  }
+  writeFileSync(join(out, "results.tsv"), lines.join("\n") + "\n");
+  console.log(lines.join("\n"));
+  console.log(`batch: ${results.length}/${plan.clips.length} rendered, spent ≈ $${spentUsd(rate, started, Date.now()).toFixed(2)} of the $${cap} cap`);
+}
+
+/** One attempt at one prompt, then the guards (c) the same prompt failed three times in a row, (d) the engine stopped answering. */
+function renderAttempt({ clip, png, out, state }) {
+  const args = [join(here, "showcase-image-run.mjs"), "--plan", join(out, "plan.json"), "--out", out, "--only", clip.id, "--redo", ...(arg("model") ? ["--model", arg("model")] : []), ...(arg("size") ? ["--size", arg("size")] : [])];
+  const run = spawnSync(process.execPath, args, { env: process.env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  if (run.stdout) process.stdout.write(run.stdout);
+  if (run.stderr) process.stderr.write(run.stderr);
+  const missing = !existsSync(png);
+  state.failed = engineStreak(state.failed, missing && RUN_FAILED.test(run.stdout ?? ""), Date.now(), { minutes: Infinity });
+  if (state.failed.abort) throw new Error(`${clip.id} failed ${state.failed.count} times in a row — read the run's error in the Studio; ending the pod`);
+  state.streak = engineStreak(state.streak, missing && ENGINE_DOWN.test(run.stderr ?? ""), Date.now());
+  if (state.streak.abort) throw new Error(`the engine stopped answering (${state.streak.count} × « could not be reached ») — ending the pod`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => { console.error(`batch: ${e.message}`); process.exit(1); });
