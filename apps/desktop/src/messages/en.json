@@ -29,7 +29,7 @@
   },
   "stack": {
     "title": "Local stack",
-    "lead": "Start Sovkora on this Mac with the orazaka CLI, then open the workspace.",
+    "lead": "Start Sovkora on this Mac with the Sovkora command line, then open the workspace.",
     "status": {
       "running": "Running",
       "partial": "Partly running",
@@ -55,7 +55,7 @@
     "fetchLogs": "Show logs",
     "clearLogs": "Clear",
     "cliVersion": "CLI {version}",
-    "sidecarMissing": "The orazaka CLI is missing from this build.",
+    "sidecarMissing": "The Sovkora command line is missing from this build.",
     "needsNode": "The CLI needs Node.js 22 or later on this Mac (brew install node).",
     "workspaceNeeded": "Choose the Sovkora workspace folder in Settings so the CLI knows where the stack lives.",
     "remoteNote": "You are connected to {host}. The local stack is optional here — start it only to run Sovkora on this Mac.",
@@ -104,7 +104,7 @@
     "remoteUrl": "Sovkora address",
     "remoteHelp": "https only. You sign in on the Sovkora page itself — this app never stores a password.",
     "workspaceDir": "Sovkora workspace folder",
-    "workspaceHelp": "Where orazaka.workspace.json lives. The CLI runs there; the app does not read it.",
+    "workspaceHelp": "Where the workspace file lives. The CLI runs there; the app does not read it.",
     "startup": "Start Sovkora when I log in",
     "startupHelp": "Off by default. Runs in the menu bar; nothing is started unless you ask.",
     "language": "Language",
