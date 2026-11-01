@@ -14,6 +14,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { bootBudgetMinutes, progressLine } from "./lib/boot-budget.mjs";
 
 /**
  * One clip per prompt, ids `r01`, `r02`… (the plan format of gpu-i2v-run.mjs, only `scene` and `references` are read by the image step).
@@ -63,6 +64,8 @@ export function engineStreak(previous, unreachable, nowMs, { max = 3, minutes = 
   return { count, since, abort: count >= max || nowMs - since >= minutes * 60_000 };
 }
 
+function readProgress(file) { try { return file ? readFileSync(file, "utf8") : undefined; } catch { return undefined; } }
+
 /** Guard (a): polls the Studio (studio-preflight.mjs --require-engine) until the engine answers; throws when the wait or the cap runs out. */
 async function waitForEngine({ started, rate, cap, minutes }) {
   for (let attempt = 1; ; attempt++) {
@@ -70,7 +73,7 @@ async function waitForEngine({ started, rate, cap, minutes }) {
     const probe = spawnSync(process.execPath, args, { env: process.env, encoding: "utf8", timeout: 90_000 });
     if (probe.status === 0) { console.log(`batch: engine reachable after ${Math.round(Date.now() / 1000 - started)} s`); return; }
     if (probe.status === 1) throw new Error(`the Studio refuses the run: ${(probe.stdout + probe.stderr).trim().slice(0, 300)}`);
-    if (engineWaitOver(started, Date.now(), minutes)) throw new Error(`the engine was not reachable after ${minutes} min — ending the pod`);
+    if (engineWaitOver(started, Date.now(), minutes)) throw new Error(`the engine was not reachable after ${minutes} min (${progressLine(readProgress(process.env.GPU_POD_PROGRESS_FILE))}) — ending the pod`);
     if (capReached(spentUsd(rate, started, Date.now()), cap)) throw new Error(`cap $${cap} reached while the engine was still down`);
     if (attempt % 4 === 1) console.log(`batch: engine not reachable yet (${Math.round(Date.now() / 1000 - started)} s)`);
     await new Promise((res) => setTimeout(res, 20_000));
@@ -105,7 +108,8 @@ async function main() {
   const batch = arg("batch", new Date().toISOString().slice(0, 10) + "-batch");
   const bootMinutes = Number(process.env.GPU_BATCH_BOOT_MINUTES ?? 20);
   // A stills pod listens in minutes (STILLS=1): the engine wait is short, and it is a hard stop, not a retry of real prompts.
-  const engineMinutes = Number(process.env.GPU_BATCH_ENGINE_MINUTES ?? 15);
+  // With GPU_BATCH_DOWNLOAD_GB (the model's `downloadGb` in the catalogue) the wait is sized to the download, not to a flat limit.
+  const engineMinutes = Number(process.env.GPU_BATCH_ENGINE_MINUTES ?? bootBudgetMinutes({ downloadGb: Number(process.env.GPU_BATCH_DOWNLOAD_GB ?? 0) }));
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, "plan.json"), JSON.stringify(plan));
   const results = [];

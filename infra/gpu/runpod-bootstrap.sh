@@ -53,20 +53,34 @@ destroy_pod() {
   return 1
 }
 if [[ "${1:-}" == "--destroy" ]]; then destroy_pod "${2:-requested}"; exit $?; fi
-STATE=/var/lib/orazaka-gpu; IDLE=${IDLE_MINUTES:-30}; MAX=${MAX_HOURS:-10}; SETUP=${SETUP_MAX_MINUTES:-120}
+# The decision, one pure function (tested by scripts/test/gpu-boot-watchdog.test.mjs through `--decide`):
+#   decide <idle min> <age min> <ready 0|1> <busy 0|1> <idle limit> <max min> <setup min>  →  the reason to end the pod, or nothing.
+# « busy » = a download or a model load is in progress, or a job is running (the worker's heartbeat): the GPU is idle but the pod works.
+decide() {
+  local idle=$1 age=$2 ready=$3 busy=$4 limit=$5 max=$6 setup=$7 reason=""
+  (( busy == 0 && idle >= limit )) && reason="idle for ${idle} min"
+  (( age >= max )) && reason="lifetime of ${max} min reached"
+  (( ready == 0 && age >= setup )) && reason="setup unfinished after ${age} min"
+  [[ -n "$reason" ]] && echo "$reason"
+  return 0
+}
+if [[ "${1:-}" == "--decide" ]]; then shift; decide "$@"; exit 0; fi
+STATE=${ORAZAKA_STATE:-/var/lib/orazaka-gpu}; IDLE=${IDLE_MINUTES:-30}; MAX=${MAX_HOURS:-10}; SETUP=${SETUP_MAX_MINUTES:-120}
+HEARTBEAT_SECONDS=${HEARTBEAT_SECONDS:-180}
 # The lifetime in whole minutes: a batch gives fractional hours (0.6), which bash arithmetic refuses (the cap never fired).
 MAXMIN=$(awk -v h="$MAX" 'BEGIN { printf "%d", h * 60 }')
-boot=$(cat /var/lib/orazaka-gpu/boot-epoch)
-while sleep 60; do
+boot=$(cat $STATE/boot-epoch)
+# busy: the heartbeat file (touched by the weights download, and by the worker while it loads a model or runs a job) is fresh.
+is_busy() { local t; t=$(stat -c %Y $STATE/state/heartbeat 2>/dev/null) || return 1; (( $(date +%s) - t < HEARTBEAT_SECONDS )); }
+while sleep "${WATCHDOG_TICK:-60}"; do
   now=$(date +%s)
   util=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
   [[ "${util:-0}" =~ ^[0-9]+$ ]] && (( util >= 20 )) && touch $STATE/state/last-activity
   [[ ! -e $STATE/ready ]] && (( now - boot < SETUP * 60 )) && touch $STATE/state/last-activity
+  busy=0; is_busy && busy=1
   last=$(stat -c %Y $STATE/state/last-activity); idle=$(( (now - last) / 60 )); age=$(( (now - boot) / 60 ))
-  reason=""
-  (( idle >= IDLE )) && reason="idle for ${idle} min"
-  (( age >= MAXMIN )) && reason="lifetime of ${MAX} h reached"
-  [[ ! -e $STATE/ready ]] && (( age >= SETUP )) && reason="setup unfinished after ${age} min"
+  ready=0; [[ -e $STATE/ready ]] && ready=1
+  reason=$(decide "$idle" "$age" "$ready" "$busy" "$IDLE" "$MAXMIN" "$SETUP")
   [[ -z "$reason" ]] && continue
   destroy_pod "$reason" && exit 0
   sleep 120   # retried every few minutes: a pod that cannot end itself must not stay silent
@@ -174,8 +188,30 @@ export MEDIA_MODELS_DIR=/models HF_HOME=/models/hf HF_HUB_CACHE=/models/hf/hub H
 export MEDIA_SCRATCH_DIR=/var/lib/orazaka-scratch
 mkdir -p "$MEDIA_SCRATCH_DIR"
 touch "$STATE/state/last-activity"
+# What the profile needs (models.yaml `downloadGb`, a repository shared by two models counts once) against the free disk: a pod
+# that cannot hold its weights ends now, with the numbers, instead of idling until the watchdog does (krizaka-internal#2101).
+NEED_GB=$(cd /app-src && /opt/venv/bin/python -c "
+from app.video_models import load_manifest
+m = load_manifest(); seen = {}
+for n in m['profiles']['${PROFILE:-big}']['video']:
+    v = m['video'][n]; seen[v.get('repo', n)] = max(seen.get(v.get('repo', n), 0), v.get('downloadGb') or 0)
+print(int(sum(seen.values())))" 2>/dev/null || echo 0)
+FREE_GB=$(df -BG --output=avail /models 2>/dev/null | tail -1 | tr -dc 0-9)
+echo "${NEED_GB:-0}" > "$STATE/state/need-gb"
+if (( ${NEED_GB:-0} > 0 && ${FREE_GB:-0} > 0 && NEED_GB > FREE_GB )); then
+  step "weights need ~${NEED_GB} GB, /models has ${FREE_GB} GB free: attach a network volume or a bigger disk"
+  /usr/local/bin/orazaka-watchdog --destroy "weights ${NEED_GB} GB do not fit in ${FREE_GB} GB"; exit 1
+fi
+# The heartbeat and the progress (« X / Y GB ») while the download runs: the GPU is idle then, the pod is not.
+( while :; do touch "$STATE/state/heartbeat"; echo "$(du -s --block-size=1G /models/hf /models/sd 2>/dev/null | awk '{s+=$1} END {print s+0}') ${NEED_GB:-0}" > "$STATE/state/progress"; sleep 20; done ) &
+HEARTBEAT_PID=$!
 started=$(date +%s)
-(cd /app-src && /opt/venv/bin/python -m app.fetch_models "${PROFILE:-big}")
+if ! (cd /app-src && /opt/venv/bin/python -m app.fetch_models "${PROFILE:-big}"); then
+  kill $HEARTBEAT_PID 2>/dev/null
+  step "weights FAILED: the pod is not serving; ending it"
+  /usr/local/bin/orazaka-watchdog --destroy "weights download failed"; exit 1
+fi
+kill $HEARTBEAT_PID 2>/dev/null
 step "weights ready in $(( $(date +%s) - started ))s"
 step "GPU: $(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader | head -1)"
 # What the profile declares beside video: an image engine, sound models (models.yaml `profiles`).
@@ -225,7 +261,7 @@ export SPRING_RABBITMQ_HOST=127.0.0.1 SPRING_RABBITMQ_PORT=15671 SPRING_RABBITMQ
   SPRING_RABBITMQ_SSL_ENABLED=true SPRING_RABBITMQ_SSL_CA_FILE=/etc/orazaka/broker-ca.pem \
   SPRING_RABBITMQ_SSL_SERVER_NAME=broker-dev.orazaka.com \
   MEDIA_ASSET_SINK_URL=http://127.0.0.1:18090 JOB_SERVICE_INTERNAL_URL=http://127.0.0.1:18090 \
-  UPLOAD_DIR="$STATE/uploads" MEDIA_ACTIVITY_FILE="$STATE/state/last-activity" MEDIA_GPU_PROFILE="${PROFILE:-big}" \
+  UPLOAD_DIR="$STATE/uploads" MEDIA_ACTIVITY_FILE="$STATE/state/last-activity" MEDIA_HEARTBEAT_FILE="$STATE/state/heartbeat" MEDIA_GPU_PROFILE="${PROFILE:-big}" \
   ORAZAKA_MEDIA_MEM_HEADROOM_GB=4 PYTHONUNBUFFERED=1 MEDIA_WORKER_PORT=8188 MEDIA_SOUND_ENABLED="$SOUND_FLAG" MEDIA_FONT_FILE="$FONT"
 # shellcheck disable=SC2086 # UPSCALER_ENV is a list of NAME=value words
 env $UPSCALER_ENV SPRING_RABBITMQ_PASSWORD="$RABBIT_PASSWORD" ORAZAKA_SERVICE_TOKEN="$SERVICE_TOKEN" \

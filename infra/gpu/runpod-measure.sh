@@ -45,20 +45,34 @@ destroy_pod() {
   return 1
 }
 if [[ "${1:-}" == "--destroy" ]]; then destroy_pod "${2:-requested}"; exit $?; fi
-STATE=/var/lib/orazaka-gpu; IDLE=${IDLE_MINUTES:-30}; MAX=${MAX_HOURS:-10}; SETUP=${SETUP_MAX_MINUTES:-120}
+# The decision, one pure function (tested by scripts/test/gpu-boot-watchdog.test.mjs through `--decide`):
+#   decide <idle min> <age min> <ready 0|1> <busy 0|1> <idle limit> <max min> <setup min>  →  the reason to end the pod, or nothing.
+# « busy » = a download or a model load is in progress, or a job is running (the worker's heartbeat): the GPU is idle but the pod works.
+decide() {
+  local idle=$1 age=$2 ready=$3 busy=$4 limit=$5 max=$6 setup=$7 reason=""
+  (( busy == 0 && idle >= limit )) && reason="idle for ${idle} min"
+  (( age >= max )) && reason="lifetime of ${max} min reached"
+  (( ready == 0 && age >= setup )) && reason="setup unfinished after ${age} min"
+  [[ -n "$reason" ]] && echo "$reason"
+  return 0
+}
+if [[ "${1:-}" == "--decide" ]]; then shift; decide "$@"; exit 0; fi
+STATE=${ORAZAKA_STATE:-/var/lib/orazaka-gpu}; IDLE=${IDLE_MINUTES:-30}; MAX=${MAX_HOURS:-10}; SETUP=${SETUP_MAX_MINUTES:-120}
+HEARTBEAT_SECONDS=${HEARTBEAT_SECONDS:-180}
 # The lifetime in whole minutes: a batch gives fractional hours (0.6), which bash arithmetic refuses (the cap never fired).
 MAXMIN=$(awk -v h="$MAX" 'BEGIN { printf "%d", h * 60 }')
-boot=$(cat /var/lib/orazaka-gpu/boot-epoch)
-while sleep 60; do
+boot=$(cat $STATE/boot-epoch)
+# busy: the heartbeat file (touched by the weights download, and by the worker while it loads a model or runs a job) is fresh.
+is_busy() { local t; t=$(stat -c %Y $STATE/state/heartbeat 2>/dev/null) || return 1; (( $(date +%s) - t < HEARTBEAT_SECONDS )); }
+while sleep "${WATCHDOG_TICK:-60}"; do
   now=$(date +%s)
   util=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
   [[ "${util:-0}" =~ ^[0-9]+$ ]] && (( util >= 20 )) && touch $STATE/state/last-activity
   [[ ! -e $STATE/ready ]] && (( now - boot < SETUP * 60 )) && touch $STATE/state/last-activity
+  busy=0; is_busy && busy=1
   last=$(stat -c %Y $STATE/state/last-activity); idle=$(( (now - last) / 60 )); age=$(( (now - boot) / 60 ))
-  reason=""
-  (( idle >= IDLE )) && reason="idle for ${idle} min"
-  (( age >= MAXMIN )) && reason="lifetime of ${MAX} h reached"
-  [[ ! -e $STATE/ready ]] && (( age >= SETUP )) && reason="setup unfinished after ${age} min"
+  ready=0; [[ -e $STATE/ready ]] && ready=1
+  reason=$(decide "$idle" "$age" "$ready" "$busy" "$IDLE" "$MAXMIN" "$SETUP")
   [[ -z "$reason" ]] && continue
   destroy_pod "$reason" && exit 0
   sleep 120   # retried every few minutes: a pod that cannot end itself must not stay silent
