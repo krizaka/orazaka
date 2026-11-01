@@ -43,6 +43,37 @@ export const spentUsd = (rate, startedS, nowMs) => Math.round(((nowMs / 1000 - s
 /** True when one more prompt must NOT start: the cap is reached, or the next prompt (at `perPromptUsd`) would cross it. */
 export const capReached = (spent, cap, perPromptUsd = 0) => spent + perPromptUsd >= cap;
 
+/** The Studio's answer while the pod's engine is not reachable (guard (b) reads it in the image step's error). */
+export const ENGINE_DOWN = /is not running \(its engine could not be reached\)/;
+
+/** True once the engine wait (guard (a)) has used its `minutes`, counted from the pod's start `startedS` (epoch seconds). */
+export const engineWaitOver = (startedS, nowMs, minutes) => nowMs / 1000 - startedS >= minutes * 60;
+
+/**
+ * Guard (b): the streak of « engine could not be reached » after the engine was proved up. Three in a row, or five minutes since the
+ * first of them, abort the batch (the shell's trap ends the pod). Any other outcome resets it.
+ */
+export function engineStreak(previous, unreachable, nowMs, { max = 3, minutes = 5 } = {}) {
+  if (!unreachable) return { count: 0, since: undefined, abort: false };
+  const count = (previous?.count ?? 0) + 1;
+  const since = previous?.since ?? nowMs;
+  return { count, since, abort: count >= max || nowMs - since >= minutes * 60_000 };
+}
+
+/** Guard (a): polls the Studio (studio-preflight.mjs --require-engine) until the engine answers; throws when the wait or the cap runs out. */
+async function waitForEngine({ started, rate, cap, minutes }) {
+  for (let attempt = 1; ; attempt++) {
+    const args = [join(here, "studio-preflight.mjs"), "--require-engine", ...(arg("model") ? ["--model", arg("model")] : []), ...(arg("size") ? ["--size", arg("size")] : [])];
+    const probe = spawnSync("node", args, { env: process.env, encoding: "utf8", timeout: 90_000 });
+    if (probe.status === 0) { console.log(`batch: engine reachable after ${Math.round(Date.now() / 1000 - started)} s`); return; }
+    if (probe.status === 1) throw new Error(`the Studio refuses the run: ${(probe.stdout + probe.stderr).trim().slice(0, 300)}`);
+    if (engineWaitOver(started, Date.now(), minutes)) throw new Error(`the engine was not reachable after ${minutes} min — ending the pod`);
+    if (capReached(spentUsd(rate, started, Date.now()), cap)) throw new Error(`cap $${cap} reached while the engine was still down`);
+    if (attempt % 4 === 1) console.log(`batch: engine not reachable yet (${Math.round(Date.now() / 1000 - started)} s)`);
+    await new Promise((res) => setTimeout(res, 20_000));
+  }
+}
+
 /** The Bunny storage URL and the CDN URL of one result (a batch name is a slug, never a path). */
 export function bunnyTarget(batch, id, settings) {
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(batch)) throw new Error(`batch name "${batch}" must be a lowercase slug`);
@@ -70,6 +101,8 @@ async function main() {
   if (![rate, started, cap].every(Number.isFinite) || cap <= 0) throw new Error("--rate, --started and --cap are required numbers");
   const batch = arg("batch", new Date().toISOString().slice(0, 10) + "-batch");
   const bootMinutes = Number(process.env.GPU_BATCH_BOOT_MINUTES ?? 20);
+  // A stills pod listens in minutes (STILLS=1): the engine wait is short, and it is a hard stop, not a retry of real prompts.
+  const engineMinutes = Number(process.env.GPU_BATCH_ENGINE_MINUTES ?? 15);
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, "plan.json"), JSON.stringify(plan));
   let perPrompt = 0;
@@ -88,6 +121,8 @@ async function main() {
     console.log(`batch: ${results.length}/${plan.clips.length} rendered, spent ≈ $${spentUsd(rate, started, Date.now()).toFixed(2)} of the $${cap} cap`);
   }
 
+  await waitForEngine({ started, rate, cap, minutes: engineMinutes });
+  let streak;
   for (const clip of plan.clips) {
     const png = join(out, `${clip.id}.image.png`);
     // The pod boots for minutes before its worker answers: a prompt is retried until it succeeds; the cap or the boot window stops it.
@@ -100,7 +135,10 @@ async function main() {
       if (results.length === 0 && Date.now() / 1000 - started > bootMinutes * 60) throw new Error(`no render after ${bootMinutes} min of boot — giving up`);
       const t0 = Date.now();
       const args = [join(here, "showcase-image-run.mjs"), "--plan", join(out, "plan.json"), "--out", out, "--only", clip.id, "--redo", ...(arg("model") ? ["--model", arg("model")] : []), ...(arg("size") ? ["--size", arg("size")] : [])];
-      spawnSync("node", args, { env: process.env, stdio: ["ignore", "inherit", "inherit"] });
+      const run = spawnSync("node", args, { env: process.env, encoding: "utf8", stdio: ["ignore", "inherit", "pipe"] });
+      if (run.stderr) process.stderr.write(run.stderr);
+      streak = engineStreak(streak, !existsSync(png) && ENGINE_DOWN.test(run.stderr ?? ""), Date.now());
+      if (streak.abort) throw new Error(`the engine stopped answering (${streak.count} × « could not be reached ») — ending the pod`);
       if (existsSync(png)) perPrompt = Math.max(perPrompt, spentUsd(rate, 0, Date.now()) - spentUsd(rate, 0, t0));
       else await new Promise((res) => setTimeout(res, 30_000));
     }
