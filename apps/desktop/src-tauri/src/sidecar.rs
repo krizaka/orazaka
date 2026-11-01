@@ -34,11 +34,23 @@ pub struct Plan {
 pub fn plan(call: &CliCall) -> Result<Plan, String> {
     let s = |v: &str| v.to_string();
     match call.command.as_str() {
-        "version" => Ok(Plan { args: vec![s("--version")], timeout_secs: 30 }),
-        "status" => Ok(Plan { args: vec![s("status"), s("--json")], timeout_secs: 60 }),
-        "doctor" => Ok(Plan { args: vec![s("doctor")], timeout_secs: 120 }),
+        "version" => Ok(Plan {
+            args: vec![s("--version")],
+            timeout_secs: 30,
+        }),
+        "status" => Ok(Plan {
+            args: vec![s("status"), s("--json")],
+            timeout_secs: 60,
+        }),
+        "doctor" => Ok(Plan {
+            args: vec![s("doctor")],
+            timeout_secs: 120,
+        }),
         // Never `--purge`: deleting data is a terminal decision, not a button in a control panel.
-        "stop" => Ok(Plan { args: vec![s("stop"), s("-y")], timeout_secs: 300 }),
+        "stop" => Ok(Plan {
+            args: vec![s("stop"), s("-y")],
+            timeout_secs: 300,
+        }),
         "start" => {
             let mode = call.mode.as_deref().unwrap_or("dev");
             if !START_MODES.contains(&mode) {
@@ -61,7 +73,10 @@ pub fn plan(call: &CliCall) -> Result<Plan, String> {
             let tail = call.tail.unwrap_or(100).clamp(1, MAX_TAIL);
             args.push(s("--tail"));
             args.push(tail.to_string());
-            Ok(Plan { args, timeout_secs: 30 })
+            Ok(Plan {
+                args,
+                timeout_secs: 30,
+            })
         }
         other => Err(format!("command not allowed: {other}")),
     }
@@ -72,7 +87,12 @@ mod tests {
     use super::*;
 
     fn call(command: &str) -> CliCall {
-        CliCall { command: command.into(), mode: None, service: None, tail: None }
+        CliCall {
+            command: command.into(),
+            mode: None,
+            service: None,
+            tail: None,
+        }
     }
 
     #[test]
@@ -81,7 +101,10 @@ mod tests {
         assert_eq!(plan(&call("status")).unwrap().args, ["status", "--json"]);
         assert_eq!(plan(&call("doctor")).unwrap().args, ["doctor"]);
         assert_eq!(plan(&call("stop")).unwrap().args, ["stop", "-y"]);
-        assert_eq!(plan(&call("start")).unwrap().args, ["start", "--mode", "dev"]);
+        assert_eq!(
+            plan(&call("start")).unwrap().args,
+            ["start", "--mode", "dev"]
+        );
     }
 
     #[test]
@@ -95,7 +118,18 @@ mod tests {
 
     #[test]
     fn unknown_commands_are_refused() {
-        for bad in ["", "install", "reset", "config", "db", "chat", "rm", "sh", "status --json; ls", "../x"] {
+        for bad in [
+            "",
+            "install",
+            "reset",
+            "config",
+            "db",
+            "chat",
+            "rm",
+            "sh",
+            "status --json; ls",
+            "../x",
+        ] {
             assert!(plan(&call(bad)).is_err(), "{bad} must be refused");
         }
     }
@@ -111,7 +145,10 @@ mod tests {
         let mut l = call("logs");
         l.service = Some("ollama".into());
         l.tail = Some(9999);
-        assert_eq!(plan(&l).unwrap().args, ["logs", "--service", "ollama", "--tail", "500"]);
+        assert_eq!(
+            plan(&l).unwrap().args,
+            ["logs", "--service", "ollama", "--tail", "500"]
+        );
         l.service = Some("../../etc/passwd".into());
         assert!(plan(&l).is_err());
     }
@@ -125,10 +162,9 @@ mod tests {
 
     #[test]
     fn a_free_form_json_payload_cannot_smuggle_arguments() {
-        let c: CliCall = serde_json::from_str(
-            r#"{"command":"status","args":["--purge"],"mode":"dev"}"#,
-        )
-        .unwrap();
+        let c: CliCall =
+            serde_json::from_str(r#"{"command":"status","args":["--purge"],"mode":"dev"}"#)
+                .unwrap();
         assert_eq!(plan(&c).unwrap().args, ["status", "--json"]);
     }
 }

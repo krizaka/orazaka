@@ -5,7 +5,9 @@
 //! transport, and the state the page polls. The tokens stay on the Rust side: the page sees `connected` and, while a
 //! sign-in waits, the code to type and where. No client secret exists on the Mac.
 
-use krizaka_tauri_kit::device_flow::{self, DeviceCode, Failure, Provider, Session, TokenVault, Tokens, Transport};
+use krizaka_tauri_kit::device_flow::{
+    self, DeviceCode, Failure, Provider, Session, TokenVault, Tokens, Transport,
+};
 use krizaka_tauri_kit::secrets::SecretStore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -35,7 +37,11 @@ pub struct GithubConfig {
 impl Default for GithubConfig {
     fn default() -> Self {
         let p = Provider::github(DEFAULT_CLIENT_ID);
-        GithubConfig { client_id: p.client_id, device_code_url: p.device_code_url, token_url: p.token_url }
+        GithubConfig {
+            client_id: p.client_id,
+            device_code_url: p.device_code_url,
+            token_url: p.token_url,
+        }
     }
 }
 
@@ -43,7 +49,10 @@ impl GithubConfig {
     /// A missing or broken file means the defaults; an address that is not https is ignored (a token never goes in clear).
     pub fn load(file: &Path) -> Self {
         let defaults = GithubConfig::default();
-        let Some(mut c) = fs::read_to_string(file).ok().and_then(|t| serde_json::from_str::<GithubConfig>(&t).ok()) else {
+        let Some(mut c) = fs::read_to_string(file)
+            .ok()
+            .and_then(|t| serde_json::from_str::<GithubConfig>(&t).ok())
+        else {
             return defaults;
         };
         if c.client_id.trim().is_empty() {
@@ -59,7 +68,11 @@ impl GithubConfig {
     }
 
     pub fn provider(&self) -> Provider {
-        Provider { device_code_url: self.device_code_url.clone(), token_url: self.token_url.clone(), client_id: self.client_id.clone() }
+        Provider {
+            device_code_url: self.device_code_url.clone(),
+            token_url: self.token_url.clone(),
+            client_id: self.client_id.clone(),
+        }
     }
 }
 
@@ -68,11 +81,16 @@ pub struct HttpTransport;
 
 impl Transport for HttpTransport {
     fn post_form(&self, url: &str, fields: &[(&str, &str)]) -> Result<Value, String> {
-        let result = ureq::post(url).timeout(HTTP_TIMEOUT).set("Accept", "application/json").send_form(fields);
+        let result = ureq::post(url)
+            .timeout(HTTP_TIMEOUT)
+            .set("Accept", "application/json")
+            .send_form(fields);
         match result {
             Ok(resp) => resp.into_json::<Value>().map_err(|e| e.to_string()),
             // an HTTP error still carries GitHub's `error` code
-            Err(ureq::Error::Status(_, resp)) => resp.into_json::<Value>().map_err(|e| e.to_string()),
+            Err(ureq::Error::Status(_, resp)) => {
+                resp.into_json::<Value>().map_err(|e| e.to_string())
+            }
             Err(e) => Err(e.to_string()),
         }
     }
@@ -99,14 +117,21 @@ struct Flow {
 pub struct Connection(Arc<Mutex<Flow>>);
 
 fn unix_now() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 impl Connection {
     pub fn status(&self, store: &dyn SecretStore) -> Result<GithubStatus, String> {
         let flow = self.0.lock().map_err(|e| e.to_string())?;
         let Session { connected } = TokenVault::new(store, VAULT_PREFIX).session()?;
-        Ok(GithubStatus { connected, pending: flow.pending.clone(), failure: flow.failure.clone() })
+        Ok(GithubStatus {
+            connected,
+            pending: flow.pending.clone(),
+            failure: flow.failure.clone(),
+        })
     }
 
     /// Asks GitHub for a code and returns it at once; `wait` then runs on its own thread until the person approves.
@@ -124,7 +149,11 @@ impl Connection {
         {
             let mut flow = self.0.lock().map_err(|e| e.to_string())?;
             flow.cancelled.store(true, Ordering::SeqCst); // a second start replaces the first
-            *flow = Flow { pending: Some(code.clone()), failure: None, cancelled: cancelled.clone() };
+            *flow = Flow {
+                pending: Some(code.clone()),
+                failure: None,
+                cancelled: cancelled.clone(),
+            };
         }
         let conn = self.clone();
         let waiting = code.clone();
@@ -142,7 +171,12 @@ impl Connection {
         Ok(code)
     }
 
-    fn finish(&self, outcome: Result<Tokens, Failure>, store: &dyn SecretStore, cancelled: &AtomicBool) {
+    fn finish(
+        &self,
+        outcome: Result<Tokens, Failure>,
+        store: &dyn SecretStore,
+        cancelled: &AtomicBool,
+    ) {
         if cancelled.load(Ordering::SeqCst) {
             return; // signed out, or replaced by a newer sign-in: this one writes nothing
         }
@@ -167,7 +201,12 @@ impl Connection {
     }
 
     /// A valid user-to-server token for a GitHub call (refreshed when it is about to expire). Rust side only.
-    pub fn access_token(&self, transport: &dyn Transport, store: &dyn SecretStore, config: &GithubConfig) -> Result<Option<String>, String> {
+    pub fn access_token(
+        &self,
+        transport: &dyn Transport,
+        store: &dyn SecretStore,
+        config: &GithubConfig,
+    ) -> Result<Option<String>, String> {
         TokenVault::new(store, VAULT_PREFIX).access_token(transport, &config.provider(), unix_now())
     }
 }
@@ -214,24 +253,39 @@ mod tests {
         let l = GithubConfig::load(&f);
         assert_eq!(l.client_id, "Iv-ghe");
         assert_eq!(l.device_code_url, "https://ghe.example/login/device/code");
-        assert_eq!(l.token_url, c.token_url, "a clear-text token endpoint is ignored");
+        assert_eq!(
+            l.token_url, c.token_url,
+            "a clear-text token endpoint is ignored"
+        );
         fs::write(&f, "not json").unwrap();
         assert_eq!(GithubConfig::load(&f), c);
     }
 
     #[test]
-    fn sign_in_shows_the_code_then_stores_the_tokens_in_the_vault_and_the_status_never_holds_a_token() {
+    fn sign_in_shows_the_code_then_stores_the_tokens_in_the_vault_and_the_status_never_holds_a_token(
+    ) {
         let conn = Connection::default();
         let s = store();
-        let t = fake(vec![device(), json!({"error": "authorization_pending"}), json!({"access_token": "ghu_fake", "refresh_token": "ghr_fake", "expires_in": 28800})]);
+        let t = fake(vec![
+            device(),
+            json!({"error": "authorization_pending"}),
+            json!({"access_token": "ghu_fake", "refresh_token": "ghr_fake", "expires_in": 28800}),
+        ]);
         // `spawn` is held back, so the status can be read while the sign-in waits
         let held: Arc<Mutex<Option<Box<dyn FnOnce() + Send>>>> = Arc::default();
         let h = held.clone();
-        let code = conn.begin(t, s.clone(), &GithubConfig::default(), move |job| *h.lock().unwrap() = Some(job)).unwrap();
+        let code = conn
+            .begin(t, s.clone(), &GithubConfig::default(), move |job| {
+                *h.lock().unwrap() = Some(job)
+            })
+            .unwrap();
         assert_eq!(code.user_code, "ABCD-1234");
         let waiting = conn.status(&*s).unwrap();
         assert!(!waiting.connected);
-        assert_eq!(waiting.pending.as_ref().unwrap().verification_uri, "https://github.com/login/device");
+        assert_eq!(
+            waiting.pending.as_ref().unwrap().verification_uri,
+            "https://github.com/login/device"
+        );
         held.lock().unwrap().take().unwrap()();
         let done = conn.status(&*s).unwrap();
         assert!(done.connected && done.pending.is_none() && done.failure.is_none());
@@ -244,7 +298,13 @@ mod tests {
     fn a_denied_or_expired_sign_in_is_a_failure_to_show_and_stores_nothing() {
         let conn = Connection::default();
         let s = store();
-        conn.begin(fake(vec![device(), json!({"error": "access_denied"})]), s.clone(), &GithubConfig::default(), inline).unwrap();
+        conn.begin(
+            fake(vec![device(), json!({"error": "access_denied"})]),
+            s.clone(),
+            &GithubConfig::default(),
+            inline,
+        )
+        .unwrap();
         let st = conn.status(&*s).unwrap();
         assert!(!st.connected && st.pending.is_none());
         assert!(st.failure.unwrap().contains("denied"));
@@ -257,27 +317,60 @@ mod tests {
         let s = store();
         let held: Arc<Mutex<Option<Box<dyn FnOnce() + Send>>>> = Arc::default();
         let h = held.clone();
-        let t = fake(vec![device(), json!({"access_token": "ghu_late", "refresh_token": "ghr_late", "expires_in": 60})]);
-        conn.begin(t, s.clone(), &GithubConfig::default(), move |job| *h.lock().unwrap() = Some(job)).unwrap();
+        let t = fake(vec![
+            device(),
+            json!({"access_token": "ghu_late", "refresh_token": "ghr_late", "expires_in": 60}),
+        ]);
+        conn.begin(t, s.clone(), &GithubConfig::default(), move |job| {
+            *h.lock().unwrap() = Some(job)
+        })
+        .unwrap();
         conn.sign_out(&*s).unwrap();
         held.lock().unwrap().take().unwrap()();
         assert!(!conn.status(&*s).unwrap().connected);
         // connected, then signed out: both items go, and the next call asks to reconnect
-        let tokens = Tokens { access_token: "a".into(), refresh_token: Some("r".into()), expires_at: Some(u64::MAX) };
+        let tokens = Tokens {
+            access_token: "a".into(),
+            refresh_token: Some("r".into()),
+            expires_at: Some(u64::MAX),
+        };
         TokenVault::new(&*s, "github").save(&tokens).unwrap();
         conn.sign_out(&*s).unwrap();
         conn.sign_out(&*s).unwrap();
-        assert_eq!((s.get("github.access").unwrap(), s.get("github.refresh").unwrap()), (None, None));
-        assert_eq!(conn.access_token(&*fake(vec![]), &*s, &GithubConfig::default()).unwrap(), None);
+        assert_eq!(
+            (
+                s.get("github.access").unwrap(),
+                s.get("github.refresh").unwrap()
+            ),
+            (None, None)
+        );
+        assert_eq!(
+            conn.access_token(&*fake(vec![]), &*s, &GithubConfig::default())
+                .unwrap(),
+            None
+        );
     }
 
     #[test]
     fn an_expiring_token_is_refreshed_before_a_github_call() {
         let conn = Connection::default();
         let s = store();
-        TokenVault::new(&*s, "github").save(&Tokens { access_token: "old".into(), refresh_token: Some("r".into()), expires_at: Some(1) }).unwrap();
-        let t = fake(vec![json!({"access_token": "new", "refresh_token": "r2", "expires_in": 28800})]);
-        assert_eq!(conn.access_token(&*t, &*s, &GithubConfig::default()).unwrap().as_deref(), Some("new"));
+        TokenVault::new(&*s, "github")
+            .save(&Tokens {
+                access_token: "old".into(),
+                refresh_token: Some("r".into()),
+                expires_at: Some(1),
+            })
+            .unwrap();
+        let t = fake(vec![
+            json!({"access_token": "new", "refresh_token": "r2", "expires_in": 28800}),
+        ]);
+        assert_eq!(
+            conn.access_token(&*t, &*s, &GithubConfig::default())
+                .unwrap()
+                .as_deref(),
+            Some("new")
+        );
         assert_eq!(s.get("github.refresh").unwrap().as_deref(), Some("r2"));
     }
 }

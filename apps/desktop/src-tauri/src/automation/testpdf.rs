@@ -2,7 +2,9 @@
 //! of the end-to-end test. Written by hand so the tests need no PDF library and no binary fixture in the repository.
 
 fn escape(line: &str) -> String {
-    line.replace('\\', "\\\\").replace('(', "\\(").replace(')', "\\)")
+    line.replace('\\', "\\\\")
+        .replace('(', "\\(")
+        .replace(')', "\\)")
 }
 
 pub fn minimal_pdf(text: &str) -> Vec<u8> {
@@ -25,11 +27,17 @@ pub fn minimal_pdf(text: &str) -> Vec<u8> {
         pdf.push_str(&format!("{} 0 obj\n{}\nendobj\n", i + 1, body));
     }
     let xref = pdf.len();
-    pdf.push_str(&format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1));
+    pdf.push_str(&format!(
+        "xref\n0 {}\n0000000000 65535 f \n",
+        objects.len() + 1
+    ));
     for o in offsets {
         pdf.push_str(&format!("{o:010} 00000 n \n"));
     }
-    pdf.push_str(&format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n", objects.len() + 1));
+    pdf.push_str(&format!(
+        "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n",
+        objects.len() + 1
+    ));
     pdf.into_bytes()
 }
 

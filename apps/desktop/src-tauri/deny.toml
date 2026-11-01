@@ -1,0 +1,31 @@
+# The Krizaka cargo-deny baseline (krizaka/.github docs/standards/lang/deny.toml) plus this repository's recorded exceptions.
+# An exception is debt with a reason and an exit: it goes when the upstream crate is bumped, never to get green.
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+ignore = [
+  { id = "RUSTSEC-2024-0370", reason = "proc-macro-error is unmaintained; pulled transitively by tauri, goes with its bump" },
+  { id = "RUSTSEC-2026-0192", reason = "ttf-parser is unmaintained; pulled transitively by tauri's tray icon rendering, goes with its bump" },
+  { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained; pulled transitively by tauri (zbus), goes with its bump" },
+  { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained; pulled transitively by tauri (zbus), goes with its bump" },
+  { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained; pulled transitively by tauri (zbus), goes with its bump" },
+]
+
+[licenses]
+version = 2
+allow = ["MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Unicode-3.0", "Unicode-DFS-2016", "Zlib", "MPL-2.0", "CC0-1.0", "0BSD", "BSL-1.0", "OpenSSL", "CDLA-Permissive-2.0"]
+confidence-threshold = 0.9
+exceptions = [{ crate = "orazaka-desktop", allow = ["FSL-1.1-ALv2"] }]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = ["https://github.com/krizaka/krizaka-tauri-kit"]

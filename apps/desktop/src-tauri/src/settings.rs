@@ -43,8 +43,11 @@ impl Settings {
         if let Some(dir) = file.parent() {
             fs::create_dir_all(dir).map_err(|e| e.to_string())?;
         }
-        fs::write(file, serde_json::to_string_pretty(self).map_err(|e| e.to_string())?)
-            .map_err(|e| e.to_string())
+        fs::write(
+            file,
+            serde_json::to_string_pretty(self).map_err(|e| e.to_string())?,
+        )
+        .map_err(|e| e.to_string())
     }
 
     /// Checks everything that comes from the UI before it is stored.
@@ -92,8 +95,14 @@ mod tests {
 
     #[test]
     fn remote_must_be_https_or_loopback_and_is_reduced_to_its_origin() {
-        assert_eq!(normalize_remote("https://dev.orazaka.com/some/path?x=1").unwrap(), "https://dev.orazaka.com");
-        assert_eq!(normalize_remote("http://localhost:3000/").unwrap(), "http://localhost:3000");
+        assert_eq!(
+            normalize_remote("https://dev.orazaka.com/some/path?x=1").unwrap(),
+            "https://dev.orazaka.com"
+        );
+        assert_eq!(
+            normalize_remote("http://localhost:3000/").unwrap(),
+            "http://localhost:3000"
+        );
         assert!(normalize_remote("http://dev.orazaka.com").is_err());
         assert!(normalize_remote("https://user:pw@dev.orazaka.com").is_err());
         assert!(normalize_remote("file:///etc/passwd").is_err());
@@ -115,13 +124,25 @@ mod tests {
     fn settings_round_trip_and_validate() {
         let d = tempfile::tempdir().unwrap();
         let f = d.path().join("settings.json");
-        let s = Settings { mode: "local".into(), ..Default::default() };
+        let s = Settings {
+            mode: "local".into(),
+            ..Default::default()
+        };
         s.save(&f).unwrap();
         assert_eq!(Settings::load(&f).mode, "local");
-        let bad = Settings { mode: "root".into(), ..Default::default() };
+        let bad = Settings {
+            mode: "root".into(),
+            ..Default::default()
+        };
         assert!(bad.validated().is_err());
-        assert_eq!(Settings::default().validated().unwrap().workspace_url(), DEFAULT_REMOTE);
-        let loc = Settings { mode: "local".into(), ..Default::default() };
+        assert_eq!(
+            Settings::default().validated().unwrap().workspace_url(),
+            DEFAULT_REMOTE
+        );
+        let loc = Settings {
+            mode: "local".into(),
+            ..Default::default()
+        };
         assert_eq!(loc.workspace_url(), LOCAL_WORKSPACE_URL);
     }
 }

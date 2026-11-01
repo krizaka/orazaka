@@ -7,7 +7,11 @@ use std::fs;
 use std::process::Command;
 
 fn valid_run_id(id: &str) -> bool {
-    !id.is_empty() && id.len() <= 64 && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    !id.is_empty()
+        && id.len() <= 64
+        && id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
 }
 
 fn ref_name(run_id: &str) -> Result<String, CodeError> {
@@ -18,7 +22,11 @@ fn ref_name(run_id: &str) -> Result<String, CodeError> {
     }
 }
 
-fn git_private_index(repo: &Repo, index: &std::path::Path, args: &[&str]) -> Result<String, CodeError> {
+fn git_private_index(
+    repo: &Repo,
+    index: &std::path::Path,
+    args: &[&str],
+) -> Result<String, CodeError> {
     let out = Command::new("git")
         .arg("-C")
         .arg(repo.root())
@@ -33,20 +41,32 @@ fn git_private_index(repo: &Repo, index: &std::path::Path, args: &[&str]) -> Res
     if out.status.success() {
         Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
     } else {
-        Err(CodeError::Io(String::from_utf8_lossy(&out.stderr).trim().to_string()))
+        Err(CodeError::Io(
+            String::from_utf8_lossy(&out.stderr).trim().to_string(),
+        ))
     }
 }
 
 /// Records the working tree as it is now (tracked and untracked, gitignored files left out). Returns the commit sha.
 pub fn create(repo: &Repo, run_id: &str) -> Result<String, CodeError> {
     let name = ref_name(run_id)?;
-    let dir = std::env::temp_dir().join(format!("orazaka-snapshot-{}-{run_id}", std::process::id()));
+    let dir =
+        std::env::temp_dir().join(format!("orazaka-snapshot-{}-{run_id}", std::process::id()));
     fs::create_dir_all(&dir).map_err(|e| CodeError::Io(e.to_string()))?;
     let index = dir.join("index");
     let result = (|| {
         git_private_index(repo, &index, &["add", "-A", "--", "."])?;
         let tree = git_private_index(repo, &index, &["write-tree"])?;
-        let sha = git_private_index(repo, &index, &["commit-tree", &tree, "-m", &format!("orazaka snapshot {run_id}")])?;
+        let sha = git_private_index(
+            repo,
+            &index,
+            &[
+                "commit-tree",
+                &tree,
+                "-m",
+                &format!("orazaka snapshot {run_id}"),
+            ],
+        )?;
         repo.git(&["update-ref", &name, &sha])?;
         Ok(sha)
     })();
@@ -58,7 +78,8 @@ pub fn create(repo: &Repo, run_id: &str) -> Result<String, CodeError> {
 /// Every path goes through the write scope. Returns the restored paths.
 pub fn restore(repo: &Repo, run_id: &str, touched: &[String]) -> Result<Vec<String>, CodeError> {
     let name = ref_name(run_id)?;
-    repo.git(&["rev-parse", "--verify", &name]).map_err(|_| CodeError::NotFound(name.clone()))?;
+    repo.git(&["rev-parse", "--verify", &name])
+        .map_err(|_| CodeError::NotFound(name.clone()))?;
     let mut done = Vec::new();
     for rel in touched {
         let target = repo.resolve_write(rel)?;

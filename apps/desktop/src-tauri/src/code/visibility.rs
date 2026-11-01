@@ -14,11 +14,35 @@ pub fn is_git_internal(rel: &str) -> bool {
 
 const SECRET_DIRS: &[&str] = &[".ssh", ".gnupg", ".aws", ".kube"];
 const SECRET_NAMES: &[&str] = &[
-    ".npmrc", ".pypirc", ".netrc", ".pgpass", ".htpasswd", ".git-credentials", "credentials", "credentials.json",
-    "kubeconfig", "id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", "secrets.json", "secrets.yaml", "secrets.yml",
-    "terraform.tfvars", "application_default_credentials.json",
+    ".npmrc",
+    ".pypirc",
+    ".netrc",
+    ".pgpass",
+    ".htpasswd",
+    ".git-credentials",
+    "credentials",
+    "credentials.json",
+    "kubeconfig",
+    "id_rsa",
+    "id_dsa",
+    "id_ecdsa",
+    "id_ed25519",
+    "secrets.json",
+    "secrets.yaml",
+    "secrets.yml",
+    "terraform.tfvars",
+    "application_default_credentials.json",
 ];
-const SECRET_SUFFIXES: &[&str] = &[".pem", ".p12", ".pfx", ".key", ".keystore", ".jks", ".tfstate", ".kdbx"];
+const SECRET_SUFFIXES: &[&str] = &[
+    ".pem",
+    ".p12",
+    ".pfx",
+    ".key",
+    ".keystore",
+    ".jks",
+    ".tfstate",
+    ".kdbx",
+];
 const DOTENV_SAFE: &[&str] = &[".env.example", ".env.sample", ".env.template", ".env.dist"];
 
 /// The secret rule set: returns the reason when a path (relative, `/`-separated) matches a secret pattern.
@@ -31,7 +55,9 @@ pub fn is_secret_path(rel: &str) -> Option<&'static str> {
     if name == ".env" || (name.starts_with(".env.") && !DOTENV_SAFE.contains(&name.as_str())) {
         return Some("dotenv file");
     }
-    if SECRET_NAMES.contains(&name.as_str()) || (name.starts_with("service-account") && name.ends_with(".json")) {
+    if SECRET_NAMES.contains(&name.as_str())
+        || (name.starts_with("service-account") && name.ends_with(".json"))
+    {
         return Some("credential file");
     }
     if SECRET_SUFFIXES.iter().any(|s| name.ends_with(s)) {
@@ -68,17 +94,28 @@ fn ignored(repo: &Repo, paths: &[String]) -> HashSet<String> {
     let out = child.wait_with_output();
     let _ = writer.join();
     match out {
-        Ok(o) => o.stdout.split(|b| *b == 0).filter(|s| !s.is_empty()).map(|s| String::from_utf8_lossy(s).to_string()).collect(),
+        Ok(o) => o
+            .stdout
+            .split(|b| *b == 0)
+            .filter(|s| !s.is_empty())
+            .map(|s| String::from_utf8_lossy(s).to_string())
+            .collect(),
         Err(_) => HashSet::new(),
     }
 }
 
 /// The visible subset of `paths`, in order. The single filter behind every read tool.
 pub fn filter_visible(repo: &Repo, paths: &[String]) -> Vec<String> {
-    let candidates: Vec<String> =
-        paths.iter().filter(|p| !is_git_internal(p) && is_secret_path(p).is_none()).cloned().collect();
+    let candidates: Vec<String> = paths
+        .iter()
+        .filter(|p| !is_git_internal(p) && is_secret_path(p).is_none())
+        .cloned()
+        .collect();
     let hidden = ignored(repo, &candidates);
-    candidates.into_iter().filter(|p| !hidden.contains(p)).collect()
+    candidates
+        .into_iter()
+        .filter(|p| !hidden.contains(p))
+        .collect()
 }
 
 pub fn is_visible(repo: &Repo, rel: &str) -> bool {

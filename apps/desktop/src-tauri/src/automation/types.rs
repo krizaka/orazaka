@@ -239,7 +239,13 @@ pub struct Grant {
 }
 
 impl Grant {
-    pub fn covers(&self, automation_id: &str, server: &str, tool: &str, path: &std::path::Path) -> bool {
+    pub fn covers(
+        &self,
+        automation_id: &str,
+        server: &str,
+        tool: &str,
+        path: &std::path::Path,
+    ) -> bool {
         self.revoked_at.is_none()
             && self.automation_id == automation_id
             && self.server == server

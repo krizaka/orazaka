@@ -18,18 +18,38 @@ fn dump(dir: &Path, name: &str, value: &impl serde::Serialize) {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    let folder = Path::new(args.get(1).expect("folder")).canonicalize().expect("the folder exists");
+    let folder = Path::new(args.get(1).expect("folder"))
+        .canonicalize()
+        .expect("the folder exists");
     let data = Path::new(args.get(2).expect("data dir")).to_path_buf();
     let model = args.get(3).cloned().unwrap_or_else(|| "qwen2.5:7b".into());
-    let base_url = args.get(4).cloned().unwrap_or_else(|| "http://localhost:11434/v1".into());
+    let base_url = args
+        .get(4)
+        .cloned()
+        .unwrap_or_else(|| "http://localhost:11434/v1".into());
     let journey = data.join("journey");
 
-    let svc = Service::open(&data, Arc::new(RealBackends), Arc::new(now_local), Arc::new(|| {}));
+    let svc = Service::open(
+        &data,
+        Arc::new(RealBackends),
+        Arc::new(now_local),
+        Arc::new(|| {}),
+    );
     // Scheduled for the next minute; the loop below is the scheduler tick of the app.
-    let time = (now_local() + chrono::Duration::minutes(1)).format("%H:%M").to_string();
+    let time = (now_local() + chrono::Duration::minutes(1))
+        .format("%H:%M")
+        .to_string();
     let a = svc
         .create(
-            NewAutomation { name: "Morning PDF summaries".into(), folder: folder.display().to_string(), time, days: vec![], model, base_url, dry_run: false },
+            NewAutomation {
+                name: "Morning PDF summaries".into(),
+                folder: folder.display().to_string(),
+                time,
+                days: vec![],
+                model,
+                base_url,
+                dry_run: false,
+            },
             |p: &Path| p.canonicalize().map_err(|e| e.to_string()),
         )
         .expect("created");
@@ -50,7 +70,12 @@ fn main() {
     dump(&journey, "2-awaiting-approval.json", &svc.overview());
     dump(&journey, "2-run.json", &run);
 
-    let approval = svc.overview().approvals.first().cloned().expect("an approval is asked before the first write");
+    let approval = svc
+        .overview()
+        .approvals
+        .first()
+        .cloned()
+        .expect("an approval is asked before the first write");
     let done = svc.decide(&approval.id, Decision::Always).expect("decided");
     let run = svc.run(&run_id).unwrap();
     dump(&journey, "3-approved.json", &svc.overview());
@@ -63,6 +88,12 @@ fn main() {
     }
     println!(
         "{:?} · {} note(s) · {} → {} tokens · {} ms · audit chain ok: {} ({} entries)",
-        done.status, done.written, run.usage.prompt_tokens, run.usage.completion_tokens, run.usage.duration_ms, audit.verification.ok, audit.verification.entries
+        done.status,
+        done.written,
+        run.usage.prompt_tokens,
+        run.usage.completion_tokens,
+        run.usage.duration_ms,
+        audit.verification.ok,
+        audit.verification.entries
     );
 }
