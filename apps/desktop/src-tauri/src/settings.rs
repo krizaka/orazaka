@@ -1,4 +1,4 @@
-//! App settings: connect mode, the remote Orazaka, the workspace folder, watched folders.
+//! App settings: connect mode, the remote Sovkora, the workspace folder, watched folders.
 
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -10,10 +10,10 @@ pub const LOCAL_WORKSPACE_URL: &str = "http://localhost:3000";
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
-    /// "local" (the stack started by the CLI) or "remote" (a hosted Orazaka).
+    /// "local" (the stack started by the CLI) or "remote" (a hosted Sovkora).
     pub mode: String,
     pub remote_url: String,
-    /// The Orazaka workspace the CLI runs in (where `orazaka.workspace.json` lives).
+    /// The Sovkora workspace the CLI runs in (where `orazaka.workspace.json` lives).
     pub workspace_dir: Option<String>,
     pub watched: Vec<PathBuf>,
     pub locale: String,
@@ -76,7 +76,7 @@ impl Settings {
     }
 }
 
-/// A remote Orazaka must be HTTPS (plain http only for a loopback address), without credentials in the URL, and is
+/// A remote Sovkora must be HTTPS (plain http only for a loopback address), without credentials in the URL, and is
 /// reduced to its origin: the app window may never leave it. The rule is krizaka-tauri-kit's navigation guard.
 pub fn normalize_remote(input: &str) -> Result<String, String> {
     krizaka_tauri_kit::nav_guard::normalize_origin(input)

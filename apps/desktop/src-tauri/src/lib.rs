@@ -1,9 +1,9 @@
-//! Orazaka Desktop — a control panel and a least-privilege file bridge for Orazaka (macOS).
+//! Sovkora Desktop — a control panel and a least-privilege file bridge for Sovkora (macOS).
 //!
 //! * `sidecar`   — the allow-list of operations of the bundled `orazaka` CLI (no shell, no free-form args).
 //! * `scope`     — the folders the user granted; every read of a file goes through it.
 //! * `files`     — listing / preview of granted files.
-//! * `settings`  — connect mode, the remote Orazaka, the workspace folder.
+//! * `settings`  — connect mode, the remote Sovkora, the workspace folder.
 //! * `automation` — scheduled automations run on this Mac, tools over MCP behind approvals (ADR-079).
 
 pub mod automation;
@@ -771,7 +771,7 @@ fn open_workspace(app: AppHandle, state: State<'_, AppState>) -> Res<String> {
     // No capability is bound to this window's label: the hosted page gets no IPC at all. Its file drops
     // are the browser's own (the OS drag-drop handler is off), so a PDF can go straight into a Studio.
     WebviewWindowBuilder::new(&app, "workspace", WebviewUrl::External(parsed))
-        .title("Orazaka")
+        .title("Sovkora")
         .inner_size(1280.0, 860.0)
         .min_inner_size(900.0, 600.0)
         .disable_drag_drop_handler()
@@ -838,12 +838,12 @@ fn tray_text(locale: &str, key: &str) -> &'static str {
         ("fr", "workspace") => "Ouvrir l'espace de travail",
         ("fr", "start") => "Démarrer la pile locale",
         ("fr", "stop") => "Arrêter la pile locale",
-        ("fr", "quit") => "Quitter Orazaka",
+        ("fr", "quit") => "Quitter Sovkora",
         (_, "panel") => "Open control panel",
         (_, "workspace") => "Open workspace",
         (_, "start") => "Start local stack",
         (_, "stop") => "Stop local stack",
-        _ => "Quit Orazaka",
+        _ => "Quit Sovkora",
     }
 }
 
@@ -894,7 +894,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     TrayIconBuilder::with_id("main")
         .icon(tauri::image::Image::from_bytes(TRAY_OFF)?)
         .icon_as_template(true)
-        .tooltip("Orazaka")
+        .tooltip("Sovkora")
         .menu(&menu)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "panel" => show_panel(app),
@@ -932,7 +932,7 @@ fn spawn_probe_loop(app: AppHandle) {
                         let _ = tray.set_icon(Some(img));
                         let _ = tray.set_icon_as_template(true);
                     }
-                    let _ = tray.set_tooltip(Some(format!("Orazaka — {}", p.state)));
+                    let _ = tray.set_tooltip(Some(format!("Sovkora — {}", p.state)));
                 }
                 let _ = app.emit("stack-probe", &p);
             }
@@ -1051,7 +1051,7 @@ pub fn run() {
                 return;
             }
             match event {
-                // A menu-bar app: closing the panel hides it; "Quit Orazaka" in the tray quits.
+                // A menu-bar app: closing the panel hides it; "Quit Sovkora" in the tray quits.
                 WindowEvent::CloseRequested { api, .. } => {
                     api.prevent_close();
                     let _ = window.hide();
@@ -1108,7 +1108,7 @@ pub fn run() {
             github_sign_out,
         ])
         .build(tauri::generate_context!())
-        .expect("error while building Orazaka Desktop");
+        .expect("error while building Sovkora Desktop");
 
     app.run(|handle, event| {
         if let RunEvent::Reopen { .. } = event {

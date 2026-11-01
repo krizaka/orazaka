@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Orazaka",
+    "name": "Sovkora",
     "tagline": "L'IA souveraine sur votre Mac",
     "development": "En développement : encore en test, pas prête pour le public.",
     "version": "App {version}"
@@ -29,7 +29,7 @@
   },
   "stack": {
     "title": "Pile locale",
-    "lead": "Démarrez Orazaka sur ce Mac avec le CLI orazaka, puis ouvrez l'espace de travail.",
+    "lead": "Démarrez Sovkora sur ce Mac avec la ligne de commande Sovkora, puis ouvrez l'espace de travail.",
     "status": {
       "running": "En marche",
       "partial": "En marche en partie",
@@ -55,18 +55,18 @@
     "fetchLogs": "Afficher les journaux",
     "clearLogs": "Effacer",
     "cliVersion": "CLI {version}",
-    "sidecarMissing": "Le CLI orazaka est absent de ce build.",
+    "sidecarMissing": "La ligne de commande Sovkora est absente de ce build.",
     "needsNode": "Le CLI demande Node.js 22 ou plus sur ce Mac (brew install node).",
-    "workspaceNeeded": "Choisissez le dossier de l'espace Orazaka dans les Réglages pour que le CLI sache où vit la pile.",
-    "remoteNote": "Vous êtes connecté à {host}. La pile locale est facultative ici — ne la démarrez que pour faire tourner Orazaka sur ce Mac.",
+    "workspaceNeeded": "Choisissez le dossier de l'espace Sovkora dans les Réglages pour que le CLI sache où vit la pile.",
+    "remoteNote": "Vous êtes connecté à {host}. La pile locale est facultative ici — ne la démarrez que pour faire tourner Sovkora sur ce Mac.",
     "busy": "En cours…",
     "exit": "Terminé avec le code {code}",
     "timedOut": "Arrêté : c'était trop long."
   },
   "files": {
-    "title": "Les fichiers qu'Orazaka peut lire",
-    "lead": "Orazaka ne peut lire que les dossiers listés ici — rien d'autre sur ce Mac. Vous les choisissez, et vous pouvez les reprendre à tout moment.",
-    "none": "Aucun dossier pour l'instant. Orazaka ne peut lire aucun fichier de ce Mac.",
+    "title": "Les fichiers que Sovkora peut lire",
+    "lead": "Sovkora ne peut lire que les dossiers listés ici — rien d'autre sur ce Mac. Vous les choisissez, et vous pouvez les reprendre à tout moment.",
+    "none": "Aucun dossier pour l'instant. Sovkora ne peut lire aucun fichier de ce Mac.",
     "count": "{count} dossier(s) partagé(s)",
     "choose": "Choisir un dossier…",
     "revoke": "Révoquer",
@@ -98,21 +98,21 @@
   },
   "settings": {
     "title": "Réglages",
-    "connection": "Où est Orazaka ?",
+    "connection": "Où est Sovkora ?",
     "modeLocal": "Sur ce Mac (pile locale)",
     "modeRemote": "Sur un serveur (connexion)",
-    "remoteUrl": "Adresse d'Orazaka",
-    "remoteHelp": "https uniquement. Vous vous connectez sur la page Orazaka elle-même — cette app ne conserve aucun mot de passe.",
-    "workspaceDir": "Dossier de l'espace Orazaka",
-    "workspaceHelp": "Là où se trouve orazaka.workspace.json. Le CLI s'y exécute ; l'app ne le lit pas.",
-    "startup": "Lancer Orazaka à l'ouverture de session",
+    "remoteUrl": "Adresse de Sovkora",
+    "remoteHelp": "https uniquement. Vous vous connectez sur la page Sovkora elle-même — cette app ne conserve aucun mot de passe.",
+    "workspaceDir": "Dossier de l'espace Sovkora",
+    "workspaceHelp": "Là où se trouve le fichier de l'espace de travail. Le CLI s'y exécute ; l'app ne le lit pas.",
+    "startup": "Lancer Sovkora à l'ouverture de session",
     "startupHelp": "Désactivé par défaut. Tourne dans la barre des menus ; rien n'est démarré sans votre demande.",
     "language": "Langue",
-    "about": "Orazaka Desktop n'est pas encore signée : si macOS refuse de l'ouvrir, faites un clic droit sur l'app puis Ouvrir."
+    "about": "Sovkora Desktop n'est pas encore signée : si macOS refuse de l'ouvrir, faites un clic droit sur l'app puis Ouvrir."
   },
   "automations": {
     "title": "Automatisations",
-    "lead": "Le travail qu'Orazaka fait seul, sur ce Mac, avec votre modèle local. Il ne lit que le dossier que vous choisissez et vous demande avant d'écrire quoi que ce soit.",
+    "lead": "Le travail que Sovkora fait seul, sur ce Mac, avec votre modèle local. Il ne lit que le dossier que vous choisissez et vous demande avant d'écrire quoi que ce soit.",
     "killSwitch": "Arrêter tous les agents",
     "killSwitchOn": "Tous les agents sont arrêtés sur ce Mac",
     "killSwitchOnLead": "Aucune automatisation ne tourne et toutes les planifications sont en pause jusqu'à la reprise.",
@@ -122,12 +122,12 @@
     "templateSummarise": "Résumer les nouveaux PDF chaque matin",
     "templateSummariseLead": "Chaque matin, lit les PDF arrivés dans un dossier et enregistre une courte note de résumé à côté de chacun.",
     "noneTitle": "Aucune automatisation",
-    "noneLead": "Partez d'un modèle : Orazaka vous demandera avant d'écrire le premier fichier.",
+    "noneLead": "Partez d'un modèle : Sovkora vous demandera avant d'écrire le premier fichier.",
     "form": {
       "name": "Nom",
       "nameDefault": "Résumés des PDF du matin",
       "folder": "Dossier",
-      "folderHint": "Seulement un dossier partagé dans Fichiers. Orazaka le lit et écrit les notes à côté des PDF — nulle part ailleurs.",
+      "folderHint": "Seulement un dossier partagé dans Fichiers. Sovkora le lit et écrit les notes à côté des PDF — nulle part ailleurs.",
       "noFolder": "Partagez d'abord un dossier dans Fichiers.",
       "time": "Chaque jour à",
       "weekdays": "En semaine seulement",
@@ -162,7 +162,7 @@
     "approvals": {
       "title": "Approbations",
       "count": "{count} en attente",
-      "lead": "Orazaka veut écrire ces fichiers. Rien n'est écrit tant que vous n'avez pas décidé.",
+      "lead": "Sovkora veut écrire ces fichiers. Rien n'est écrit tant que vous n'avez pas décidé.",
       "none": "Rien n'attend votre approbation.",
       "tool": "{tool} dans {folder}",
       "expires": "Expire {time}",
@@ -211,12 +211,12 @@
   },
   "code": {
     "title": "Code",
-    "lead": "Orazaka lit le dépôt que vous choisissez et propose des changements. Rien n'est écrit tant que vous n'avez pas approuvé chaque changement, et un clic annule une exécution.",
+    "lead": "Sovkora lit le dépôt que vous choisissez et propose des changements. Rien n'est écrit tant que vous n'avez pas approuvé chaque changement, et un clic annule une exécution.",
     "choose": "Choisir un dépôt",
     "repo": "{branch} · {visible} fichiers visibles, {hidden} masqués (ignorés ou secrets)",
     "clean": "Arbre de travail propre",
     "noneTitle": "Aucun dépôt pour l'instant",
-    "noneLead": "Choisissez un dossier qui contient un dépôt git. Les fichiers ignorés et les secrets restent invisibles pour Orazaka.",
+    "noneLead": "Choisissez un dossier qui contient un dépôt git. Les fichiers ignorés et les secrets restent invisibles pour Sovkora.",
     "review": {
       "title": "Relecture",
       "hunk": "Changement {n} sur {total}, à partir de la ligne {line}",
@@ -238,7 +238,7 @@
     },
     "checks": {
       "title": "Vérifications",
-      "lead": "Les commandes qu'Orazaka peut lancer pour tester un changement. Vous confirmez chacune ; elle s'exécute sans shell, dans un bac à sable qui n'écrit que dans le dépôt.",
+      "lead": "Les commandes que Sovkora peut lancer pour tester un changement. Vous confirmez chacune ; elle s'exécute sans shell, dans un bac à sable qui n'écrit que dans le dépôt.",
       "suggested": "Suggérées par le dépôt",
       "confirmed": "Confirmées",
       "none": "Aucune commande confirmée pour l'instant. Une suggestion n'est qu'une proposition.",

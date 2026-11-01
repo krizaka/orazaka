@@ -203,6 +203,9 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
     devDependencies:
+      '@krizaka/org':
+        specifier: ^0.7.0
+        version: 0.7.0
       '@tauri-apps/cli':
         specifier: ^2.12.2
         version: 2.12.2
@@ -570,6 +573,11 @@ packages:
 
   '@krizaka/orazaka-shared@1.2.0':
     resolution: {integrity: sha512-R6BUAihIzMF7NftwAQLCKL6Le+xBmLecPEUosLfFGtSFLArX77U9K2K9VbpYg56VuyqSdK10MHXP1qBtUe64HA==}
+
+  '@krizaka/org@0.7.0':
+    resolution: {integrity: sha512-1CKhAVDRRnD4VjRhUlD6LBBEJnrZJeo6mVW0oaqPG9R13/cLJRhGAX+zNuDRgkoAWOR0gl6K1CaQDgsojwspgg==}
+    engines: {node: '>=22'}
+    hasBin: true
 
   '@krizaka/pacer@0.1.0':
     resolution: {integrity: sha512-MLl1rYubhRJeIOkBOOc1YPJrJTQX89YxxrnXuw/wmqs8os+/YCZ8srCvWrVre9M7AkZ3SBLLpYgnIDXeA8rO7g==}
@@ -3119,6 +3127,8 @@ snapshots:
   '@krizaka/orazaka-shared@1.2.0':
     dependencies:
       zod: 3.25.76
+
+  '@krizaka/org@0.7.0': {}
 
   '@krizaka/pacer@0.1.0(react@19.3.0)':
     dependencies:

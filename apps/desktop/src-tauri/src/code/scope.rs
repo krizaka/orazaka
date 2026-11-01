@@ -46,7 +46,7 @@ pub struct RepoInfo {
     pub branch: String,
     /// `git status --short` lines (secret paths are not listed).
     pub status: Vec<String>,
-    /// How many files Orazaka can see, and how many it cannot (ignored, secret).
+    /// How many files Sovkora can see, and how many it cannot (ignored, secret).
     pub visible: usize,
     pub hidden: usize,
 }

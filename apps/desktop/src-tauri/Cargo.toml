@@ -1,7 +1,7 @@
 [package]
 name = "orazaka-desktop"
 version = "0.2.0"
-description = "Orazaka Desktop — control panel and file bridge for the Orazaka sovereign AI platform"
+description = "Sovkora Desktop — control panel and file bridge for the Sovkora sovereign AI platform"
 authors = ["Krizaka"]
 edition = "2021"
 license = "FSL-1.1-ALv2"

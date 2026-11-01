@@ -6,3 +6,4 @@ minimumReleaseAgeExclude:
   - '@krizaka/tailwind@3.11.0 || 3.28.0 || 3.44.0'
   - '@krizaka/tokens@3.10.0 || 3.11.0 || 3.28.0 || 3.44.0'
   - '@krizaka/ui@3.11.0 || 3.28.0 || 3.44.0'
+  - '@krizaka/org@0.7.0'
