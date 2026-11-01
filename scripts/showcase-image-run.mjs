@@ -25,7 +25,8 @@ async function call(method, path, body, raw) {
     headers: { Accept: "application/json", ...(body ? { "Content-Type": "application/json" } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(`${method} ${path} → ${res.status}`);
+  // The Studio's message is kept: the batch reads « engine could not be reached » from it (runpod-batch.mjs, ENGINE_DOWN).
+  if (!res.ok) throw new Error(`${method} ${path} → ${res.status} ${(await res.text().catch(() => "")).slice(0, 300)}`);
   return raw ? res : res.json();
 }
 

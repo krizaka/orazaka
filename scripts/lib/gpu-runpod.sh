@@ -77,7 +77,7 @@ runpod_start() {
       RELAY_URL="$RELAY_URL" RELAY_AUTH="${MEASURE:+x}${MEASURE:-gpu:$(secret AI_GPU_RELAY_PASSWORD)}" \
       RABBIT_PASSWORD="${MEASURE:+x}${MEASURE:-$(secret RABBITMQ_PASS_GPU)}" \
       SERVICE_TOKEN="${MEASURE:+x}${MEASURE:-$(mint_service_token "$max_hours")}" BROKER_CA_B64="${MEASURE:+x}${MEASURE:-$(broker_ca_b64)}" \
-      MEASURE="${MEASURE:-}" MEASURE_ARGS="${MEASURE_ARGS:-}" MEASURE_PIP="${MEASURE_PIP:-}" \
+      STILLS="${STILLS:-}" MEASURE="${MEASURE:-}" MEASURE_ARGS="${MEASURE_ARGS:-}" MEASURE_PIP="${MEASURE_PIP:-}" \
       BOOT="$ROOT/infra/gpu/$([[ -n "${MEASURE:-}" ]] && echo runpod-measure.sh || echo runpod-bootstrap.sh)" \
       HF_TOKEN="$(secret AI_HUGGINGFACE_TOKEN 2>/dev/null || true)" DISK_GB="${GPU_RUNPOD_DISK_GB:-}" \
       rp_py body "$body" "$gpu"
@@ -148,8 +148,8 @@ runpod_ssh_target() {
 runpod_logs() {
   local ip port; read -r ip port <<<"$(runpod_ssh_target)" || die "no RunPod pod running"
   [[ -n "$ip" && -n "$port" ]] || die "the pod has no public ssh yet"
-  ssh -i "$LOCAL/id_ed25519" -p "$port" -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$LOCAL/known_hosts" "root@$ip" \
-    'tail -n 25 /var/log/orazaka-boot.log; for f in orazaka-worker orazaka-relay orazaka-watchdog; do echo "== $f"; tail -n 20 /var/log/$f.log 2>&1; done; nvidia-smi --query-gpu=name,utilization.gpu,memory.used,memory.total --format=csv'
+  ssh -i "$LOCAL/id_ed25519" -p "$port" -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$LOCAL/known_hosts" "root@$ip" \
+    'tail -n '"${GPU_LOG_LINES:-25}"' /var/log/orazaka-boot.log; for f in orazaka-worker orazaka-sd-server orazaka-relay orazaka-watchdog; do echo "== $f"; tail -n 20 /var/log/$f.log 2>&1; done; nvidia-smi --query-gpu=name,utilization.gpu,memory.used,memory.total --format=csv'
 }
 
 # The pod is ended whatever happens (success, error, Ctrl-C, kill): the trap of `runpod batch`. It then proves it: « pods: 0 running ».
@@ -157,6 +157,11 @@ runpod_batch_cleanup() {
   local status=$?
   trap - EXIT INT TERM HUP
   say "batch: ending the pod"
+  # The boot log first (krizaka-internal#138: a pod ended without it left « engine could not be reached » unexplained).
+  if [[ -n "${BATCH_OUT:-}" && -n "$(rp_live)" ]]; then
+    mkdir -p "$BATCH_OUT"
+    ( GPU_LOG_LINES=200 runpod_logs ) > "$BATCH_OUT/pod-boot.log" 2>&1 && say "batch: the pod's boot log is in $BATCH_OUT/pod-boot.log" || true
+  fi
   local try
   for try in 1 2 3; do
     runpod_stop && [[ -z "$(rp_live)" ]] && break
@@ -178,7 +183,7 @@ runpod_batch() {
     shift 2
   done
   python3 -c "import sys; sys.exit(0 if float('$cap') > 0 else 1)" || die "runpod batch: --cap must be a positive dollar amount"
-  out="${out:-$LOCAL/batch-$(date -u +%Y%m%dT%H%M%SZ)}"
+  out="${out:-$LOCAL/batch-$(date -u +%Y%m%dT%H%M%SZ)}"; BATCH_OUT="$out"
   # Free preflight: the prompts and their reference names are read BEFORE a pod is created (an unknown name must cost nothing).
   node "$ROOT/scripts/runpod-batch.mjs" --prompts "$prompts" --validate-only ${refs:+--refs "$refs"} || die "runpod batch: the prompts file is not valid"
   trap runpod_batch_cleanup EXIT INT TERM HUP
@@ -187,7 +192,8 @@ runpod_batch() {
     node "$ROOT/scripts/studio-preflight.mjs" ${model:+--model "$model"} ${model:+--worker-ref "${GPU_WORKER_REF:-$(git ls-remote https://github.com/krizaka/orazaka-worker-media.git refs/heads/main | cut -c1-40)}"} ${size:+--size "$size"} || die "preflight refused: no GPU was rented"
   fi
   # The pod's own watchdog gets the cap too: at the dearest rate we would ever start (GPU_BATCH_MAX_RATE), the hours the cap pays for.
-  GPU_MAX_HOURS="$(python3 -c "print(max(0.25, round(float('$cap') / float('${GPU_BATCH_MAX_RATE:-4}'), 2)))")" runpod_start ${gpu:+"$gpu"}
+  # STILLS=1: the pod serves the image engine only, up in minutes (no video weights, no upscaler, no consumer).
+  STILLS=1 GPU_MAX_HOURS="$(python3 -c "print(max(0.25, round(float('$cap') / float('${GPU_BATCH_MAX_RATE:-4}'), 2)))")" runpod_start ${gpu:+"$gpu"}
   python3 -c "import sys; sys.exit(0 if float('$RP_RATE') <= float('$cap') else 1)" || die "the pod costs \$$RP_RATE/hour: more than the whole cap (\$$cap)"
   local started; started=$(date -u +%s)
   say "batch: $(grep -cv '^\s*\(#\|$\)' "$prompts") prompts, cap \$$cap, results in $out"
