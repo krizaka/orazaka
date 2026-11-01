@@ -94,16 +94,6 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | GET | `/api/v1/billing/wallets/{actorId}` | ADMIN | Reads an actor's balances. |
 | POST | `/api/v1/billing/wallets/{actorId}/adjustments` | ADMIN | Issues a manual credit adjustment — support goodwill, or a claw-back. |
 | GET | `/api/v1/billing/wallets/adjustments/today` | ADMIN | What an admin has already adjusted today, against their ceiling. |
-| GET | `/api/v1/admin/users` | ADMIN | — |
-| DELETE | `/api/v1/admin/users/{id}` | ADMIN | — |
-| GET | `/api/v1/admin/users/{id}` | ADMIN | — |
-| PUT | `/api/v1/admin/users/{id}/admin` | ADMIN | — |
-| POST | `/api/v1/admin/users/{id}/restore` | ADMIN | — |
-| POST | `/api/v1/admin/users/{id}/suspend` | ADMIN | — |
-| GET | `/api/v1/admin/users/audit` | ADMIN | — |
-| GET | `/api/v1/organizations` | authenticated | — |
-| POST | `/api/v1/organizations` | authenticated | — |
-| GET | `/api/v1/organizations/{id}/service-keys` | ADMIN + USER | — |
 | GET | `/api/v1/studios` | authenticated | The catalogue, optionally narrowed to one profession. |
 | GET | `/api/v1/studios/{studioKey}` | authenticated | One Studio's detail, including the schemas its forms are generated from. |
 | GET | `/api/v1/studios/{studioKey}/blueprints` | ADMIN | Every version of a Studio, drafts included — the Builder's version list. |
@@ -181,23 +171,6 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | POST | `/api/v1/billing/wallets/{actorId}/adjustments` | Issues a manual credit adjustment — support goodwill, or a claw-back. |
 | GET | `/api/v1/billing/wallets/{actorId}/entitlements` | Reads an actor's effective entitlements plus their balance summary. |
 | GET | `/api/v1/billing/wallets/adjustments/today` | What an admin has already adjusted today, against their ceiling. |
-
-### krizaka-users-service
-
-| Method | Path | Summary |
-|:---|:---|:---|
-| GET | `/api/v1/admin/lockout-policy` | — |
-| PUT | `/api/v1/admin/lockout-policy` | — |
-| GET | `/api/v1/admin/social-connections` | — |
-| POST | `/api/v1/admin/social-connections/rewrap` | Re-wraps every secret under the current vault key (after a key change). |
-| GET | `/api/v1/admin/users` | — |
-| DELETE | `/api/v1/admin/users/{id}` | — |
-| GET | `/api/v1/admin/users/{id}` | — |
-| PUT | `/api/v1/admin/users/{id}/admin` | — |
-| GET | `/api/v1/admin/users/{id}/export` | — |
-| POST | `/api/v1/admin/users/{id}/restore` | — |
-| POST | `/api/v1/admin/users/{id}/suspend` | — |
-| GET | `/api/v1/admin/users/audit` | — |
 
 ### studio-service
 

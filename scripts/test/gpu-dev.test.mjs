@@ -232,3 +232,38 @@ test("a RunPod batch runs on a remote GPU: it never takes a local heavy-lock slo
     assert.doesNotMatch(read(file), /heavy-lock|HEAVY_SLOTS/, `${file} must not take the Mac's slots`);
   }
 });
+
+test("secrets come from the secret tool by logical source, never from ~/Documents (the vault moved to ~/.krizaka-private, 2026-10-27)", () => {
+  for (const file of ["scripts/gpu-dev.sh", "scripts/lib/gpu-runpod.sh"]) {
+    assert.doesNotMatch(read(file), /Documents\/krizaka\/env/, `${file} must not read secrets from ~/Documents`);
+  }
+  // No ORAZAKA_DEV_ENV_FILE: the values are read through KRIZAKA_SECRET_TOOL (`secret.sh @dev KEY`), and user-data renders.
+  const dir = mkdtempSync(join(tmpdir(), "gpu-dev-tool-"));
+  const tool = join(dir, "secret.sh");
+  const values = {
+    IDENTITY_JWT_SECRET: JWT,
+    RABBITMQ_PASS_GPU: "rabbit-from-tool",
+    AI_GPU_RELAY_PASSWORD: "relay-from-tool-0123456789abcdef",
+    GPU_WATCHDOG_DO_TOKEN: "dop_v1_tool",
+    RABBITMQ_CA_CERT_BASE64: Buffer.from("-----BEGIN CERTIFICATE-----\nTOOL\n-----END CERTIFICATE-----\n").toString("base64"),
+  };
+  writeFileSync(
+    tool,
+    `#!/bin/sh\necho "$1 $2" >> "${join(dir, "calls")}"\ncase "$2" in\n${Object.entries(values)
+      .map(([k, v]) => `  ${k}) [ "$1" = "@dev" ] && printf '%s' '${v}' && exit 0 ;;`)
+      .join("\n")}\nesac\nexit 1\n`,
+    { mode: 0o755 },
+  );
+  const out = join(dir, "user-data.yaml");
+  const env = { ...process.env, KRIZAKA_SECRET_TOOL: tool, GPU_REGIONS: "tor1" };
+  delete env.ORAZAKA_DEV_ENV_FILE;
+  execFileSync("bash", [join(root, "scripts/gpu-dev.sh"), "user-data", "small", out], { env });
+  const text = readFileSync(out, "utf8");
+  const relay = [...text.matchAll(/content: (\S+)/g)].map((m) => Buffer.from(m[1], "base64").toString()).join("\n");
+  assert.match(relay, /AUTH=gpu:relay-from-tool/);
+  assert.ok(readFileSync(join(dir, "calls"), "utf8").split("\n").every((l) => !l || l.startsWith("@dev ")));
+});
+
+test("runpod batch passes --no-upload through when GPU_BATCH_NO_UPLOAD is set (the results stay local for review)", () => {
+  assert.match(read("scripts/lib/gpu-runpod.sh"), /\$\{GPU_BATCH_NO_UPLOAD:\+--no-upload\}/);
+});

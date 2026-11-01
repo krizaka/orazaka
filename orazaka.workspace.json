@@ -13,19 +13,6 @@
       "dependsOn": []
     },
     {
-      "name": "krizaka-users",
-      "path": "krizaka/krizaka-users",
-      "kind": "maven",
-      "layer": "krizaka",
-      "description": "Reusable user management for any application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance — with its contract (krizaka-users-api) and HTTP client (krizaka-users-client).",
-      "dependsOn": [
-        "krizaka-build"
-      ],
-      "initdb": [
-        "10-identity.sql"
-      ]
-    },
-    {
       "name": "krizaka-billing",
       "path": "krizaka/krizaka-billing",
       "kind": "maven",
@@ -98,7 +85,6 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "krizaka-users",
         "krizaka-billing",
         "orazaka-ai-engine"
       ],
@@ -115,7 +101,6 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "krizaka-users",
         "krizaka-billing",
         "orazaka-ai-engine"
       ],

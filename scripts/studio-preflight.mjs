@@ -26,6 +26,16 @@ export function judge(status, body) {
   return { ok: false, reason: `the Studio would refuse (${status}): ${message}`.slice(0, 400) };
 }
 
+/**
+ * The engine itself (guard (a), krizaka-internal#138): `up` when the Studio accepts the run, `down` while it cannot reach the engine,
+ * `refused` for anything a pod cannot fix. `--require-engine` exits 0 on `up` only (3 on `down`): the batch polls it before its first prompt.
+ */
+export function engineState(status, body) {
+  const verdict = judge(status, body);
+  if (!verdict.ok) return "refused";
+  return status >= 200 && status < 300 ? "up" : "down";
+}
+
 /** True when the worker's models.yaml declares the model as a catalogue entry (two-space indent: `  flux-1-schnell:`). */
 export function workerListsModel(yaml, model) {
   const escaped = model.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -67,6 +77,11 @@ async function main() {
   const token = login.body.token;
   const answer = await call("POST", "/api/v1/studios/image-generation/runs", { inputs: { prompt: "preflight", size: arg("size", "1024x1024"), model: arg("model") } }, token);
   if (answer.status >= 200 && answer.status < 300 && answer.body?.id) await call("POST", `/api/v1/studios/runs/${answer.body.id}/cancel`, undefined, token).catch(() => {});
+  if (process.argv.includes("--require-engine")) {
+    const state = engineState(answer.status, answer.body);
+    console.log(`preflight: engine ${state}`);
+    process.exit(state === "up" ? 0 : state === "down" ? 3 : 1);
+  }
   const verdict = judge(answer.status, answer.body);
   console.log(`preflight: ${verdict.ok ? "ok" : "REFUSED"} — ${verdict.reason}`);
   process.exit(verdict.ok ? 0 : 1);

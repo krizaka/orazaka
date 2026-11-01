@@ -215,55 +215,6 @@ no matcher covers the path — the service has no security on it whatsoever.
 | DELETE | `/internal/v1/billing/packs/{packKey}` | SERVICE | PackProvisioningController | Withdraws a pack from sale, so a failed install can undo the half it already applied. |
 | PUT | `/internal/v1/billing/packs/{packKey}` | SERVICE | PackProvisioningController | Creates or replaces a pack's price and entitlement matrix. |
 
-## krizaka-users-service
-
-| Method | Path | Access | Controller | Summary |
-|:---|:---|:---|:---|:---|
-| GET | `/.well-known/jwks.json` | public | JwksController |  |
-| GET | `/api/v1/admin/lockout-policy` | ADMIN | LockoutPolicyController |  |
-| PUT | `/api/v1/admin/lockout-policy` | ADMIN | LockoutPolicyController |  |
-| GET | `/api/v1/admin/social-connections` | ADMIN | SocialConnectionController |  |
-| POST | `/api/v1/admin/social-connections/rewrap` | ADMIN | SocialConnectionController | Re-wraps every secret under the current vault key (after a key change). |
-| GET | `/api/v1/admin/users` | ADMIN | AdminUserController |  |
-| DELETE | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |
-| GET | `/api/v1/admin/users/{id}` | ADMIN | AdminUserController |  |
-| PUT | `/api/v1/admin/users/{id}/admin` | ADMIN | AdminUserController |  |
-| GET | `/api/v1/admin/users/{id}/export` | ADMIN | AdminUserController |  |
-| POST | `/api/v1/admin/users/{id}/restore` | ADMIN | AdminUserController |  |
-| POST | `/api/v1/admin/users/{id}/suspend` | ADMIN | AdminUserController |  |
-| GET | `/api/v1/admin/users/audit` | ADMIN | AdminUserController |  |
-| GET | `/api/v1/api-keys` | authenticated | ApiKeyController |  |
-| POST | `/api/v1/api-keys` | authenticated | ApiKeyController |  |
-| DELETE | `/api/v1/api-keys/{id}` | ADMIN + USER | ApiKeyController |  |
-| POST | `/api/v1/auth/forgot` | public | AuthController | Forgot password endpoint. |
-| POST | `/api/v1/auth/login` | public | AuthController | Login endpoint. |
-| POST | `/api/v1/auth/oauth` | public | AuthController | OAuth2 Token-Exchange login endpoint. |
-| POST | `/api/v1/auth/register` | public | AuthController | Register endpoint. |
-| POST | `/api/v1/auth/reset` | public | AuthController | Reset password endpoint. |
-| POST | `/api/v1/auth/verify` | public | AuthController | Verifies the provided account activation token. |
-| GET | `/api/v1/credentials` | authenticated | CredentialController |  |
-| POST | `/api/v1/credentials` | authenticated | CredentialController |  |
-| DELETE | `/api/v1/credentials/{providerName}` | ADMIN + USER | CredentialController |  |
-| GET | `/api/v1/interceptions/{schemaId}` | authenticated | InterceptionController | Returns the raw interception schema JSON for the given schema id, served as text so the JSON string is not double-encoded by Jackson (the client parses it). |
-| POST | `/api/v1/interceptions/resolve` | authenticated | InterceptionController | Resolves an active interception by merging the user's responses. |
-| GET | `/api/v1/organizations` | authenticated | OrganizationController |  |
-| POST | `/api/v1/organizations` | authenticated | OrganizationController |  |
-| GET | `/api/v1/organizations/{id}` | ADMIN + USER | OrganizationController |  |
-| GET | `/api/v1/organizations/{id}/members` | ADMIN + USER | OrganizationController |  |
-| PUT | `/api/v1/organizations/{id}/members` | ADMIN + USER | OrganizationController |  |
-| DELETE | `/api/v1/organizations/{id}/members/{userId}` | ADMIN + USER | OrganizationController |  |
-| POST | `/api/v1/organizations/{id}/service-accounts` | ADMIN + USER | OrganizationController |  |
-| GET | `/api/v1/organizations/{id}/service-keys` | ADMIN + USER | OrganizationController |  |
-| DELETE | `/api/v1/organizations/{id}/service-keys/{keyId}` | ADMIN + USER | OrganizationController |  |
-| GET | `/api/v1/profile` | authenticated | ProfileController | Returns the authenticated user's profile. |
-| PUT | `/api/v1/profile/preferences` | ADMIN + USER | ProfileController | Updates the authenticated user's preference map and returns the refreshed profile. |
-| GET | `/internal/v1/tiers/{key}` | SERVICE | InternalUserController | Bucket parameters of a rate-limit tier. |
-| GET | `/internal/v1/tiers/default` | SERVICE | InternalUserController | The DB-flagged default rate-limit tier (anonymous callers). |
-| POST | `/internal/v1/tokens/exchange` | SERVICE | InternalUserController | Exchanges a valid oz_ API key for a session JWT (performed by the edge). |
-| GET | `/internal/v1/users/{id}` | SERVICE | InternalUserController | Full user snapshot for downstream principal hydration (404 via UserNotFoundException). |
-| GET | `/internal/v1/users/{id}/credentials/{provider}` | SERVICE | InternalUserController | The user's decrypted BYOK provider key (service-to-service only). |
-| GET | `/internal/v1/users/{id}/profile` | SERVICE | InternalUserController | The user's profile for pipeline context assembly. |
-
 ## studio-service
 
 | Method | Path | Access | Controller | Summary |
