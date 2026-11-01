@@ -184,9 +184,6 @@ def create_body(e, gpu_id):
         env = {k: e[k] for k in ("WORKER_REF", "PROFILE", "RELAY_URL", "RELAY_AUTH", "RABBIT_PASSWORD", "SERVICE_TOKEN", "BROKER_CA_B64", "MAX_HOURS", "IDLE_MINUTES")}
     if e.get("STILLS"):
         env["STILLS"] = "1"  # the image engine only (runpod-bootstrap.sh): a render batch never waits for video weights
-    for k in ("MEDIA_STORAGE_API_KEY", "MEDIA_STORAGE_ZONE", "MEDIA_STORAGE_ENDPOINT"):
-        if e.get(k) and not e.get("MEASURE"):
-            env[k] = e[k]  # where the pod leaves its end reason and boot log before a self-destroy (krizaka-internal#2121)
     if e.get("HF_TOKEN"):
         env["HF_TOKEN"] = e["HF_TOKEN"]  # downloads of public weights, faster and not rate-limited
     env["PUBLIC_KEY"] = e["PUBKEY"]

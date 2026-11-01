@@ -1,6 +1,6 @@
 // node --test scripts/test — a pod that destroys itself leaves its end reason and boot log OFF the pod (krizaka-internal#2121).
 // Incident 2026-11-01: an H200 pod (run 7 of the vertical film) vanished ~19 min after creation; the API said 404 and nothing on our side
-// said why. The pod's watchdog now writes apps/orazaka/gpu-pods/<pod>/end.json and boot.log (Bunny layout v2) BEFORE the delete.
+// said why. The pod's watchdog now writes apps/orazaka/gpu-pods/<pod>/end.json and boot.log (by the server, Bunny layout v2) BEFORE the delete.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -42,12 +42,12 @@ test("guard: a watchdog destroy leaves a readable end reason and the boot log be
     timeout: 10000,
     env: {
       ...process.env, PATH: `${bin}:${process.env.PATH}`, ORAZAKA_STATE: join(work, "state"), RUNPOD_POD_ID: "pod123", RUNPOD_API_KEY: "k",
-      MEDIA_STORAGE_API_KEY: "sentinel-value", MEDIA_STORAGE_ZONE: "zone", MEDIA_STORAGE_ENDPOINT: "storage.example",
+      ORAZAKA_TRACE_TOKEN: "sentinel-value", ORAZAKA_TRACE_URL: "http://core.example",
     },
   });
   assert.equal(r.status, 0, r.stderr);
   const calls = readdirSync(out).sort((a, b) => a - b).map((f) => readFileSync(join(out, f), "utf8"));
-  const iEnd = calls.findIndex((c) => c.startsWith("PUT https://storage.example/zone/apps/orazaka/gpu-pods/pod123/end.json"));
+  const iEnd = calls.findIndex((c) => c.startsWith("PUT http://core.example/internal/gpu-pods/pod123/end.json"));
   const iDelete = calls.findIndex((c) => c.startsWith("DELETE "));
   assert.ok(iEnd >= 0, `end.json is written (${calls.map((c) => c.split("\n")[0])})`);
   assert.ok(iEnd < iDelete, "the reason is left BEFORE the pod is deleted");
@@ -56,8 +56,8 @@ test("guard: a watchdog destroy leaves a readable end reason and the boot log be
   assert.equal(trace.pod, "pod123");
   assert.equal(trace.downloadProgress.trim(), "62 115");
   assert.ok(trace.ageMinutes >= 18 && trace.ageMinutes <= 20, `age ${trace.ageMinutes}`);
-  assert.ok(calls.some((c) => c.startsWith("PUT https://storage.example/zone/apps/orazaka/gpu-pods/pod123/boot.log")), "the boot log is left too");
-  assert.ok(!r.stdout.includes("sentinel-value") && !r.stderr.includes("sentinel-value"), "the storage key is never printed");
+  assert.ok(calls.some((c) => c.startsWith("PUT http://core.example/internal/gpu-pods/pod123/boot.log")), "the boot log is left too");
+  assert.ok(!r.stdout.includes("sentinel-value") && !r.stderr.includes("sentinel-value"), "the job token is never printed");
 });
 
 test("a pod without storage settings still destroys itself and says the reason stays on the pod", () => {
@@ -66,15 +66,17 @@ test("a pod without storage settings still destroys itself and says the reason s
   [bin, out].forEach((d) => mkdirSync(d));
   fakeCurl(bin, out);
   const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, ORAZAKA_STATE: work, RUNPOD_POD_ID: "p", RUNPOD_API_KEY: "k" };
-  for (const k of ["MEDIA_STORAGE_API_KEY", "MEDIA_STORAGE_ZONE", "MEDIA_STORAGE_ENDPOINT"]) delete env[k];
+  for (const k of ["ORAZAKA_TRACE_TOKEN"]) delete env[k];
   const r = spawnSync("bash", [file, "--destroy", "idle"], { encoding: "utf8", timeout: 10000, env });
   assert.equal(r.status, 0);
-  assert.match(r.stdout, /no storage settings/);
+  assert.match(r.stdout, /no job token/);
   assert.match(r.stdout, /destroyed through the API/);
 });
 
-test("the pod is given the storage settings for the trace (and a measurement pod is not)", () => {
-  const guard = readFileSync(join(root, "scripts/runpod-guard.py"), "utf8");
-  assert.match(guard, /MEDIA_STORAGE_API_KEY/);
-  assert.match(guard, /not e\.get\("MEASURE"\)/);
+test("a rented pod never holds a storage credential: no storage key in the pod env, the templates or the watchdog (krizaka-internal#2121)", () => {
+  const files = ["scripts/runpod-guard.py", "scripts/lib/gpu-runpod.sh", "infra/gpu/runpod-bootstrap.sh", "infra/gpu/runpod-measure.sh", "infra/gpu/host.sh"];
+  for (const f of files) {
+    const text = readFileSync(join(root, f), "utf8");
+    assert.ok(!/MEDIA_STORAGE|AccessKey|BUNNY_|storage\.bunnycdn/i.test(text), `${f} names a storage credential or the storage API`);
+  }
 });

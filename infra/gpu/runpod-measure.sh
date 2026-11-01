@@ -27,15 +27,17 @@ cat > /usr/local/bin/orazaka-watchdog <<'WD'
 pod_env() { tr '\0' '\n' < /proc/1/environ 2>/dev/null | sed -n "s/^$1=//p" | head -1; }
 RUNPOD_POD_ID="${RUNPOD_POD_ID:-$(pod_env RUNPOD_POD_ID)}"
 RUNPOD_API_KEY="${RUNPOD_API_KEY:-$(pod_env RUNPOD_API_KEY)}"
-# Before any self-destroy the pod leaves its end reason and its boot log OFF the pod (Bunny, layout v2: apps/orazaka/gpu-pods/<pod>/),
-# so a pod that is gone is still explained (krizaka-internal#2121). Best effort: a failure here never blocks the destroy.
-for v in MEDIA_STORAGE_API_KEY MEDIA_STORAGE_ZONE MEDIA_STORAGE_ENDPOINT; do
-  [[ -n "${!v:-}" ]] || export "$v=$(pod_env "$v")"
-done
+# Before any self-destroy the pod sends its end reason and its boot log to the Orazaka job service, through the tunnel and with the job-scoped
+# service token it already holds for the run; the SERVER writes them to Bunny (apps/orazaka/gpu-pods/<pod>/), so a pod that is gone is still
+# explained (krizaka-internal#2121). The pod never holds a storage credential: it is a rented third-party machine. Best effort: a failure
+# here never blocks the destroy.
+# The job token is handed to the watchdog through a file only the bootstrap writes (a measurement pod has none).
+[[ -r /etc/orazaka/trace-token ]] && ORAZAKA_TRACE_TOKEN="${ORAZAKA_TRACE_TOKEN:-$(cat /etc/orazaka/trace-token)}"
 leave_trace() {
-  local st=${ORAZAKA_STATE:-/var/lib/orazaka-gpu} base
-  if [[ -z "${MEDIA_STORAGE_API_KEY:-}" || -z "${MEDIA_STORAGE_ZONE:-}" ]]; then echo "orazaka-gpu: no storage settings: the end reason stays on the pod"; return 0; fi
-  base="https://${MEDIA_STORAGE_ENDPOINT:-storage.bunnycdn.com}/${MEDIA_STORAGE_ZONE}/apps/orazaka/gpu-pods/${RUNPOD_POD_ID:-unknown}"
+  local st=${ORAZAKA_STATE:-/var/lib/orazaka-gpu}
+  local base=${ORAZAKA_TRACE_URL:-http://127.0.0.1:18090}
+  if [[ -z "${ORAZAKA_TRACE_TOKEN:-}" || "$ORAZAKA_TRACE_TOKEN" == x ]]; then echo "orazaka-gpu: no job token: the end reason stays on the pod"; return 0; fi
+  base="$base/internal/gpu-pods/${RUNPOD_POD_ID:-unknown}"
   local boot_epoch=0 now beat=-1 free progress="" ready=false
   now=$(date +%s)
   [[ -r "$st/boot-epoch" ]] && boot_epoch=$(cat "$st/boot-epoch")
@@ -46,9 +48,9 @@ leave_trace() {
   REASON="$1" POD="${RUNPOD_POD_ID:-unknown}" NOW="$now" AGE=$(( (now - boot_epoch) / 60 )) BEAT="$beat" FREE="${free:-}" PROGRESS="$progress" READY="$ready" \
     python3 -c 'import json,os; e=os.environ; print(json.dumps({"pod":e["POD"],"reason":e["REASON"],"endedAt":int(e["NOW"]),"ageMinutes":int(e["AGE"]),"ready":e["READY"]=="true","heartbeatAgeSeconds":int(e["BEAT"]),"diskFreeGb":e["FREE"],"downloadProgress":e["PROGRESS"]}))' > "$st/end.json" 2>/dev/null || return 0
   tail -n 2000 /var/log/orazaka-boot.log > "$st/boot-tail.log" 2>/dev/null
-  if curl -fsS -m 20 -X PUT -H "AccessKey: ${MEDIA_STORAGE_API_KEY}" -H "Content-Type: application/json" --data-binary "@$st/end.json" "$base/end.json" >/dev/null 2>&1 \
-    && curl -fsS -m 30 -X PUT -H "AccessKey: ${MEDIA_STORAGE_API_KEY}" -H "Content-Type: text/plain" --data-binary "@$st/boot-tail.log" "$base/boot.log" >/dev/null 2>&1; then
-    echo "orazaka-gpu: end reason left at apps/orazaka/gpu-pods/${RUNPOD_POD_ID:-unknown}/"
+  if curl -fsS -m 20 -X PUT -H "Authorization: Bearer ${ORAZAKA_TRACE_TOKEN}" -H "Content-Type: application/json" --data-binary "@$st/end.json" "$base/end.json" >/dev/null 2>&1 \
+    && curl -fsS -m 30 -X PUT -H "Authorization: Bearer ${ORAZAKA_TRACE_TOKEN}" -H "Content-Type: text/plain" --data-binary "@$st/boot-tail.log" "$base/boot.log" >/dev/null 2>&1; then
+    echo "orazaka-gpu: end reason sent to the job service (${RUNPOD_POD_ID:-unknown})"
   else
     echo "orazaka-gpu: could not leave the end reason off the pod"
   fi
