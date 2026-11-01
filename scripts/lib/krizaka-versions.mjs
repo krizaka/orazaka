@@ -89,7 +89,8 @@ export const PACKAGE_REPOSITORIES = ["krizaka-build", "krizaka-platform-kit"];
 export async function onGitHubPackages({ group, artifactId, version }, { credential, actor = "krizaka", repositories = PACKAGE_REPOSITORIES } = {}, fetchImpl = fetch) {
   if (!credential) return null;
   const path = `${group.replaceAll(".", "/")}/${artifactId}/${version}/${artifactId}-${version}.pom`;
-  const headers = { Authorization: `Basic ${Buffer.from(`${actor}:${credential}`).toString("base64")}` };
+  const basic = Buffer.from(actor + ":" + credential).toString("base64");
+  const headers = { Authorization: `Basic ${basic}` };
   let unknown = false;
   for (const repository of repositories) {
     try {
@@ -106,8 +107,9 @@ export async function onGitHubPackages({ group, artifactId, version }, { credent
 /** Provided by a registry: true on Central or GitHub Packages, false only when both say no, null when one could not tell. */
 export async function onRegistry(claim, credentials = {}, { central = onCentral, packages = onGitHubPackages } = {}) {
   const answers = [await central(claim), await packages(claim, credentials)];
-  if (answers.includes(true)) return true;
-  return answers.includes(null) ? null : false;
+  const seen = new Set(answers);
+  if (seen.has(true)) return true;
+  return seen.has(null) ? null : false;
 }
 
 /** The claims nobody provides: the reactor builds another version and no registry carries the one named. */
