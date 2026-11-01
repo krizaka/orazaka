@@ -111,3 +111,8 @@ test("retention: only date folders at least retentionDays old expire; a clip is 
   assert.equal(clipKind(new TextEncoder().encode("<html>not a clip</html>")), null);
   assert.equal(clipKind(new Uint8Array(0)), null);
 });
+
+test("the worker process gets the pod's output zone, so a clip is written there before the sink (krizaka-internal#2149)", () => {
+  const launch = bootstrap.split("\n").find((l) => l.includes("python -u -m app.consumer") === false && l.startsWith("env $UPSCALER_ENV"));
+  for (const name of ["GPU_OUT_URL", "GPU_OUT_HEADER", "GPU_OUT_KEY"]) assert.match(launch, new RegExp(`${name}=`));
+});
