@@ -14,7 +14,7 @@
 #                                    the unattended render batch: a pod, N prompts (one per line) → images → Bunny, the dollar
 #                                    cap enforced, the pod terminated in a trap whatever happens, then « pods: 0 running »
 #
-# The API key is AI_GPU_RUNPOD_API_KEY in the secrets file (ORAZAKA_DEV_ENV_FILE): never printed. Sessions go to the same
+# The API key is AI_GPU_RUNPOD_API_KEY, read like every secret by gpu-dev.sh secret(): never printed. Sessions go to the same
 # ledger as the droplets (id "rp-<pod>"), so `gpu-dev.sh cost` adds them up. A budget guard refuses to start when the
 # account balance is below GPU_RUNPOD_MIN_BALANCE (default 10 USD).
 # Terminate, not pause: for occasional runs a stopped pod still bills its container disk, and the weights live on the network volume.
@@ -39,7 +39,7 @@ rp_balance() { rp_py balance; }
 rp_live() { rp_py list orazaka-gpu 2>/dev/null | awk '$2 != "EXITED" && $2 != "TERMINATED"' || true; }
 
 runpod_start() {
-  [[ -n "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || die "no AI_GPU_RUNPOD_API_KEY in $ENV_FILE"
+  [[ -n "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || die "no AI_GPU_RUNPOD_API_KEY in ${ENV_FILE:-$SECRET_SOURCE}"
   # MEASURE=1 (gpu-dev.sh runpod measure): a pod that measures and ends, with no relay, no broker, no service token.
   [[ -n "${MEASURE:-}" || -n "$(secret AI_GPU_RELAY_PASSWORD || true)" ]] || die "no relay credential — scripts/gpu-dev.sh relay-secret"
   local running; running=$(rp_live | wc -l | tr -d ' ')
@@ -192,7 +192,7 @@ runpod_batch() {
   local started; started=$(date -u +%s)
   say "batch: $(grep -cv '^\s*\(#\|$\)' "$prompts") prompts, cap \$$cap, results in $out"
   node "$ROOT/scripts/runpod-batch.mjs" --prompts "$prompts" --out "$out" --rate "$RP_RATE" --started "$started" --cap "$cap" \
-    ${model:+--model "$model"} ${size:+--size "$size"} ${batch:+--batch "$batch"} ${refs:+--refs "$refs"}
+    ${model:+--model "$model"} ${size:+--size "$size"} ${batch:+--batch "$batch"} ${refs:+--refs "$refs"} ${GPU_BATCH_NO_UPLOAD:+--no-upload}
 }
 
 runpod() {
