@@ -5138,8 +5138,8 @@
       "iconKey": "code",
       "sortWeight": 50,
       "pricing": {
-        "priceCents": 0,
-        "includedCredits": 0
+        "priceCents": 4900,
+        "includedCredits": 300
       },
       "capabilities": [
         "orazaka.code.agent.turn"
