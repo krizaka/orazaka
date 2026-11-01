@@ -125,7 +125,11 @@ fn probe() -> Probe {
         (false, false) => "stopped",
         _ => "partial",
     };
-    Probe { web, edge, state: state.into() }
+    Probe {
+        web,
+        edge,
+        state: state.into(),
+    }
 }
 
 fn sidecar_path() -> Option<PathBuf> {
@@ -135,9 +139,8 @@ fn sidecar_path() -> Option<PathBuf> {
             candidates.push(dir.join("orazaka"));
         }
     }
-    candidates.push(
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("binaries/orazaka-aarch64-apple-darwin"),
-    );
+    candidates
+        .push(Path::new(env!("CARGO_MANIFEST_DIR")).join("binaries/orazaka-aarch64-apple-darwin"));
     candidates.into_iter().find(|p| p.is_file())
 }
 
@@ -145,7 +148,14 @@ fn sidecar_path() -> Option<PathBuf> {
 fn get_snapshot(app: AppHandle, state: State<'_, AppState>) -> Snapshot {
     Snapshot {
         settings: state.settings.lock().unwrap().clone(),
-        roots: state.scope.lock().unwrap().roots().iter().map(|p| p.display().to_string()).collect(),
+        roots: state
+            .scope
+            .lock()
+            .unwrap()
+            .roots()
+            .iter()
+            .map(|p| p.display().to_string())
+            .collect(),
         sidecar: sidecar_path().is_some(),
         autostart: app.autolaunch().is_enabled().unwrap_or(false),
         probe: probe(),
@@ -225,7 +235,12 @@ async fn cli_run(app: AppHandle, state: State<'_, AppState>, call: CliCall) -> R
     result
 }
 
-fn run_sidecar(app: &AppHandle, bin: &Path, plan: &sidecar::Plan, cwd: Option<String>) -> Res<CliResult> {
+fn run_sidecar(
+    app: &AppHandle,
+    bin: &Path,
+    plan: &sidecar::Plan,
+    cwd: Option<String>,
+) -> Res<CliResult> {
     let mut cmd = Command::new(bin);
     cmd.args(&plan.args)
         .env("PATH", child_path_env())
@@ -239,18 +254,38 @@ fn run_sidecar(app: &AppHandle, bin: &Path, plan: &sidecar::Plan, cwd: Option<St
     if let Some(dir) = cwd.filter(|d| Path::new(d).is_dir()) {
         cmd.current_dir(dir);
     }
-    let mut child = cmd.spawn().map_err(|e| format!("cannot start the CLI: {e}"))?;
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("cannot start the CLI: {e}"))?;
     let lines = Arc::new(Mutex::new(Vec::<String>::new()));
     let mut readers = Vec::new();
     for (stream, pipe) in [
-        ("stdout", child.stdout.take().map(|p| Box::new(p) as Box<dyn std::io::Read + Send>)),
-        ("stderr", child.stderr.take().map(|p| Box::new(p) as Box<dyn std::io::Read + Send>)),
+        (
+            "stdout",
+            child
+                .stdout
+                .take()
+                .map(|p| Box::new(p) as Box<dyn std::io::Read + Send>),
+        ),
+        (
+            "stderr",
+            child
+                .stderr
+                .take()
+                .map(|p| Box::new(p) as Box<dyn std::io::Read + Send>),
+        ),
     ] {
         let Some(pipe) = pipe else { continue };
         let (app, lines) = (app.clone(), lines.clone());
         readers.push(std::thread::spawn(move || {
             for line in BufReader::new(pipe).lines().map_while(Result::ok) {
-                let _ = app.emit("cli-line", CliLine { stream, line: line.clone() });
+                let _ = app.emit(
+                    "cli-line",
+                    CliLine {
+                        stream,
+                        line: line.clone(),
+                    },
+                );
                 let mut l = lines.lock().unwrap();
                 if l.len() < 5000 {
                     l.push(line);
@@ -280,7 +315,12 @@ fn run_sidecar(app: &AppHandle, bin: &Path, plan: &sidecar::Plan, cwd: Option<St
         let _ = r.join();
     }
     let lines = lines.lock().unwrap().clone();
-    Ok(CliResult { ok: code == Some(0), code, timed_out, lines })
+    Ok(CliResult {
+        ok: code == Some(0),
+        code,
+        timed_out,
+        lines,
+    })
 }
 
 // ───────────────────────────── file access ─────────────────────────────
@@ -302,10 +342,13 @@ fn resolve_readable(state: &AppState, path: &str) -> Res<PathBuf> {
 #[tauri::command]
 async fn pick_folder(app: AppHandle, state: State<'_, AppState>) -> Res<Option<String>> {
     let app2 = app.clone();
-    let picked = tauri::async_runtime::spawn_blocking(move || app2.dialog().file().blocking_pick_folder())
-        .await
-        .map_err(|e| e.to_string())?;
-    let Some(picked) = picked else { return Ok(None) };
+    let picked =
+        tauri::async_runtime::spawn_blocking(move || app2.dialog().file().blocking_pick_folder())
+            .await
+            .map_err(|e| e.to_string())?;
+    let Some(picked) = picked else {
+        return Ok(None);
+    };
     let path = picked.into_path().map_err(|e| e.to_string())?;
     grant_path(&state, &path).map(Some)
 }
@@ -336,7 +379,11 @@ fn revoke_folder(state: State<'_, AppState>, path: String) -> Res<Vec<String>> {
     stop_watchers_outside(&state, &scope);
     state.automations.revoke_grants_under(&root);
     drop_session_files_under(&state, &root);
-    Ok(scope.roots().iter().map(|p| p.display().to_string()).collect())
+    Ok(scope
+        .roots()
+        .iter()
+        .map(|p| p.display().to_string())
+        .collect())
 }
 
 #[tauri::command]
@@ -356,20 +403,31 @@ fn revoke_all(state: State<'_, AppState>) -> Res<()> {
 }
 
 fn drop_session_files_under(state: &AppState, root: &Path) {
-    state.drops.lock().unwrap().files.retain(|f| !f.starts_with(root));
+    state
+        .drops
+        .lock()
+        .unwrap()
+        .files
+        .retain(|f| !f.starts_with(root));
 }
 
 fn stop_watchers_outside(state: &AppState, scope: &ScopeStore) {
     let mut w = state.watchers.lock().unwrap();
     w.retain(|path, _| scope.roots().iter().any(|r| path.starts_with(r)));
     let mut s = state.settings.lock().unwrap();
-    s.watched.retain(|path| scope.roots().iter().any(|r| path.starts_with(r)));
+    s.watched
+        .retain(|path| scope.roots().iter().any(|r| path.starts_with(r)));
     let _ = s.save(&state.settings_file());
 }
 
 #[tauri::command]
 fn list_dir(state: State<'_, AppState>, path: String) -> Res<Listing> {
-    let dir = state.scope.lock().unwrap().resolve(Path::new(&path)).map_err(|e| e.to_string())?;
+    let dir = state
+        .scope
+        .lock()
+        .unwrap()
+        .resolve(Path::new(&path))
+        .map_err(|e| e.to_string())?;
     files::list_dir(&dir)
 }
 
@@ -381,7 +439,12 @@ fn preview_file(state: State<'_, AppState>, path: String) -> Res<Preview> {
 #[tauri::command]
 fn reveal_in_finder(state: State<'_, AppState>, path: String) -> Res<()> {
     let p = resolve_readable(&state, &path)?;
-    Command::new("open").arg("-R").arg(p).spawn().map(|_| ()).map_err(|e| e.to_string())
+    Command::new("open")
+        .arg("-R")
+        .arg(p)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
 }
 
 // ───────────────────────────── folder watch ─────────────────────────────
@@ -394,8 +457,18 @@ struct FileAdded {
 }
 
 #[tauri::command]
-fn watch_set(app: AppHandle, state: State<'_, AppState>, path: String, enabled: bool) -> Res<Vec<String>> {
-    let dir = state.scope.lock().unwrap().resolve(Path::new(&path)).map_err(|e| e.to_string())?;
+fn watch_set(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    path: String,
+    enabled: bool,
+) -> Res<Vec<String>> {
+    let dir = state
+        .scope
+        .lock()
+        .unwrap()
+        .resolve(Path::new(&path))
+        .map_err(|e| e.to_string())?;
     if enabled {
         start_watch(&app, &state, &dir)?;
     } else {
@@ -427,13 +500,18 @@ fn start_watch(app: &AppHandle, state: &AppState, dir: &Path) -> Res<()> {
             return;
         }
         for path in ev.paths {
-            let name = path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+            let name = path
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
             if files::is_noise(&name) {
                 continue;
             }
             {
                 let mut s = seen.lock().unwrap();
-                if s.get(&path).is_some_and(|t| t.elapsed() < Duration::from_secs(5)) {
+                if s.get(&path)
+                    .is_some_and(|t| t.elapsed() < Duration::from_secs(5))
+                {
                     continue;
                 }
                 s.insert(path.clone(), Instant::now());
@@ -442,14 +520,23 @@ fn start_watch(app: &AppHandle, state: &AppState, dir: &Path) -> Res<()> {
             std::thread::spawn(move || {
                 // Wait for the copy to finish: report the file once its size stops changing.
                 let size = |p: &Path| std::fs::metadata(p).map(|m| (m.is_file(), m.len())).ok();
-                let Some((true, first)) = size(&path) else { return };
+                let Some((true, first)) = size(&path) else {
+                    return;
+                };
                 std::thread::sleep(Duration::from_millis(700));
-                let Some((true, second)) = size(&path) else { return };
+                let Some((true, second)) = size(&path) else {
+                    return;
+                };
                 if first != second {
                     std::thread::sleep(Duration::from_millis(1500));
                 }
-                let Ok(meta) = std::fs::metadata(&path) else { return };
-                let name = path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+                let Ok(meta) = std::fs::metadata(&path) else {
+                    return;
+                };
+                let name = path
+                    .file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default();
                 let modified = meta
                     .modified()
                     .ok()
@@ -474,7 +561,9 @@ fn start_watch(app: &AppHandle, state: &AppState, dir: &Path) -> Res<()> {
         }
     })
     .map_err(|e| e.to_string())?;
-    watcher.watch(dir, RecursiveMode::NonRecursive).map_err(|e| e.to_string())?;
+    watcher
+        .watch(dir, RecursiveMode::NonRecursive)
+        .map_err(|e| e.to_string())?;
     watchers.insert(dir.to_path_buf(), watcher);
     Ok(())
 }
@@ -488,10 +577,18 @@ struct ScopedBackends {
 
 impl automation::Backends for ScopedBackends {
     fn fs(&self, root: &Path) -> Result<Box<dyn automation::mcp::FsTools>, String> {
-        let resolved = self.scope.lock().unwrap().resolve(root).map_err(|e| format!("the folder is no longer granted: {e}"))?;
+        let resolved = self
+            .scope
+            .lock()
+            .unwrap()
+            .resolve(root)
+            .map_err(|e| format!("the folder is no longer granted: {e}"))?;
         automation::RealBackends.fs(&resolved)
     }
-    fn model(&self, target: &automation::types::ModelTarget) -> Box<dyn automation::model::ModelClient> {
+    fn model(
+        &self,
+        target: &automation::types::ModelTarget,
+    ) -> Box<dyn automation::model::ModelClient> {
         automation::RealBackends.model(target)
     }
 }
@@ -512,13 +609,23 @@ fn spawn_scheduler(svc: Arc<automation::Service>) {
 // ---- Code on the Mac (ADR-093 slice 1) ---------------------------------------------------------------------------
 
 fn code_repo(state: &State<'_, AppState>) -> Res<code::Repo> {
-    state.code.lock().unwrap().clone().ok_or_else(|| "no repository is open".to_string())
+    state
+        .code
+        .lock()
+        .unwrap()
+        .clone()
+        .ok_or_else(|| "no repository is open".to_string())
 }
 
 /// Opens a repository inside a folder the user granted with the native picker.
 #[tauri::command]
 fn code_open(state: State<'_, AppState>, path: String) -> Res<code::RepoInfo> {
-    let canon = state.scope.lock().unwrap().resolve(Path::new(&path)).map_err(|e| e.to_string())?;
+    let canon = state
+        .scope
+        .lock()
+        .unwrap()
+        .resolve(Path::new(&path))
+        .map_err(|e| e.to_string())?;
     let repo = code::Repo::open(&canon, scope::home_dir().as_deref()).map_err(|e| e.to_string())?;
     let info = repo.info().map_err(|e| e.to_string())?;
     *state.code.lock().unwrap() = Some(repo);
@@ -547,7 +654,11 @@ fn code_outline(state: State<'_, AppState>, path: String) -> Res<Vec<code::tools
 
 /// A proposed diff: computed, shown, never written.
 #[tauri::command]
-fn code_propose(state: State<'_, AppState>, path: String, new_text: String) -> Res<code::diff::FileProposal> {
+fn code_propose(
+    state: State<'_, AppState>,
+    path: String,
+    new_text: String,
+) -> Res<code::diff::FileProposal> {
     code::diff::propose(&code_repo(&state)?, &path, &new_text).map_err(|e| e.to_string())
 }
 
@@ -561,7 +672,11 @@ struct CodeDecision {
 
 /// Applies the approved hunks (the only write path of the Code tab). A snapshot of the tree is taken first.
 #[tauri::command]
-fn code_apply(state: State<'_, AppState>, run_id: String, decisions: Vec<CodeDecision>) -> Res<Vec<code::diff::Applied>> {
+fn code_apply(
+    state: State<'_, AppState>,
+    run_id: String,
+    decisions: Vec<CodeDecision>,
+) -> Res<Vec<code::diff::Applied>> {
     let repo = code_repo(&state)?;
     if decisions.iter().all(|d| d.approved.is_empty()) {
         return Ok(vec![]);
@@ -614,9 +729,17 @@ fn code_checks_overview(state: State<'_, AppState>) -> Res<ChecksOverview> {
 
 /// The user confirmed a check in the app (an `exec` grant: listed, revocable, audited).
 #[tauri::command]
-fn code_check_confirm(state: State<'_, AppState>, check: code::checks::Check) -> Res<code::checks::Grant> {
+fn code_check_confirm(
+    state: State<'_, AppState>,
+    check: code::checks::Check,
+) -> Res<code::checks::Grant> {
     let repo = code_repo(&state)?;
-    let grant = state.code_checks.lock().unwrap().confirm(&repo, check, &code_stamp()).map_err(|e| e.to_string())?;
+    let grant = state
+        .code_checks
+        .lock()
+        .unwrap()
+        .confirm(&repo, check, &code_stamp())
+        .map_err(|e| e.to_string())?;
     code_audit(
         &state,
         "code.check.confirmed",
@@ -629,23 +752,41 @@ fn code_check_confirm(state: State<'_, AppState>, check: code::checks::Check) ->
 fn code_check_revoke(state: State<'_, AppState>, id: String) -> Res<bool> {
     let revoked = state.code_checks.lock().unwrap().revoke(&id, &code_stamp());
     if revoked {
-        code_audit(&state, "code.check.revoked", serde_json::json!({ "grant": id }));
+        code_audit(
+            &state,
+            "code.check.revoked",
+            serde_json::json!({ "grant": id }),
+        );
     }
     Ok(revoked)
 }
 
 /// Runs a confirmed check by name. `approved` is the user's approval of this very run.
 #[tauri::command]
-async fn code_check_run(state: State<'_, AppState>, name: String, approved: bool) -> Res<code::checks::CheckRun> {
+async fn code_check_run(
+    state: State<'_, AppState>,
+    name: String,
+    approved: bool,
+) -> Res<code::checks::CheckRun> {
     let repo = code_repo(&state)?;
-    let result = code::checks::run(&repo, &mut state.code_checks.lock().unwrap(), &name, approved, &state.code_rules.limits());
+    let result = code::checks::run(
+        &repo,
+        &mut state.code_checks.lock().unwrap(),
+        &name,
+        approved,
+        &state.code_rules.limits(),
+    );
     match result {
         Ok(run) => {
             code_audit(&state, "code.check.run", run.audit_data());
             Ok(run)
         }
         Err(e) => {
-            code_audit(&state, "code.check.refused", serde_json::json!({ "name": name, "reason": e.to_string() }));
+            code_audit(
+                &state,
+                "code.check.refused",
+                serde_json::json!({ "name": name, "reason": e.to_string() }),
+            );
             Err(e.to_string())
         }
     }
@@ -659,12 +800,23 @@ fn github_status(state: State<'_, AppState>) -> Res<code::github::GithubStatus> 
 
 /// Starts the device flow: returns the code to type and where; the wait runs on its own thread.
 #[tauri::command]
-async fn github_sign_in(state: State<'_, AppState>) -> Res<krizaka_tauri_kit::device_flow::DeviceCode> {
+async fn github_sign_in(
+    state: State<'_, AppState>,
+) -> Res<krizaka_tauri_kit::device_flow::DeviceCode> {
     let spawn = |job: Box<dyn FnOnce() + Send>| {
         std::thread::spawn(job);
     };
-    let code = state.github.begin(Arc::new(code::github::HttpTransport), state.secrets.clone(), &state.github_config, spawn)?;
-    code_audit(&state, "code.github.sign_in", serde_json::json!({ "userCode": code.user_code }));
+    let code = state.github.begin(
+        Arc::new(code::github::HttpTransport),
+        state.secrets.clone(),
+        &state.github_config,
+        spawn,
+    )?;
+    code_audit(
+        &state,
+        "code.github.sign_in",
+        serde_json::json!({ "userCode": code.user_code }),
+    );
     Ok(code)
 }
 
@@ -683,7 +835,12 @@ fn code_undo(state: State<'_, AppState>, run_id: String, paths: Vec<String>) -> 
 }
 
 #[tauri::command]
-fn code_open_in_editor(state: State<'_, AppState>, editor: code::editor::Editor, path: String, line: usize) -> Res<()> {
+fn code_open_in_editor(
+    state: State<'_, AppState>,
+    editor: code::editor::Editor,
+    path: String,
+    line: usize,
+) -> Res<()> {
     code::editor::open(&code_repo(&state)?, editor, &path, line).map_err(|e| e.to_string())
 }
 
@@ -693,9 +850,14 @@ fn automations_overview(state: State<'_, AppState>) -> automation::Overview {
 }
 
 #[tauri::command]
-fn automation_create(state: State<'_, AppState>, input: automation::NewAutomation) -> Res<automation::types::Automation> {
+fn automation_create(
+    state: State<'_, AppState>,
+    input: automation::NewAutomation,
+) -> Res<automation::types::Automation> {
     let scope = state.scope.clone();
-    state.automations.create(input, |p| scope.lock().unwrap().resolve(p).map_err(|e| e.to_string()))
+    state.automations.create(input, |p| {
+        scope.lock().unwrap().resolve(p).map_err(|e| e.to_string())
+    })
 }
 
 #[tauri::command]
@@ -716,20 +878,31 @@ fn automation_delete(state: State<'_, AppState>, id: String) -> Res<()> {
 #[tauri::command]
 async fn automation_run_now(state: State<'_, AppState>, id: String) -> Res<String> {
     let svc = state.automations.clone();
-    tauri::async_runtime::spawn_blocking(move || svc.run_now(&id, automation::types::RunTrigger::Manual))
-        .await
-        .map_err(|e| e.to_string())?
+    tauri::async_runtime::spawn_blocking(move || {
+        svc.run_now(&id, automation::types::RunTrigger::Manual)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
 fn automation_run(state: State<'_, AppState>, id: String) -> Res<automation::types::Run> {
-    state.automations.run(&id).ok_or_else(|| "unknown run".into())
+    state
+        .automations
+        .run(&id)
+        .ok_or_else(|| "unknown run".into())
 }
 
 #[tauri::command]
-async fn approval_decide(state: State<'_, AppState>, id: String, decision: automation::types::Decision) -> Res<automation::RunSummary> {
+async fn approval_decide(
+    state: State<'_, AppState>,
+    id: String,
+    decision: automation::types::Decision,
+) -> Res<automation::RunSummary> {
     let svc = state.automations.clone();
-    tauri::async_runtime::spawn_blocking(move || svc.decide(&id, decision)).await.map_err(|e| e.to_string())?
+    tauri::async_runtime::spawn_blocking(move || svc.decide(&id, decision))
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -739,7 +912,7 @@ fn grant_revoke(state: State<'_, AppState>, id: String) -> Res<()> {
 
 #[tauri::command]
 fn kill_switch_set(state: State<'_, AppState>, halted: bool) {
-    state.automations.set_halted(halted)
+    state.automations.set_halted(halted);
 }
 
 #[tauri::command]
@@ -749,9 +922,11 @@ fn audit_log(state: State<'_, AppState>, limit: Option<usize>) -> automation::Au
 
 #[tauri::command]
 async fn models_list(base_url: String) -> Res<Vec<String>> {
-    tauri::async_runtime::spawn_blocking(move || automation::model::OpenAiCompatible::list_models(&base_url, Duration::from_secs(5)))
-        .await
-        .map_err(|e| e.to_string())?
+    tauri::async_runtime::spawn_blocking(move || {
+        automation::model::OpenAiCompatible::list_models(&base_url, Duration::from_secs(5))
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 // ───────────────────────────── workspace window ─────────────────────────────
@@ -800,8 +975,13 @@ fn workspace_send_file(app: AppHandle, state: State<'_, AppState>, path: String)
     if !meta.is_file() || meta.len() > files::MAX_SEND {
         return Err("not a file, or larger than 50 MB".into());
     }
-    let window = app.get_webview_window("workspace").ok_or("open the workspace first")?;
-    let name = file.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+    let window = app
+        .get_webview_window("workspace")
+        .ok_or("open the workspace first")?;
+    let name = file
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_default();
     let data = STANDARD.encode(std::fs::read(&file).map_err(|e| e.to_string())?);
     let js = format!(
         r#"(()=>{{
@@ -856,7 +1036,11 @@ fn tray_status_text(locale: &str, state: &str) -> String {
         (_, "partial") => "partial",
         _ => "stopped",
     };
-    if locale == "fr" { format!("Pile locale : {word}") } else { format!("Local stack: {word}") }
+    if locale == "fr" {
+        format!("Pile locale : {word}")
+    } else {
+        format!("Local stack: {word}")
+    }
 }
 
 fn apply_tray_locale(app: &AppHandle, locale: &str) {
@@ -881,16 +1065,57 @@ fn show_panel(app: &AppHandle) {
 }
 
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let locale = app.state::<AppState>().settings.lock().unwrap().locale.clone();
-    let status = MenuItem::with_id(app, "status", tray_status_text(&locale, "stopped"), false, None::<&str>)?;
-    let panel = MenuItem::with_id(app, "panel", tray_text(&locale, "panel"), true, None::<&str>)?;
-    let workspace = MenuItem::with_id(app, "workspace", tray_text(&locale, "workspace"), true, None::<&str>)?;
-    let start = MenuItem::with_id(app, "start", tray_text(&locale, "start"), true, None::<&str>)?;
+    let locale = app
+        .state::<AppState>()
+        .settings
+        .lock()
+        .unwrap()
+        .locale
+        .clone();
+    let status = MenuItem::with_id(
+        app,
+        "status",
+        tray_status_text(&locale, "stopped"),
+        false,
+        None::<&str>,
+    )?;
+    let panel = MenuItem::with_id(
+        app,
+        "panel",
+        tray_text(&locale, "panel"),
+        true,
+        None::<&str>,
+    )?;
+    let workspace = MenuItem::with_id(
+        app,
+        "workspace",
+        tray_text(&locale, "workspace"),
+        true,
+        None::<&str>,
+    )?;
+    let start = MenuItem::with_id(
+        app,
+        "start",
+        tray_text(&locale, "start"),
+        true,
+        None::<&str>,
+    )?;
     let stop = MenuItem::with_id(app, "stop", tray_text(&locale, "stop"), true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", tray_text(&locale, "quit"), true, Some("CmdOrCtrl+Q"))?;
+    let quit = MenuItem::with_id(
+        app,
+        "quit",
+        tray_text(&locale, "quit"),
+        true,
+        Some("CmdOrCtrl+Q"),
+    )?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
-    let menu = Menu::with_items(app, &[&status, &sep1, &panel, &workspace, &start, &stop, &sep2, &quit])?;
+    let menu = Menu::with_items(
+        app,
+        &[
+            &status, &sep1, &panel, &workspace, &start, &stop, &sep2, &quit,
+        ],
+    )?;
     TrayIconBuilder::with_id("main")
         .icon(tauri::image::Image::from_bytes(TRAY_OFF)?)
         .icon_as_template(true)
@@ -909,7 +1134,14 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             _ => {}
         })
         .build(app)?;
-    *app.state::<AppState>().tray.lock().unwrap() = Some(TrayItems { status, panel, workspace, start, stop, quit });
+    *app.state::<AppState>().tray.lock().unwrap() = Some(TrayItems {
+        status,
+        panel,
+        workspace,
+        start,
+        stop,
+        quit,
+    });
     Ok(())
 }
 
@@ -927,7 +1159,11 @@ fn spawn_probe_loop(app: AppHandle) {
                     let _ = t.status.set_text(tray_status_text(&locale, &p.state));
                 }
                 if let Some(tray) = app.tray_by_id("main") {
-                    let bytes = if p.state == "stopped" { TRAY_OFF } else { TRAY_ON };
+                    let bytes = if p.state == "stopped" {
+                        TRAY_OFF
+                    } else {
+                        TRAY_ON
+                    };
                     if let Ok(img) = tauri::image::Image::from_bytes(bytes) {
                         let _ = tray.set_icon(Some(img));
                         let _ = tray.set_icon_as_template(true);
@@ -952,11 +1188,18 @@ struct Dropped {
 
 fn on_panel_drop(app: &AppHandle, paths: &[PathBuf]) {
     let state = app.state::<AppState>();
-    let mut out = Dropped { files: vec![], folders: vec![] };
+    let mut out = Dropped {
+        files: vec![],
+        folders: vec![],
+    };
     let mut drops = state.drops.lock().unwrap();
     for p in paths {
-        let Ok(canon) = p.canonicalize() else { continue };
-        let Ok(meta) = std::fs::metadata(&canon) else { continue };
+        let Ok(canon) = p.canonicalize() else {
+            continue;
+        };
+        let Ok(meta) = std::fs::metadata(&canon) else {
+            continue;
+        };
         if meta.is_dir() {
             if !drops.folders.contains(&canon) {
                 drops.folders.push(canon.clone());
@@ -966,7 +1209,10 @@ fn on_panel_drop(app: &AppHandle, paths: &[PathBuf]) {
             if !drops.files.contains(&canon) {
                 drops.files.push(canon.clone());
             }
-            let name = canon.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+            let name = canon
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
             out.files.push(Entry {
                 kind: files::kind_of(&name).into(),
                 path: canon.display().to_string(),
@@ -990,7 +1236,10 @@ pub fn run() {
     let builder = builder.plugin(tauri_plugin_webdriver::init());
     let app = builder
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ))
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
             let settings = Settings::load(&data_dir.join("settings.json"));
@@ -999,7 +1248,9 @@ pub fn run() {
             let emitter = app.handle().clone();
             let automations = automation::Service::open(
                 &data_dir,
-                Arc::new(ScopedBackends { scope: scope.clone() }),
+                Arc::new(ScopedBackends {
+                    scope: scope.clone(),
+                }),
                 Arc::new(automation::now_local),
                 Arc::new(move || {
                     let _ = emitter.emit("automations-changed", ());
@@ -1025,9 +1276,9 @@ pub fn run() {
                 code_rules: code_rules.clone(),
                 github: code::github::Connection::default(),
                 github_config: code::github::GithubConfig::load(&github_file),
-                secrets: Arc::new(krizaka_tauri_kit::secrets::Checked(krizaka_tauri_kit::keychain::Keychain::new(
-                    &app.config().identifier,
-                ))),
+                secrets: Arc::new(krizaka_tauri_kit::secrets::Checked(
+                    krizaka_tauri_kit::keychain::Keychain::new(&app.config().identifier),
+                )),
             });
             let handle = app.handle().clone();
             let state = handle.state::<AppState>();

@@ -126,7 +126,10 @@ impl EngineError {
 
 /// The engine's refusals as the wire says them (`RestErrorResolver`): a `status` field in the body.
 pub fn engine_error_from(http: u16, body: &str) -> EngineError {
-    let status = serde_json::from_str::<Value>(body).ok().and_then(|v| v["status"].as_str().map(String::from)).unwrap_or_default();
+    let status = serde_json::from_str::<Value>(body)
+        .ok()
+        .and_then(|v| v["status"].as_str().map(String::from))
+        .unwrap_or_default();
     match status.as_str() {
         "studio_not_entitled" => EngineError::NotEntitled,
         "consent_required" => EngineError::ConsentRequired,
@@ -163,17 +166,26 @@ pub struct SessionEngine {
 
 /// `POST {base}/api/v1/studios/{studio}/runs`: starts the task's run.
 pub fn start_run_url(base: &str, studio_key: &str) -> String {
-    format!("{}/api/v1/studios/{studio_key}/runs", base.trim_end_matches('/'))
+    format!(
+        "{}/api/v1/studios/{studio_key}/runs",
+        base.trim_end_matches('/')
+    )
 }
 
 /// `POST {base}/api/v1/studio-runs/{runId}/finish`: the task is over, close the session.
 pub fn finish_url(base: &str, run_id: &str) -> String {
-    format!("{}/api/v1/studio-runs/{run_id}/finish", base.trim_end_matches('/'))
+    format!(
+        "{}/api/v1/studio-runs/{run_id}/finish",
+        base.trim_end_matches('/')
+    )
 }
 
 /// `POST {base}/api/v1/studio-runs/{runId}/turns`: one model turn of that run.
 pub fn turns_url(base: &str, run_id: &str) -> String {
-    format!("{}/api/v1/studio-runs/{run_id}/turns", base.trim_end_matches('/'))
+    format!(
+        "{}/api/v1/studio-runs/{run_id}/turns",
+        base.trim_end_matches('/')
+    )
 }
 
 /// The wire of a turn: the system prompt, the messages and the closed tool list. No feature key: it is the server's.
@@ -182,18 +194,41 @@ pub fn turn_body(req: &TurnRequest) -> Value {
 }
 
 impl SessionEngine {
-    pub fn new(base_url: String, bearer: String, studio_key: String, timeout: Duration) -> SessionEngine {
-        SessionEngine { base_url, bearer, studio_key, run_id: None, timeout }
+    pub fn new(
+        base_url: String,
+        bearer: String,
+        studio_key: String,
+        timeout: Duration,
+    ) -> SessionEngine {
+        SessionEngine {
+            base_url,
+            bearer,
+            studio_key,
+            run_id: None,
+            timeout,
+        }
     }
 
-    fn post(&self, url: &str, body: Value, idempotency_key: Option<&str>) -> Result<Value, EngineError> {
-        let mut request = ureq::post(url).timeout(self.timeout).set("Authorization", &format!("Bearer {}", self.bearer));
+    fn post(
+        &self,
+        url: &str,
+        body: Value,
+        idempotency_key: Option<&str>,
+    ) -> Result<Value, EngineError> {
+        let mut request = ureq::post(url)
+            .timeout(self.timeout)
+            .set("Authorization", &format!("Bearer {}", self.bearer));
         if let Some(key) = idempotency_key {
             request = request.set("Idempotency-Key", key);
         }
         match request.send_json(body) {
-            Ok(r) => r.into_json::<Value>().map_err(|e| EngineError::Unavailable(e.to_string())),
-            Err(ureq::Error::Status(code, resp)) => Err(engine_error_from(code, &resp.into_string().unwrap_or_default())),
+            Ok(r) => r
+                .into_json::<Value>()
+                .map_err(|e| EngineError::Unavailable(e.to_string())),
+            Err(ureq::Error::Status(code, resp)) => Err(engine_error_from(
+                code,
+                &resp.into_string().unwrap_or_default(),
+            )),
             Err(e) => Err(EngineError::Unavailable(e.to_string())),
         }
     }
@@ -203,8 +238,15 @@ impl SessionEngine {
         if let Some(id) = &self.run_id {
             return Ok(id.clone());
         }
-        let accepted = self.post(&start_run_url(&self.base_url, &self.studio_key), json!({ "inputs": {} }), Some(&uuid::Uuid::new_v4().to_string()))?;
-        let id = accepted["id"].as_str().ok_or_else(|| EngineError::Unavailable("no run id".into()))?.to_string();
+        let accepted = self.post(
+            &start_run_url(&self.base_url, &self.studio_key),
+            json!({ "inputs": {} }),
+            Some(&uuid::Uuid::new_v4().to_string()),
+        )?;
+        let id = accepted["id"]
+            .as_str()
+            .ok_or_else(|| EngineError::Unavailable("no run id".into()))?
+            .to_string();
         self.run_id = Some(id.clone());
         Ok(id)
     }
@@ -212,10 +254,12 @@ impl SessionEngine {
 
 impl Engine for SessionEngine {
     fn turn(&mut self, req: &TurnRequest) -> Result<TurnReply, EngineError> {
-        crate::automation::model::OpenAiCompatible::validate_base_url(&self.base_url).map_err(EngineError::Unavailable)?;
+        crate::automation::model::OpenAiCompatible::validate_base_url(&self.base_url)
+            .map_err(EngineError::Unavailable)?;
         let run_id = self.ensure_run()?;
         let reply = self.post(&turns_url(&self.base_url, &run_id), turn_body(req), None)?;
-        serde_json::from_value::<TurnReply>(reply).map_err(|e| EngineError::Unavailable(e.to_string()))
+        serde_json::from_value::<TurnReply>(reply)
+            .map_err(|e| EngineError::Unavailable(e.to_string()))
     }
 
     fn run_id(&self) -> Option<String> {
@@ -243,7 +287,12 @@ pub struct Budgets {
 impl Budgets {
     /// The settings rule set's values, clamped to what the code allows.
     pub fn bounded(turns: usize, tokens: u64, files_read: usize, hunks: usize) -> Budgets {
-        Budgets { turns: turns.clamp(1, MAX_TURNS), tokens: tokens.clamp(1, MAX_TOKENS), files_read: files_read.clamp(1, MAX_FILES_READ), hunks: hunks.clamp(1, MAX_HUNKS) }
+        Budgets {
+            turns: turns.clamp(1, MAX_TURNS),
+            tokens: tokens.clamp(1, MAX_TOKENS),
+            files_read: files_read.clamp(1, MAX_FILES_READ),
+            hunks: hunks.clamp(1, MAX_HUNKS),
+        }
     }
 }
 
@@ -297,7 +346,15 @@ fn redacted(history: &[Message]) -> Vec<Message> {
         .map(|m| Message {
             role: m.role,
             content: redact(&m.content),
-            calls: m.calls.iter().map(|c| ToolCall { id: c.id.clone(), name: c.name.clone(), args: serde_json::from_str(&redact(&c.args.to_string())).unwrap_or(Value::Null) }).collect(),
+            calls: m
+                .calls
+                .iter()
+                .map(|c| ToolCall {
+                    id: c.id.clone(),
+                    name: c.name.clone(),
+                    args: serde_json::from_str(&redact(&c.args.to_string())).unwrap_or(Value::Null),
+                })
+                .collect(),
             tool_call_id: m.tool_call_id.clone(),
         })
         .collect()
@@ -315,7 +372,9 @@ enum Outcome {
 }
 
 fn arg<'a>(args: &'a Value, key: &str) -> Result<&'a str, String> {
-    args[key].as_str().ok_or_else(|| format!("missing argument: {key}"))
+    args[key]
+        .as_str()
+        .ok_or_else(|| format!("missing argument: {key}"))
 }
 
 fn refusal(e: impl std::fmt::Display) -> String {
@@ -324,7 +383,13 @@ fn refusal(e: impl std::fmt::Display) -> String {
     format!("refused: {s}")
 }
 
-fn execute(cx: &Ctx, book: &mut Book, approver: &mut dyn Approver, report: &mut RunReport, call: &ToolCall) -> Outcome {
+fn execute(
+    cx: &Ctx,
+    book: &mut Book,
+    approver: &mut dyn Approver,
+    report: &mut RunReport,
+    call: &ToolCall,
+) -> Outcome {
     let a = &call.args;
     let text = match call.name.as_str() {
         "read_file" | "outline" | "list_dir" | "search_text" => {
@@ -338,24 +403,59 @@ fn execute(cx: &Ctx, book: &mut Book, approver: &mut dyn Approver, report: &mut 
                 "read_file" => {
                     let p = arg(a, "path")?;
                     let f = tools::read_file(cx.repo, p).map_err(refusal)?;
-                    Ok(data::untrusted("file", &[("path", p)], &f.text, data::PART_CAP))
+                    Ok(data::untrusted(
+                        "file",
+                        &[("path", p)],
+                        &f.text,
+                        data::PART_CAP,
+                    ))
                 }
                 "outline" => {
                     let p = arg(a, "path")?;
                     let s = tools::outline(cx.repo, p).map_err(refusal)?;
-                    let lines: Vec<String> = s.iter().map(|x| format!("{}: {}", x.line, x.text)).collect();
-                    Ok(data::untrusted("outline", &[("path", p)], &lines.join("\n"), data::PART_CAP))
+                    let lines: Vec<String> = s
+                        .iter()
+                        .map(|x| format!("{}: {}", x.line, x.text))
+                        .collect();
+                    Ok(data::untrusted(
+                        "outline",
+                        &[("path", p)],
+                        &lines.join("\n"),
+                        data::PART_CAP,
+                    ))
                 }
                 "list_dir" => {
                     let p = a["path"].as_str().unwrap_or("");
                     let e = tools::list_dir(cx.repo, p).map_err(refusal)?;
-                    let lines: Vec<String> = e.iter().map(|x| if x.dir { format!("{}/", x.name) } else { x.name.clone() }).collect();
-                    Ok(data::untrusted("listing", &[("path", p)], &lines.join("\n"), data::PART_CAP))
+                    let lines: Vec<String> = e
+                        .iter()
+                        .map(|x| {
+                            if x.dir {
+                                format!("{}/", x.name)
+                            } else {
+                                x.name.clone()
+                            }
+                        })
+                        .collect();
+                    Ok(data::untrusted(
+                        "listing",
+                        &[("path", p)],
+                        &lines.join("\n"),
+                        data::PART_CAP,
+                    ))
                 }
                 _ => {
                     let m = tools::search_text(cx.repo, arg(a, "query")?).map_err(refusal)?;
-                    let lines: Vec<String> = m.iter().map(|x| format!("{}:{}: {}", x.path, x.line, x.text)).collect();
-                    Ok(data::untrusted("search", &[], &lines.join("\n"), data::PART_CAP))
+                    let lines: Vec<String> = m
+                        .iter()
+                        .map(|x| format!("{}:{}: {}", x.path, x.line, x.text))
+                        .collect();
+                    Ok(data::untrusted(
+                        "search",
+                        &[],
+                        &lines.join("\n"),
+                        data::PART_CAP,
+                    ))
                 }
             })();
             res.unwrap_or_else(|e| e)
@@ -368,7 +468,12 @@ fn execute(cx: &Ctx, book: &mut Book, approver: &mut dyn Approver, report: &mut 
             match diff::propose(cx.repo, path, new_text) {
                 Err(e) => refusal(e),
                 Ok(p) => {
-                    let others: usize = report.proposals.iter().filter(|q| q.path != p.path).map(|q| q.hunks.len()).sum();
+                    let others: usize = report
+                        .proposals
+                        .iter()
+                        .filter(|q| q.path != p.path)
+                        .map(|q| q.hunks.len())
+                        .sum();
                     if others + p.hunks.len() > cx.budgets.hunks {
                         return Outcome::Budget("hunks");
                     }
@@ -391,16 +496,32 @@ fn execute(cx: &Ctx, book: &mut Book, approver: &mut dyn Approver, report: &mut 
             };
             let mut result = checks::run(cx.repo, book, name, false, cx.limits);
             if matches!(result, Err(CheckError::ApprovalRequired)) {
-                result = if approver.approve_check(name) { checks::run(cx.repo, book, name, true, cx.limits) } else { Err(CheckError::LimitReached("the person did not approve this run".into())) };
+                result = if approver.approve_check(name) {
+                    checks::run(cx.repo, book, name, true, cx.limits)
+                } else {
+                    Err(CheckError::LimitReached(
+                        "the person did not approve this run".into(),
+                    ))
+                };
             }
             match result {
                 Ok(run) => {
-                    let head = format!("check {} finished: exit {:?}, {} ms, timed out: {}", run.name, run.exit_code, run.duration_ms, run.timed_out);
-                    let body = data::untrusted("check-output", &[("name", &run.name)], &run.output, data::PART_CAP);
+                    let head = format!(
+                        "check {} finished: exit {:?}, {} ms, timed out: {}",
+                        run.name, run.exit_code, run.duration_ms, run.timed_out
+                    );
+                    let body = data::untrusted(
+                        "check-output",
+                        &[("name", &run.name)],
+                        &run.output,
+                        data::PART_CAP,
+                    );
                     report.checks.push(run);
                     format!("{head}\n{body}")
                 }
-                Err(CheckError::LimitReached(m)) if m.contains("runs in this session") => return Outcome::Budget("check runs"),
+                Err(CheckError::LimitReached(m)) if m.contains("runs in this session") => {
+                    return Outcome::Budget("check runs")
+                }
                 Err(e) => refusal(e),
             }
         }
@@ -412,20 +533,60 @@ fn execute(cx: &Ctx, book: &mut Book, approver: &mut dyn Approver, report: &mut 
 /// Runs the loop, then says « finish » to the engine: the end of a task closes the server's session (whatever the stop).
 /// The caller starts a run with `Book::begin_run` (a new session, tainted from the first untrusted byte);
 /// a loop resumed after the person applied hunks keeps its session, so a « changes what runs » hunk still asks.
-pub fn run_agent(repo: &Repo, book: &mut Book, engine: &mut dyn Engine, approver: &mut dyn Approver, input: &AgentInput, budgets: &Budgets, limits: &Limits) -> RunReport {
+pub fn run_agent(
+    repo: &Repo,
+    book: &mut Book,
+    engine: &mut dyn Engine,
+    approver: &mut dyn Approver,
+    input: &AgentInput,
+    budgets: &Budgets,
+    limits: &Limits,
+) -> RunReport {
     let report = run_loop(repo, book, engine, approver, input, budgets, limits);
     engine.finish();
     report
 }
 
-fn run_loop(repo: &Repo, book: &mut Book, engine: &mut dyn Engine, approver: &mut dyn Approver, input: &AgentInput, budgets: &Budgets, limits: &Limits) -> RunReport {
+fn run_loop(
+    repo: &Repo,
+    book: &mut Book,
+    engine: &mut dyn Engine,
+    approver: &mut dyn Approver,
+    input: &AgentInput,
+    budgets: &Budgets,
+    limits: &Limits,
+) -> RunReport {
     let tools_json = tool_defs();
-    let cx = Ctx { repo, limits, budgets };
-    let mut report = RunReport { run_id: input.run_id.clone(), stop: Stop::Done, turns: 0, usage: Usage::default(), files_read: 0, proposals: vec![], checks: vec![], rejected: vec![], final_text: String::new() };
+    let cx = Ctx {
+        repo,
+        limits,
+        budgets,
+    };
+    let mut report = RunReport {
+        run_id: input.run_id.clone(),
+        stop: Stop::Done,
+        turns: 0,
+        usage: Usage::default(),
+        files_read: 0,
+        proposals: vec![],
+        checks: vec![],
+        rejected: vec![],
+        final_text: String::new(),
+    };
 
-    let mut history = vec![Message { role: "user", content: input.goal.clone(), calls: vec![], tool_call_id: None }];
+    let mut history = vec![Message {
+        role: "user",
+        content: input.goal.clone(),
+        calls: vec![],
+        tool_call_id: None,
+    }];
     for part in &input.data {
-        history.push(Message { role: "user", content: data::fence_part(part, data::PART_CAP), calls: vec![], tool_call_id: None });
+        history.push(Message {
+            role: "user",
+            content: data::fence_part(part, data::PART_CAP),
+            calls: vec![],
+            tool_call_id: None,
+        });
     }
 
     loop {
@@ -438,7 +599,13 @@ fn run_loop(repo: &Repo, book: &mut Book, engine: &mut dyn Engine, approver: &mu
             break;
         }
         let messages = redacted(&history);
-        let req = TurnRequest { run_id: &input.run_id, feature_key: FEATURE_KEY, system: SYSTEM_PROMPT, messages: &messages, tools: &tools_json };
+        let req = TurnRequest {
+            run_id: &input.run_id,
+            feature_key: FEATURE_KEY,
+            system: SYSTEM_PROMPT,
+            messages: &messages,
+            tools: &tools_json,
+        };
         let answer = engine.turn(&req);
         if let Some(id) = engine.run_id() {
             report.run_id = id;
@@ -454,7 +621,12 @@ fn run_loop(repo: &Repo, book: &mut Book, engine: &mut dyn Engine, approver: &mu
         report.usage.prompt_tokens += reply.usage.prompt_tokens;
         report.usage.completion_tokens += reply.usage.completion_tokens;
         report.usage.credits_micro += reply.usage.credits_micro;
-        history.push(Message { role: "assistant", content: reply.text.clone(), calls: reply.calls.clone(), tool_call_id: None });
+        history.push(Message {
+            role: "assistant",
+            content: reply.text.clone(),
+            calls: reply.calls.clone(),
+            tool_call_id: None,
+        });
         if reply.calls.is_empty() {
             report.final_text = redact(&reply.text);
             break;
@@ -467,7 +639,12 @@ fn run_loop(repo: &Repo, book: &mut Book, engine: &mut dyn Engine, approver: &mu
                 Outcome::Result("refused: that tool is not available".into())
             };
             match outcome {
-                Outcome::Result(content) => history.push(Message { role: "tool", content, calls: vec![], tool_call_id: Some(call.id.clone()) }),
+                Outcome::Result(content) => history.push(Message {
+                    role: "tool",
+                    content,
+                    calls: vec![],
+                    tool_call_id: Some(call.id.clone()),
+                }),
                 Outcome::Budget(what) => {
                     report.stop = Stop::SkippedBudget(what.into());
                     return report;

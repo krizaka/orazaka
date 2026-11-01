@@ -26,7 +26,10 @@ impl OpenAiCompatible {
     /// Only loopback over plain HTTP: a remote model must be HTTPS (the content of the user's files goes there).
     pub fn validate_base_url(url: &str) -> Result<(), String> {
         let u = url::Url::parse(url).map_err(|_| format!("invalid model URL: {url}"))?;
-        let loopback = matches!(u.host_str(), Some("localhost") | Some("127.0.0.1") | Some("[::1]"));
+        let loopback = matches!(
+            u.host_str(),
+            Some("localhost") | Some("127.0.0.1") | Some("[::1]")
+        );
         match u.scheme() {
             "https" => Ok(()),
             "http" if loopback => Ok(()),
@@ -42,8 +45,18 @@ impl OpenAiCompatible {
     pub fn list_models(base_url: &str, timeout: Duration) -> Result<Vec<String>, String> {
         Self::validate_base_url(base_url)?;
         let url = format!("{}/models", base_url.trim_end_matches('/'));
-        let v: Value = ureq::get(&url).timeout(timeout).call().map_err(|e| e.to_string())?.into_json().map_err(|e| e.to_string())?;
-        Ok(v["data"].as_array().into_iter().flatten().filter_map(|m| m["id"].as_str().map(String::from)).collect())
+        let v: Value = ureq::get(&url)
+            .timeout(timeout)
+            .call()
+            .map_err(|e| e.to_string())?
+            .into_json()
+            .map_err(|e| e.to_string())?;
+        Ok(v["data"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|m| m["id"].as_str().map(String::from))
+            .collect())
     }
 }
 
@@ -65,7 +78,10 @@ impl ModelClient for OpenAiCompatible {
             .map_err(|e| format!("the model did not answer: {e}"))?
             .into_json()
             .map_err(|e| e.to_string())?;
-        let text = v["choices"][0]["message"]["content"].as_str().ok_or("the model returned no text")?.to_string();
+        let text = v["choices"][0]["message"]["content"]
+            .as_str()
+            .ok_or("the model returned no text")?
+            .to_string();
         Ok(Completion {
             text,
             prompt_tokens: v["usage"]["prompt_tokens"].as_u64().unwrap_or(0),

@@ -42,7 +42,10 @@ pub struct Applied {
 }
 
 pub fn hash_bytes(b: &[u8]) -> String {
-    Sha256::digest(b).iter().map(|x| format!("{x:02x}")).collect()
+    Sha256::digest(b)
+        .iter()
+        .map(|x| format!("{x:02x}"))
+        .collect()
 }
 
 fn lines_of(s: &str) -> Vec<String> {
@@ -54,7 +57,8 @@ pub fn propose(repo: &Repo, rel: &str, new_text: &str) -> Result<FileProposal, C
     let target = repo.resolve_write(rel)?;
     let (base_hash, base) = match fs::read(&target) {
         Ok(bytes) => {
-            let text = String::from_utf8(bytes.clone()).map_err(|_| CodeError::Refused(format!("{rel} is not text")))?;
+            let text = String::from_utf8(bytes.clone())
+                .map_err(|_| CodeError::Refused(format!("{rel} is not text")))?;
             (Some(hash_bytes(&bytes)), text)
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => (None, String::new()),
@@ -62,15 +66,31 @@ pub fn propose(repo: &Repo, rel: &str, new_text: &str) -> Result<FileProposal, C
     };
     let base_lines = lines_of(&base);
     let new_all = lines_of(new_text);
-    let (old_refs, new_refs): (Vec<&str>, Vec<&str>) = (base_lines.iter().map(String::as_str).collect(), new_all.iter().map(String::as_str).collect());
+    let (old_refs, new_refs): (Vec<&str>, Vec<&str>) = (
+        base_lines.iter().map(String::as_str).collect(),
+        new_all.iter().map(String::as_str).collect(),
+    );
     let diff = TextDiff::from_slices(&old_refs, &new_refs);
     let mut hunks = Vec::new();
     for op in diff.ops() {
         let (old_start, old_len, new_start, new_len) = match *op {
             DiffOp::Equal { .. } => continue,
-            DiffOp::Delete { old_index, old_len, new_index } => (old_index, old_len, new_index, 0),
-            DiffOp::Insert { old_index, new_index, new_len } => (old_index, 0, new_index, new_len),
-            DiffOp::Replace { old_index, old_len, new_index, new_len } => (old_index, old_len, new_index, new_len),
+            DiffOp::Delete {
+                old_index,
+                old_len,
+                new_index,
+            } => (old_index, old_len, new_index, 0),
+            DiffOp::Insert {
+                old_index,
+                new_index,
+                new_len,
+            } => (old_index, 0, new_index, new_len),
+            DiffOp::Replace {
+                old_index,
+                old_len,
+                new_index,
+                new_len,
+            } => (old_index, old_len, new_index, new_len),
         };
         let new_lines: Vec<String> = new_all[new_start..new_start + new_len].to_vec();
         hunks.push(Hunk {
@@ -85,25 +105,59 @@ pub fn propose(repo: &Repo, rel: &str, new_text: &str) -> Result<FileProposal, C
     for h in &mut hunks {
         h.exec_surface = touches_exec_surface(rel, &base_lines, h);
     }
-    Ok(FileProposal { path: rel.to_string(), base_hash, hunks })
+    Ok(FileProposal {
+        path: rel.to_string(),
+        base_hash,
+        hunks,
+    })
 }
 
-const EXEC_NAMES: &[&str] = &["makefile", "gnumakefile", "build.rs", "lefthook.yml", "lefthook.yaml", ".pre-commit-config.yaml", "conftest.py", "pytest.ini", "tox.ini"];
+const EXEC_NAMES: &[&str] = &[
+    "makefile",
+    "gnumakefile",
+    "build.rs",
+    "lefthook.yml",
+    "lefthook.yaml",
+    ".pre-commit-config.yaml",
+    "conftest.py",
+    "pytest.ini",
+    "tox.ini",
+];
 const EXEC_PREFIXES: &[&str] = &[".husky/", ".github/workflows/"];
-const TEST_CONFIGS: &[&str] = &["jest.config", "vitest.config", "vite.config", "playwright.config", "karma.conf", ".mocharc", "phpunit.xml", "cypress.config"];
+const TEST_CONFIGS: &[&str] = &[
+    "jest.config",
+    "vitest.config",
+    "vite.config",
+    "playwright.config",
+    "karma.conf",
+    ".mocharc",
+    "phpunit.xml",
+    "cypress.config",
+];
 
 /// True when a hunk touches what a check runs: `package.json` scripts, a Makefile, `build.rs`, hooks, workflows, test configs.
 pub fn touches_exec_surface(rel: &str, base_lines: &[String], hunk: &Hunk) -> bool {
     let rel = rel.trim_start_matches("./");
-    let name = Path::new(rel).file_name().and_then(|n| n.to_str()).unwrap_or("").to_lowercase();
+    let name = Path::new(rel)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("")
+        .to_lowercase();
     if EXEC_NAMES.contains(&name.as_str())
-        || EXEC_PREFIXES.iter().any(|p| rel.starts_with(p) || rel.contains(&format!("/{p}")))
+        || EXEC_PREFIXES
+            .iter()
+            .any(|p| rel.starts_with(p) || rel.contains(&format!("/{p}")))
         || TEST_CONFIGS.iter().any(|p| name.starts_with(p))
     {
         return true;
     }
     if name == "package.json" {
-        if hunk.new_lines.iter().chain(hunk.old_lines.iter()).any(|l| l.contains("\"scripts\"")) {
+        if hunk
+            .new_lines
+            .iter()
+            .chain(hunk.old_lines.iter())
+            .any(|l| l.contains("\"scripts\""))
+        {
             return true;
         }
         // lines of the `"scripts": { … }` block in the base
@@ -131,16 +185,29 @@ pub fn touches_exec_surface(rel: &str, base_lines: &[String], hunk: &Hunk) -> bo
 /// True when an approved hunk changes what a check runs. Recomputed from the file on disk: the flag a hunk carries
 /// comes from the webview and is never trusted for the « ask again » rule.
 pub fn approved_exec_surface(repo: &Repo, file: &FileProposal, approved: &[usize]) -> bool {
-    let base = fs::read_to_string(repo.root().join(&file.path)).map(|t| lines_of(&t)).unwrap_or_default();
-    file.hunks.iter().filter(|h| approved.contains(&h.id)).any(|h| h.exec_surface || touches_exec_surface(&file.path, &base, h))
+    let base = fs::read_to_string(repo.root().join(&file.path))
+        .map(|t| lines_of(&t))
+        .unwrap_or_default();
+    file.hunks
+        .iter()
+        .filter(|h| approved.contains(&h.id))
+        .any(|h| h.exec_surface || touches_exec_surface(&file.path, &base, h))
 }
 
 /// Applies the approved hunks of one file, exactly. Refuses when the file's base changed (re-propose).
 pub fn apply(repo: &Repo, file: &FileProposal, approved: &[usize]) -> Result<Applied, CodeError> {
     // checked at the call …
     repo.resolve_write(&file.path)?;
-    let chosen: Vec<&Hunk> = file.hunks.iter().filter(|h| approved.contains(&h.id)).collect();
-    let none = Applied { path: file.path.clone(), written: false, hunks_applied: 0 };
+    let chosen: Vec<&Hunk> = file
+        .hunks
+        .iter()
+        .filter(|h| approved.contains(&h.id))
+        .collect();
+    let none = Applied {
+        path: file.path.clone(),
+        written: false,
+        hunks_applied: 0,
+    };
 
     // … the base, compared by hash
     let target = repo.root().join(&file.path);
@@ -155,7 +222,8 @@ pub fn apply(repo: &Repo, file: &FileProposal, approved: &[usize]) -> Result<App
     if chosen.is_empty() {
         return Ok(none);
     }
-    let base_text = String::from_utf8(current.unwrap_or_default()).map_err(|_| CodeError::Refused(format!("{} is not text", file.path)))?;
+    let base_text = String::from_utf8(current.unwrap_or_default())
+        .map_err(|_| CodeError::Refused(format!("{} is not text", file.path)))?;
     let base = lines_of(&base_text);
 
     let mut sorted = chosen.clone();
@@ -188,5 +256,9 @@ pub fn apply(repo: &Repo, file: &FileProposal, approved: &[usize]) -> Result<App
         let _ = fs::remove_file(&tmp);
         CodeError::Io(e.to_string())
     })?;
-    Ok(Applied { path: file.path.clone(), written: true, hunks_applied: sorted.len() })
+    Ok(Applied {
+        path: file.path.clone(),
+        written: true,
+        hunks_applied: sorted.len(),
+    })
 }
