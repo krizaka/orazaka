@@ -35,17 +35,21 @@ cat > /usr/local/bin/orazaka-watchdog <<'WD'
 pod_env() { tr '\0' '\n' < /proc/1/environ 2>/dev/null | sed -n "s/^$1=//p" | head -1; }
 RUNPOD_POD_ID="${RUNPOD_POD_ID:-$(pod_env RUNPOD_POD_ID)}"
 RUNPOD_API_KEY="${RUNPOD_API_KEY:-$(pod_env RUNPOD_API_KEY)}"
-# Before any self-destroy the pod sends its end reason and its boot log to the Orazaka job service, through the tunnel and with the job-scoped
-# service token it already holds for the run; the SERVER writes them to Bunny (apps/orazaka/gpu-pods/<pod>/), so a pod that is gone is still
-# explained (krizaka-internal#2121). The pod never holds a storage credential: it is a rented third-party machine. Best effort: a failure
-# here never blocks the destroy.
-# The job token is handed to the watchdog through a file only the bootstrap writes (a measurement pod has none).
-[[ -r /etc/orazaka/trace-token ]] && ORAZAKA_TRACE_TOKEN="${ORAZAKA_TRACE_TOKEN:-$(cat /etc/orazaka/trace-token)}"
+# Before any self-destroy the pod leaves its end reason and its boot log in ITS OWN output zone (GPU_OUT_URL: <day>/<run>, the pod adds
+# /<pod>/), written straight to the store with that zone's key: a rented, third-party machine holds no other storage credential, so a
+# compromised pod can touch this zone only, never the sites (krizaka-internal#2121). The server promotes a validated clip afterwards
+# (scripts/gpu-out/cli.mjs promote) and the retention deletes the rest. Best effort: a failure here never blocks the destroy.
+GPU_OUT_URL="${GPU_OUT_URL:-$(pod_env GPU_OUT_URL)}"
+GPU_OUT_HEADER="${GPU_OUT_HEADER:-$(pod_env GPU_OUT_HEADER)}"
+GPU_OUT_KEY="${GPU_OUT_KEY:-$(pod_env GPU_OUT_KEY)}"
+# One object into the output zone. The key goes to curl through stdin (-K -), never on a command line.
+put_out() { # $1 name, $2 file, $3 content type
+  printf 'header = "%s: %s"\n' "$GPU_OUT_HEADER" "$GPU_OUT_KEY" \
+    | curl -fsS -m 60 -K - -X PUT -H "Content-Type: $3" --data-binary "@$2" "$GPU_OUT_URL/${RUNPOD_POD_ID:-unknown}/$1" >/dev/null 2>&1
+}
 leave_trace() {
   local st=${ORAZAKA_STATE:-/var/lib/orazaka-gpu}
-  local base=${ORAZAKA_TRACE_URL:-http://127.0.0.1:18090}
-  if [[ -z "${ORAZAKA_TRACE_TOKEN:-}" || "$ORAZAKA_TRACE_TOKEN" == x ]]; then echo "orazaka-gpu: no job token: the end reason stays on the pod"; return 0; fi
-  base="$base/internal/gpu-pods/${RUNPOD_POD_ID:-unknown}"
+  if [[ -z "${GPU_OUT_URL:-}" || -z "${GPU_OUT_KEY:-}" ]]; then echo "orazaka-gpu: no output zone: the end reason stays on the pod"; return 0; fi
   local boot_epoch=0 now beat=-1 free progress="" ready=false
   now=$(date +%s)
   [[ -r "$st/boot-epoch" ]] && boot_epoch=$(cat "$st/boot-epoch")
@@ -56,9 +60,8 @@ leave_trace() {
   REASON="$1" POD="${RUNPOD_POD_ID:-unknown}" NOW="$now" AGE=$(( (now - boot_epoch) / 60 )) BEAT="$beat" FREE="${free:-}" PROGRESS="$progress" READY="$ready" \
     python3 -c 'import json,os; e=os.environ; print(json.dumps({"pod":e["POD"],"reason":e["REASON"],"endedAt":int(e["NOW"]),"ageMinutes":int(e["AGE"]),"ready":e["READY"]=="true","heartbeatAgeSeconds":int(e["BEAT"]),"diskFreeGb":e["FREE"],"downloadProgress":e["PROGRESS"]}))' > "$st/end.json" 2>/dev/null || return 0
   tail -n 2000 /var/log/orazaka-boot.log > "$st/boot-tail.log" 2>/dev/null
-  if curl -fsS -m 20 -X PUT -H "Authorization: Bearer ${ORAZAKA_TRACE_TOKEN}" -H "Content-Type: application/json" --data-binary "@$st/end.json" "$base/end.json" >/dev/null 2>&1 \
-    && curl -fsS -m 30 -X PUT -H "Authorization: Bearer ${ORAZAKA_TRACE_TOKEN}" -H "Content-Type: text/plain" --data-binary "@$st/boot-tail.log" "$base/boot.log" >/dev/null 2>&1; then
-    echo "orazaka-gpu: end reason sent to the job service (${RUNPOD_POD_ID:-unknown})"
+  if put_out end.json "$st/end.json" application/json && put_out boot.log "$st/boot-tail.log" text/plain; then
+    echo "orazaka-gpu: end reason left in the output zone (${RUNPOD_POD_ID:-unknown})"
   else
     echo "orazaka-gpu: could not leave the end reason off the pod"
   fi
@@ -286,7 +289,6 @@ UPSCALER_ENV=""
 AUTH="$RELAY_AUTH" nohup chisel client --keepalive 25s --max-retry-interval 30s "$RELAY_URL" \
   127.0.0.1:15671:broker-dev.orazaka.com:5671 127.0.0.1:18090:core:8090 R:0.0.0.0:8188:127.0.0.1:8188 $IMAGE_REMOTE \
   > /var/log/orazaka-relay.log 2>&1 &
-(umask 077; printf '%s' "$SERVICE_TOKEN" > /etc/orazaka/trace-token)
 cd /app-src
 export SPRING_RABBITMQ_HOST=127.0.0.1 SPRING_RABBITMQ_PORT=15671 SPRING_RABBITMQ_USERNAME=gpu-worker \
   SPRING_RABBITMQ_SSL_ENABLED=true SPRING_RABBITMQ_SSL_CA_FILE=/etc/orazaka/broker-ca.pem \
@@ -295,7 +297,7 @@ export SPRING_RABBITMQ_HOST=127.0.0.1 SPRING_RABBITMQ_PORT=15671 SPRING_RABBITMQ
   UPLOAD_DIR="$STATE/uploads" MEDIA_ACTIVITY_FILE="$STATE/state/last-activity" MEDIA_HEARTBEAT_FILE="$STATE/state/heartbeat" MEDIA_GPU_PROFILE="${PROFILE:-big}" \
   ORAZAKA_MEDIA_MEM_HEADROOM_GB=4 PYTHONUNBUFFERED=1 MEDIA_WORKER_PORT=8188 MEDIA_SOUND_ENABLED="$SOUND_FLAG" MEDIA_FONT_FILE="$FONT"
 # shellcheck disable=SC2086 # UPSCALER_ENV is a list of NAME=value words
-env $UPSCALER_ENV SPRING_RABBITMQ_PASSWORD="$RABBIT_PASSWORD" ORAZAKA_SERVICE_TOKEN="$SERVICE_TOKEN" \
+env $UPSCALER_ENV GPU_OUT_URL="${GPU_OUT_URL:-}" GPU_OUT_HEADER="${GPU_OUT_HEADER:-}" GPU_OUT_KEY="${GPU_OUT_KEY:-}" SPRING_RABBITMQ_PASSWORD="$RABBIT_PASSWORD" ORAZAKA_SERVICE_TOKEN="$SERVICE_TOKEN" \
   nohup /opt/venv/bin/python -u -m app.consumer > /var/log/orazaka-worker.log 2>&1 &
 touch "$STATE/ready" "$STATE/state/last-activity"
 step "serving: worker (${PROFILE:-big}${IMAGE_MODEL:+, images $IMAGE_MODEL}${SOUND_MODELS:+, sound $SOUND_MODELS}), relay → ${RELAY_URL}"

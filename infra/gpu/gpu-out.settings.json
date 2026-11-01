@@ -1,0 +1,8 @@
+{
+  "_why": "The GPU output store, as data (krizaka-internal#2121). Same fields as the admin's storage settings (@krizaka/storage provider registry): the Studio admin owns them in the database once the admin slice lands; this file is the launcher's bootstrap until then. A credential is a REFERENCE (a vault name), never a value. Bunny is dev only: production switches to an S3 kind (DigitalOcean Spaces tor1, AWS ca-central-1) by setting alone.",
+  "provider": "bunny",
+  "coordinates": { "endpoint": "storage.bunnycdn.com", "zone": "krizaka-gpu-out" },
+  "region": "DE",
+  "credentialRef": "MEDIA_GPU_STORAGE_API_KEY",
+  "retentionDays": 7
+}
