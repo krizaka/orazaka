@@ -229,7 +229,7 @@ const APPLICATION_LIBRARIES = ["orazaka-business", "orazaka-interceptors", "oraz
 
 function roleOf(m) {
   if (/SpringApplication\.run\(/.test(javaFiles(join(m.dir, "src/main/java")).map(read).join("\n"))) return "service";
-  if (m.repository.name === "krizaka-platform-kit") return "platform";
+  if (m.path.split("/").includes("krizaka-platform-kit")) return "platform";
   if (m.id.endsWith("-api")) return "contract";
   if (m.id.endsWith("-core")) return "domain";
   if (APPLICATION_LIBRARIES.includes(m.id)) return "application";
@@ -489,8 +489,8 @@ function extractBuildingBlocks() {
   if (!known.size) throw new Error("generate-docs: no Krizaka artifact found — clone the krizaka/* repositories of orazaka.workspace.json");
 
   const roleOf = (a) => {
+    if (a.path.split("/").includes("krizaka-platform-kit")) return a.path.split("/").includes("starters") ? "starter" : "platform";
     if (a.repository.name === "krizaka-build") return "build";
-    if (a.repository.name === "krizaka-platform-kit") return a.path.split("/").includes("starters") ? "starter" : "platform";
     if (/SpringApplication\.run\(/.test(javaFiles(join(a.dir, "src/main/java")).map(read).join("\n"))) return "service";
     if (a.id.endsWith("-api")) return "contract";
     if (a.id.endsWith("-core")) return "domain";
@@ -714,7 +714,7 @@ function extractMessaging(reactor, extra) {
   }
 
   // The retry policy of the kit's listener container (krizaka.messaging.retry), defaults read from code.
-  const retrySrc = read(sourceFile("krizaka/krizaka-platform-kit/krizaka-messaging", "ConsumerRetryProperties.java"));
+  const retrySrc = read(sourceFile("krizaka/krizaka-build/krizaka-platform-kit/krizaka-messaging", "ConsumerRetryProperties.java"));
   const retry = {
     maxAttempts: Number(retrySrc.match(/maxAttempts\s*=\s*maxAttempts\s*==\s*null\s*\?\s*(\d+)/)?.[1]),
     initialMs: Number(retrySrc.match(/initial\s*=\s*initial\s*==\s*null\s*\?\s*Duration\.ofMillis\((\d+)\)/)?.[1]),

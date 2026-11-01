@@ -56,7 +56,6 @@
 
     <modules>
         <module>krizaka/krizaka-build</module>
-        <module>krizaka/krizaka-platform-kit</module>
         <module>orazaka-libs/orazaka-build</module>
         <module>orazaka-libs/orazaka-contracts</module>
         <module>krizaka/krizaka-users</module>

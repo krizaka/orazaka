@@ -13,24 +13,13 @@
       "dependsOn": []
     },
     {
-      "name": "krizaka-platform-kit",
-      "path": "krizaka/krizaka-platform-kit",
-      "kind": "maven",
-      "layer": "krizaka",
-      "description": "Cross-cutting building blocks for Spring Boot services: stateless JWT security with one baseline, service-to-service tokens, idempotent message consumption and a transactional outbox relay.",
-      "dependsOn": [
-        "krizaka-build"
-      ]
-    },
-    {
       "name": "krizaka-users",
       "path": "krizaka/krizaka-users",
       "kind": "maven",
       "layer": "krizaka",
       "description": "Reusable user management for any application: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance — with its contract (krizaka-users-api) and HTTP client (krizaka-users-client).",
       "dependsOn": [
-        "krizaka-build",
-        "krizaka-platform-kit"
+        "krizaka-build"
       ],
       "initdb": [
         "10-identity.sql"
@@ -43,8 +32,7 @@
       "layer": "krizaka",
       "description": "Credits, wallets, plans, subscriptions, a price book and metering (hold → settle → release) as a reusable billing service, with its contract (krizaka-billing-api) and a typed HTTP client (krizaka-billing-client).",
       "dependsOn": [
-        "krizaka-build",
-        "krizaka-platform-kit"
+        "krizaka-build"
       ],
       "initdb": [
         "70-billing.sql"
@@ -142,7 +130,7 @@
       "layer": "ai",
       "description": "Knowledge & RAG retrieval service (pgvector) with asynchronous indexing.",
       "dependsOn": [
-        "krizaka-platform-kit",
+        "krizaka-build",
         "orazaka-build"
       ],
       "initdb": [
@@ -171,7 +159,7 @@
       "layer": "foundation",
       "description": "Transparent HTTP edge in front of every Orazaka service: routing, API-key → JWT exchange, CORS and tracing. Spring MVC + virtual threads.",
       "dependsOn": [
-        "krizaka-platform-kit",
+        "krizaka-build",
         "orazaka-build"
       ]
     },
