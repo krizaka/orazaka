@@ -1,7 +1,7 @@
 -- 2026-10-09 — Krizaka building blocks (ADR-073): the users and billing contexts keep their data
 -- under neutral names.
 --
--- A fresh `orazaka start` creates them from krizaka/krizaka-users/infra/initdb/10-identity.sql and
+-- A fresh `orazaka start` creates them from krizaka/krizaka-build/krizaka-users/infra/initdb/10-identity.sql and
 -- krizaka/krizaka-billing/infra/initdb/70-billing.sql and needs nothing here. This script moves an
 -- EXISTING local database without losing its rows:
 --
