@@ -84,6 +84,8 @@ runpod_start() {
       SERVICE_TOKEN="${MEASURE:+x}${MEASURE:-$(mint_service_token "$max_hours")}" BROKER_CA_B64="${MEASURE:+x}${MEASURE:-$(broker_ca_b64)}" \
       STILLS="${STILLS:-}" MEASURE="${MEASURE:-}" MEASURE_ARGS="${MEASURE_ARGS:-}" MEASURE_PIP="${MEASURE_PIP:-}" \
       BOOT="$ROOT/infra/gpu/$([[ -n "${MEASURE:-}" ]] && echo runpod-measure.sh || echo runpod-bootstrap.sh)" \
+      MEDIA_STORAGE_API_KEY="$([[ -n "${MEASURE:-}" ]] || secret MEDIA_STORAGE_API_KEY 2>/dev/null || true)" \
+      MEDIA_STORAGE_ZONE="$([[ -n "${MEASURE:-}" ]] || secret MEDIA_STORAGE_ZONE 2>/dev/null || true)" \
       HF_TOKEN="$(secret AI_HUGGINGFACE_TOKEN 2>/dev/null || true)" DISK_GB="${GPU_RUNPOD_DISK_GB:-}" \
       rp_py body "$body" "$gpu"
       say "trying $dc ($gpu)…"
