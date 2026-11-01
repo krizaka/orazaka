@@ -68,7 +68,7 @@ describe("StackPanel", () => {
 
   it("explains the missing workspace and disables start", async () => {
     render(wrap(<StackPanel snap={{ ...base, settings: { ...base.settings, workspaceDir: null } }} goSettings={() => undefined} />));
-    expect(await screen.findByText(/Choose the Orazaka workspace folder/)).toBeInTheDocument();
+    expect(await screen.findByText(/Choose the Sovkora workspace folder/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start" })).toBeDisabled();
   });
 
@@ -82,7 +82,7 @@ describe("StackPanel", () => {
 describe("FilesPanel", () => {
   it("says plainly that no file is readable when nothing is shared", () => {
     render(wrap(<FilesPanel snap={base} />));
-    expect(screen.getByText(/Orazaka cannot read any file on this Mac/)).toBeInTheDocument();
+    expect(screen.getByText(/Sovkora cannot read any file on this Mac/)).toBeInTheDocument();
     expect(screen.getByText("0 folder(s) shared")).toBeInTheDocument();
   });
 

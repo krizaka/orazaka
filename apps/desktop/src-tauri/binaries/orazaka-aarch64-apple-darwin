@@ -1,5 +1,5 @@
 #!/bin/sh
-# The `orazaka` sidecar of Orazaka Desktop: runs the CLI bundled in the app (Contents/Resources/cli) with a
+# The `orazaka` sidecar of Sovkora Desktop: runs the CLI bundled in the app (Contents/Resources/cli) with a
 # Node.js >= 22 found on this Mac. It runs nothing else — the app only ever passes it the arguments that
 # src/sidecar.rs allows. Version 0.1 does not ship its own Node runtime (see the README).
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -32,7 +32,7 @@ if [ -z "$NODE" ] && command -v node >/dev/null 2>&1; then
   [ "${major:-0}" -ge 22 ] 2>/dev/null && NODE="$(command -v node)"
 fi
 if [ -z "$NODE" ]; then
-  echo "Node.js 22 or later is required by the Orazaka CLI (brew install node)." >&2
+  echo "Node.js 22 or later is required by the Sovkora CLI (brew install node)." >&2
   exit 127
 fi
 exec "$NODE" "$CLI" "$@"

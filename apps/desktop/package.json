@@ -2,7 +2,7 @@
   "name": "orazaka-desktop",
   "private": true,
   "version": "0.2.0",
-  "description": "Orazaka Desktop — a Tauri 2 control panel and file bridge for the Orazaka sovereign AI platform (macOS).",
+  "description": "Sovkora Desktop — a Tauri 2 control panel and file bridge for the Sovkora sovereign AI platform (macOS).",
   "type": "module",
   "license": "FSL-1.1-ALv2",
   "engines": {

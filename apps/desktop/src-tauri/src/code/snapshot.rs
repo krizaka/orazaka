@@ -24,9 +24,9 @@ fn git_private_index(repo: &Repo, index: &std::path::Path, args: &[&str]) -> Res
         .arg(repo.root())
         .args(args)
         .env("GIT_INDEX_FILE", index)
-        .env("GIT_AUTHOR_NAME", "Orazaka")
+        .env("GIT_AUTHOR_NAME", "Sovkora")
         .env("GIT_AUTHOR_EMAIL", "orazaka@localhost")
-        .env("GIT_COMMITTER_NAME", "Orazaka")
+        .env("GIT_COMMITTER_NAME", "Sovkora")
         .env("GIT_COMMITTER_EMAIL", "orazaka@localhost")
         .output()
         .map_err(|e| CodeError::Io(e.to_string()))?;

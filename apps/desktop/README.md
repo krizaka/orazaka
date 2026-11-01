@@ -1,28 +1,28 @@
-# Orazaka Desktop
+# Sovkora Desktop
 
 A [Tauri 2](https://tauri.app) app (Rust + a web UI built with `@krizaka/ui` and `@krizaka/orazaka-design-system`,
-Orazaka orange, dark/light, English/French) for macOS on Apple Silicon. v0.1 is a **test build**: it lets you run
-Orazaka on your Mac, or connect to a hosted one, and give Orazaka **access to the folders you choose — and only those**.
+Sovkora orange, dark/light, English/French) for macOS on Apple Silicon. v0.1 is a **test build**: it lets you run
+Sovkora on your Mac, or connect to a hosted one, and give Sovkora **access to the folders you choose — and only those**.
 
-> Delivery context: [`docs/DELIVERY.md`](../../docs/DELIVERY.md) — Orazaka Desktop is the installer and control panel of
-> *Orazaka for Mac*. It never re-implements an operation: it runs the `orazaka` CLI as a sidecar.
+> Delivery context: [`docs/DELIVERY.md`](../../docs/DELIVERY.md) — Sovkora Desktop is the installer and control panel of
+> *Sovkora for Mac*. It never re-implements an operation: it runs the `orazaka` CLI as a sidecar.
 
 ## What it does (v0.1)
 
 | | |
 |---|---|
 | **Control panel** | Status of the local stack (`orazaka status --json`), **Start** / **Stop**, **Run doctor**, logs (live output + `orazaka logs --service …`), CLI and app version, **Open workspace** (the web UI in an app window). |
-| **Connect mode** | Point the app at a hosted Orazaka (default `https://dev.orazaka.com`, https only) and sign in **on the Orazaka page itself** — the app never sees or stores a password. |
+| **Connect mode** | Point the app at a hosted Sovkora (default `https://dev.orazaka.com`, https only) and sign in **on the Sovkora page itself** — the app never sees or stores a password. |
 | **File access** | Choose folders with the native picker; list and preview their files (text, images, PDF); **drag & drop** files into the workspace page or onto the panel; **watch a folder** for new files; **revoke** any folder or all of them. |
 | **Menu bar** | An icon showing the stack's state (outline = stopped, filled = running/partial), with Open panel · Open workspace · Start · Stop · Quit. Closing the window keeps the app in the menu bar. |
 | **Automations** | Scheduled work on a shared folder with a model served on this Mac — v0.2: *Summarise new PDFs every morning* (a note next to each new PDF). The filesystem MCP server is limited to that folder, every write waits for your approval (or a permission you gave: *always for this folder*), dry-run, **Stop all agents**, budgets, run history with a step-by-step trace, a hash-chained audit log. See [docs/AUTOMATION.md](../../docs/AUTOMATION.md) and ADR-079. Needs Node.js 22+ (the MCP server) and a local model (Ollama: `ollama pull qwen2.5:7b`). |
-| **Auto-start** | "Start Orazaka when I log in" (macOS login item) — **off by default**, and it only opens the menu-bar app; nothing is started unless you ask. |
+| **Auto-start** | "Start Sovkora when I log in" (macOS login item) — **off by default**, and it only opens the menu-bar app; nothing is started unless you ask. |
 
 ## Least privilege — how access is bounded
 
 1. **No filesystem permission in the web layer.** The control panel's capability (`src-tauri/capabilities/main.json`) is
    `core:default` only: no `fs`, no `shell`, no `opener` plugin. The hosted workspace window has **no capability at all**
-   (no IPC): the Orazaka page cannot call the app.
+   (no IPC): the Sovkora page cannot call the app.
 2. **Folder scope** ([`krizaka-tauri-kit`](https://github.com/krizaka/krizaka-tauri-kit) `scope`, shared by every Krizaka Mac app). The app can read a path only if its *canonical* form lies inside a
    folder you granted with the picker. `..` and symlinks that leave a folder are refused; grants are persisted
    (`~/Library/Application Support/com.krizaka.orazaka.desktop/scope.json`), shown in the **Files** tab and revocable
@@ -46,13 +46,13 @@ Orazaka on your Mac, or connect to a hosted one, and give Orazaka **access to th
 
 macOS 14+, Apple Silicon. **Node.js 22+** on the Mac (`brew install node`): v0.1 bundles the orazaka CLI
 (`@krizaka/orazaka-cli`, pinned in `package.json` → `orazakaCli`) but not a Node runtime. For the local stack: Docker
-(OrbStack/Colima/Docker Desktop) and the Orazaka workspace folder — see Settings.
+(OrbStack/Colima/Docker Desktop) and the Sovkora workspace folder — see Settings.
 
 ## Open the unsigned build
 
 The `.dmg` is **not signed or notarized yet** (the Apple Developer ID is pending), so Gatekeeper blocks a plain
-double-click. Drag **Orazaka** to *Applications*, then **right-click the app → Open → Open** (once). If macOS still
-refuses ("damaged"), run `xattr -dr com.apple.quarantine /Applications/Orazaka.app`.
+double-click. Drag **Sovkora** to *Applications*, then **right-click the app → Open → Open** (once). If macOS still
+refuses ("damaged"), run `xattr -dr com.apple.quarantine /Applications/Sovkora.app`.
 
 ## Add signing and notarization (when the Developer ID exists)
 

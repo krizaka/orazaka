@@ -118,7 +118,7 @@ pub fn pdf_text(bytes: &[u8]) -> Result<String, String> {
 fn note(model: &str, file: &str, at: &str, run_id: &str, text: &str) -> String {
     let stem = Path::new(file).file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
     format!(
-        "# {stem} — summary\n\n{}\n\n---\n_Orazaka · {model} on this Mac · {at} · run {} · from {file}_\n",
+        "# {stem} — summary\n\n{}\n\n---\n_Sovkora · {model} on this Mac · {at} · run {} · from {file}_\n",
         truncate_chars(text.trim(), MAX_SUMMARY_CHARS),
         &run_id[..run_id.len().min(8)]
     )

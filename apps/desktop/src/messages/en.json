@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Orazaka",
+    "name": "Sovkora",
     "tagline": "Sovereign AI on your Mac",
     "development": "In development: still being tested, not ready for the public.",
     "version": "App {version}"
@@ -29,7 +29,7 @@
   },
   "stack": {
     "title": "Local stack",
-    "lead": "Start Orazaka on this Mac with the orazaka CLI, then open the workspace.",
+    "lead": "Start Sovkora on this Mac with the orazaka CLI, then open the workspace.",
     "status": {
       "running": "Running",
       "partial": "Partly running",
@@ -57,16 +57,16 @@
     "cliVersion": "CLI {version}",
     "sidecarMissing": "The orazaka CLI is missing from this build.",
     "needsNode": "The CLI needs Node.js 22 or later on this Mac (brew install node).",
-    "workspaceNeeded": "Choose the Orazaka workspace folder in Settings so the CLI knows where the stack lives.",
-    "remoteNote": "You are connected to {host}. The local stack is optional here — start it only to run Orazaka on this Mac.",
+    "workspaceNeeded": "Choose the Sovkora workspace folder in Settings so the CLI knows where the stack lives.",
+    "remoteNote": "You are connected to {host}. The local stack is optional here — start it only to run Sovkora on this Mac.",
     "busy": "Running…",
     "exit": "Exited with code {code}",
     "timedOut": "Stopped: it took too long."
   },
   "files": {
-    "title": "Files Orazaka can read",
-    "lead": "Orazaka can read only the folders listed here — nothing else on this Mac. You choose them, and you can take them back at any time.",
-    "none": "No folder yet. Orazaka cannot read any file on this Mac.",
+    "title": "Files Sovkora can read",
+    "lead": "Sovkora can read only the folders listed here — nothing else on this Mac. You choose them, and you can take them back at any time.",
+    "none": "No folder yet. Sovkora cannot read any file on this Mac.",
     "count": "{count} folder(s) shared",
     "choose": "Choose a folder…",
     "revoke": "Revoke",
@@ -98,21 +98,21 @@
   },
   "settings": {
     "title": "Settings",
-    "connection": "Where is Orazaka?",
+    "connection": "Where is Sovkora?",
     "modeLocal": "On this Mac (local stack)",
     "modeRemote": "On a server (connect)",
-    "remoteUrl": "Orazaka address",
-    "remoteHelp": "https only. You sign in on the Orazaka page itself — this app never stores a password.",
-    "workspaceDir": "Orazaka workspace folder",
+    "remoteUrl": "Sovkora address",
+    "remoteHelp": "https only. You sign in on the Sovkora page itself — this app never stores a password.",
+    "workspaceDir": "Sovkora workspace folder",
     "workspaceHelp": "Where orazaka.workspace.json lives. The CLI runs there; the app does not read it.",
-    "startup": "Start Orazaka when I log in",
+    "startup": "Start Sovkora when I log in",
     "startupHelp": "Off by default. Runs in the menu bar; nothing is started unless you ask.",
     "language": "Language",
-    "about": "Orazaka Desktop is unsigned for now: if macOS refuses to open it, right-click the app and choose Open."
+    "about": "Sovkora Desktop is unsigned for now: if macOS refuses to open it, right-click the app and choose Open."
   },
   "automations": {
     "title": "Automations",
-    "lead": "Work Orazaka does on its own, on this Mac, with your local model. It reads only the folder you choose and asks you before it writes anything.",
+    "lead": "Work Sovkora does on its own, on this Mac, with your local model. It reads only the folder you choose and asks you before it writes anything.",
     "killSwitch": "Stop all agents",
     "killSwitchOn": "All agents are stopped on this Mac",
     "killSwitchOnLead": "No automation runs and every schedule is paused until you resume.",
@@ -122,12 +122,12 @@
     "templateSummarise": "Summarise new PDFs every morning",
     "templateSummariseLead": "Every morning, reads the PDFs that arrived in a folder and saves a short summary note next to each one.",
     "noneTitle": "No automation yet",
-    "noneLead": "Start from a template: Orazaka will ask you before it writes the first file.",
+    "noneLead": "Start from a template: Sovkora will ask you before it writes the first file.",
     "form": {
       "name": "Name",
       "nameDefault": "Morning PDF summaries",
       "folder": "Folder",
-      "folderHint": "Only a folder you shared in Files. Orazaka reads it and writes the notes next to the PDFs — nowhere else.",
+      "folderHint": "Only a folder you shared in Files. Sovkora reads it and writes the notes next to the PDFs — nowhere else.",
       "noFolder": "Share a folder in Files first.",
       "time": "Every day at",
       "weekdays": "Weekdays only",
@@ -162,7 +162,7 @@
     "approvals": {
       "title": "Approvals",
       "count": "{count} waiting",
-      "lead": "Orazaka wants to write these files. Nothing is written until you decide.",
+      "lead": "Sovkora wants to write these files. Nothing is written until you decide.",
       "none": "Nothing waits for your approval.",
       "tool": "{tool} in {folder}",
       "expires": "Expires {time}",
@@ -211,12 +211,12 @@
   },
   "code": {
     "title": "Code",
-    "lead": "Orazaka reads the repository you choose and proposes changes. Nothing is written until you approve each change, and one click undoes a run.",
+    "lead": "Sovkora reads the repository you choose and proposes changes. Nothing is written until you approve each change, and one click undoes a run.",
     "choose": "Choose a repository",
     "repo": "{branch} · {visible} files visible, {hidden} hidden (ignored or secret)",
     "clean": "Working tree clean",
     "noneTitle": "No repository yet",
-    "noneLead": "Pick a folder that holds a git repository. Ignored files and secrets stay invisible to Orazaka.",
+    "noneLead": "Pick a folder that holds a git repository. Ignored files and secrets stay invisible to Sovkora.",
     "review": {
       "title": "Review",
       "hunk": "Change {n} of {total}, from line {line}",
@@ -238,7 +238,7 @@
     },
     "checks": {
       "title": "Checks",
-      "lead": "Commands Orazaka may run to test a change. Each one is yours to confirm, and runs without a shell, in a sandbox that can write only to the repository.",
+      "lead": "Commands Sovkora may run to test a change. Each one is yours to confirm, and runs without a shell, in a sandbox that can write only to the repository.",
       "suggested": "Suggested by the repository",
       "confirmed": "Confirmed",
       "none": "No command is confirmed yet. A suggestion is only a proposal.",
