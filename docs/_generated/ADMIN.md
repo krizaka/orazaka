@@ -71,29 +71,6 @@ A Next.js console served by `orazaka-web-client` on the admin host (`admin.oraza
 | GET | `/api/v1/models/providers` | authenticated | Retrieves all available AI provider names from the database. |
 | GET | `/api/v1/status/health` | public | Returns sovereign readiness health details (public probe). |
 | GET | `/api/v1/status/infrastructure` | authenticated | Returns the current online/offline snapshot of the local inference engines. |
-| GET | `/api/v1/billing/admin/audit` | ADMIN | — |
-| GET | `/api/v1/billing/configuration` | ADMIN | The declared key vocabulary — type, permitted domain and code default per key. |
-| PATCH | `/api/v1/billing/configuration` | ADMIN | Applies one validated configuration change. |
-| GET | `/api/v1/billing/packs` | authenticated | The priced catalogue. |
-| DELETE | `/api/v1/billing/packs/{packKey}` | ADMIN | Withdraws a pack from sale. |
-| GET | `/api/v1/billing/packs/{packKey}` | authenticated | One pack with its entitlement matrix. |
-| PUT | `/api/v1/billing/packs/{packKey}` | ADMIN | Creates or replaces a pack's price and entitlements. |
-| GET | `/api/v1/billing/plans` | authenticated | The catalogue. |
-| DELETE | `/api/v1/billing/plans/{planKey}` | ADMIN | Retires a plan — deactivated, never deleted, because subscriptions reference it. |
-| GET | `/api/v1/billing/plans/{planKey}` | authenticated | One plan with its entitlement matrix. |
-| PUT | `/api/v1/billing/plans/{planKey}` | ADMIN | Creates or replaces a plan. |
-| GET | `/api/v1/billing/pricebook` | ADMIN | — |
-| POST | `/api/v1/billing/pricebook` | ADMIN | — |
-| POST | `/api/v1/billing/pricebook/preview` | ADMIN | — |
-| GET | `/api/v1/billing/prices/admin` | ADMIN | Every entry in force, internal ones included. |
-| DELETE | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | Ends an actor's subscription. |
-| GET | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | The subscription in force for an actor. |
-| POST | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | Moves an actor onto a plan — upgrade, downgrade or trial. |
-| GET | `/api/v1/billing/usage/capabilities` | ADMIN | Consumption and refusals per capability × model. |
-| GET | `/api/v1/billing/usage/top-consumers` | ADMIN | The heaviest consumers. |
-| GET | `/api/v1/billing/wallets/{actorId}` | ADMIN | Reads an actor's balances. |
-| POST | `/api/v1/billing/wallets/{actorId}/adjustments` | ADMIN | Issues a manual credit adjustment — support goodwill, or a claw-back. |
-| GET | `/api/v1/billing/wallets/adjustments/today` | ADMIN | What an admin has already adjusted today, against their ceiling. |
 | GET | `/api/v1/studios` | authenticated | The catalogue, optionally narrowed to one profession. |
 | GET | `/api/v1/studios/{studioKey}` | authenticated | One Studio's detail, including the schemas its forms are generated from. |
 | GET | `/api/v1/studios/{studioKey}/blueprints` | ADMIN | Every version of a Studio, drafts included — the Builder's version list. |
@@ -138,39 +115,6 @@ administrator's token (through the edge, `http://localhost:8088` locally).
 | POST | `/api/v1/pipeline/interceptors/reset` | Resets all pipeline interceptor configurations to hardcoded defaults. |
 | GET | `/api/v1/pipeline/validation` | Retrieves all validation pipeline tier configurations ordered by execution order. |
 | PUT | `/api/v1/pipeline/validation` | Bulk-updates validation pipeline tier ordering and enabled state. |
-
-### krizaka-billing-service
-
-| Method | Path | Summary |
-|:---|:---|:---|
-| GET | `/api/v1/billing/admin/audit` | — |
-| GET | `/api/v1/billing/configuration` | The declared key vocabulary — type, permitted domain and code default per key. |
-| PATCH | `/api/v1/billing/configuration` | Applies one validated configuration change. |
-| GET | `/api/v1/billing/pack-subscriptions` | Every live holder of a pack — what an admin checks before withdrawing one. |
-| GET | `/api/v1/billing/pack-subscriptions/{actorId}` | The packs one actor holds. |
-| DELETE | `/api/v1/billing/packs/{packKey}` | Withdraws a pack from sale. |
-| PUT | `/api/v1/billing/packs/{packKey}` | Creates or replaces a pack's price and entitlements. |
-| DELETE | `/api/v1/billing/plans/{planKey}` | Retires a plan — deactivated, never deleted, because subscriptions reference it. |
-| PUT | `/api/v1/billing/plans/{planKey}` | Creates or replaces a plan. |
-| GET | `/api/v1/billing/pricebook` | — |
-| POST | `/api/v1/billing/pricebook` | — |
-| GET | `/api/v1/billing/pricebook/history` | — |
-| POST | `/api/v1/billing/pricebook/preview` | — |
-| GET | `/api/v1/billing/prices/admin` | Every entry in force, internal ones included. |
-| GET | `/api/v1/billing/prices/admin/{key}/history` | Every version of a key, past and scheduled. |
-| POST | `/api/v1/billing/prices/admin/{key}/schedule` | Schedules a change from a date. |
-| GET | `/api/v1/billing/subscriptions` | Every live subscriber of a plan — what an admin checks before retiring one. |
-| DELETE | `/api/v1/billing/subscriptions/{actorId}` | Ends an actor's subscription. |
-| GET | `/api/v1/billing/subscriptions/{actorId}` | The subscription in force for an actor. |
-| POST | `/api/v1/billing/subscriptions/{actorId}` | Moves an actor onto a plan — upgrade, downgrade or trial. |
-| POST | `/api/v1/billing/subscriptions/{actorId}/rollover` | Rolls a subscription into its next period, honouring a pending cancellation. |
-| GET | `/api/v1/billing/usage/capabilities` | Consumption and refusals per capability × model. |
-| GET | `/api/v1/billing/usage/me` | The caller's own usage and cost for a calendar month. |
-| GET | `/api/v1/billing/usage/top-consumers` | The heaviest consumers. |
-| GET | `/api/v1/billing/wallets/{actorId}` | Reads an actor's balances. |
-| POST | `/api/v1/billing/wallets/{actorId}/adjustments` | Issues a manual credit adjustment — support goodwill, or a claw-back. |
-| GET | `/api/v1/billing/wallets/{actorId}/entitlements` | Reads an actor's effective entitlements plus their balance summary. |
-| GET | `/api/v1/billing/wallets/adjustments/today` | What an admin has already adjusted today, against their ceiling. |
 
 ### studio-service
 
