@@ -100,6 +100,28 @@ psql "$URL" -At -F, -c "select usename, count(*) from pg_stat_activity where dat
   | node scripts/db-connections.mjs     # exit 1 above 80 % of the 22 usable
 ```
 
+## Reset dev data
+
+Dev data is disposable (founder's go, 2026-11-02; plan `docs/plans/2026-11-02-db-migration-plan.md` § R in krizaka/.github,
+krizaka-internal#2255). One command clears a product's databases and rebuilds them from its migrations, then seeds the cast:
+
+```sh
+APP_ENV=dev DEV_RESET_EXPECTED_HOST=<database_host output of krizaka-infra stacks/dev/orazaka> \
+  node scripts/dev-reset.mjs <orazaka|yomizaka|akinaza|all> --target dev          # guards + read-only preflight
+  node scripts/dev-reset.mjs <product> --target dev --yes                          # clear, redeploy, seed, smoke
+```
+
+- Per database, as its owner: `DROP OWNED BY <owner> CASCADE` and the `public` schema back, in one transaction; then
+  doadmin puts the extensions back and the owner the runtime role's grants (krizaka-infra `bootstrap_admin_sql`,
+  `grants_sql`). The database, its roles and its pools stay.
+- Then the product's dev app is redeployed (`--force-rebuild`): its migrations run before it takes traffic. Then
+  `tools/seed-dev.sh <product>` loads the cast, and Orazaka's persona smoke runs.
+- Guards (`scripts/lib/dev-reset.mjs`, `scripts/test/dev-reset.test.mjs`): only the 8 product databases
+  (`krizaka_newsletter`, `krizaka_accounts`, `defaultdb` and the others are refused before any connection), `APP_ENV`
+  equal to the target, the host must be `krizaka-dev-pg` and equal to the OpenTofu output, a prod or commercial host
+  anywhere is refused. One JSON line per run in `~/.krizaka-private/logs/dev-reset.jsonl`, no host, no secret.
+- It runs from the maintainer's Mac: the dev cluster trusts no GitHub runner (2026-10-28), so there is no workflow for it.
+
 ## Rotating a role's password
 
 A role is rotated one app at a time: reset it (the `user reset` command of doctl, JSON output captured and never
