@@ -65,6 +65,8 @@ export function rollbackVerdict(deployments) {
  */
 export function staleSourceVerdict(deployments, mainSha) {
   const coreCommit = (d) => d.services?.find((s) => s.name === "core")?.source_commit_hash;
+  // A rebuild just started (the redeploy step runs right before this check) is the cure: judge it when it ends.
+  if (deployments.some((d) => BUSY.has(d.phase))) return { ok: true, message: "a deployment is in progress; the commit is judged once it ends" };
   const last = deployments.find((d) => !BUSY.has(d.phase) && coreCommit(d));
   const built = last && coreCommit(last);
   if (!last || !built) return { ok: true, message: "no finished deployment with a recorded source commit" };
