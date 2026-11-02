@@ -49,7 +49,7 @@ jobs:
   changes:
     permissions:
       contents: read
-    uses: krizaka/.github/.github/workflows/changes.yml@8b8ba2244f8348479fe6b85f245049da036195d2 # main
+    uses: krizaka/.github/.github/workflows/changes.yml@33659828113f147459416d4ae30eab8457bf1957 # main
     with:
       ignore: ${{ inputs.ignore }}
 
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "22"
-      - uses: krizaka/.github/actions/dup-check@8b8ba2244f8348479fe6b85f245049da036195d2 # v1.5.0
+      - uses: krizaka/.github/actions/dup-check@33659828113f147459416d4ae30eab8457bf1957 # v1.5.0
 
   # A change no build reads (dependabot.yml, licence, changesets) skips `verify`, yet the required « SonarCloud Code Analysis » is posted
   # by the SonarCloud app only when a scan runs: without it the PR is BLOCKED for ever (the train: « required check never ran »,
@@ -88,7 +88,7 @@ jobs:
           fetch-depth: 0  # blame and new-code detection need the history
           persist-credentials: false
       - name: SonarCloud, light analysis
-        uses: krizaka/.github/actions/sonar-scan@8b8ba2244f8348479fe6b85f245049da036195d2 # main
+        uses: krizaka/.github/actions/sonar-scan@33659828113f147459416d4ae30eab8457bf1957 # main
         with:
           token: ${{ secrets.SONAR_TOKEN }}
           args: -Dsonar.projectVersion=ci-${{ github.run_number }} -Dsonar.qualitygate.wait=true -Dsonar.java.binaries=.
@@ -140,7 +140,7 @@ jobs:
           server-password: GITHUB_TOKEN
 
       # A Krizaka release waits for a human to press Publish on Central; development builds resolve it from GitHub Packages.
-      - uses: krizaka/.github/actions/maven-github-packages@8b8ba2244f8348479fe6b85f245049da036195d2 # main
+      - uses: krizaka/.github/actions/maven-github-packages@33659828113f147459416d4ae30eab8457bf1957 # main
         with:
           token: ${{ github.token }}
 
@@ -174,7 +174,7 @@ jobs:
 
       - name: SonarCloud — analysis with the coverage of the verification
         if: ${{ inputs.sonar }}
-        uses: krizaka/.github/actions/sonar-scan@8b8ba2244f8348479fe6b85f245049da036195d2 # main
+        uses: krizaka/.github/actions/sonar-scan@33659828113f147459416d4ae30eab8457bf1957 # main
         with:
           token: ${{ secrets.SONAR_TOKEN }}
           project-base-dir: ${{ steps.where.outputs.dir }}
