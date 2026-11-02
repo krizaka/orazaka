@@ -88,3 +88,14 @@ test("a workflow that mints the app token skips Dependabot pull requests (Depend
     .map(([f]) => f);
   assert.deepEqual(bad, []);
 });
+
+// A docs-only change skips `verify`; the required « SonarCloud Code Analysis » is posted by the app only when a scan runs, so
+// component.yml must scan lightly in that case (orazaka-ai-engine#219, orazaka-web-client#395: BLOCKED, check never ran).
+test("component.yml scans lightly when verify is skipped (the required Sonar check must report)", () => {
+  const text = readFileSync(new URL("component.yml", dir), "utf8");
+  const m = /^  sonar-light:\n([\s\S]*?)(?=^  \S)/m.exec(text);
+  assert.ok(m, "component.yml has no sonar-light job");
+  assert.match(m[1], /inputs\.sonar && !cancelled\(\) && needs\.changes\.outputs\.code == 'false'/);
+  assert.match(m[1], /actions\/sonar-scan@/);
+  assert.match(m[1], /qualitygate\.wait=true/);
+});

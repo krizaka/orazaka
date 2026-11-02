@@ -70,6 +70,29 @@ jobs:
           node-version: "22"
       - uses: krizaka/.github/actions/dup-check@8b8ba2244f8348479fe6b85f245049da036195d2 # v1.5.0
 
+  # A change no build reads (dependabot.yml, licence, changesets) skips `verify`, yet the required « SonarCloud Code Analysis » is posted
+  # by the SonarCloud app only when a scan runs: without it the PR is BLOCKED for ever (the train: « required check never ran »,
+  # orazaka-ai-engine#219, orazaka-web-client#395). A light scan (checkout, no build, no coverage) posts it; its quality gate is real
+  # on the changed files. Never a synthetic status. Same job as java-ci.yml « SonarCloud (docs only) » (krizaka/.github#330).
+  sonar-light:
+    name: SonarCloud (docs only)
+    needs: changes
+    if: ${{ inputs.sonar && !cancelled() && needs.changes.outputs.code == 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0  # blame and new-code detection need the history
+          persist-credentials: false
+      - name: SonarCloud, light analysis
+        uses: krizaka/.github/actions/sonar-scan@8b8ba2244f8348479fe6b85f245049da036195d2 # main
+        with:
+          token: ${{ secrets.SONAR_TOKEN }}
+          args: -Dsonar.projectVersion=ci-${{ github.run_number }} -Dsonar.qualitygate.wait=true -Dsonar.java.binaries=.
+
   verify:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
