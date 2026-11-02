@@ -19,7 +19,7 @@ jobs:
   rust:
     permissions:
       contents: read
-    uses: krizaka/.github/.github/workflows/rust-quality.yml@64ef71342891ca9fadc5be6d8a5ad308eff1be02 # main
+    uses: krizaka/.github/.github/workflows/rust-quality.yml@0f4bdc5a3fc4facd03a20571da5c6e65abed9dd1 # main
     with:
       working-directory: apps/desktop/src-tauri
       runs-on: macos-latest
