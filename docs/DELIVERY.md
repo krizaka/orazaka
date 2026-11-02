@@ -116,7 +116,7 @@ edge, web, admin), `gpu` (the CUDA media-worker image — worker + `sd-server`, 
 honestly in the profile). TLS on the LAN: the edge behind Caddy with the firm's certificate, or an
 internal CA created at install whose root the firm distributes.
 
-No development fixture ever ships: `00-reset.sql` and `90-dev-fixtures.sql` are excluded from the
+No development fixture ever ships: `00-reset.sql` is excluded from the
 bundle; the first administrator is created by `orazaka install` and sign-up stays closed
 (`AUTH_SIGNUP_ENABLED=false`).
 

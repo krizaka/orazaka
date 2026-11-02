@@ -337,8 +337,7 @@ test("the searchKnowledge rename (orazaka-ai-engine#59) is copied, additive and 
     assert.doesNotMatch(sql, /\b(DELETE|DROP|UPDATE)\b/);
   }
   assert.match(sources, /\\c orazaka_knowledge_db/);
-  const fixtures = readFileSync(new URL("../../infra/initdb/90-dev-fixtures.sql", import.meta.url), "utf8");
-  assert.doesNotMatch(fixtures, /^\('searchWeb'/m);
+  assert.ok(!existsSync(new URL("../../infra/initdb/90-dev-fixtures.sql", import.meta.url)), "dev data is seeded by dev-reset, never by initdb");
   assert.match(readFileSync(new URL("../dev-deploy.mjs", import.meta.url), "utf8"), /command === "search-knowledge"\) searchKnowledge\(\)/);
 });
 
