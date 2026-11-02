@@ -76,8 +76,8 @@ const readInitDb = () => {
     if (!existsSync(dir)) continue;
     for (const n of readdirSync(dir).filter((x) => /^V\d+__.*\.sql$/.test(x))) baselines.push({ n, p: join(dir, n) });
   }
-  baselines.sort((a, b) => a.n.localeCompare(b.n, undefined, { numeric: true }));
-  return [...files.sort((a, b) => a.n.localeCompare(b.n)), ...baselines].map((f) => read(f.p)).join("\n");
+  const byName = (a, b) => a.n.localeCompare(b.n, undefined, { numeric: true });
+  return [...files.toSorted(byName), ...baselines.toSorted(byName)].map((f) => read(f.p)).join("\n");
 };
 
 const javaFiles = (dir) => walk(dir, (p) => p.endsWith(".java"));
