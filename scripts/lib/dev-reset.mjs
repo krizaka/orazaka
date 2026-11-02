@@ -64,19 +64,33 @@ export function refusals({ product, target, appEnv, host, expectedHost, database
   for (const value of [host, expectedHost, ...urls].filter(Boolean)) {
     if (PROD_MARKS.test(value)) out.push("a production or commercial host was given: refused");
   }
-  if (!host) out.push("no database host");
-  else if (target === "dev") {
-    if (!DEV_HOST.test(host)) out.push("the host is not the dev cluster krizaka-dev-pg");
-    if (!expectedHost) out.push("no expected dev host (the dev cluster's host from the non-prod OpenTofu outputs)");
-    else if (host !== expectedHost && host !== `private-${expectedHost}` && `private-${host}` !== expectedHost) {
-      out.push("the host is not the dev cluster's host from the OpenTofu outputs");
-    }
-  } else if (target === "local" && !LOCAL_HOSTS.has(host)) out.push("--target local only reaches a local Postgres (localhost or the compose service)");
+  out.push(...hostRefusals(target, host, expectedHost), ...databaseRefusals(product, allowed, databases));
+  return [...new Set(out)];
+}
+
+/** The host must exist and, for dev, be the dev cluster's own host; for local, a local Postgres. */
+function hostRefusals(target, host, expectedHost) {
+  if (!host) return ["no database host"];
+  if (target === "local") return LOCAL_HOSTS.has(host) ? [] : ["--target local only reaches a local Postgres (localhost or the compose service)"];
+  if (target !== "dev") return [];
+  const out = [];
+  if (!DEV_HOST.test(host)) out.push("the host is not the dev cluster krizaka-dev-pg");
+  if (!expectedHost) out.push("no expected dev host (the dev cluster's host from the non-prod OpenTofu outputs)");
+  else if (!sameClusterHost(host, expectedHost)) out.push("the host is not the dev cluster's host from the OpenTofu outputs");
+  return out;
+}
+
+function sameClusterHost(host, expectedHost) {
+  return host === expectedHost || host === "private-" + expectedHost || "private-" + host === expectedHost;
+}
+
+function databaseRefusals(product, allowed, databases) {
+  const out = [];
   for (const db of databases ?? allowed) {
     if (EXCLUDED_DATABASES.includes(db)) out.push(`« ${db} » is never reset`);
     else if (!allowed.includes(db)) out.push(`« ${db} » is not a database of ${product}`);
   }
-  return [...new Set(out)];
+  return out;
 }
 
 function ident(name) {
@@ -92,7 +106,7 @@ function ident(name) {
 export function clearSql(db) {
   const owner = ident(db);
   return [
-    "\\set ON_ERROR_STOP 1",
+    String.raw`\set ON_ERROR_STOP 1`,
     "BEGIN;",
     `DO $$ BEGIN IF current_database() <> '${owner}' OR current_user <> '${owner}' THEN RAISE EXCEPTION 'dev-reset: not ${owner} as its owner'; END IF; END $$;`,
     `DROP OWNED BY ${owner} CASCADE;`,
@@ -115,7 +129,7 @@ export function bootstrapSql(db, extensions = []) {
   const owner = ident(db);
   const runtime = `${owner}_app`;
   return [
-    ...[...new Set(extensions)].sort().map((e) => `CREATE EXTENSION IF NOT EXISTS ${ident(e)};`),
+    ...[...new Set(extensions)].sort((a, b) => a.localeCompare(b)).map((e) => `CREATE EXTENSION IF NOT EXISTS ${ident(e)};`),
     `DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${runtime}') THEN EXECUTE 'GRANT CONNECT ON DATABASE ${owner} TO ${runtime}'; END IF; END $$;`,
   ].join("\n");
 }
@@ -131,7 +145,8 @@ export function grantsSql(db) {
     `ALTER DEFAULT PRIVILEGES FOR ROLE ${owner} GRANT USAGE, SELECT ON SEQUENCES TO ${runtime}`,
     `ALTER DEFAULT PRIVILEGES FOR ROLE ${owner} GRANT EXECUTE ON FUNCTIONS TO ${runtime}`,
   ];
-  return `DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${runtime}') THEN ${grants.map((g) => `EXECUTE '${g.replaceAll("'", "''")}';`).join(" ")} END IF; END $$;`;
+  const executes = grants.map((g) => "EXECUTE '" + g.replaceAll("'", "''") + "';").join(" ");
+  return `DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${runtime}') THEN ${executes} END IF; END $$;`;
 }
 
 /** The extensions each database's bootstrap creates (same as krizaka-infra stacks; akinaza's moved out of its baseline). */
@@ -153,5 +168,6 @@ export function plan(product, target) {
 
 /** One JSON line for the run's log: who, when, what; never a credential or a host. */
 export function logLine({ actor, at, product, target, steps, result }) {
-  return JSON.stringify({ kind: "dev-reset", actor, at, product, target, steps: steps.map((s) => `${s.product}:${s.step}${s.db ? `:${s.db}` : ""}`), result });
+  const named = steps.map((s) => [s.product, s.step, s.db].filter(Boolean).join(":"));
+  return JSON.stringify({ kind: "dev-reset", actor, at, product, target, steps: named, result });
 }

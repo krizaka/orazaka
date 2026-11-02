@@ -35,15 +35,32 @@ function option(argv, name, fallback) {
   return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith("--") ? argv[i + 1] : fallback;
 }
 
-function psqlBinary() {
-  if (process.env.PSQL) return process.env.PSQL;
-  if (spawnSync("psql", ["--version"]).status === 0) return "psql";
+/** Fixed, root-owned or Homebrew directories: a tool is never looked up through a PATH that a project could write to. */
+const TOOL_DIRS = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"];
+
+function libpqBins() {
   const cellar = "/opt/homebrew/Cellar/libpq";
-  if (existsSync(cellar)) {
-    const v = readdirSync(cellar).sort().pop();
-    if (v) return join(cellar, v, "bin/psql");
-  }
-  throw new Error("psql not found (set PSQL)");
+  if (!existsSync(cellar)) return [];
+  return readdirSync(cellar)
+    .sort((a, b) => a.localeCompare(b, "en", { numeric: true }))
+    .reverse()
+    .map((v) => join(cellar, v, "bin"));
+}
+
+function toolPath(name, override) {
+  if (override) return override;
+  const dirs = [...TOOL_DIRS, ...libpqBins()];
+  const found = dirs.map((d) => join(d, name)).find((f) => existsSync(f));
+  if (!found) throw new Error(`${name} not found in ${dirs.join(", ")} (set ${name.toUpperCase()})`);
+  return found;
+}
+
+const psqlBinary = () => toolPath("psql", process.env.PSQL);
+const doctl = (...args) => execFileSync(toolPath("doctl", process.env.DOCTL), args, { encoding: "utf8" });
+
+/** A synchronous pause, without a child process. */
+function pause(seconds) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, seconds * 1000);
 }
 
 /** `sql` on `db` as `role`; the password goes through the environment only, the host never reaches a message. */
@@ -55,14 +72,14 @@ function psql({ host, port, password, sslmode }, db, role, sql) {
 }
 
 function waitForDeployment(app, log) {
-  const id = execFileSync("doctl", ["apps", "list", "--format", "ID,Spec.Name", "--no-header"], { encoding: "utf8" })
+  const id = doctl("apps", "list", "--format", "ID,Spec.Name", "--no-header")
     .split("\n").map((l) => l.trim().split(/\s+/)).find(([, name]) => name === app)?.[0];
   if (!id) throw new Error(`no App Platform app ${app}`);
-  const dep = JSON.parse(execFileSync("doctl", ["apps", "create-deployment", id, "--force-rebuild", "--output", "json"], { encoding: "utf8" }))[0];
+  const dep = JSON.parse(doctl("apps", "create-deployment", id, "--force-rebuild", "--output", "json"))[0];
   log(`  ${app}: deployment ${dep.id} started`);
   for (let i = 0; i < 120; i++) {
-    spawnSync("sleep", ["15"]);
-    const d = JSON.parse(execFileSync("doctl", ["apps", "get-deployment", id, dep.id, "--output", "json"], { encoding: "utf8" }))[0];
+    pause(15);
+    const d = JSON.parse(doctl("apps", "get-deployment", id, dep.id, "--output", "json"))[0];
     if (d.phase === "ACTIVE") return log(`  ${app}: ACTIVE`);
     if (["ERROR", "CANCELED", "SUPERSEDED"].includes(d.phase)) throw new Error(`${app}: deployment ${dep.id} ended ${d.phase} (the previous release keeps serving)`);
   }
@@ -72,6 +89,39 @@ function waitForDeployment(app, log) {
 function run(cmd, args, cwd) {
   const r = spawnSync(cmd, args, { cwd, stdio: "inherit" });
   if (r.status !== 0) throw new Error(`${[cmd, ...args].join(" ")} exited ${r.status}`);
+}
+
+/** The connection of `role` to the target's cluster; the password comes from the environment or the vault only. */
+function connectionFor({ local, host, environ, secrets }) {
+  return (role) => ({
+    host,
+    port: local ? (environ.PGPORT ?? "5432") : (secrets.DATABASE_PORT ?? "25060"),
+    sslmode: local ? "disable" : "require",
+    password: local ? environ.PGPASSWORD : secrets["DATABASE_PASSWORD_" + role.toUpperCase()],
+  });
+}
+
+/** One database: the read-only preflight, then (when applying) clear, extensions back, grants back. */
+function resetDatabase({ db, conn, apply, log }) {
+  const atRisk = psql(conn(db), db, db, extensionsAtRiskSql(db));
+  const putBack = atRisk ? " (extensions put back after: " + atRisk.replaceAll("\n", ", ") + ")" : "";
+  log(`  ${db}: preflight ok as its owner${putBack}`);
+  if (!apply) return;
+  psql(conn(db), db, db, clearSql(db));
+  psql(conn("doadmin"), db, "doadmin", bootstrapSql(db, EXTENSIONS[db]));
+  psql(conn(db), db, db, grantsSql(db));
+  log(`  ${db}: cleared, extensions and grants back`);
+}
+
+/** After a product's databases are clear: its migrations run from V1 (redeploy), then the cast and the smoke. */
+function reseedProduct({ p, local, noDeploy, log }) {
+  if (local) {
+    log(`  ${p}: start the stack (docker compose up): the services' migrations run from V1`);
+    return;
+  }
+  if (!noDeploy) waitForDeployment(DEV_APPS[p], log);
+  run(join(TOOLS, "seed-dev.sh"), [p]);
+  if (p === "orazaka") run(process.execPath, ["scripts/dev-persona-smoke.mjs", "eric"]);
 }
 
 export async function main(argv = process.argv.slice(2), environ = process.env) {
@@ -89,37 +139,20 @@ export async function main(argv = process.argv.slice(2), environ = process.env) 
   }
   const steps = plan(product, target);
   const log = (line) => console.log(line);
-  log(`dev-reset ${product} --target ${target}${apply ? "" : " (dry run: guards and read-only preflight only)"}`);
-  for (const s of steps) log(`  ${s.product} · ${s.step}${s.db ? ` · ${s.db}` : ""}`);
-  const conn = (role) => ({
-    host,
-    port: local ? (environ.PGPORT ?? "5432") : (secrets.DATABASE_PORT ?? "25060"),
-    sslmode: local ? "disable" : "require",
-    password: local ? environ.PGPASSWORD : secrets[`DATABASE_PASSWORD_${role.toUpperCase()}`],
-  });
+  const dryRun = apply ? "" : " (dry run: guards and read-only preflight only)";
+  log(`dev-reset ${product} --target ${target}${dryRun}`);
+  for (const s of steps) log("  " + s.product + " · " + s.step + (s.db ? " · " + s.db : ""));
+  const conn = connectionFor({ local, host, environ, secrets });
   const record = (result) => {
     const file = option(argv, "log", join(homedir(), ".krizaka-private/logs/dev-reset.jsonl"));
     mkdirSync(dirname(file), { recursive: true });
-    appendFileSync(file, `${logLine({ actor: userInfo().username, at: new Date().toISOString(), product, target, steps, result })}\n`);
+    const line = logLine({ actor: userInfo().username, at: new Date().toISOString(), product, target, steps, result });
+    appendFileSync(file, line + "\n");
   };
   try {
     for (const p of productsOf(product)) {
-      for (const db of PRODUCT_DATABASES[p]) {
-        const atRisk = psql(conn(db), db, db, extensionsAtRiskSql(db));
-        log(`  ${db}: preflight ok as its owner${atRisk ? ` (extensions put back after: ${atRisk.split("\n").join(", ")})` : ""}`);
-        if (!apply) continue;
-        psql(conn(db), db, db, clearSql(db));
-        psql(conn("doadmin"), db, "doadmin", bootstrapSql(db, EXTENSIONS[db]));
-        psql(conn(db), db, db, grantsSql(db));
-        log(`  ${db}: cleared, extensions and grants back`);
-      }
-      if (!apply) continue;
-      if (local) log(`  ${p}: start the stack (docker compose up): the services' migrations run from V1`);
-      else if (!flag(argv, "no-deploy")) waitForDeployment(DEV_APPS[p], log);
-      if (!local) {
-        run(join(TOOLS, "seed-dev.sh"), [p]);
-        if (p === "orazaka") run("node", ["scripts/dev-persona-smoke.mjs", "eric"]);
-      }
+      for (const db of PRODUCT_DATABASES[p]) resetDatabase({ db, conn, apply, log });
+      if (apply) reseedProduct({ p, local, noDeploy: flag(argv, "no-deploy"), log });
     }
     record(apply ? "done" : "dry-run");
     return 0;
