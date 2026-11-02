@@ -1,12 +1,13 @@
 // node --test scripts/test — the facts a Studio form's model picker shows (time, price) live in the catalogue, once:
-// a fresh database (job-service initdb) and an existing one (this repository's migration) must say the same thing,
+// a fresh database (job-service Flyway V1) and an existing one (this repository's migration) must say the same thing,
 // and a model that is hosted must carry a price while one on the operator's hardware must not.
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const migration = readFileSync(new URL("../../infra/migrations/2026-10-17-model-picker-facts.sql", import.meta.url), "utf8");
-const initdbUrl = new URL("../../orazaka-apps/services/orazaka-job-service/infra/initdb/30-jobs-config.sql", import.meta.url);
+// The job service's catalogue moved from infra/initdb to its Flyway V1 baseline (krizaka-internal#2255).
+const initdbUrl = new URL("../../orazaka-apps/services/orazaka-job-service/src/main/resources/db/migration/V1__job_baseline.sql", import.meta.url);
 const initdb = existsSync(initdbUrl) ? readFileSync(initdbUrl, "utf8") : null;
 
 const facts = (sql) =>

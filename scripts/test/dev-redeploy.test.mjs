@@ -1,7 +1,7 @@
 // node --test scripts/test — the dev core image follows the repositories it clones (no merge left unbuilt, no rebuild for nothing).
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { decide, rollbackVerdict, staleSourceVerdict } from "../dev-redeploy.mjs";
+import { decide, rollbackVerdict, staleSourceVerdict, schemaDriftVerdict } from "../dev-redeploy.mjs";
 
 const manual = { created_at: "2026-10-27T10:47:33Z", cause: "manual", phase: "ACTIVE" };
 
@@ -65,4 +65,19 @@ test("staleSourceVerdict waits while a rebuild is in progress: the check right a
   const v = staleSourceVerdict([{ id: "b", phase: "BUILDING", services: [] }, { id: "a", phase: "ACTIVE", services: core("e5b019e") }], "d2bc55f");
   assert.equal(v.ok, true);
   assert.match(v.message, /in progress/);
+});
+
+test("schemaDriftVerdict fails loudly on a missing column (dev billing, 2026-11-02, krizaka-internal#2255)", () => {
+  const logs = [
+    "core 2026-11-02T03:45:23Z [billing] org.postgresql.util.PSQLException: ERROR: column \"overage_credit_price_cents\" does not exist",
+    "core 2026-11-02T03:45:24Z [billing] org.postgresql.util.PSQLException: ERROR: column \"overage_credit_price_cents\" does not exist",
+    "core 2026-11-02T03:45:25Z [users] relation \"api_key\" is fine",
+  ].join("\n");
+  const v = schemaDriftVerdict(logs);
+  assert.equal(v.ok, false);
+  assert.match(v.message, /billing: column overage_credit_price_cents/);
+});
+
+test("schemaDriftVerdict is quiet on healthy logs", () => {
+  assert.equal(schemaDriftVerdict("core [billing] Started BillingApplication in 9s").ok, true);
 });
