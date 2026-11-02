@@ -124,6 +124,21 @@ function reseedProduct({ p, local, noDeploy, log }) {
   if (p === "orazaka") run(process.execPath, ["scripts/dev-persona-smoke.mjs", "eric"]);
 }
 
+const DEFAULT_LOG = join(homedir(), ".krizaka-private/logs/dev-reset.jsonl");
+
+function announce({ product, target, apply, steps, log }) {
+  const dryRun = apply ? "" : " (dry run: guards and read-only preflight only)";
+  log(`dev-reset ${product} --target ${target}${dryRun}`);
+  for (const s of steps) log("  " + s.product + " · " + s.step + (s.db ? " · " + s.db : ""));
+}
+
+/** One JSON line per run: who, when, what; never a credential or a host. */
+function recordRun({ file, product, target, steps, result }) {
+  mkdirSync(dirname(file), { recursive: true });
+  const line = logLine({ actor: userInfo().username, at: new Date().toISOString(), product, target, steps, result });
+  appendFileSync(file, line + "\n");
+}
+
 export async function main(argv = process.argv.slice(2), environ = process.env) {
   const product = argv[0];
   const target = option(argv, "target", "");
@@ -139,16 +154,9 @@ export async function main(argv = process.argv.slice(2), environ = process.env) 
   }
   const steps = plan(product, target);
   const log = (line) => console.log(line);
-  const dryRun = apply ? "" : " (dry run: guards and read-only preflight only)";
-  log(`dev-reset ${product} --target ${target}${dryRun}`);
-  for (const s of steps) log("  " + s.product + " · " + s.step + (s.db ? " · " + s.db : ""));
+  announce({ product, target, apply, steps, log });
   const conn = connectionFor({ local, host, environ, secrets });
-  const record = (result) => {
-    const file = option(argv, "log", join(homedir(), ".krizaka-private/logs/dev-reset.jsonl"));
-    mkdirSync(dirname(file), { recursive: true });
-    const line = logLine({ actor: userInfo().username, at: new Date().toISOString(), product, target, steps, result });
-    appendFileSync(file, line + "\n");
-  };
+  const record = (result) => recordRun({ file: option(argv, "log", DEFAULT_LOG), product, target, steps, result });
   try {
     for (const p of productsOf(product)) {
       for (const db of PRODUCT_DATABASES[p]) resetDatabase({ db, conn, apply, log });
