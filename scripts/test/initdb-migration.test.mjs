@@ -2,7 +2,7 @@
 // (infra/migrations): every column, constraint, index and table a migration adds is in the initdb DDL.
 // The initdb files live in the component repositories (orazaka.workspace.json `initdb`), cloned next to this one.
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -31,13 +31,19 @@ export function objectsAdded(sql) {
   return parts;
 }
 
-/** The text of every initdb file of the workspace, by database. */
+/** The text of every initdb file of the workspace, and of the Flyway baselines that replace them (krizaka-internal#2255). */
 function initdbText() {
   const all = [];
   for (const r of manifest.repositories) {
     for (const f of r.initdb ?? []) {
       const p = join(root, r.path, "infra", "initdb", f);
       if (existsSync(p)) all.push(readFileSync(p, "utf8").replace(/--[^\n]*/g, ""));
+    }
+    const migrations = join(root, r.path, "src", "main", "resources", "db", "migration");
+    if (existsSync(migrations)) {
+      for (const f of readdirSync(migrations).filter((n) => /^V\d+__.*\.sql$/.test(n)).sort()) {
+        all.push(readFileSync(join(migrations, f), "utf8").replace(/--[^\n]*/g, ""));
+      }
     }
   }
   return all.join("\n");
