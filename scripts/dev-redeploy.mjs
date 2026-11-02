@@ -74,6 +74,24 @@ export function staleSourceVerdict(deployments, mainSha) {
   return { ok: false, message: `deployment ${last.id} built core from ${built.slice(0, 7)}, behind main (${mainSha.slice(0, 7)}): a spec apply reuses the old commit, start doctl apps create-deployment <app> --force-rebuild` };
 }
 
+/**
+ * The redeploy ships a new jar every 15 minutes and never applies a migration (docs/DEV_DATABASE.md), so a service can run ahead of its
+ * database: on 2026-11-02 dev billing answered 500 on /api/v1/billing/plans, `column "overage_credit_price_cents" does not exist`
+ * (krizaka-billing 2026-10-30-offers-versioned.sql merged, released in 0.8.x, never applied; krizaka-internal#2255). Fails when the run
+ * logs of `core` hold such an error, and names the services and the missing columns or tables (secret-shaped text never leaves the log).
+ * @param {string} logs run logs of the core component, one line per entry, prefixed `[service]` by run-services.sh
+ * @returns {{ ok: boolean, message: string }}
+ */
+export function schemaDriftVerdict(logs) {
+  const found = new Map();
+  for (const line of logs.split("\n")) {
+    const m = /\[([\w-]+)\].*PSQLException: ERROR: (column|relation) "([^"]+)" does not exist/.exec(line);
+    if (m) found.set(`${m[1]}: ${m[2]} ${m[3]}`, true);
+  }
+  if (!found.size) return { ok: true, message: "no schema drift in the core run logs" };
+  return { ok: false, message: `a service runs ahead of its database (apply the pending migration, node scripts/dev-migrations.mjs check): ${[...found.keys()].sort().join("; ")}` };
+}
+
 const run = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "inherit"] });
 
 function main(dryRun, check) {
@@ -95,6 +113,9 @@ function main(dryRun, check) {
     const stale = staleSourceVerdict(deployments, mainSha);
     console.log(`${APP}: ${stale.message}`);
     if (!stale.ok) process.exitCode = 1;
+    const drift = schemaDriftVerdict(run("doctl", ["apps", "logs", id, "core", "--type", "run", "--tail", "2000"]));
+    console.log(`${APP}: ${drift.message}`);
+    if (!drift.ok) process.exitCode = 1;
     return;
   }
   const verdict = decide({ deployments, heads });
