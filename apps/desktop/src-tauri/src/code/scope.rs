@@ -30,7 +30,9 @@ impl std::fmt::Display for CodeError {
             CodeError::Refused(p) => write!(f, "refused target: {p}"),
             CodeError::Invisible(p) => write!(f, "not visible: {p}"),
             CodeError::NotFound(p) => write!(f, "not found: {p}"),
-            CodeError::Conflict(p) => write!(f, "the file changed since the proposal, propose again: {p}"),
+            CodeError::Conflict(p) => {
+                write!(f, "the file changed since the proposal, propose again: {p}")
+            }
             CodeError::Io(e) => write!(f, "io: {e}"),
         }
     }
@@ -60,7 +62,9 @@ impl Repo {
     /// Grants `folder` through the kit's scope rules (too broad or sensitive folders are refused) and requires git.
     pub fn open(folder: &Path, home: Option<&Path>) -> Result<Repo, CodeError> {
         let mut store = ScopeStore::default();
-        let root = store.grant_with_home(folder, home).map_err(|e| CodeError::NotARepository(e.to_string()))?;
+        let root = store
+            .grant_with_home(folder, home)
+            .map_err(|e| CodeError::NotARepository(e.to_string()))?;
         if !root.join(".git").exists() {
             return Err(CodeError::NotARepository(root.display().to_string()));
         }
@@ -82,33 +86,55 @@ impl Repo {
         if out.status.success() {
             Ok(out.stdout)
         } else {
-            Err(CodeError::Io(String::from_utf8_lossy(&out.stderr).trim().to_string()))
+            Err(CodeError::Io(
+                String::from_utf8_lossy(&out.stderr).trim().to_string(),
+            ))
         }
     }
 
     pub fn info(&self) -> Result<RepoInfo, CodeError> {
-        let branch = String::from_utf8_lossy(&self.git(&["rev-parse", "--abbrev-ref", "HEAD"]).unwrap_or_default()).trim().to_string();
+        let branch = String::from_utf8_lossy(
+            &self
+                .git(&["rev-parse", "--abbrev-ref", "HEAD"])
+                .unwrap_or_default(),
+        )
+        .trim()
+        .to_string();
         let status = String::from_utf8_lossy(&self.git(&["status", "--short"])?)
             .lines()
-            .filter(|l| l.len() > 3 && visibility::is_secret_path(l[3..].trim_matches('"')).is_none())
+            .filter(|l| {
+                l.len() > 3 && visibility::is_secret_path(l[3..].trim_matches('"')).is_none()
+            })
             .map(str::to_string)
             .collect();
         let all = self.candidate_files()?;
         let visible = visibility::filter_visible(self, &all).len();
-        Ok(RepoInfo { root: self.root.display().to_string(), branch, status, visible, hidden: all.len() - visible })
+        Ok(RepoInfo {
+            root: self.root.display().to_string(),
+            branch,
+            status,
+            visible,
+            hidden: all.len() - visible,
+        })
     }
 
     /// Tracked and untracked files (before the visibility filter), relative to the root.
     pub(crate) fn candidate_files(&self) -> Result<Vec<String>, CodeError> {
         let out = self.git(&["ls-files", "-co", "-z"])?;
-        Ok(out.split(|b| *b == 0).filter(|s| !s.is_empty()).map(|s| String::from_utf8_lossy(s).to_string()).collect())
+        Ok(out
+            .split(|b| *b == 0)
+            .filter(|s| !s.is_empty())
+            .map(|s| String::from_utf8_lossy(s).to_string())
+            .collect())
     }
 
     /// A relative path made only of normal components (no `..`, no root): the lexical gate.
     fn lexical(&self, rel: &str) -> Result<PathBuf, CodeError> {
         let p = Path::new(rel);
         let p = if p.is_absolute() {
-            p.strip_prefix(&self.root).map_err(|_| CodeError::OutsideRepository(rel.to_string()))?.to_path_buf()
+            p.strip_prefix(&self.root)
+                .map_err(|_| CodeError::OutsideRepository(rel.to_string()))?
+                .to_path_buf()
         } else {
             p.to_path_buf()
         };
@@ -127,8 +153,14 @@ impl Repo {
     pub fn resolve_read(&self, rel: &str) -> Result<PathBuf, CodeError> {
         let clean = self.lexical(rel)?;
         let rel_s = clean.to_string_lossy().to_string();
-        let canon = self.root.join(&clean).canonicalize().map_err(|_| CodeError::NotFound(rel.to_string()))?;
-        let inside = canon.strip_prefix(&self.root).map_err(|_| CodeError::OutsideRepository(rel.to_string()))?;
+        let canon = self
+            .root
+            .join(&clean)
+            .canonicalize()
+            .map_err(|_| CodeError::NotFound(rel.to_string()))?;
+        let inside = canon
+            .strip_prefix(&self.root)
+            .map_err(|_| CodeError::OutsideRepository(rel.to_string()))?;
         let target_rel = inside.to_string_lossy().to_string();
         for r in [&rel_s, &target_rel] {
             if !r.is_empty() && !visibility::is_visible(self, r) {
@@ -151,17 +183,30 @@ impl Repo {
         }
         let target = self.root.join(&clean);
         // The deepest existing ancestor is canonical and inside (a new file's parent is resolved before it is created).
-        let mut anc = target.parent().map(Path::to_path_buf).unwrap_or_else(|| self.root.clone());
+        let mut anc = target
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| self.root.clone());
         while !anc.exists() {
             if anc.symlink_metadata().is_ok() {
                 return Err(CodeError::OutsideRepository(rel.to_string())); // a dangling symlink in the chain
             }
-            anc = anc.parent().ok_or_else(|| CodeError::OutsideRepository(rel.to_string()))?.to_path_buf();
+            anc = anc
+                .parent()
+                .ok_or_else(|| CodeError::OutsideRepository(rel.to_string()))?
+                .to_path_buf();
         }
-        let canon_anc = anc.canonicalize().map_err(|e| CodeError::Io(e.to_string()))?;
-        let tail = canon_anc.strip_prefix(&self.root).map_err(|_| CodeError::OutsideRepository(rel.to_string()))?;
+        let canon_anc = anc
+            .canonicalize()
+            .map_err(|e| CodeError::Io(e.to_string()))?;
+        let tail = canon_anc
+            .strip_prefix(&self.root)
+            .map_err(|_| CodeError::OutsideRepository(rel.to_string()))?;
         // `.git` or a secret directory reached through a symlinked directory is refused too.
-        let full = tail.join(clean.file_name().unwrap_or_default()).to_string_lossy().to_string();
+        let full = tail
+            .join(clean.file_name().unwrap_or_default())
+            .to_string_lossy()
+            .to_string();
         if visibility::is_git_internal(&full) || visibility::is_secret_path(&full).is_some() {
             return Err(CodeError::Refused(rel.to_string()));
         }

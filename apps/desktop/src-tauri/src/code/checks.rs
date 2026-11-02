@@ -48,9 +48,14 @@ impl std::fmt::Display for CheckError {
         match self {
             CheckError::NotConfirmed(n) => write!(f, "not a confirmed check: {n}"),
             CheckError::Invalid(m) => write!(f, "invalid check: {m}"),
-            CheckError::ApprovalRequired => write!(f, "approval required: a change to what runs was applied since the last approval"),
+            CheckError::ApprovalRequired => write!(
+                f,
+                "approval required: a change to what runs was applied since the last approval"
+            ),
             CheckError::LimitReached(m) => write!(f, "limit reached: {m}"),
-            CheckError::SandboxUnavailable => write!(f, "the sandbox is unavailable, the check was not run"),
+            CheckError::SandboxUnavailable => {
+                write!(f, "the sandbox is unavailable, the check was not run")
+            }
             CheckError::Code(e) => write!(f, "{e}"),
             CheckError::Io(e) => write!(f, "io: {e}"),
         }
@@ -109,7 +114,11 @@ pub struct Session {
 
 impl Default for Session {
     fn default() -> Self {
-        Session { tainted: true, runs: 0, exec_pending: false }
+        Session {
+            tainted: true,
+            runs: 0,
+            exec_pending: false,
+        }
     }
 }
 
@@ -196,7 +205,11 @@ pub struct Book {
 
 impl Book {
     pub fn in_memory() -> Book {
-        Book { path: None, grants: vec![], session: Session::default() }
+        Book {
+            path: None,
+            grants: vec![],
+            session: Session::default(),
+        }
     }
 
     /// A new run is a new session: tainted from its first untrusted byte, nothing pending, no runs counted.
@@ -205,16 +218,29 @@ impl Book {
     }
 
     pub fn open(path: &Path) -> Book {
-        let grants = fs::read_to_string(path).ok().and_then(|s| serde_json::from_str::<BookFile>(&s).ok()).unwrap_or_default().grants;
-        Book { path: Some(path.to_path_buf()), grants, session: Session::default() }
+        let grants = fs::read_to_string(path)
+            .ok()
+            .and_then(|s| serde_json::from_str::<BookFile>(&s).ok())
+            .unwrap_or_default()
+            .grants;
+        Book {
+            path: Some(path.to_path_buf()),
+            grants,
+            session: Session::default(),
+        }
     }
 
     fn save(&self) -> Result<(), CheckError> {
-        let Some(path) = &self.path else { return Ok(()) };
+        let Some(path) = &self.path else {
+            return Ok(());
+        };
         if let Some(dir) = path.parent() {
             fs::create_dir_all(dir).map_err(|e| CheckError::Io(e.to_string()))?;
         }
-        let body = serde_json::to_string_pretty(&BookFile { grants: self.grants.clone() }).map_err(|e| CheckError::Io(e.to_string()))?;
+        let body = serde_json::to_string_pretty(&BookFile {
+            grants: self.grants.clone(),
+        })
+        .map_err(|e| CheckError::Io(e.to_string()))?;
         let tmp = path.with_extension("json.tmp");
         fs::write(&tmp, body).map_err(|e| CheckError::Io(e.to_string()))?;
         fs::rename(&tmp, path).map_err(|e| CheckError::Io(e.to_string()))
@@ -224,7 +250,11 @@ impl Book {
     pub fn confirm(&mut self, repo: &Repo, check: Check, at: &str) -> Result<Grant, CheckError> {
         validate(repo, &check)?;
         let root = repo.root().display().to_string();
-        for g in self.grants.iter_mut().filter(|g| g.repo == root && g.check.name == check.name && g.revoked_at.is_none()) {
+        for g in self
+            .grants
+            .iter_mut()
+            .filter(|g| g.repo == root && g.check.name == check.name && g.revoked_at.is_none())
+        {
             g.revoked_at = Some(at.to_string());
         }
         let grant = Grant {
@@ -241,7 +271,13 @@ impl Book {
     }
 
     pub fn revoke(&mut self, id: &str, at: &str) -> bool {
-        let Some(g) = self.grants.iter_mut().find(|g| g.id == id && g.revoked_at.is_none()) else { return false };
+        let Some(g) = self
+            .grants
+            .iter_mut()
+            .find(|g| g.id == id && g.revoked_at.is_none())
+        else {
+            return false;
+        };
         g.revoked_at = Some(at.to_string());
         self.save().is_ok()
     }
@@ -249,11 +285,17 @@ impl Book {
     /// The active grants of a repository.
     pub fn list(&self, repo: &Repo) -> Vec<&Grant> {
         let root = repo.root().display().to_string();
-        self.grants.iter().filter(|g| g.repo == root && g.revoked_at.is_none()).collect()
+        self.grants
+            .iter()
+            .filter(|g| g.repo == root && g.revoked_at.is_none())
+            .collect()
     }
 
     fn confirmed(&self, repo: &Repo, name: &str) -> Option<Check> {
-        self.list(repo).into_iter().find(|g| g.check.name == name).map(|g| g.check.clone())
+        self.list(repo)
+            .into_iter()
+            .find(|g| g.check.name == name)
+            .map(|g| g.check.clone())
     }
 }
 
@@ -266,11 +308,37 @@ fn valid_name(name: &str) -> bool {
     !b.is_empty()
         && b.len() <= 64
         && (b[0].is_ascii_lowercase() || b[0].is_ascii_digit())
-        && b.iter().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, b'.' | b'_' | b'-'))
+        && b.iter().all(|c| {
+            c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, b'.' | b'_' | b'-')
+        })
 }
 
-const CREDENTIAL_WORDS: &[&str] = &["TOKEN", "SECRET", "PASSWORD", "PASSWD", "CREDENTIAL", "API_KEY", "APIKEY", "PRIVATE", "AUTH", "SESSION", "COOKIE"];
-const CREDENTIAL_PREFIXES: &[&str] = &["GH_", "GITHUB_", "ORAZAKA_", "OZ_", "AWS_", "SSH_", "GPG_", "OPENAI_", "ANTHROPIC_", "DYLD_", "LD_"];
+const CREDENTIAL_WORDS: &[&str] = &[
+    "TOKEN",
+    "SECRET",
+    "PASSWORD",
+    "PASSWD",
+    "CREDENTIAL",
+    "API_KEY",
+    "APIKEY",
+    "PRIVATE",
+    "AUTH",
+    "SESSION",
+    "COOKIE",
+];
+const CREDENTIAL_PREFIXES: &[&str] = &[
+    "GH_",
+    "GITHUB_",
+    "ORAZAKA_",
+    "OZ_",
+    "AWS_",
+    "SSH_",
+    "GPG_",
+    "OPENAI_",
+    "ANTHROPIC_",
+    "DYLD_",
+    "LD_",
+];
 const BASE_ENV: &[&str] = &["PATH", "HOME", "LANG", "TMPDIR"];
 
 fn env_name_allowed(name: &str) -> bool {
@@ -302,14 +370,20 @@ pub fn validate(repo: &Repo, c: &Check) -> Result<(), CheckError> {
     if c.argv.is_empty() || c.argv[0].is_empty() {
         return bad("argv is empty");
     }
-    if c.argv.len() > MAX_ARGV || c.argv.iter().any(|a| a.len() > MAX_ARG_LEN || a.contains('\0')) {
+    if c.argv.len() > MAX_ARGV
+        || c.argv
+            .iter()
+            .any(|a| a.len() > MAX_ARG_LEN || a.contains('\0'))
+    {
         return bad("argv is too long");
     }
     if c.timeout_secs == 0 || c.timeout_secs > MAX_WALL_SECS {
         return bad("the timeout is between 1 s and the ceiling");
     }
     if let Some(n) = c.env.iter().find(|n| !env_name_allowed(n)) {
-        return Err(CheckError::Invalid(format!("the variable {n} cannot be declared")));
+        return Err(CheckError::Invalid(format!(
+            "the variable {n} cannot be declared"
+        )));
     }
     resolve_cwd(repo, &c.cwd).map(|_| ())
 }
@@ -317,7 +391,14 @@ pub fn validate(repo: &Repo, c: &Check) -> Result<(), CheckError> {
 // ---- suggestions ------------------------------------------------------------------------------------------------
 
 fn suggestion(name: &str, argv: &[&str]) -> Check {
-    Check { name: name.into(), argv: argv.iter().map(|s| s.to_string()).collect(), cwd: String::new(), timeout_secs: DEFAULT_TIMEOUT_SECS, network: false, env: vec![] }
+    Check {
+        name: name.into(),
+        argv: argv.iter().map(|s| s.to_string()).collect(),
+        cwd: String::new(),
+        timeout_secs: DEFAULT_TIMEOUT_SECS,
+        network: false,
+        env: vec![],
+    }
 }
 
 fn read_small(repo: &Repo, rel: &str) -> Option<String> {
@@ -331,7 +412,9 @@ fn read_small(repo: &Repo, rel: &str) -> Option<String> {
 /// Checks the repository suggests. They are proposals for the user to confirm, never an allow-list.
 pub fn suggest(repo: &Repo) -> Vec<Check> {
     let mut out: Vec<Check> = Vec::new();
-    if let Some(pkg) = read_small(repo, "package.json").and_then(|s| serde_json::from_str::<Value>(&s).ok()) {
+    if let Some(pkg) =
+        read_small(repo, "package.json").and_then(|s| serde_json::from_str::<Value>(&s).ok())
+    {
         for key in ["test", "lint", "typecheck", "check", "build"] {
             if pkg.get("scripts").and_then(|s| s.get(key)).is_some() {
                 out.push(suggestion(&format!("npm-{key}"), &["npm", "run", key]));
@@ -344,8 +427,14 @@ pub fn suggest(repo: &Repo) -> Vec<Check> {
     if read_small(repo, "pom.xml").is_some() {
         out.push(suggestion("mvn-test", &["mvn", "-B", "test"]));
     }
-    if let Some(Value::Array(items)) = read_small(repo, ".orazaka/checks.json").and_then(|s| serde_json::from_str::<Value>(&s).ok()) {
-        out.extend(items.into_iter().filter_map(|v| serde_json::from_value::<Check>(v).ok()));
+    if let Some(Value::Array(items)) = read_small(repo, ".orazaka/checks.json")
+        .and_then(|s| serde_json::from_str::<Value>(&s).ok())
+    {
+        out.extend(
+            items
+                .into_iter()
+                .filter_map(|v| serde_json::from_value::<Check>(v).ok()),
+        );
     }
     let mut seen = std::collections::HashSet::new();
     out.retain(|c| validate(repo, c).is_ok() && seen.insert(c.name.clone()));
@@ -355,11 +444,23 @@ pub fn suggest(repo: &Repo) -> Vec<Check> {
 // ---- the environment and the profile ----------------------------------------------------------------------------
 
 /// The environment of a run: `PATH`, `HOME`, `LANG`, a private `TMPDIR`, and what the check declares. Nothing else.
-pub fn build_env(check: &Check, get: &dyn Fn(&str) -> Option<String>, tmp: &Path) -> Vec<(String, String)> {
+pub fn build_env(
+    check: &Check,
+    get: &dyn Fn(&str) -> Option<String>,
+    tmp: &Path,
+) -> Vec<(String, String)> {
     let home = get("HOME").unwrap_or_default();
-    let mut path: Vec<String> = get("PATH").unwrap_or_else(|| "/usr/bin:/bin".into()).split(':').filter(|p| !p.is_empty()).map(str::to_string).collect();
+    let mut path: Vec<String> = get("PATH")
+        .unwrap_or_else(|| "/usr/bin:/bin".into())
+        .split(':')
+        .filter(|p| !p.is_empty())
+        .map(str::to_string)
+        .collect();
     // an app started from the Dock has a minimal PATH: add the usual toolchain folders
-    let mut extras = vec!["/opt/homebrew/bin".to_string(), "/usr/local/bin".to_string()];
+    let mut extras = vec![
+        "/opt/homebrew/bin".to_string(),
+        "/usr/local/bin".to_string(),
+    ];
     if !home.is_empty() {
         extras.push(format!("{home}/.cargo/bin"));
     }
@@ -371,7 +472,10 @@ pub fn build_env(check: &Check, get: &dyn Fn(&str) -> Option<String>, tmp: &Path
     let mut env = vec![
         ("PATH".to_string(), path.join(":")),
         ("HOME".to_string(), home),
-        ("LANG".to_string(), get("LANG").unwrap_or_else(|| "en_US.UTF-8".into())),
+        (
+            "LANG".to_string(),
+            get("LANG").unwrap_or_else(|| "en_US.UTF-8".into()),
+        ),
         ("TMPDIR".to_string(), tmp.display().to_string()),
     ];
     for name in check.env.iter().filter(|n| env_name_allowed(n)) {
@@ -384,10 +488,20 @@ pub fn build_env(check: &Check, get: &dyn Fn(&str) -> Option<String>, tmp: &Path
 
 /// Folders a toolchain writes its caches to (only those that exist).
 fn cache_dirs(home: &Path) -> Vec<PathBuf> {
-    [".cargo", ".rustup", ".npm", ".pnpm-store", ".m2", ".gradle", ".cache", "Library/Caches", "Library/pnpm"]
-        .iter()
-        .filter_map(|d| home.join(d).canonicalize().ok())
-        .collect()
+    [
+        ".cargo",
+        ".rustup",
+        ".npm",
+        ".pnpm-store",
+        ".m2",
+        ".gradle",
+        ".cache",
+        "Library/Caches",
+        "Library/pnpm",
+    ]
+    .iter()
+    .filter_map(|d| home.join(d).canonicalize().ok())
+    .collect()
 }
 
 /// The Seatbelt profile. Paths come in as parameters (`-D`), never spliced into the text.
@@ -400,7 +514,9 @@ pub fn seatbelt_profile(cache_count: usize, network: bool) -> String {
     }
     p.push_str(")\n");
     // a check never plants a hook or edits the git config: the runner commits unsandboxed
-    p.push_str("(deny file-write*\n  (subpath (param \"GITHOOKS\"))\n  (literal (param \"GITCONFIG\")))\n");
+    p.push_str(
+        "(deny file-write*\n  (subpath (param \"GITHOOKS\"))\n  (literal (param \"GITCONFIG\")))\n",
+    );
     if !network {
         p.push_str("(deny network*)\n");
     }
@@ -410,13 +526,24 @@ pub fn seatbelt_profile(cache_count: usize, network: bool) -> String {
 // ---- the run ----------------------------------------------------------------------------------------------------
 
 /// Runs a confirmed check by **name**. `approved` is the user's approval of this run.
-pub fn run(repo: &Repo, book: &mut Book, name: &str, approved: bool, limits: &Limits) -> Result<CheckRun, CheckError> {
-    let check = book.confirmed(repo, name).ok_or_else(|| CheckError::NotConfirmed(name.to_string()))?;
+pub fn run(
+    repo: &Repo,
+    book: &mut Book,
+    name: &str,
+    approved: bool,
+    limits: &Limits,
+) -> Result<CheckRun, CheckError> {
+    let check = book
+        .confirmed(repo, name)
+        .ok_or_else(|| CheckError::NotConfirmed(name.to_string()))?;
     if book.session.needs_approval() && !approved {
         return Err(CheckError::ApprovalRequired);
     }
     if book.session.runs >= limits.max_runs {
-        return Err(CheckError::LimitReached(format!("{} runs in this session", limits.max_runs)));
+        return Err(CheckError::LimitReached(format!(
+            "{} runs in this session",
+            limits.max_runs
+        )));
     }
     validate(repo, &check)?; // the folder may have changed since the confirmation
     let cwd = resolve_cwd(repo, &check.cwd)?;
@@ -430,22 +557,37 @@ pub fn run(repo: &Repo, book: &mut Book, name: &str, approved: bool, limits: &Li
 
     let runtmp = std::env::temp_dir().join(format!("orazaka-check-{}", uuid::Uuid::new_v4()));
     fs::create_dir_all(&runtmp).map_err(|e| CheckError::Io(e.to_string()))?;
-    let runtmp_path = runtmp.canonicalize().map_err(|e| CheckError::Io(e.to_string()))?;
+    let runtmp_path = runtmp
+        .canonicalize()
+        .map_err(|e| CheckError::Io(e.to_string()))?;
     let home = std::env::var("HOME").map(PathBuf::from).unwrap_or_default();
     let caches = cache_dirs(&home);
     let env = build_env(&check, &|k| std::env::var(k).ok(), &runtmp_path);
 
     let mut cmd = Command::new(SANDBOX_EXEC);
     cmd.arg("-D").arg(format!("REPO={}", repo.root().display()));
-    cmd.arg("-D").arg(format!("RUNTMP={}", runtmp_path.display()));
-    cmd.arg("-D").arg(format!("GITHOOKS={}", repo.root().join(".git/hooks").display()));
-    cmd.arg("-D").arg(format!("GITCONFIG={}", repo.root().join(".git/config").display()));
+    cmd.arg("-D")
+        .arg(format!("RUNTMP={}", runtmp_path.display()));
+    cmd.arg("-D").arg(format!(
+        "GITHOOKS={}",
+        repo.root().join(".git/hooks").display()
+    ));
+    cmd.arg("-D").arg(format!(
+        "GITCONFIG={}",
+        repo.root().join(".git/config").display()
+    ));
     for (i, c) in caches.iter().enumerate() {
         cmd.arg("-D").arg(format!("CACHE{i}={}", c.display()));
     }
-    cmd.arg("-p").arg(seatbelt_profile(caches.len(), check.network));
+    cmd.arg("-p")
+        .arg(seatbelt_profile(caches.len(), check.network));
     cmd.arg("--").args(&check.argv);
-    cmd.current_dir(&cwd).env_clear().envs(env).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
+    cmd.current_dir(&cwd)
+        .env_clear()
+        .envs(env)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
@@ -456,28 +598,37 @@ pub fn run(repo: &Repo, book: &mut Book, name: &str, approved: bool, limits: &Li
     let mut child = cmd.spawn().map_err(|e| CheckError::Io(e.to_string()))?;
     let pid = child.id() as i32;
     let buf = Arc::new(Mutex::new((Vec::<u8>::new(), false)));
-    let readers: Vec<_> = [child.stdout.take().map(|s| Box::new(s) as Box<dyn Read + Send>), child.stderr.take().map(|s| Box::new(s) as Box<dyn Read + Send>)]
-        .into_iter()
-        .flatten()
-        .map(|mut stream| {
-            let buf = buf.clone();
-            let cap = limits.output_cap;
-            std::thread::spawn(move || {
-                let mut chunk = [0u8; 8192];
-                while let Ok(n) = stream.read(&mut chunk) {
-                    if n == 0 {
-                        break;
-                    }
-                    let mut g = buf.lock().unwrap();
-                    let room = cap.saturating_sub(g.0.len());
-                    g.0.extend_from_slice(&chunk[..n.min(room)]);
-                    if n > room {
-                        g.1 = true; // keep draining so the child never blocks on a full pipe
-                    }
+    let readers: Vec<_> = [
+        child
+            .stdout
+            .take()
+            .map(|s| Box::new(s) as Box<dyn Read + Send>),
+        child
+            .stderr
+            .take()
+            .map(|s| Box::new(s) as Box<dyn Read + Send>),
+    ]
+    .into_iter()
+    .flatten()
+    .map(|mut stream| {
+        let buf = buf.clone();
+        let cap = limits.output_cap;
+        std::thread::spawn(move || {
+            let mut chunk = [0u8; 8192];
+            while let Ok(n) = stream.read(&mut chunk) {
+                if n == 0 {
+                    break;
                 }
-            })
+                let mut g = buf.lock().unwrap();
+                let room = cap.saturating_sub(g.0.len());
+                g.0.extend_from_slice(&chunk[..n.min(room)]);
+                if n > room {
+                    g.1 = true; // keep draining so the child never blocks on a full pipe
+                }
+            }
         })
-        .collect();
+    })
+    .collect();
 
     let wall = Duration::from_secs(check.timeout_secs.min(limits.max_wall_secs));
     let mut timed_out = false;

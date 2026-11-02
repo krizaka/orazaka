@@ -22,13 +22,24 @@ pub struct CodeRules {
 impl Default for CodeRules {
     fn default() -> Self {
         let (b, l) = (Budgets::default(), Limits::default());
-        CodeRules { turns: b.turns, tokens: b.tokens, files_read: b.files_read, hunks: b.hunks, check_runs: l.max_runs, check_wall_secs: l.max_wall_secs, check_output_cap: l.output_cap }
+        CodeRules {
+            turns: b.turns,
+            tokens: b.tokens,
+            files_read: b.files_read,
+            hunks: b.hunks,
+            check_runs: l.max_runs,
+            check_wall_secs: l.max_wall_secs,
+            check_output_cap: l.output_cap,
+        }
     }
 }
 
 impl CodeRules {
     pub fn load(file: &Path) -> CodeRules {
-        fs::read_to_string(file).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default()
+        fs::read_to_string(file)
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or_default()
     }
 
     pub fn budgets(&self) -> Budgets {
@@ -47,7 +58,10 @@ mod tests {
     #[test]
     fn a_missing_or_broken_file_is_the_defaults() {
         let tmp = tempfile::tempdir().unwrap();
-        assert_eq!(CodeRules::load(&tmp.path().join("none.json")), CodeRules::default());
+        assert_eq!(
+            CodeRules::load(&tmp.path().join("none.json")),
+            CodeRules::default()
+        );
         let f = tmp.path().join("r.json");
         fs::write(&f, "not json").unwrap();
         assert_eq!(CodeRules::load(&f), CodeRules::default());

@@ -44,7 +44,10 @@ pub fn escape(text: &str) -> String {
 }
 
 fn attr_value(v: &str) -> String {
-    v.chars().filter(|c| !matches!(c, '"' | '<' | '>' | '\n' | '\r' | '\'' | '`')).take(120).collect()
+    v.chars()
+        .filter(|c| !matches!(c, '"' | '<' | '>' | '\n' | '\r' | '\'' | '`'))
+        .take(120)
+        .collect()
 }
 
 /// `<untrusted source="…" k="v">` + the redacted, escaped, capped text + `</untrusted>`.
@@ -52,7 +55,10 @@ pub fn untrusted(source: &str, attrs: &[(&str, &str)], text: &str, cap: usize) -
     let cap = cap.min(PART_CAP);
     let mut head = format!("<untrusted source=\"{}\"", attr_value(source));
     for (k, v) in attrs {
-        let key: String = k.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_').collect();
+        let key: String = k
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
+            .collect();
         if !key.is_empty() && key != "source" {
             head.push_str(&format!(" {key}=\"{}\"", attr_value(v)));
         }
@@ -68,6 +74,10 @@ pub fn untrusted(source: &str, attrs: &[(&str, &str)], text: &str, cap: usize) -
 }
 
 pub fn fence_part(p: &Part, cap: usize) -> String {
-    let attrs: Vec<(&str, &str)> = p.attrs.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    let attrs: Vec<(&str, &str)> = p
+        .attrs
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.as_str()))
+        .collect();
     untrusted(&p.source, &attrs, &p.text, cap)
 }

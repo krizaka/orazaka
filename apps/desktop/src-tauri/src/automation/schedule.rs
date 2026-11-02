@@ -14,7 +14,8 @@ pub const GRACE_MINUTES: i64 = 15;
 pub const SLOT_FORMAT: &str = "%Y-%m-%dT%H:%M:%S";
 
 pub fn parse_time(time: &str) -> Result<NaiveTime, String> {
-    NaiveTime::parse_from_str(time, "%H:%M").map_err(|_| format!("invalid time of day: {time} (expected HH:MM)"))
+    NaiveTime::parse_from_str(time, "%H:%M")
+        .map_err(|_| format!("invalid time of day: {time} (expected HH:MM)"))
 }
 
 pub fn validate(schedule: &Schedule) -> Result<(), String> {
@@ -26,7 +27,10 @@ pub fn validate(schedule: &Schedule) -> Result<(), String> {
 }
 
 fn runs_on(schedule: &Schedule, day: chrono::NaiveDate) -> bool {
-    schedule.days.is_empty() || schedule.days.contains(&(day.weekday().number_from_monday() as u8))
+    schedule.days.is_empty()
+        || schedule
+            .days
+            .contains(&(day.weekday().number_from_monday() as u8))
 }
 
 /// The most recent slot at or before `now` (looking back at most a week), if any.
@@ -82,7 +86,11 @@ mod tests {
         NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M").unwrap()
     }
     fn daily(time: &str) -> Schedule {
-        Schedule { time: time.into(), days: vec![], catch_up: CatchUp::Once }
+        Schedule {
+            time: time.into(),
+            days: vec![],
+            catch_up: CatchUp::Once,
+        }
     }
 
     #[test]
@@ -90,12 +98,28 @@ mod tests {
         let s = daily("08:00");
         let created = at("2026-10-15 12:00");
         assert_eq!(due_slot(&s, created, None, at("2026-10-16 07:59")), None);
-        assert_eq!(due_slot(&s, created, None, at("2026-10-16 08:00")), Some(at("2026-10-16 08:00")));
+        assert_eq!(
+            due_slot(&s, created, None, at("2026-10-16 08:00")),
+            Some(at("2026-10-16 08:00"))
+        );
         // handled: not due again the same day
-        assert_eq!(due_slot(&s, created, Some(at("2026-10-16 08:00")), at("2026-10-16 18:00")), None);
+        assert_eq!(
+            due_slot(
+                &s,
+                created,
+                Some(at("2026-10-16 08:00")),
+                at("2026-10-16 18:00")
+            ),
+            None
+        );
         // due the next morning
         assert_eq!(
-            due_slot(&s, created, Some(at("2026-10-16 08:00")), at("2026-10-17 08:00")),
+            due_slot(
+                &s,
+                created,
+                Some(at("2026-10-16 08:00")),
+                at("2026-10-17 08:00")
+            ),
             Some(at("2026-10-17 08:00"))
         );
     }
@@ -103,38 +127,65 @@ mod tests {
     #[test]
     fn a_slot_before_the_automation_existed_never_runs() {
         let s = daily("08:00");
-        assert_eq!(due_slot(&s, at("2026-10-16 09:00"), None, at("2026-10-16 10:00")), None);
+        assert_eq!(
+            due_slot(&s, at("2026-10-16 09:00"), None, at("2026-10-16 10:00")),
+            None
+        );
     }
 
     #[test]
     fn catch_up_once_runs_the_latest_missed_slot_only() {
         let s = daily("08:00");
         // The Mac slept from Friday evening to Monday 10:00: one run, for Monday 08:00.
-        let due = due_slot(&s, at("2026-10-01 00:00"), Some(at("2026-10-16 08:00")), at("2026-10-19 10:00"));
+        let due = due_slot(
+            &s,
+            at("2026-10-01 00:00"),
+            Some(at("2026-10-16 08:00")),
+            at("2026-10-19 10:00"),
+        );
         assert_eq!(due, Some(at("2026-10-19 08:00")));
     }
 
     #[test]
     fn catch_up_skip_drops_a_slot_older_than_the_grace_window() {
-        let s = Schedule { catch_up: CatchUp::Skip, ..daily("08:00") };
+        let s = Schedule {
+            catch_up: CatchUp::Skip,
+            ..daily("08:00")
+        };
         let created = at("2026-10-01 00:00");
-        assert_eq!(due_slot(&s, created, None, at("2026-10-16 08:10")), Some(at("2026-10-16 08:00")));
+        assert_eq!(
+            due_slot(&s, created, None, at("2026-10-16 08:10")),
+            Some(at("2026-10-16 08:00"))
+        );
         assert_eq!(due_slot(&s, created, None, at("2026-10-16 09:00")), None);
     }
 
     #[test]
     fn weekdays_only() {
         // 2026-10-17 is a Saturday.
-        let s = Schedule { days: vec![1, 2, 3, 4, 5], ..daily("08:00") };
-        assert_eq!(latest_slot(&s, at("2026-10-17 09:00")), Some(at("2026-10-16 08:00")));
-        assert_eq!(next_slot(&s, at("2026-10-17 09:00")), Some(at("2026-10-19 08:00")));
+        let s = Schedule {
+            days: vec![1, 2, 3, 4, 5],
+            ..daily("08:00")
+        };
+        assert_eq!(
+            latest_slot(&s, at("2026-10-17 09:00")),
+            Some(at("2026-10-16 08:00"))
+        );
+        assert_eq!(
+            next_slot(&s, at("2026-10-17 09:00")),
+            Some(at("2026-10-19 08:00"))
+        );
     }
 
     #[test]
     fn validation_refuses_bad_times_and_days() {
         assert!(validate(&daily("8h")).is_err());
         assert!(validate(&daily("24:00")).is_err());
-        assert!(validate(&Schedule { days: vec![0], ..daily("08:00") }).is_err());
+        assert!(validate(&Schedule {
+            days: vec![0],
+            ..daily("08:00")
+        })
+        .is_err());
         assert!(validate(&daily("07:30")).is_ok());
     }
 }

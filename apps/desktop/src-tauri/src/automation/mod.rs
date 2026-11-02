@@ -47,10 +47,18 @@ pub struct RealBackends;
 
 impl Backends for RealBackends {
     fn fs(&self, root: &Path) -> Result<Box<dyn FsTools>, String> {
-        Ok(Box::new(McpFilesystem::start(&Catalogue::bundled(), root, MCP_TIMEOUT)?))
+        Ok(Box::new(McpFilesystem::start(
+            &Catalogue::bundled(),
+            root,
+            MCP_TIMEOUT,
+        )?))
     }
     fn model(&self, target: &ModelTarget) -> Box<dyn ModelClient> {
-        Box::new(OpenAiCompatible { base_url: target.base_url.clone(), model: target.model.clone(), timeout: MODEL_TIMEOUT })
+        Box::new(OpenAiCompatible {
+            base_url: target.base_url.clone(),
+            model: target.model.clone(),
+            timeout: MODEL_TIMEOUT,
+        })
     }
 }
 
@@ -165,7 +173,11 @@ impl Service {
         let store_file = data_dir.join("automations.json");
         let mut store = Store::load(&store_file);
         // A run the app was closed in the middle of did not finish: say so instead of showing it running forever.
-        for r in store.runs.iter_mut().filter(|r| r.status == RunStatus::Running) {
+        for r in store
+            .runs
+            .iter_mut()
+            .filter(|r| r.status == RunStatus::Running)
+        {
             r.status = RunStatus::Failed;
             r.error = Some("the app was closed during the run".into());
         }
@@ -204,8 +216,15 @@ impl Service {
                 .iter()
                 .map(|a| AutomationView {
                     automation: a.clone(),
-                    next_run: (a.enabled && !s.halted).then(|| schedule::next_slot(&a.schedule, now)).flatten().map(stamp),
-                    last_run: s.runs.iter().find(|r| r.automation_id == a.id).map(RunSummary::from),
+                    next_run: (a.enabled && !s.halted)
+                        .then(|| schedule::next_slot(&a.schedule, now))
+                        .flatten()
+                        .map(stamp),
+                    last_run: s
+                        .runs
+                        .iter()
+                        .find(|r| r.automation_id == a.id)
+                        .map(RunSummary::from),
                 })
                 .collect(),
             runs: s.runs.iter().map(RunSummary::from).collect(),
@@ -223,11 +242,18 @@ impl Service {
 
     pub fn audit_view(&self, limit: usize) -> AuditView {
         let log = self.audit.lock().unwrap();
-        AuditView { entries: log.tail(limit), verification: log.verify() }
+        AuditView {
+            entries: log.tail(limit),
+            verification: log.verify(),
+        }
     }
 
     /// Creates an automation on a folder the user granted (`resolve` is the app's folder scope).
-    pub fn create(&self, input: NewAutomation, resolve: impl Fn(&Path) -> Result<PathBuf, String>) -> Result<Automation, String> {
+    pub fn create(
+        &self,
+        input: NewAutomation,
+        resolve: impl Fn(&Path) -> Result<PathBuf, String>,
+    ) -> Result<Automation, String> {
         let name = input.name.trim();
         if name.is_empty() || name.chars().count() > 80 {
             return Err("a name of 1 to 80 characters is required".into());
@@ -236,7 +262,11 @@ impl Service {
         if !folder.is_dir() {
             return Err("the folder must be a granted folder".into());
         }
-        let sched = Schedule { time: input.time.clone(), days: input.days.clone(), catch_up: CatchUp::Once };
+        let sched = Schedule {
+            time: input.time.clone(),
+            days: input.days.clone(),
+            catch_up: CatchUp::Once,
+        };
         schedule::validate(&sched)?;
         OpenAiCompatible::validate_base_url(&input.base_url)?;
         if input.model.trim().is_empty() {
@@ -249,7 +279,10 @@ impl Service {
             recipe: Recipe::SummariseNewPdfs,
             schedule: sched,
             folder,
-            model: ModelTarget { base_url: input.base_url.trim().into(), model: input.model.trim().into() },
+            model: ModelTarget {
+                base_url: input.base_url.trim().into(),
+                model: input.model.trim().into(),
+            },
             policy: bounded(&s.defaults.policy),
             dry_run: input.dry_run,
             enabled: true,
@@ -269,7 +302,14 @@ impl Service {
         let mut s = self.store.lock().unwrap();
         let a = s.automation_mut(id).ok_or("unknown automation")?;
         a.enabled = enabled;
-        self.audit_event(if enabled { "automation.resumed" } else { "automation.paused" }, json!({ "automation": id }));
+        self.audit_event(
+            if enabled {
+                "automation.resumed"
+            } else {
+                "automation.paused"
+            },
+            json!({ "automation": id }),
+        );
         self.persist(&s);
         Ok(())
     }
@@ -278,7 +318,10 @@ impl Service {
         let mut s = self.store.lock().unwrap();
         let a = s.automation_mut(id).ok_or("unknown automation")?;
         a.dry_run = dry_run;
-        self.audit_event("automation.edited", json!({ "automation": id, "dryRun": dry_run }));
+        self.audit_event(
+            "automation.edited",
+            json!({ "automation": id, "dryRun": dry_run }),
+        );
         self.persist(&s);
         Ok(())
     }
@@ -297,14 +340,25 @@ impl Service {
     pub fn set_halted(&self, halted: bool) {
         let mut s = self.store.lock().unwrap();
         s.halted = halted;
-        self.audit_event(if halted { "kill-switch.on" } else { "kill-switch.off" }, json!({}));
+        self.audit_event(
+            if halted {
+                "kill-switch.on"
+            } else {
+                "kill-switch.off"
+            },
+            json!({}),
+        );
         self.persist(&s);
     }
 
     pub fn revoke_grant(&self, id: &str) -> Result<(), String> {
         let mut s = self.store.lock().unwrap();
         let now = stamp(self.now());
-        let g = s.grants.iter_mut().find(|g| g.id == id && g.revoked_at.is_none()).ok_or("unknown grant")?;
+        let g = s
+            .grants
+            .iter_mut()
+            .find(|g| g.id == id && g.revoked_at.is_none())
+            .ok_or("unknown grant")?;
         g.revoked_at = Some(now);
         self.audit_event("grant.revoked", json!({ "grant": id }));
         self.persist(&s);
@@ -316,12 +370,19 @@ impl Service {
         let mut s = self.store.lock().unwrap();
         let now = stamp(self.now());
         let mut revoked = vec![];
-        for g in s.grants.iter_mut().filter(|g| g.revoked_at.is_none() && g.scope.starts_with(folder)) {
+        for g in s
+            .grants
+            .iter_mut()
+            .filter(|g| g.revoked_at.is_none() && g.scope.starts_with(folder))
+        {
             g.revoked_at = Some(now.clone());
             revoked.push(g.id.clone());
         }
         if !revoked.is_empty() {
-            self.audit_event("grant.revoked", json!({ "grants": revoked, "reason": "folder revoked" }));
+            self.audit_event(
+                "grant.revoked",
+                json!({ "grants": revoked, "reason": "folder revoked" }),
+            );
             self.persist(&s);
         }
     }
@@ -402,9 +463,17 @@ impl Service {
     pub fn decide(&self, approval_id: &str, decision: Decision) -> Result<RunSummary, String> {
         let (automation, run, mut approval, halted) = {
             let s = self.store.lock().unwrap();
-            let approval = s.approvals.iter().find(|a| a.id == approval_id && a.state == ApprovalState::Pending).cloned().ok_or("this approval is no longer pending")?;
+            let approval = s
+                .approvals
+                .iter()
+                .find(|a| a.id == approval_id && a.state == ApprovalState::Pending)
+                .cloned()
+                .ok_or("this approval is no longer pending")?;
             let run = s.run(&approval.run_id).cloned().ok_or("unknown run")?;
-            let automation = s.automation(&approval.automation_id).cloned().ok_or("the automation was deleted")?;
+            let automation = s
+                .automation(&approval.automation_id)
+                .cloned()
+                .ok_or("the automation was deleted")?;
             (automation, run, approval, s.halted)
         };
         let catalogue = Catalogue::bundled();

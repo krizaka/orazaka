@@ -46,7 +46,11 @@ impl Catalogue {
 
     /// The effect of a tool; unknown server or tool = `Exec` (refused in v1).
     pub fn effect(&self, server: &str, tool: &str) -> Effect {
-        self.servers.get(server).and_then(|s| s.tools.get(tool)).copied().unwrap_or(Effect::Exec)
+        self.servers
+            .get(server)
+            .and_then(|s| s.tools.get(tool))
+            .copied()
+            .unwrap_or(Effect::Exec)
     }
 }
 
@@ -69,8 +73,12 @@ pub struct McpClient {
 
 impl McpClient {
     pub fn spawn(mut cmd: Command, timeout: Duration) -> Result<Self, String> {
-        cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null());
-        let mut child = cmd.spawn().map_err(|e| format!("cannot start the MCP server: {e}"))?;
+        cmd.stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null());
+        let mut child = cmd
+            .spawn()
+            .map_err(|e| format!("cannot start the MCP server: {e}"))?;
         let stdin = child.stdin.take().ok_or("no stdin")?;
         let stdout = child.stdout.take().ok_or("no stdout")?;
         let (tx, rx) = mpsc::channel();
@@ -81,7 +89,13 @@ impl McpClient {
                 }
             }
         });
-        let mut client = Self { child, stdin, lines: rx, next_id: 1, timeout };
+        let mut client = Self {
+            child,
+            stdin,
+            lines: rx,
+            next_id: 1,
+            timeout,
+        };
         client.request(
             "initialize",
             json!({
@@ -112,15 +126,26 @@ impl McpClient {
         loop {
             let left = deadline.saturating_duration_since(std::time::Instant::now());
             let line = self.lines.recv_timeout(left).map_err(|e| match e {
-                std::sync::mpsc::RecvTimeoutError::Timeout => format!("MCP server did not answer {method} in time"),
-                std::sync::mpsc::RecvTimeoutError::Disconnected => format!("MCP server exited before answering {method}"),
+                std::sync::mpsc::RecvTimeoutError::Timeout => {
+                    format!("MCP server did not answer {method} in time")
+                }
+                std::sync::mpsc::RecvTimeoutError::Disconnected => {
+                    format!("MCP server exited before answering {method}")
+                }
             })?;
-            let Ok(msg) = serde_json::from_str::<Value>(&line) else { continue };
+            let Ok(msg) = serde_json::from_str::<Value>(&line) else {
+                continue;
+            };
             if msg.get("id").and_then(Value::as_u64) != Some(id) {
                 continue; // a notification or a log line
             }
             if let Some(err) = msg.get("error") {
-                return Err(format!("MCP error: {}", err.get("message").and_then(Value::as_str).unwrap_or("unknown")));
+                return Err(format!(
+                    "MCP error: {}",
+                    err.get("message")
+                        .and_then(Value::as_str)
+                        .unwrap_or("unknown")
+                ));
             }
             return Ok(msg.get("result").cloned().unwrap_or(Value::Null));
         }
@@ -128,12 +153,20 @@ impl McpClient {
 
     pub fn list_tools(&mut self) -> Result<Vec<String>, String> {
         let r = self.request("tools/list", json!({}))?;
-        Ok(r["tools"].as_array().into_iter().flatten().filter_map(|t| t["name"].as_str().map(String::from)).collect())
+        Ok(r["tools"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|t| t["name"].as_str().map(String::from))
+            .collect())
     }
 
     /// Calls a tool; a tool-level error (`isError`) is an `Err` with the server's text.
     pub fn call_tool(&mut self, name: &str, arguments: Value) -> Result<Value, String> {
-        let r = self.request("tools/call", json!({ "name": name, "arguments": arguments }))?;
+        let r = self.request(
+            "tools/call",
+            json!({ "name": name, "arguments": arguments }),
+        )?;
         if r.get("isError").and_then(Value::as_bool) == Some(true) {
             return Err(first_text(&r).unwrap_or_else(|| format!("{name} failed")));
         }
@@ -149,14 +182,24 @@ impl Drop for McpClient {
 }
 
 fn first_text(result: &Value) -> Option<String> {
-    result["content"].as_array()?.iter().find_map(|c| c["text"].as_str().map(String::from))
+    result["content"]
+        .as_array()?
+        .iter()
+        .find_map(|c| c["text"].as_str().map(String::from))
 }
 
 /// Where a Node.js >= 22 lives on this Mac (the same places the CLI sidecar looks): a GUI app has no shell PATH.
 pub fn node_bin_dir() -> Option<PathBuf> {
     let home = std::env::var("HOME").unwrap_or_default();
-    let mut dirs: Vec<PathBuf> = vec!["/opt/homebrew/bin".into(), "/usr/local/bin".into(), format!("{home}/.volta/bin").into()];
-    for base in [format!("{home}/.nvm/versions/node"), format!("{home}/.local/share/fnm/node-versions")] {
+    let mut dirs: Vec<PathBuf> = vec![
+        "/opt/homebrew/bin".into(),
+        "/usr/local/bin".into(),
+        format!("{home}/.volta/bin").into(),
+    ];
+    for base in [
+        format!("{home}/.nvm/versions/node"),
+        format!("{home}/.local/share/fnm/node-versions"),
+    ] {
         if let Ok(rd) = std::fs::read_dir(&base) {
             let mut v: Vec<PathBuf> = rd.flatten().map(|e| e.path()).collect();
             v.sort();
@@ -170,7 +213,8 @@ pub fn node_bin_dir() -> Option<PathBuf> {
     if let Ok(path) = std::env::var("PATH") {
         dirs.extend(std::env::split_paths(&path));
     }
-    dirs.into_iter().find(|d| d.join("node").is_file() && d.join("npx").is_file())
+    dirs.into_iter()
+        .find(|d| d.join("node").is_file() && d.join("npx").is_file())
 }
 
 /// The filesystem server of the catalogue, limited to `root`, reached over MCP.
@@ -183,8 +227,12 @@ impl McpFilesystem {
     pub const SERVER: &'static str = "filesystem";
 
     pub fn start(catalogue: &Catalogue, root: &Path, timeout: Duration) -> Result<Self, String> {
-        let spec = catalogue.servers.get(Self::SERVER).ok_or("the filesystem server is not in the catalogue")?;
-        let dir = node_bin_dir().ok_or("Node.js 22+ was not found on this Mac (needed by the filesystem MCP server)")?;
+        let spec = catalogue
+            .servers
+            .get(Self::SERVER)
+            .ok_or("the filesystem server is not in the catalogue")?;
+        let dir = node_bin_dir()
+            .ok_or("Node.js 22+ was not found on this Mac (needed by the filesystem MCP server)")?;
         let mut cmd = Command::new(dir.join("npx"));
         let path = format!("{}:/usr/bin:/bin", dir.display());
         cmd.env("PATH", path)
@@ -194,18 +242,28 @@ impl McpFilesystem {
         // Least privilege: refuse to go on if the server offers a tool whose effect the catalogue does not declare.
         for tool in client.list_tools()? {
             if !spec.tools.contains_key(&tool) {
-                return Err(format!("the filesystem server offers an undeclared tool: {tool}"));
+                return Err(format!(
+                    "the filesystem server offers an undeclared tool: {tool}"
+                ));
             }
         }
-        Ok(Self { client, root: root.to_path_buf() })
+        Ok(Self {
+            client,
+            root: root.to_path_buf(),
+        })
     }
 
     fn inside(&self, path: &Path) -> Result<(), String> {
-        let climbs = path.components().any(|c| matches!(c, std::path::Component::ParentDir));
+        let climbs = path
+            .components()
+            .any(|c| matches!(c, std::path::Component::ParentDir));
         if path.starts_with(&self.root) && !climbs {
             Ok(())
         } else {
-            Err(format!("outside the automation's folder: {}", path.display()))
+            Err(format!(
+                "outside the automation's folder: {}",
+                path.display()
+            ))
         }
     }
 }
@@ -213,23 +271,41 @@ impl McpFilesystem {
 impl FsTools for McpFilesystem {
     fn list_files(&mut self, dir: &Path) -> Result<Vec<String>, String> {
         self.inside(dir)?;
-        let r = self.client.call_tool("list_directory", json!({ "path": dir }))?;
+        let r = self
+            .client
+            .call_tool("list_directory", json!({ "path": dir }))?;
         let text = first_text(&r).unwrap_or_default();
-        Ok(text.lines().filter_map(|l| l.strip_prefix("[FILE] ").map(String::from)).collect())
+        Ok(text
+            .lines()
+            .filter_map(|l| l.strip_prefix("[FILE] ").map(String::from))
+            .collect())
     }
 
     fn read_bytes(&mut self, path: &Path) -> Result<Vec<u8>, String> {
         use base64::Engine;
         self.inside(path)?;
-        let r = self.client.call_tool("read_media_file", json!({ "path": path }))?;
-        let item = r["content"].as_array().and_then(|a| a.first()).cloned().unwrap_or(Value::Null);
-        let b64 = item["resource"]["blob"].as_str().or_else(|| item["data"].as_str()).ok_or("read_media_file returned no data")?;
-        base64::engine::general_purpose::STANDARD.decode(b64).map_err(|e| e.to_string())
+        let r = self
+            .client
+            .call_tool("read_media_file", json!({ "path": path }))?;
+        let item = r["content"]
+            .as_array()
+            .and_then(|a| a.first())
+            .cloned()
+            .unwrap_or(Value::Null);
+        let b64 = item["resource"]["blob"]
+            .as_str()
+            .or_else(|| item["data"].as_str())
+            .ok_or("read_media_file returned no data")?;
+        base64::engine::general_purpose::STANDARD
+            .decode(b64)
+            .map_err(|e| e.to_string())
     }
 
     fn write_text(&mut self, path: &Path, content: &str) -> Result<(), String> {
         self.inside(path)?;
-        self.client.call_tool("write_file", json!({ "path": path, "content": content })).map(|_| ())
+        self.client
+            .call_tool("write_file", json!({ "path": path, "content": content }))
+            .map(|_| ())
     }
 }
 
@@ -256,7 +332,10 @@ mod tests {
     #[test]
     fn servers_are_pinned_to_an_exact_version() {
         for (name, s) in Catalogue::bundled().servers {
-            assert!(s.version.chars().all(|c| c.is_ascii_digit() || c == '.'), "{name} must pin an exact version");
+            assert!(
+                s.version.chars().all(|c| c.is_ascii_digit() || c == '.'),
+                "{name} must pin an exact version"
+            );
         }
     }
 }
