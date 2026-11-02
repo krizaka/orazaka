@@ -89,7 +89,7 @@ export function schemaDriftVerdict(logs) {
     if (m) found.set(`${m[1]}: ${m[2]} ${m[3]}`, true);
   }
   if (!found.size) return { ok: true, message: "no schema drift in the core run logs" };
-  return { ok: false, message: `a service runs ahead of its database (apply the pending migration, node scripts/dev-migrations.mjs check): ${[...found.keys()].sort().join("; ")}` };
+  return { ok: false, message: `a service runs ahead of its database (apply the pending migration, node scripts/dev-migrations.mjs check): ${[...found.keys()].sort((a, b) => a.localeCompare(b)).join("; ")}` };
 }
 
 const run = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "inherit"] });
