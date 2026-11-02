@@ -13,19 +13,6 @@
       "dependsOn": []
     },
     {
-      "name": "krizaka-billing",
-      "path": "krizaka/krizaka-billing",
-      "kind": "maven",
-      "layer": "krizaka",
-      "description": "Credits, wallets, plans, subscriptions, a price book and metering (hold → settle → release) as a reusable billing service, with its contract (krizaka-billing-api) and a typed HTTP client (krizaka-billing-client).",
-      "dependsOn": [
-        "krizaka-build"
-      ],
-      "initdb": [
-        "70-billing.sql"
-      ]
-    },
-    {
       "name": "orazaka-build",
       "path": "orazaka-libs/orazaka-build",
       "kind": "maven",
@@ -53,8 +40,7 @@
       "description": "Studio & pack marketplace: pack catalogue, studio blueprints, installations and saga-driven runs, with its contract (studio-api) and HTTP client (studio-client).",
       "dependsOn": [
         "orazaka-build",
-        "orazaka-contracts",
-        "krizaka-billing"
+        "orazaka-contracts"
       ],
       "initdb": [
         "80-studio.sql"
@@ -69,7 +55,6 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "krizaka-billing",
         "orazaka-studio"
       ],
       "initdb": [
@@ -85,7 +70,6 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "krizaka-billing",
         "orazaka-ai-engine"
       ],
       "initdb": [
@@ -101,7 +85,6 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "krizaka-billing",
         "orazaka-ai-engine"
       ],
       "initdb": [
@@ -130,7 +113,6 @@
       "description": "Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry.",
       "dependsOn": [
         "orazaka-build",
-        "krizaka-billing",
         "orazaka-ai-engine"
       ],
       "initdb": [

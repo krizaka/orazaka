@@ -9,7 +9,7 @@
  *   node scripts/dev-migrations.mjs verify [--only <text>]                        # probe each file's effect on dev (read only); exit 1 if a recorded file is missing / partial, or a file has no probe
  *
  * The ledger is one table, `dev_migration_ledger`, in orazaka_db (created on first use, never anything else written).
- * A file is keyed `<path from the workspace root>`, e.g. `krizaka/krizaka-billing/infra/migrations/2026-10-26-price-catalogue.sql`.
+ * A file is keyed `<path from the workspace root>`, e.g. `krizaka/krizaka-build/krizaka-billing/infra/migrations/2026-10-26-price-catalogue.sql`.
  * A file that spans several databases (`\c <db>` lines, e.g. ADR-091's knowledge-access) is recorded once, for all of them:
  * `--on` must name every database it touches (refused otherwise), and the ledger keeps them in its `databases` column.
  * Nothing here ever applies a migration: applying stays a person's act (dry run in a rolled-back transaction, then commit).
@@ -25,11 +25,16 @@ import { judge, probesOf } from "./lib/migration-probes.mjs";
 
 const HERE = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const LEDGER_DB = "orazaka_db";
+/** Components that live inside krizaka-build (its monorepo) and keep their own infra/migrations. */
+const NESTED_COMPONENTS = ["krizaka/krizaka-build/krizaka-billing"];
+/** Ledger rows written while krizaka-billing was a repository of its own (archived): same file, new path. */
+const LEGACY_PREFIX = "krizaka/krizaka-billing/";
+const MOVED_PREFIX = "krizaka/krizaka-build/krizaka-billing/";
 const DATE = /^\d{4}-\d{2}-\d{2}-/;
 
 /** Every migration file of the workspace and of its component repositories, keyed by path from the root, sorted. */
 export function migrationFiles(root, manifest = JSON.parse(readFileSync(join(root, "orazaka.workspace.json"), "utf8"))) {
-  const dirs = ["", ...manifest.repositories.map((r) => r.path)];
+  const dirs = ["", ...manifest.repositories.map((r) => r.path), ...NESTED_COMPONENTS];
   const out = [];
   for (const d of dirs) {
     const rel = join(d, "infra/migrations");
@@ -58,7 +63,7 @@ export function databasesToRecord(file, sql, on) {
 
 /** The files the ledger does not hold. */
 export function pending(files, ledger) {
-  const done = new Set(ledger);
+  const done = new Set(ledger.map((f) => (f.startsWith(LEGACY_PREFIX) ? MOVED_PREFIX + f.slice(LEGACY_PREFIX.length) : f)));
   return files.filter((f) => !done.has(f));
 }
 
