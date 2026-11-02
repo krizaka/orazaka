@@ -6,7 +6,7 @@
  *
  * Per product, in order: clear each of its databases as the owner role (DROP OWNED BY <owner> CASCADE, public schema back),
  * put back doadmin's extensions and the runtime role's grants, redeploy its dev app (its migrations run from V1 before it
- * takes traffic), wait for the deployment, then seed the cast (`tools/seed-dev.sh <product>`) and run the persona smoke.
+ * takes traffic), wait for the deployment, then seed the cast (Orazaka: the personas Eric, Mira, Krizaka then their names, `orazakaDatasetSteps`; the others `tools/seed-dev.sh <product>`) and run the persona smoke.
  * Without --yes it stops after the guards and the read-only preflight (same as --dry-run).
  *
  * Runs on the maintainer's Mac: the dev cluster trusts no GitHub runner (CTO decision 2026-10-28, krizaka/.github#356), so
@@ -23,7 +23,7 @@ import { homedir, userInfo } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { devSecrets } from "./lib/dev-secrets.mjs";
-import { DEV_APPS, EXTENSIONS, PRODUCT_DATABASES, bootstrapSql, clearSql, extensionsAtRiskSql, grantsSql, logLine, plan, productsOf, refusals } from "./lib/dev-reset.mjs";
+import { DEV_APPS, EXTENSIONS, PRODUCT_DATABASES, bootstrapSql, clearSql, extensionsAtRiskSql, grantsSql, logLine, orazakaDatasetSteps, plan, productsOf, refusals } from "./lib/dev-reset.mjs";
 
 const TOOLS = join(homedir(), ".krizaka-worktrees/tools");
 
@@ -120,7 +120,8 @@ function reseedProduct({ p, local, noDeploy, log }) {
     return;
   }
   if (!noDeploy) waitForDeployment(DEV_APPS[p], log);
-  run(join(TOOLS, "seed-dev.sh"), [p]);
+  if (p === "orazaka") for (const step of orazakaDatasetSteps()) run(process.execPath, ["scripts/dev-deploy.mjs", ...step]);
+  else run(join(TOOLS, "seed-dev.sh"), [p]);
   if (p === "orazaka") run(process.execPath, ["scripts/dev-persona-smoke.mjs", "eric"]);
 }
 

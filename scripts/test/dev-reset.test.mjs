@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EXCLUDED_DATABASES, bootstrapSql, clearSql, databasesOf, grantsSql, logLine, plan, refusals } from "../lib/dev-reset.mjs";
+import { EXCLUDED_DATABASES, bootstrapSql, clearSql, databasesOf, grantsSql, logLine, orazakaDatasetSteps, plan, refusals } from "../lib/dev-reset.mjs";
 
 const DEV = "krizaka-dev-pg-do-user-123456-0.b.db.ondigitalocean.com";
 const ok = { product: "orazaka", target: "dev", appEnv: "dev", host: DEV, expectedHost: DEV };
@@ -68,4 +68,8 @@ test("the log line names steps, never a host or a credential", () => {
   const line = logLine({ actor: "a", at: "2026-11-02T00:00:00Z", product: "orazaka", target: "dev", steps: plan("orazaka", "dev"), result: "dry-run" });
   assert.match(line, /orazaka:clear:krizaka_users_db/);
   assert.doesNotMatch(line, /ondigitalocean|password/i);
+});
+
+test("the Orazaka dev dataset: the three personas first, then the cast's names; no production command", () => {
+  assert.deepEqual(orazakaDatasetSteps(), [["persona", "eric"], ["persona", "mira"], ["persona", "krizaka"], ["names"]]);
 });

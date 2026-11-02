@@ -171,3 +171,16 @@ export function logLine({ actor, at, product, target, steps, result }) {
   const named = steps.map((s) => [s.product, s.step, s.db].filter(Boolean).join(":"));
   return JSON.stringify({ kind: "dev-reset", actor, at, product, target, steps: named, result });
 }
+
+/**
+ * The prototype dev dataset of Orazaka after a reset (the cast the demo and the persona smoke sign in as), as the
+ * `node scripts/dev-deploy.mjs <command> [arg]` calls that put it back, in order. The accounts come from `persona`
+ * (a plain ROLE_USER on the free plan, stored secrets, never printed), then `names` gives them the cast's names.
+ * The catalogue (plans, pricebook, models, Studios) is the services' Flyway V1, not data of this list.
+ * Nothing here ever touches a production host: dev-reset's guards run first.
+ */
+export const ORAZAKA_CAST = Object.freeze(["eric", "mira", "krizaka"]);
+
+export function orazakaDatasetSteps() {
+  return [...ORAZAKA_CAST.map((name) => ["persona", name]), ["names"]];
+}
