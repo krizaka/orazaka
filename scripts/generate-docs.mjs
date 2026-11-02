@@ -69,10 +69,15 @@ const readInitDb = () => {
   for (const dir of dirs.filter((d) => existsSync(d))) {
     for (const n of readdirSync(dir).filter((x) => x.endsWith(".sql"))) files.push({ n, p: join(dir, n) });
   }
-  return files
-    .sort((a, b) => a.n.localeCompare(b.n))
-    .map((f) => read(f.p))
-    .join("\n");
+  // A service that moved to Flyway (krizaka-internal#2255) keeps its seeds in its V<n> baselines: read after the initdb files.
+  const baselines = [];
+  for (const r of REPOSITORIES) {
+    const dir = join(ROOT, r.path, "src", "main", "resources", "db", "migration");
+    if (!existsSync(dir)) continue;
+    for (const n of readdirSync(dir).filter((x) => /^V\d+__.*\.sql$/.test(x))) baselines.push({ n, p: join(dir, n) });
+  }
+  const byName = (a, b) => a.n.localeCompare(b.n, undefined, { numeric: true });
+  return [...files.toSorted(byName), ...baselines.toSorted(byName)].map((f) => read(f.p)).join("\n");
 };
 
 const javaFiles = (dir) => walk(dir, (p) => p.endsWith(".java"));
