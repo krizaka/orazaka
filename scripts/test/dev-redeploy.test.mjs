@@ -54,3 +54,15 @@ test("staleSourceVerdict ignores a deployment still building and one without a r
   assert.equal(staleSourceVerdict([{ id: "b", phase: "BUILDING", services: [{ name: "core", source_commit_hash: "x" }] }], "ea4a19c").ok, true);
   assert.equal(staleSourceVerdict([{ id: "n", phase: "ACTIVE", services: [] }], "ea4a19c").ok, true);
 });
+
+test("a finished deployment whose core has no recorded commit is not judged stale", () => {
+  const v = staleSourceVerdict([{ id: "d1", phase: "ACTIVE", services: [{ name: "core" }] }], "abcdef1234");
+  assert.equal(v.ok, true);
+});
+
+test("staleSourceVerdict waits while a rebuild is in progress: the check right after create-deployment must not fail the run (2026-11-01)", () => {
+  const core = (sha) => [{ name: "core", source_commit_hash: sha }];
+  const v = staleSourceVerdict([{ id: "b", phase: "BUILDING", services: [] }, { id: "a", phase: "ACTIVE", services: core("e5b019e") }], "d2bc55f");
+  assert.equal(v.ok, true);
+  assert.match(v.message, /in progress/);
+});

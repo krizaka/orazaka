@@ -38,6 +38,9 @@ rp_balance() { rp_py balance; }
 # « id status rate gpu name » of the orazaka pods that bill (not EXITED / TERMINATED).
 rp_live() { rp_py list orazaka-gpu 2>/dev/null | awk '$2 != "EXITED" && $2 != "TERMINATED"' || true; }
 
+# KEY=value lines of the pod's output zone (a driver may define its own before sourcing this file: the tests do).
+declare -F gpu_out_env >/dev/null || gpu_out_env() { local pod="$1"; node "$ROOT/scripts/gpu-out/cli.mjs" pod-env "$pod"; }
+
 runpod_start() {
   [[ -n "$(secret AI_GPU_RUNPOD_API_KEY || true)" ]] || die "no AI_GPU_RUNPOD_API_KEY in ${ENV_FILE:-$SECRET_SOURCE}"
   # MEASURE=1 (gpu-dev.sh runpod measure): a pod that measures and ends, with no relay, no broker, no service token.
@@ -68,6 +71,13 @@ runpod_start() {
       volume=$(rp_py volume-create "$RP_VOLUME" "$dc" "$RP_VOLUME_GB") || continue
     fi
     local gpu gpus
+    # The pod's own output zone (krizaka-internal#2121): URL under <day>/<run>, header name and THAT zone's key, from infra/gpu/gpu-out.settings.json.
+    # Never a site's key; read here, never printed. A measurement pod writes nothing, so it gets none.
+    if [[ -z "${MEASURE:-}" ]]; then
+      local gk gv
+      while IFS='=' read -r gk gv; do [[ -n "$gk" ]] && export "$gk=$gv"; done < <(gpu_out_env "run-$(date -u +%H%M%S)")
+      [[ -n "${GPU_OUT_URL:-}" ]] || die "the GPU output zone gave no URL: nothing was created"
+    fi
     # Before paying: do the weights fit, and what does fetching them cost? (GPU_DOWNLOAD_GB = the model's `downloadGb` in models.yaml)
     if [[ -n "${GPU_DOWNLOAD_GB:-}" ]]; then
       node "$ROOT/scripts/gpu-boot-preflight.mjs" --download-gb "$GPU_DOWNLOAD_GB" --disk-gb "${GPU_RUNPOD_DISK_GB:-60}" \

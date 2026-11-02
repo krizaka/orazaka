@@ -182,6 +182,11 @@ def create_body(e, gpu_id):
         env = {k: e[k] for k in ("WORKER_REF", "PROFILE", "MAX_HOURS", "IDLE_MINUTES", "MEASURE_ARGS", "MEASURE_PIP")}
     else:
         env = {k: e[k] for k in ("WORKER_REF", "PROFILE", "RELAY_URL", "RELAY_AUTH", "RABBIT_PASSWORD", "SERVICE_TOKEN", "BROKER_CA_B64", "MAX_HOURS", "IDLE_MINUTES")}
+    if e.get("GPU_OUT_URL") and not e.get("MEASURE"):
+        # The pod's own output zone (krizaka-internal#2121): its URL under <day>/<run>/<pod>, the header name and THAT zone's key.
+        # Never a site's key: the dedicated zone is the only storage a rented machine can touch.
+        for k in ("GPU_OUT_URL", "GPU_OUT_HEADER", "GPU_OUT_KEY"):
+            env[k] = e[k]
     if e.get("STILLS"):
         env["STILLS"] = "1"  # the image engine only (runpod-bootstrap.sh): a render batch never waits for video weights
     if e.get("HF_TOKEN"):

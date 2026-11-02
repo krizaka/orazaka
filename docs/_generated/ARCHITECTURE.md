@@ -13,11 +13,11 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | Role | Rule | Modules |
 |:---|:---|:---|
 | **Clients** | a UI repository of the workspace manifest (layer app, kind npm) | `orazaka-cli`, `orazaka-mobile-client`, `orazaka-web-client` |
-| **Services & workers** | a module with a main (SpringApplication.run), or a native worker | `orazaka-automation-service`, `orazaka-conversation-service`, `orazaka-edge`, `orazaka-job-service`, `orazaka-knowledge-service`, `orazaka-studio-service`, `orazaka-worker-media`, `krizaka-billing-service`, `krizaka-notifications-service`, `krizaka-users-service` |
-| **Adapters** | an imported module that is none of the below: persistence, typed HTTP clients, asset store, bridge | `orazaka-adapter-spring-ai`, `orazaka-architecture`, `orazaka-assets`, `orazaka-crypto`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-rewrite-style`, `orazaka-studio-client`, `krizaka-billing-client`, `krizaka-payments`, `krizaka-quality`, `krizaka-rewrite-style`, `krizaka-users-client`, `krizaka-users-persistence` |
+| **Services & workers** | a module with a main (SpringApplication.run), or a native worker | `orazaka-automation-service`, `orazaka-conversation-service`, `orazaka-edge`, `orazaka-job-service`, `orazaka-knowledge-service`, `orazaka-studio-service`, `orazaka-worker-media`, `krizaka-billing-service`, `krizaka-billing-service`, `krizaka-notifications-service`, `krizaka-users-service` |
+| **Adapters** | an imported module that is none of the below: persistence, typed HTTP clients, asset store, bridge | `orazaka-adapter-spring-ai`, `orazaka-architecture`, `orazaka-assets`, `orazaka-crypto`, `orazaka-persistence-app`, `orazaka-persistence-bridge`, `orazaka-rewrite-style`, `orazaka-studio-client`, `krizaka-billing-client`, `krizaka-billing-client`, `krizaka-payments`, `krizaka-quality`, `krizaka-rewrite-style`, `krizaka-users-client`, `krizaka-users-persistence` |
 | **Application** | the orchestration, pipeline and capability libraries around the core (AGENTS.md §2: business, interceptors, tools) | `orazaka-business`, `orazaka-interceptors`, `orazaka-tools` |
 | **Domain core** | a `*-core` module — the centre of its hexagon, depending on no outer layer | `orazaka-core`, `krizaka-users-core` |
-| **Contracts** | a Tier-1 `*-api` module — pure interfaces and records | `orazaka-jobs-api`, `orazaka-persistence-app-api`, `orazaka-studio-api`, `krizaka-billing-api`, `krizaka-users-api` |
+| **Contracts** | a Tier-1 `*-api` module — pure interfaces and records | `orazaka-jobs-api`, `orazaka-persistence-app-api`, `orazaka-studio-api`, `krizaka-billing-api`, `krizaka-billing-api`, `krizaka-users-api` |
 | **Krizaka platform kit** | a module of krizaka-platform-kit — the cross-cutting code with one author (ADR-073), starters included | `krizaka-app-config`, `krizaka-idempotency`, `krizaka-messaging`, `krizaka-notifications-api`, `krizaka-observability`, `krizaka-persistence`, `krizaka-ratelimit`, `krizaka-security`, `krizaka-spring-boot-starter-app-config`, `krizaka-spring-boot-starter-idempotency`, `krizaka-spring-boot-starter-observability`, `krizaka-spring-boot-starter-persistence`, `krizaka-spring-boot-starter-rabbitmq`, `krizaka-spring-boot-starter-ratelimit`, `krizaka-spring-boot-starter-security`, `krizaka-spring-boot-starter-web`, `krizaka-spring-boot-starter-webhooks`, `krizaka-web`, `krizaka-webhooks` |
 
 ## Modules
@@ -34,9 +34,10 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-knowledge-service` | service | `orazaka-knowledge-service` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-studio-service` | service | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-worker-media` | service | `orazaka-worker-media` | — | — | — |
+| `krizaka-billing-service` | service | `krizaka-build` | 0.8.0 | — | — |
 | `krizaka-billing-service` | service | `krizaka-billing` | 0.3.4 | — | — |
-| `krizaka-notifications-service` | service | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-users-service` | service | `krizaka-build` | 0.7.1 | — | — |
+| `krizaka-notifications-service` | service | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-users-service` | service | `krizaka-build` | 0.8.0 | — | — |
 | `orazaka-adapter-spring-ai` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-architecture` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-assets` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
@@ -45,41 +46,43 @@ Ports & Adapters: dependencies point toward the core. Each module has one **role
 | `orazaka-persistence-bridge` | adapter | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-rewrite-style` | adapter | `orazaka-build` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-studio-client` | adapter | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
+| `krizaka-billing-client` | adapter | `krizaka-build` | 0.8.0 | — | — |
 | `krizaka-billing-client` | adapter | `krizaka-billing` | 0.3.4 | — | — |
-| `krizaka-payments` | adapter | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-quality` | adapter | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-rewrite-style` | adapter | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-users-client` | adapter | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-users-persistence` | adapter | `krizaka-build` | 0.7.1 | — | — |
+| `krizaka-payments` | adapter | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-quality` | adapter | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-rewrite-style` | adapter | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-users-client` | adapter | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-users-persistence` | adapter | `krizaka-build` | 0.8.0 | — | — |
 | `orazaka-business` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-interceptors` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-tools` | application | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-core` | domain | `orazaka-ai-engine` | 1.0.0-SNAPSHOT | AgentTurns, AiClient, CatalogModelService, ChatSessionService, CitationVerifier, ExternalCheckCapability, JobService, McpService, StepRouter | AccessAudit, AudioGeneratorClient, AudioTranscriber, CapabilityProvider, ChatGeneratorClient, ChatInvocation, ChatMemoryStore, CheckAuditLog, CheckHttp, CheckKeyStore, CheckMeter, CheckProviderCatalog, CheckSubjectPepper, CodeSandboxPort, ConsentRegistry, ControlVerdictRecorder, ConversationMemory, DomainEventPublisher, EmbeddingClient, ExternalCheckConnector, FeatureModelRoutes, ImageGeneratorClient, InfrastructureStatusProvider, KnowledgeService, McpOrchestrator, ModelCatalogProvider, ModelEndpointResolver, OutputJudge, PipelineConfigProvider, PlatformMcpServerProvider, PlatformToolConfigProvider, PromptAssembly, PromptCachePolicy, ProviderChatClient, SemanticClassifierPort, SpeechSynthesis, StepModelRecorder, StepRouteProvider, StructuredOutputBounds, StructuredOutputClient, TestShaperPort, ToolAnswerCodec, ToolLoopBounds, ToolOptions, ToolPermissionProvider, ToolRegistry, ToolResolution, ToolResultCache, UserCredentialsProvider, UserMcpServerProvider, ValidationPipelineRepository |
-| `krizaka-users-core` | domain | `krizaka-build` | 0.7.1 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, LoginLockoutService, OrganizationService, PasswordPolicyService, PasswordRecoveryService, RateLimitProvider, SocialConnectionService, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, BreachedPasswordPort, CryptographyPort, LockoutRepositoryPort, OAuth2ProviderVerifier, OrganizationRepositoryPort, PasswordEventPublisher, PasswordResetTokenRepositoryPort, SecretSealPort, SocialConnectionRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
+| `krizaka-users-core` | domain | `krizaka-build` | 0.8.0 | AdminUserService, ApiKeyService, IdentityReconciliationService, IdentityService, LoginLockoutService, OrganizationService, PasswordPolicyService, PasswordRecoveryService, RateLimitProvider, SocialConnectionService, TokenService, UserProfileProvider | AdminUserRepositoryPort, ApiKeyRepositoryPort, AuthorityRepositoryPort, BreachedPasswordPort, CryptographyPort, LockoutRepositoryPort, OAuth2ProviderVerifier, OrganizationRepositoryPort, PasswordEventPublisher, PasswordResetTokenRepositoryPort, SecretSealPort, SocialConnectionRepositoryPort, UserCredentialRepositoryPort, UserEventPublisher, UserInterceptionRepositoryPort, UserProfileRepositoryPort, UserRepositoryPort, VerificationTokenRepositoryPort |
 | `orazaka-jobs-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | — | — |
 | `orazaka-persistence-app-api` | contract | `orazaka-contracts` | 1.0.0-SNAPSHOT | CapabilityManager, CatalogModelManager, ChatMemoryPersistenceProvider, ChatSessionPersistenceProvider, FeatureCachePolicyManager, FeatureRouteManager, FeatureStructuredBoundManager, FeatureToolBoundManager, JobPersistenceProvider, OutboxStore, PipelineConfigManager, PlatformMcpServerPersistenceProvider, PlatformToolConfigPersistenceProvider, RuntimeConfigProvider, SpeechVoiceManager, UserMcpServerPersistenceProvider, ValidationPipelineManager | — |
 | `orazaka-studio-api` | contract | `orazaka-studio` | 1.0.0-SNAPSHOT | — | — |
+| `krizaka-billing-api` | contract | `krizaka-build` | 0.8.0 | — | — |
 | `krizaka-billing-api` | contract | `krizaka-billing` | 0.3.4 | — | — |
-| `krizaka-users-api` | contract | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-app-config` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-idempotency` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-messaging` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-notifications-api` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-observability` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-persistence` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-ratelimit` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-security` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-spring-boot-starter-app-config` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-spring-boot-starter-idempotency` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-spring-boot-starter-observability` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-spring-boot-starter-persistence` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-spring-boot-starter-ratelimit` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-spring-boot-starter-security` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-spring-boot-starter-web` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-spring-boot-starter-webhooks` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-web` | platform | `krizaka-build` | 0.7.1 | — | — |
-| `krizaka-webhooks` | platform | `krizaka-build` | 0.7.1 | — | — |
+| `krizaka-users-api` | contract | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-app-config` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-idempotency` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-messaging` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-notifications-api` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-observability` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-persistence` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-ratelimit` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-security` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-spring-boot-starter-app-config` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-spring-boot-starter-idempotency` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-spring-boot-starter-observability` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-spring-boot-starter-persistence` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-spring-boot-starter-rabbitmq` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-spring-boot-starter-ratelimit` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-spring-boot-starter-security` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-spring-boot-starter-web` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-spring-boot-starter-webhooks` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-web` | platform | `krizaka-build` | 0.8.0 | — | — |
+| `krizaka-webhooks` | platform | `krizaka-build` | 0.8.0 | — | — |
 
 ## Dependencies
 
@@ -94,6 +97,7 @@ Build dependencies between the modules above (test scope excluded): who packages
 | `orazaka-knowledge-service` | `krizaka-messaging`, `krizaka-security` |
 | `orazaka-studio-service` | `krizaka-billing-api`, `krizaka-billing-client`, `krizaka-messaging`, `krizaka-security`, `orazaka-crypto`, `orazaka-jobs-api`, `orazaka-studio-api` |
 | `krizaka-billing-service` | `krizaka-billing-api`, `krizaka-messaging`, `krizaka-security` |
+| `krizaka-billing-service` | `krizaka-billing-api`, `krizaka-messaging`, `krizaka-security` |
 | `krizaka-notifications-service` | `krizaka-messaging`, `krizaka-notifications-api` |
 | `krizaka-users-service` | `krizaka-security`, `krizaka-users-core` |
 | `orazaka-adapter-spring-ai` | `orazaka-business`, `orazaka-core` |
@@ -102,6 +106,7 @@ Build dependencies between the modules above (test scope excluded): who packages
 | `orazaka-persistence-app` | `krizaka-messaging`, `orazaka-crypto`, `orazaka-jobs-api`, `orazaka-persistence-app-api` |
 | `orazaka-persistence-bridge` | `orazaka-core`, `orazaka-crypto`, `orazaka-persistence-app-api` |
 | `orazaka-studio-client` | `krizaka-security`, `orazaka-studio-api` |
+| `krizaka-billing-client` | `krizaka-billing-api`, `krizaka-security` |
 | `krizaka-billing-client` | `krizaka-billing-api`, `krizaka-security` |
 | `krizaka-users-client` | `krizaka-security`, `krizaka-users-api` |
 | `krizaka-users-persistence` | `krizaka-messaging` |
@@ -150,10 +155,10 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-studio-service` | `orazaka-automation-service` | amqp | `orazaka.jobs.automation` (`job.automation.approved`) |
 | `orazaka-studio-service` | `orazaka-job-service` | amqp | `orazaka.jobs.batch` (`job.media.generate`) |
 | `orazaka-studio-service` | `orazaka-job-service` | amqp | `orazaka.jobs.interactive` (`job.text.*, job.media.analyze`) |
-| `orazaka-automation-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
+| `orazaka-automation-service` | `krizaka-notifications-service` | http | `krizaka-billing-client` |
 | `orazaka-cli` | `orazaka-conversation-service` | http | `localhost:8080` |
 | `orazaka-cli` | `orazaka-edge` | http | `localhost:8088` |
-| `orazaka-conversation-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
+| `orazaka-conversation-service` | `krizaka-notifications-service` | http | `krizaka-billing-client` |
 | `orazaka-conversation-service` | `krizaka-notifications-service` | http | `krizaka-users-client` |
 | `orazaka-conversation-service` | `orazaka-studio-service` | http | `orazaka-studio-client` |
 | `orazaka-edge` | `krizaka-billing-service` | http | `route /api/v1/billing` |
@@ -170,10 +175,10 @@ Who calls whom while the platform runs: HTTP (UI defaults, the edge route table,
 | `orazaka-edge` | `orazaka-knowledge-service` | http | `route /api/v1/analytics` |
 | `orazaka-edge` | `orazaka-knowledge-service` | http | `route /api/v1/recommendations` |
 | `orazaka-edge` | `orazaka-studio-service` | http | `route /api/v1/studios` |
-| `orazaka-job-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
+| `orazaka-job-service` | `krizaka-notifications-service` | http | `krizaka-billing-client` |
 | `orazaka-job-service` | `krizaka-notifications-service` | http | `krizaka-users-client` |
 | `orazaka-job-service` | `orazaka-studio-service` | http | `orazaka-studio-client` |
-| `orazaka-studio-service` | `krizaka-billing-service` | http | `krizaka-billing-client` |
+| `orazaka-studio-service` | `krizaka-notifications-service` | http | `krizaka-billing-client` |
 | `orazaka-web-client` | `orazaka-conversation-service` | http | `localhost:8080` |
 | `orazaka-web-client` | `orazaka-edge` | http | `localhost:8088` |
 
