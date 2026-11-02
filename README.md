@@ -185,7 +185,7 @@ The compliance checks built from the law, on top of it — identify the document
 ```
 orazaka/                               ← this repository
 ├── AGENTS.md · orazaka.workspace.json · pom.xml (reactor)
-├── infra/        docker-compose, initdb (reset + dev fixtures), migrations
+├── infra/        docker-compose, initdb (reset), migrations
 ├── docs/         architecture, ADRs, generated references
 ├── orazaka-end2end/                   hermetic E2E
 ├── orazaka-libs/                      ← cloned: orazaka-build, orazaka-contracts, orazaka-ai-engine
