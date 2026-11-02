@@ -511,14 +511,15 @@ test("the automation migration is idempotent, extends the rule set without repla
   assert.match(script, /command === "automations"\) automations\(\)/);
 });
 
-test("the automations migration is the model part of the service's own bootstrap (no drift) — judged when the service is cloned", (t) => {
-  const initdb = new URL("../../orazaka-apps/services/orazaka-automation-service/infra/initdb/50-automation.sql", import.meta.url);
-  if (!existsSync(initdb)) return t.skip("orazaka-automation-service is not cloned here");
+test("the automations migration is the model part of the service's own schema (no drift) — judged when the service is cloned", (t) => {
+  // The service's schema is its Flyway baseline (krizaka-internal#2255); infra/initdb keeps the role and the database only.
+  const baseline = new URL("../../orazaka-apps/services/orazaka-automation-service/src/main/resources/db/migration/V1__automation_baseline.sql", import.meta.url);
+  if (!existsSync(baseline)) return t.skip("orazaka-automation-service is not cloned here");
   const marker = "-- ─────────────────────────────────────────────────────────────────────────────\n-- THE AUTOMATION MODEL";
-  const bootstrap = readFileSync(initdb, "utf8");
+  const schema = readFileSync(baseline, "utf8");
   const migration = readFileSync(new URL("../../infra/migrations/2026-10-20-automations.sql", import.meta.url), "utf8");
-  assert.ok(bootstrap.includes(marker), "the model marker moved");
-  assert.equal(migration.slice(migration.indexOf(marker)), bootstrap.slice(bootstrap.indexOf(marker)));
+  assert.ok(schema.includes(marker), "the model marker moved");
+  assert.equal(migration.slice(migration.indexOf(marker)), schema.slice(schema.indexOf(marker)));
 });
 
 test("the dev persona Mira: a fictional plain user on a reserved .test domain, never admin, her own secret keys", () => {
