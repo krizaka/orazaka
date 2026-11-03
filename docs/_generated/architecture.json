@@ -49,17 +49,6 @@
       "dependsOn": []
     },
     {
-      "name": "krizaka-billing",
-      "url": "https://github.com/krizaka/krizaka-billing",
-      "path": "krizaka/krizaka-billing",
-      "kind": "maven",
-      "layer": "krizaka",
-      "description": "Credits, wallets, plans, subscriptions, a price book and metering (hold → settle → release) as a reusable billing service, with its contract (krizaka-billing-api) and a typed HTTP client (krizaka-billing-client).",
-      "dependsOn": [
-        "krizaka-build"
-      ]
-    },
-    {
       "name": "orazaka-build",
       "url": "https://github.com/krizaka/orazaka-build",
       "path": "orazaka-libs/orazaka-build",
@@ -90,8 +79,7 @@
       "description": "Studio & pack marketplace: pack catalogue, studio blueprints, installations and saga-driven runs, with its contract (studio-api) and HTTP client (studio-client).",
       "dependsOn": [
         "orazaka-build",
-        "orazaka-contracts",
-        "krizaka-billing"
+        "orazaka-contracts"
       ]
     },
     {
@@ -104,7 +92,6 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "krizaka-billing",
         "orazaka-studio"
       ]
     },
@@ -118,7 +105,6 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "krizaka-billing",
         "orazaka-ai-engine"
       ]
     },
@@ -132,7 +118,6 @@
       "dependsOn": [
         "orazaka-build",
         "orazaka-contracts",
-        "krizaka-billing",
         "orazaka-ai-engine"
       ]
     },
@@ -157,7 +142,6 @@
       "description": "Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry.",
       "dependsOn": [
         "orazaka-build",
-        "krizaka-billing",
         "orazaka-ai-engine"
       ]
     },
@@ -399,21 +383,6 @@
       }
     },
     {
-      "id": "krizaka-billing-service",
-      "path": "krizaka/krizaka-billing/krizaka-billing-service",
-      "repository": "krizaka-billing",
-      "owner": "krizaka",
-      "role": "service",
-      "layer": "app",
-      "runtime": "jvm",
-      "version": "0.3.4",
-      "description": "Billing service — credit ledger, hold/settle authorisation, versioned pricebook and entitlements over its own database (ADR-033)",
-      "ports": {
-        "inbound": [],
-        "outbound": []
-      }
-    },
-    {
       "id": "krizaka-notifications-service",
       "path": "krizaka/krizaka-build/krizaka-platform-kit/krizaka-notifications-service",
       "repository": "krizaka-build",
@@ -572,21 +541,6 @@
       "layer": "framework",
       "runtime": "jvm",
       "version": "0.9.0",
-      "description": "Tier-2 SDK — the producer side of the billing contract: a NoOp and an HTTP adapter for CreditAuthorizationClient, selected at bootstrap so no call site ever branches on whether billing exists",
-      "ports": {
-        "inbound": [],
-        "outbound": []
-      }
-    },
-    {
-      "id": "krizaka-billing-client",
-      "path": "krizaka/krizaka-billing/krizaka-billing-client",
-      "repository": "krizaka-billing",
-      "owner": "krizaka",
-      "role": "adapter",
-      "layer": "framework",
-      "runtime": "jvm",
-      "version": "0.3.4",
       "description": "Tier-2 SDK — the producer side of the billing contract: a NoOp and an HTTP adapter for CreditAuthorizationClient, selected at bootstrap so no call site ever branches on whether billing exists",
       "ports": {
         "inbound": [],
@@ -909,21 +863,6 @@
       "layer": "framework",
       "runtime": "jvm",
       "version": "0.9.0",
-      "description": "Billing and entitlements contract (ADR-033) — the credit hold/settle ports and DTOs every producer on the hot path depends on; pure JDK, no dependencies",
-      "ports": {
-        "inbound": [],
-        "outbound": []
-      }
-    },
-    {
-      "id": "krizaka-billing-api",
-      "path": "krizaka/krizaka-billing/krizaka-billing-api",
-      "repository": "krizaka-billing",
-      "owner": "krizaka",
-      "role": "contract",
-      "layer": "framework",
-      "runtime": "jvm",
-      "version": "0.3.4",
       "description": "Billing and entitlements contract (ADR-033) — the credit hold/settle ports and DTOs every producer on the hot path depends on; pure JDK, no dependencies",
       "ports": {
         "inbound": [],
@@ -2574,33 +2513,6 @@
       }
     ],
     "modules": [
-      {
-        "id": "krizaka-billing-service",
-        "path": "krizaka/krizaka-billing/krizaka-billing-service",
-        "repository": "krizaka-billing",
-        "role": "service",
-        "packaging": "jar",
-        "version": "0.3.4",
-        "description": "Billing service — credit ledger, hold/settle authorisation, versioned pricebook and entitlements over its own database (ADR-033)"
-      },
-      {
-        "id": "krizaka-billing-client",
-        "path": "krizaka/krizaka-billing/krizaka-billing-client",
-        "repository": "krizaka-billing",
-        "role": "adapter",
-        "packaging": "jar",
-        "version": "0.3.4",
-        "description": "Tier-2 SDK — the producer side of the billing contract: a NoOp and an HTTP adapter for CreditAuthorizationClient, selected at bootstrap so no call site ever branches on whether billing exists"
-      },
-      {
-        "id": "krizaka-billing-api",
-        "path": "krizaka/krizaka-billing/krizaka-billing-api",
-        "repository": "krizaka-billing",
-        "role": "contract",
-        "packaging": "jar",
-        "version": "0.3.4",
-        "description": "Billing and entitlements contract (ADR-033) — the credit hold/settle ports and DTOs every producer on the hot path depends on; pure JDK, no dependencies"
-      },
       {
         "id": "krizaka-spring-boot-starter-app-config",
         "path": "krizaka/krizaka-build/krizaka-platform-kit/starters/krizaka-spring-boot-starter-app-config",

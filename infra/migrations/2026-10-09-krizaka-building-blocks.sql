@@ -2,7 +2,7 @@
 -- under neutral names.
 --
 -- A fresh `orazaka start` creates them from krizaka/krizaka-build/krizaka-users/infra/initdb/10-identity.sql and
--- krizaka/krizaka-billing/infra/initdb/70-billing.sql and needs nothing here. This script moves an
+-- krizaka/krizaka-build/krizaka-billing/infra/initdb/70-billing.sql and needs nothing here. This script moves an
 -- EXISTING local database without losing its rows:
 --
 --   docker exec -i <postgres> psql -U <superuser> -d postgres < infra/migrations/2026-10-09-krizaka-building-blocks.sql

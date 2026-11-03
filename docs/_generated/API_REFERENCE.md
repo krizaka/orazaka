@@ -162,59 +162,6 @@ no matcher covers the path — the service has no security on it whatsoever.
 | PUT | `/internal/v1/knowledge/sources/{id}/acl` | SERVICE | KnowledgeController | Replaces who may read a source; an administrator of the source's tenant only. |
 | POST | `/internal/v1/knowledge/sources/search` | SERVICE | KnowledgeController | Substring search over a tool's registered RAG sources the principal may read. |
 
-## krizaka-billing-service
-
-| Method | Path | Access | Controller | Summary |
-|:---|:---|:---|:---|:---|
-| GET | `/api/v1/billing/admin/audit` | ADMIN | OperatorAuditController |  |
-| GET | `/api/v1/billing/configuration` | ADMIN | ConfigurationController | The declared key vocabulary — type, permitted domain and code default per key. |
-| PATCH | `/api/v1/billing/configuration` | ADMIN | ConfigurationController | Applies one validated configuration change. |
-| GET | `/api/v1/billing/pack-subscriptions` | ADMIN | PackSubscriptionController | Every live holder of a pack — what an admin checks before withdrawing one. |
-| GET | `/api/v1/billing/pack-subscriptions/{actorId}` | ADMIN | PackSubscriptionController | The packs one actor holds. |
-| GET | `/api/v1/billing/pack-subscriptions/me` | authenticated | PackSubscriptionController | The packs the signed-in user holds. |
-| DELETE | `/api/v1/billing/pack-subscriptions/me/{packKey}` | authenticated | PackSubscriptionController | Removes a pack from the signed-in user. |
-| POST | `/api/v1/billing/pack-subscriptions/me/{packKey}` | authenticated | PackSubscriptionController | Adds a pack to the signed-in user. |
-| GET | `/api/v1/billing/packs` | authenticated | PackController | The priced catalogue. |
-| DELETE | `/api/v1/billing/packs/{packKey}` | ADMIN | PackController | Withdraws a pack from sale. |
-| GET | `/api/v1/billing/packs/{packKey}` | authenticated | PackController | One pack with its entitlement matrix. |
-| PUT | `/api/v1/billing/packs/{packKey}` | ADMIN | PackController | Creates or replaces a pack's price and entitlements. |
-| GET | `/api/v1/billing/packs/prices` | authenticated | PackController | The whole price table, for the Pack catalogue to render a marketplace page from. |
-| GET | `/api/v1/billing/plans` | authenticated | PlanController | The catalogue. |
-| DELETE | `/api/v1/billing/plans/{planKey}` | ADMIN | PlanController | Retires a plan — deactivated, never deleted, because subscriptions reference it. |
-| GET | `/api/v1/billing/plans/{planKey}` | authenticated | PlanController | One plan with its entitlement matrix. |
-| PUT | `/api/v1/billing/plans/{planKey}` | ADMIN | PlanController | Creates or replaces a plan. |
-| GET | `/api/v1/billing/pricebook` | ADMIN | PricebookController |  |
-| POST | `/api/v1/billing/pricebook` | ADMIN | PricebookController |  |
-| GET | `/api/v1/billing/pricebook/estimate` | authenticated | PricebookController | What an action would cost the signed-in user, and whether they can cover it. |
-| GET | `/api/v1/billing/pricebook/history` | ADMIN | PricebookController |  |
-| POST | `/api/v1/billing/pricebook/preview` | ADMIN | PricebookController |  |
-| GET | `/api/v1/billing/prices` | authenticated | PriceController | The public catalogue now. |
-| GET | `/api/v1/billing/prices/admin` | ADMIN | PriceController | Every entry in force, internal ones included. |
-| GET | `/api/v1/billing/prices/admin/{key}/history` | ADMIN | PriceController | Every version of a key, past and scheduled. |
-| POST | `/api/v1/billing/prices/admin/{key}/schedule` | ADMIN | PriceController | Schedules a change from a date. |
-| GET | `/api/v1/billing/subscriptions` | ADMIN | SubscriptionController | Every live subscriber of a plan — what an admin checks before retiring one. |
-| DELETE | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | SubscriptionController | Ends an actor's subscription. |
-| GET | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | SubscriptionController | The subscription in force for an actor. |
-| POST | `/api/v1/billing/subscriptions/{actorId}` | ADMIN | SubscriptionController | Moves an actor onto a plan — upgrade, downgrade or trial. |
-| POST | `/api/v1/billing/subscriptions/{actorId}/rollover` | ADMIN | SubscriptionController | Rolls a subscription into its next period, honouring a pending cancellation. |
-| GET | `/api/v1/billing/usage/capabilities` | ADMIN | UsageController | Consumption and refusals per capability × model. |
-| GET | `/api/v1/billing/usage/me` | ADMIN | UsageController | The caller's own usage and cost for a calendar month. |
-| GET | `/api/v1/billing/usage/top-consumers` | ADMIN | UsageController | The heaviest consumers. |
-| GET | `/api/v1/billing/wallets/{actorId}` | ADMIN | WalletController | Reads an actor's balances. |
-| POST | `/api/v1/billing/wallets/{actorId}/adjustments` | ADMIN | WalletController | Issues a manual credit adjustment — support goodwill, or a claw-back. |
-| GET | `/api/v1/billing/wallets/{actorId}/entitlements` | ADMIN | WalletController | Reads an actor's effective entitlements plus their balance summary. |
-| GET | `/api/v1/billing/wallets/adjustments/today` | ADMIN | WalletController | What an admin has already adjusted today, against their ceiling. |
-| GET | `/api/v1/billing/wallets/me` | authenticated | WalletController | The signed-in user's own balances. |
-| GET | `/api/v1/billing/wallets/me/entitlements` | authenticated | WalletController | The signed-in user's own entitlements and available balance. |
-| POST | `/internal/v1/billing/credits/{holdId}/release` | SERVICE | CreditController | Closes a hold with no debit. |
-| POST | `/internal/v1/billing/credits/{holdId}/settle` | SERVICE | CreditController | Closes a hold against measured consumption. |
-| POST | `/internal/v1/billing/credits/{holdId}/settle-aggregate` | SERVICE | CreditController | Closes one hold against the measurements of the several steps it authorised. |
-| POST | `/internal/v1/billing/credits/{holdId}/settle-measured` | SERVICE | CreditController | Closes a hold against an executor's raw measurements, pricing them in the unit the hold's pinned rate uses. |
-| POST | `/internal/v1/billing/credits/holds` | SERVICE | CreditController | Reserves the estimated cost of a request. |
-| GET | `/internal/v1/billing/entitlements/{actorId}` | SERVICE | EntitlementController | Reads an actor's effective entitlements plus their balance summary. |
-| DELETE | `/internal/v1/billing/packs/{packKey}` | SERVICE | PackProvisioningController | Withdraws a pack from sale, so a failed install can undo the half it already applied. |
-| PUT | `/internal/v1/billing/packs/{packKey}` | SERVICE | PackProvisioningController | Creates or replaces a pack's price and entitlement matrix. |
-
 ## studio-service
 
 | Method | Path | Access | Controller | Summary |
