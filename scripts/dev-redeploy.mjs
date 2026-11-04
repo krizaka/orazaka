@@ -100,16 +100,21 @@ export function schemaDriftVerdict(logs) {
  * @returns {{ found: boolean, message: string }}
  */
 export function deployFailureCause(logs) {
-  const causes = new Map();
   const failed = new Map();
+  const present = new Map();
   for (const line of logs.split("\n")) {
     const f = /\[([\w-]+)\].*Migration of schema "[^"]*" to version "([^"]+)" failed/.exec(line);
     if (f) failed.set(f[1], f[2]);
     const r = /\[([\w-]+)\].*ERROR: relation "([^"]+)" already exists/.exec(line);
-    if (r) causes.set(r[1], r[2]);
+    if (r) present.set(r[1], r[2]);
   }
-  const lines = [...failed.entries()].map(([svc, version]) => `${svc}: Flyway baseline "${version}" failed${causes.has(svc) ? `, relation ${causes.get(svc)} already exists (a database created before Flyway: reset it or adopt it)` : ""}`);
-  return lines.length ? { found: true, message: lines.sort((a, b) => a.localeCompare(b)).join("; ") } : { found: false, message: "no migration failure in the deploy logs" };
+  const describe = ([svc, version]) => {
+    const relation = present.get(svc);
+    const why = relation ? `, relation ${relation} already exists (a database created before Flyway: reset it or adopt it)` : "";
+    return `${svc}: Flyway baseline "${version}" failed${why}`;
+  };
+  const lines = [...failed.entries()].map(describe).toSorted((a, b) => a.localeCompare(b));
+  return lines.length ? { found: true, message: lines.join("; ") } : { found: false, message: "no migration failure in the deploy logs" };
 }
 
 const run = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "inherit"] });
