@@ -119,6 +119,23 @@ export function deployFailureCause(logs) {
 
 const run = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "inherit"] });
 
+/** `--check`: the rollback (with its cause), stale-source and schema-drift verdicts of the dev app; any red one fails the run. */
+function checkDeployments(org, id, deployments) {
+  const v = rollbackVerdict(deployments);
+  console.log(`${APP}: ${v.message}`);
+  const failedId = /deployment ([0-9a-f-]{36}) failed/.exec(v.message)?.[1];
+  if (!v.ok && failedId) {
+    const cause = deployFailureCause(run("doctl", ["apps", "logs", id, "core", "--deployment", failedId, "--type", "deploy"]));
+    if (cause.found) console.log(`${APP}: cause: ${cause.message}`);
+  }
+  const mainSha = run("gh", ["api", `repos/${org}/orazaka/commits/main`, "--jq", ".sha"]).trim();
+  const stale = staleSourceVerdict(deployments, mainSha);
+  console.log(`${APP}: ${stale.message}`);
+  const drift = schemaDriftVerdict(run("doctl", ["apps", "logs", id, "core", "--type", "run", "--tail", "2000"]));
+  console.log(`${APP}: ${drift.message}`);
+  if (!v.ok || !stale.ok || !drift.ok) process.exitCode = 1;
+}
+
 function main(dryRun, check) {
   const manifest = JSON.parse(readFileSync(join(ROOT, "orazaka.workspace.json"), "utf8"));
   const repos = ["orazaka", ...manifest.repositories.map((r) => r.name)];
@@ -131,21 +148,7 @@ function main(dryRun, check) {
   if (!id) throw new Error(`no app ${APP}`);
   const deployments = JSON.parse(run("doctl", ["apps", "list-deployments", id, "-o", "json"]));
   if (check) {
-    const v = rollbackVerdict(deployments);
-    console.log(`${APP}: ${v.message}`);
-    const failedId = /deployment ([0-9a-f-]{36}) failed/.exec(v.message)?.[1];
-    if (!v.ok && failedId) {
-      const cause = deployFailureCause(run("doctl", ["apps", "logs", id, "core", "--deployment", failedId, "--type", "deploy"]));
-      if (cause.found) console.log(`${APP}: cause: ${cause.message}`);
-    }
-    if (!v.ok) process.exitCode = 1;
-    const mainSha = run("gh", ["api", `repos/${manifest.org}/orazaka/commits/main`, "--jq", ".sha"]).trim();
-    const stale = staleSourceVerdict(deployments, mainSha);
-    console.log(`${APP}: ${stale.message}`);
-    if (!stale.ok) process.exitCode = 1;
-    const drift = schemaDriftVerdict(run("doctl", ["apps", "logs", id, "core", "--type", "run", "--tail", "2000"]));
-    console.log(`${APP}: ${drift.message}`);
-    if (!drift.ok) process.exitCode = 1;
+    checkDeployments(manifest.org, id, deployments);
     return;
   }
   const verdict = decide({ deployments, heads });
