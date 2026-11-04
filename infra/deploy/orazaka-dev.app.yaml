@@ -118,7 +118,9 @@ services:
       # Connection budget (docs/DEV_DATABASE.md, "Connection budget"): the cluster allows 22 usable connections for
       # every dev service. Every JVM of this container goes through its PgBouncer pool (port 25061, transaction mode:
       # pgjdbc needs prepareThreshold=0) — the pool size is the cap on the server, whatever the services' Hikari size.
-      # Flyway is off in every service (DDL = infra/initdb), so no session advisory lock sits behind the pooler.
+      # Flyway runs in every service at startup (krizaka-internal#2255, V1 = the baseline) and takes a session advisory lock: it never
+      # goes through the pooler. Each service gets DATABASE_<SERVICE>_MIGRATOR_URL on the direct port (25060, the real database), as its
+      # owner role; the runtime URL stays on the pool. A migration over the transaction pooler stalled and was cut (2026-11-04).
       - { key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE, scope: RUN_TIME, value: "3" }
       - { key: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE, scope: RUN_TIME, value: "0" }
       - { key: SPRING_DATASOURCE_USERNAME, scope: RUN_TIME, value: orazaka_db }
@@ -129,16 +131,19 @@ services:
       - { key: STUDIO_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-studio?sslmode=require&prepareThreshold=0" }
       - { key: STUDIO_DB_USER, scope: RUN_TIME, value: orazaka_studio_db }
       - { key: STUDIO_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_STUDIO_DB__" }
+      - { key: DATABASE_STUDIO_MIGRATOR_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25060/orazaka_studio_db?sslmode=require" }
       # The knowledge service: the recommender's store (ADR-078, pgvector).
       - { key: KNOWLEDGE_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-knowledge?sslmode=require&prepareThreshold=0" }
       - { key: KNOWLEDGE_DB_USERNAME, scope: RUN_TIME, value: orazaka_knowledge_db }
       - { key: KNOWLEDGE_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_KNOWLEDGE_DB__" }
+      - { key: DATABASE_KNOWLEDGE_MIGRATOR_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25060/orazaka_knowledge_db?sslmode=require" }
       # The automation service (ADR-084), the eighth JVM: signed webhooks and schedules that start Studio runs. Its own
       # database through a pool of ONE connection (budget 22 of 22, docs/DEV_DATABASE.md): the code holds no connection while
       # it calls another service. Routed by the edge at /api/v1/automations and /hooks/ (AUTOMATION_INTERNAL_URL).
       - { key: AUTOMATION_DB_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25061/pool-automation?sslmode=require&prepareThreshold=0" }
       - { key: AUTOMATION_DB_USERNAME, scope: RUN_TIME, value: orazaka_automation_db }
       - { key: AUTOMATION_DB_PASSWORD, scope: RUN_TIME, type: SECRET, value: "__DATABASE_PASSWORD_ORAZAKA_AUTOMATION_DB__" }
+      - { key: DATABASE_AUTOMATION_MIGRATOR_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25060/orazaka_automation_db?sslmode=require" }
       - { key: AUTOMATION_DB_MAX_POOL_SIZE, scope: RUN_TIME, value: "1" }
       - { key: AUTOMATION_PORT, scope: RUN_TIME, value: "8091" }
       - { key: AUTOMATION_INTERNAL_URL, scope: RUN_TIME, value: "http://localhost:8091" }
