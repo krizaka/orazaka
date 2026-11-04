@@ -18,7 +18,7 @@ Decision record: [`docs/adr/ADR-033-credit-metering-and-billing.md`](../../docs/
    §13 (configuration), §15 (fitness functions), §19 (manifest).
 4. Read for pattern-matching **before writing anything**:
    - `infra/initdb/10-identity.sql` and `50-automation.sql` — the own-database initdb shape
-   - `krizaka/krizaka-users/krizaka-users-api/` — the Tier-1 contract module shape
+   - `krizaka/krizaka-build/krizaka-users/krizaka-users-api/` — the Tier-1 contract module shape
    - `orazaka-apps/services/orazaka-knowledge-service/` — the smallest complete service shape
    **Mirror these. Do not invent a new structure.**
 
@@ -147,7 +147,7 @@ Also add the `70-billing.sql` line to the file-inventory comment at the top.
 
 ## §5 `krizaka-billing-api` — the Tier-1 contract
 
-`pom.xml`: copy `krizaka/krizaka-users/krizaka-users-api/pom.xml` verbatim, change
+`pom.xml`: copy `krizaka/krizaka-build/krizaka-users/krizaka-users-api/pom.xml` verbatim, change
 `artifactId`/`name`/`description`. **No dependency beyond `junit-jupiter` (test scope).**
 
 Package root `com.krizaka.billing.domain`. Signatures — implement exactly these, with compact-

@@ -67,7 +67,7 @@ cloned under `krizaka/` so the reactor builds them from source. Documentation: [
 |:---|:---|
 | [`krizaka-build`](https://github.com/krizaka/krizaka-build) | Parent POM, `krizaka-bom` and the test kit (ArchUnit rules, Testcontainers helpers) of every Krizaka JVM repository. |
 | [`krizaka-platform-kit`](https://github.com/krizaka/krizaka-platform-kit) | Web (problem details, correlation id), security (session JWT, `SERVICE` tokens), messaging (outbox, deduplication, retry / DLQ), observability — and their Spring Boot starters. |
-| [`krizaka-users`](https://github.com/krizaka/krizaka-users) | Reusable user management: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance. |
+| [`krizaka-users`](https://github.com/krizaka/krizaka-build/tree/main/krizaka-users) | Reusable user management: registration, e-mail verification, login (password + Google/GitHub OAuth), forgot/reset password, profile & preferences, API keys, RBAC and JWT issuance. |
 | `krizaka-notifications` (modules of [`krizaka-platform-kit`](https://github.com/krizaka/krizaka-platform-kit)) | Channel-based notification delivery: e-mail (SMTP), SMS (Twilio) and webhooks behind one DeliveryClient port, driven by platform events or explicit requests over AMQP. |
 
 ### Orazaka AI engine
@@ -201,7 +201,7 @@ Cloned directories are ignored by this repository's git; each is its own reposit
    (`krizaka-spring-boot-starter-web`, `-security`, `-rabbitmq`, `-observability`) — or inherit
    `com.krizaka.orazaka:orazaka-parent` (from [orazaka-build](https://github.com/krizaka/orazaka-build)) for the
    full Orazaka stack and quality gates.
-2. Run the services you need — e.g. [krizaka-users](https://github.com/krizaka/krizaka-users) for
+2. Run the services you need — e.g. [krizaka-users](https://github.com/krizaka/krizaka-build/tree/main/krizaka-users) for
    registration / login / forgot password / profile, krizaka-notifications ([in krizaka-platform-kit](https://github.com/krizaka/krizaka-platform-kit))
    for e-mail / SMS / webhook delivery, [krizaka-billing](https://github.com/krizaka/krizaka-build/tree/main/krizaka-billing) for credits and
    subscriptions, [orazaka-edge](https://github.com/krizaka/orazaka-edge) in front of them.
