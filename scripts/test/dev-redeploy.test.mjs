@@ -1,7 +1,7 @@
 // node --test scripts/test — the dev core image follows the repositories it clones (no merge left unbuilt, no rebuild for nothing).
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { decide, rollbackVerdict, staleSourceVerdict, schemaDriftVerdict } from "../dev-redeploy.mjs";
+import { decide, deployFailureCause, rollbackVerdict, staleSourceVerdict, schemaDriftVerdict } from "../dev-redeploy.mjs";
 
 const manual = { created_at: "2026-10-27T10:47:33Z", cause: "manual", phase: "ACTIVE" };
 
@@ -80,4 +80,19 @@ test("schemaDriftVerdict fails loudly on a missing column (dev billing, 2026-11-
 
 test("schemaDriftVerdict is quiet on healthy logs", () => {
   assert.equal(schemaDriftVerdict("core [billing] Started BillingApplication in 9s").ok, true);
+});
+
+test("deployFailureCause names the service and the relation of a Flyway baseline that cannot adopt a pre-Flyway database (dev, 2026-11-03, krizaka-internal#2366)", () => {
+  const logs = [
+    '2026-11-04T03:15:28Z [job] ERROR 38 --- Migration of schema "public" to version "1 - job baseline" failed! Changes successfully rolled back.',
+    '2026-11-04T03:15:28Z [job] Message    : ERROR: relation "orazaka_jobs" already exists',
+    "2026-11-04T03:15:29Z [studio] Graceful shutdown complete",
+  ].join("\n");
+  const v = deployFailureCause(logs);
+  assert.equal(v.found, true);
+  assert.match(v.message, /job: Flyway baseline "1 - job baseline" failed, relation orazaka_jobs already exists/);
+});
+
+test("deployFailureCause is quiet when the deploy logs hold no migration failure", () => {
+  assert.equal(deployFailureCause("[studio] Graceful shutdown complete").found, false);
 });
