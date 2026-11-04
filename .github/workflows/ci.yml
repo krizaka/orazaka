@@ -26,11 +26,11 @@ jobs:
   # tests replay, the workspace manifest or this workflow change — and always on the nightly, dispatch and on every
   # other event (krizaka/.github changes.yml fails open). The docs freshness gate and the workspace script tests always run.
   maven-changes:
-    uses: krizaka/.github/.github/workflows/changes.yml@33659828113f147459416d4ae30eab8457bf1957 # main
+    uses: krizaka/.github/.github/workflows/changes.yml@ee508b528e6edfdad989947b48b49d25e81b1964 # main
     with:
       relevant: '^(pom\.xml|\.mvn/|mvnw(\.cmd)?$|orazaka-end2end/|infra/(initdb|migrations|users|brokers-infra|docker-compose)|orazaka\.workspace\.json|scripts/workspace\.mjs|\.github/workflows/ci\.yml$)'
   ui-changes:
-    uses: krizaka/.github/.github/workflows/changes.yml@33659828113f147459416d4ae30eab8457bf1957 # main
+    uses: krizaka/.github/.github/workflows/changes.yml@ee508b528e6edfdad989947b48b49d25e81b1964 # main
     with:
       relevant: '^(orazaka-apps/ui/|orazaka\.workspace\.json|scripts/workspace\.mjs|\.github/workflows/ci\.yml$)'
 
@@ -60,7 +60,7 @@ jobs:
           cache: maven
 
       # A Krizaka release waits for a human to press Publish on Central; development builds resolve it from GitHub Packages.
-      - uses: krizaka/.github/actions/maven-github-packages@33659828113f147459416d4ae30eab8457bf1957 # main
+      - uses: krizaka/.github/actions/maven-github-packages@ee508b528e6edfdad989947b48b49d25e81b1964 # main
         if: ${{ needs.maven-changes.outputs.code != 'false' }}
         with:
           token: ${{ github.token }}
@@ -185,7 +185,7 @@ jobs:
         with:
           fetch-depth: 0 # blame and new-code detection need the history
           persist-credentials: false
-      - uses: krizaka/.github/actions/sonar-scan@33659828113f147459416d4ae30eab8457bf1957 # main
+      - uses: krizaka/.github/actions/sonar-scan@ee508b528e6edfdad989947b48b49d25e81b1964 # main
         with:
           token: ${{ secrets.SONAR_TOKEN }}
           args: -Dsonar.qualitygate.wait=true
