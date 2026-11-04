@@ -138,7 +138,7 @@ public class CinePulseController {
 ### Build Sequence
 ```bash
 # 1. Build identity logic
-mvn clean install -pl krizaka/krizaka-users/krizaka-users-core
+mvn clean install -pl krizaka/krizaka-build/krizaka-users/krizaka-users-core
 
 # 2. Compile gateway API with dependencies
 mvn clean compile -pl orazaka-apps/services/orazaka-conversation-service -am

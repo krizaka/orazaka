@@ -1027,7 +1027,7 @@ function extractApi() {
     if (!existsSync(dir)) continue;
     const rules = accessRules(dir);
     // A service's REST surface is not only what sits in its own module: identity hosts seven
-    // controllers from `krizaka/krizaka-users/krizaka-users-core`, its owned Tier-3 (AGENTS.md §2). Scanning
+    // controllers from `krizaka/krizaka-build/krizaka-users/krizaka-users-core`, its owned Tier-3 (AGENTS.md §2). Scanning
     // the service directory alone dropped `/api/v1/auth/**` — the login endpoint — from the
     // reference entirely. The libs are read from the pom, so a future move needs no edit here.
     const sources = [dir, ...hostedTier3Dirs(root)];
