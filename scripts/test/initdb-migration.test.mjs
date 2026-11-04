@@ -2,7 +2,8 @@
 // (infra/migrations): every column, constraint, index and table a migration adds is in the initdb DDL.
 // The initdb files live in the component repositories (orazaka.workspace.json `initdb`), cloned next to this one.
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -39,15 +40,53 @@ function initdbText() {
       const p = join(root, r.path, "infra", "initdb", f);
       if (existsSync(p)) all.push(readFileSync(p, "utf8").replace(/--[^\n]*/g, ""));
     }
-    const migrations = join(root, r.path, "src", "main", "resources", "db", "migration");
-    if (existsSync(migrations)) {
-      for (const f of readdirSync(migrations).filter((n) => /^V\d+__.*\.sql$/.test(n)).sort()) {
-        all.push(readFileSync(join(migrations, f), "utf8").replace(/--[^\n]*/g, ""));
-      }
-    }
+    for (const f of flywayMigrations(join(root, r.path))) all.push(readFileSync(f, "utf8").replace(/--[^\n]*/g, ""));
   }
   return all.join("\n");
 }
+
+/**
+ * Every Flyway migration of a repository: `src/main/resources/db/<location>/V<n>__*.sql` of the repository or of one of
+ * its modules (a multi-module repository keeps a context's baseline in its module, e.g. orazaka-ai-engine's
+ * `orazaka-persistence-app/src/main/resources/db/governance`, krizaka-internal#2255).
+ */
+export function flywayMigrations(repo) {
+  const found = [];
+  const walk = (dir, depth) => {
+    if (!existsSync(dir) || depth > 3) return;
+    const db = join(dir, "src", "main", "resources", "db");
+    if (existsSync(db)) {
+      for (const location of readdirSync(db, { withFileTypes: true }).filter((e) => e.isDirectory())) {
+        for (const f of readdirSync(join(db, location.name)).filter((n) => /^V\d+__.*\.sql$/.test(n)).sort()) {
+          found.push(join(db, location.name, f));
+        }
+      }
+    }
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory() && !/^(\.|node_modules$|target$|src$|build$)/.test(e.name)) walk(join(dir, e.name), depth + 1);
+    }
+  };
+  walk(repo, 0);
+  return found;
+}
+
+test("the Flyway migrations of a repository and of its modules are read, whatever their location", () => {
+  const repo = mkdtempSync(join(tmpdir(), "flyway-"));
+  const put = (path, text) => {
+    mkdirSync(dirname(join(repo, path)), { recursive: true });
+    writeFileSync(join(repo, path), text);
+  };
+  put("src/main/resources/db/migration/V1__root.sql", "");
+  put("app-module/src/main/resources/db/governance/V1__governance_baseline.sql", "");
+  put("app-module/src/main/resources/db/governance/notes.sql", "");
+  put("app-module/src/test/resources/db/other/V1__test_only.sql", "");
+  put("app-module/target/classes/db/governance/V1__copy.sql", "");
+  const got = flywayMigrations(repo).map((f) => f.slice(repo.length + 1)).sort();
+  assert.deepEqual(got, [
+    "app-module/src/main/resources/db/governance/V1__governance_baseline.sql",
+    "src/main/resources/db/migration/V1__root.sql",
+  ]);
+});
 
 test("the migration parser reads columns, constraints, indexes and tables", () => {
   const got = objectsAdded(`\\c a_db
