@@ -190,25 +190,26 @@ jobs:
           token: ${{ secrets.SONAR_TOKEN }}
           args: -Dsonar.qualitygate.wait=true
 
-  # Main must not go red unnoticed: a failed run on main opens (or updates) a single issue.
+  # Main must not go red unnoticed: a failed run on main files one issue in the private krizaka-internal (never in this public
+  # repository, krizaka-internal#2267); a second red run comments on it.
   red-main:
     needs: workspace
     if: ${{ always() && needs.workspace.result == 'failure' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      issues: write
+      contents: read
     steps:
-      - name: Open or update the "main is red" issue
+      - name: What failed
         env:
-          GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SHA: ${{ github.sha }}
         run: |
-          body="CI failed on main at ${SHA:0:7}: ${RUN_URL}"
-          n=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search '"main is red" in:title' --json number -q '.[0].number')
-          if [ -n "$n" ]; then
-            gh issue comment "$n" -R "$GITHUB_REPOSITORY" --body "$body"
-          else
-            gh issue create -R "$GITHUB_REPOSITORY" --title "main is red" --body "$body"
-          fi
+          echo "CI failed on main at ${SHA:0:7}: ${RUN_URL}" > "$RUNNER_TEMP/body.md"
+      - uses: krizaka/.github/actions/alert-issue@ad452c800f763d4f49a2cf36ffe32882ce1230bd # main
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          title: "orazaka · fix(ci): main is red"
+          body-file: ${{ runner.temp }}/body.md
+          labels: repo:orazaka,type:fix
