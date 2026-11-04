@@ -82,6 +82,7 @@ generated: true
 
 - `AdminUserService`
 - `ApiKeyService`
+- `CredentialGrantService`
 - `IdentityReconciliationService`
 - `IdentityService`
 - `LoginLockoutService`
@@ -99,6 +100,7 @@ generated: true
 - `ApiKeyRepositoryPort`
 - `AuthorityRepositoryPort`
 - `BreachedPasswordPort`
+- `CredentialGrantRepositoryPort`
 - `CryptographyPort`
 - `LockoutRepositoryPort`
 - `OAuth2ProviderVerifier`
