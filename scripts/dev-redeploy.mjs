@@ -92,7 +92,49 @@ export function schemaDriftVerdict(logs) {
   return { ok: false, message: `a service runs ahead of its database (apply the pending migration, node scripts/dev-migrations.mjs check): ${[...found.keys()].sort((a, b) => a.localeCompare(b)).join("; ")}` };
 }
 
+/**
+ * Why a deployment failed, when it is a Flyway baseline that cannot adopt a database created before Flyway (krizaka-internal#2255,
+ * #2366: from 2026-11-03 every dev deployment rolled back on `relation "orazaka_jobs" already exists`, while the old image kept
+ * running against an old schema). A red "Dev redeploy" now says it instead of "read its logs".
+ * @param {string} logs deploy logs of the failed deployment, one line per entry, prefixed `[service]`
+ * @returns {{ found: boolean, message: string }}
+ */
+export function deployFailureCause(logs) {
+  const failed = new Map();
+  const present = new Map();
+  for (const line of logs.split("\n")) {
+    const f = /\[([\w-]+)\].*Migration of schema "[^"]*" to version "([^"]+)" failed/.exec(line);
+    if (f) failed.set(f[1], f[2]);
+    const r = /\[([\w-]+)\].*ERROR: relation "([^"]+)" already exists/.exec(line);
+    if (r) present.set(r[1], r[2]);
+  }
+  const describe = ([svc, version]) => {
+    const relation = present.get(svc);
+    const why = relation ? `, relation ${relation} already exists (a database created before Flyway: reset it or adopt it)` : "";
+    return `${svc}: Flyway baseline "${version}" failed${why}`;
+  };
+  const lines = [...failed.entries()].map(describe).toSorted((a, b) => a.localeCompare(b));
+  return lines.length ? { found: true, message: lines.join("; ") } : { found: false, message: "no migration failure in the deploy logs" };
+}
+
 const run = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "inherit"] });
+
+/** `--check`: the rollback (with its cause), stale-source and schema-drift verdicts of the dev app; any red one fails the run. */
+function checkDeployments(org, id, deployments) {
+  const v = rollbackVerdict(deployments);
+  console.log(`${APP}: ${v.message}`);
+  const failedId = /deployment ([0-9a-f-]{36}) failed/.exec(v.message)?.[1];
+  if (!v.ok && failedId) {
+    const cause = deployFailureCause(run("doctl", ["apps", "logs", id, "core", "--deployment", failedId, "--type", "deploy"]));
+    if (cause.found) console.log(`${APP}: cause: ${cause.message}`);
+  }
+  const mainSha = run("gh", ["api", `repos/${org}/orazaka/commits/main`, "--jq", ".sha"]).trim();
+  const stale = staleSourceVerdict(deployments, mainSha);
+  console.log(`${APP}: ${stale.message}`);
+  const drift = schemaDriftVerdict(run("doctl", ["apps", "logs", id, "core", "--type", "run", "--tail", "2000"]));
+  console.log(`${APP}: ${drift.message}`);
+  if (!v.ok || !stale.ok || !drift.ok) process.exitCode = 1;
+}
 
 function main(dryRun, check) {
   const manifest = JSON.parse(readFileSync(join(ROOT, "orazaka.workspace.json"), "utf8"));
@@ -106,16 +148,7 @@ function main(dryRun, check) {
   if (!id) throw new Error(`no app ${APP}`);
   const deployments = JSON.parse(run("doctl", ["apps", "list-deployments", id, "-o", "json"]));
   if (check) {
-    const v = rollbackVerdict(deployments);
-    console.log(`${APP}: ${v.message}`);
-    if (!v.ok) process.exitCode = 1;
-    const mainSha = run("gh", ["api", `repos/${manifest.org}/orazaka/commits/main`, "--jq", ".sha"]).trim();
-    const stale = staleSourceVerdict(deployments, mainSha);
-    console.log(`${APP}: ${stale.message}`);
-    if (!stale.ok) process.exitCode = 1;
-    const drift = schemaDriftVerdict(run("doctl", ["apps", "logs", id, "core", "--type", "run", "--tail", "2000"]));
-    console.log(`${APP}: ${drift.message}`);
-    if (!drift.ok) process.exitCode = 1;
+    checkDeployments(manifest.org, id, deployments);
     return;
   }
   const verdict = decide({ deployments, heads });
