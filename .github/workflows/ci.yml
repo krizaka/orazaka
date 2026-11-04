@@ -204,7 +204,8 @@ jobs:
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SHA: ${{ github.sha }}
-        run: echo "CI failed on main at ${SHA:0:7}: ${RUN_URL}" > "$RUNNER_TEMP/body.md"
+        run: |
+          echo "CI failed on main at ${SHA:0:7}: ${RUN_URL}" > "$RUNNER_TEMP/body.md"
       - uses: krizaka/.github/actions/alert-issue@ad452c800f763d4f49a2cf36ffe32882ce1230bd # main
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
