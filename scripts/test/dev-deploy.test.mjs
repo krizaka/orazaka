@@ -238,14 +238,21 @@ test("orazaka-dev: outputs go to the private Bunny zone, the key is a SECRET, de
   assert.match(text, /MEDIA_RETENTION_DAYS, scope: RUN_TIME, value: "30"/);
 });
 
-test("connection budget: every JVM of the core goes through its PgBouncer pool (25061, prepareThreshold=0), none direct", () => {
+test("connection budget: every JVM of the core goes through its PgBouncer pool (25061, prepareThreshold=0); only Flyway's migrator URLs are direct", () => {
   const dev = spec("orazaka-dev");
-  const urls = [...dev.matchAll(/key: (\w+_URL|SPRING_DATASOURCE_URL), scope: RUN_TIME, value: "(jdbc:postgresql:[^"]+)"/g)];
+  const urls = [...dev.matchAll(/key: ((?:(?!MIGRATOR)\w)+_URL|SPRING_DATASOURCE_URL), scope: RUN_TIME, value: "(jdbc:postgresql:[^"]+)"/g)];
   assert.equal(urls.length, 6, "orazaka_db, users, studio, knowledge, billing, automation");
   for (const [, key, url] of urls) {
     assert.match(url, /:25061\/pool-[a-z]+\?sslmode=require&prepareThreshold=0$/, `${key} must use its pool`);
   }
   assert.doesNotMatch(dev, /__DATABASE_PORT__/, "no direct (25060) datasource left in the core");
+});
+
+test("orazaka-dev: Flyway never migrates through the transaction pooler (2026-11-04: studio, knowledge and automation V1 stalled and were cut)", () => {
+  const dev = spec("orazaka-dev");
+  for (const [svc, db] of [["STUDIO", "orazaka_studio_db"], ["KNOWLEDGE", "orazaka_knowledge_db"], ["AUTOMATION", "orazaka_automation_db"]]) {
+    assert.match(dev, new RegExp(`key: DATABASE_${svc}_MIGRATOR_URL, scope: RUN_TIME, value: "jdbc:postgresql://__DATABASE_HOST__:25060/${db}\\?sslmode=require"`), `${svc} migrates on the direct port`);
+  }
 });
 
 test("service accounts sit on the `service` rate-limit tier, whose migration is idempotent and moves the existing svc_* users", () => {
