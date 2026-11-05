@@ -99,10 +99,8 @@ test("gpu-dev.sh: stop always destroys, and the sizes are the stated ones", () =
 
 // RunPod spend guard (ADR-078): the rule alone, on fixtures — no network, no key.
 function decide(fixture) {
-  const dir = mkdtempSync(join(tmpdir(), "runpod-guard-"));
-  const file = join(dir, "fixture.json");
-  writeFileSync(file, JSON.stringify(fixture));
-  return JSON.parse(execFileSync("python3", [join(root, "scripts/runpod-guard.py"), "decide", file], { encoding: "utf8" }));
+  const input = JSON.stringify(fixture);
+  return JSON.parse(execFileSync("python3", [join(root, "scripts/runpod-guard.py"), "decide"], { input, encoding: "utf8" }));
 }
 
 test("runpod guard: a busy pod is kept, an idle one is stopped after 20 minutes", () => {

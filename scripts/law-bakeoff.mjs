@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
 import { passagesFrom } from "./lib/bakeoff/corpus.mjs";
+import { repoPath } from "./lib/repo-path.mjs";
 import { messagesFor, PROMPT_VERSION } from "./lib/bakeoff/prompt.mjs";
 import { chatClient, costUsd, SEED } from "./lib/bakeoff/models.mjs";
 import { scoreCase, aggregate, stability, decide } from "./lib/bakeoff/score.mjs";
@@ -74,6 +75,9 @@ async function main() {
   const golden = JSON.parse(readFileSync(new URL("../docs/evaluations/law-bakeoff/law-retrieval.golden.json", import.meta.url), "utf8"));
   const prices = JSON.parse(readFileSync(new URL("../docs/evaluations/law-bakeoff/prices.json", import.meta.url), "utf8"));
   const corpus = { fr: v["corpus-fr"], en: v["corpus-en"] };
+  // The measurement and the raw answers are written inside the repository only (docs/measurements, the git-ignored var/).
+  const outFile = repoPath(v.out);
+  const rawDir = repoPath(v["raw-dir"]);
   const models = v.models.split(",").map((s) => {
     const [id, where] = s.split("@");
     return { id, where };
@@ -90,13 +94,13 @@ async function main() {
   const key = process.env.AI_INFERENCE_KEY;
   const chatFor = (where) => chatClient({ base: ENDPOINTS[where], apiKey: where === "do" ? key : undefined });
   if (models.some((m) => m.where === "do") && !key) throw new Error("AI_INFERENCE_KEY is not set (read it with tools/secret.sh, never print it)");
-  mkdirSync(v["raw-dir"], { recursive: true });
-  const onModel = (m, spent) => writeFileSync(`${v["raw-dir"]}/law-retrieval-partial-${m.id.replace(/[^\w.-]/gu, "_")}.json`, JSON.stringify({ model: m, spentUsd: spent }, null, 1));
+  mkdirSync(rawDir, { recursive: true });
+  const onModel = (m, spent) => writeFileSync(`${rawDir}/law-retrieval-partial-${m.id.replace(/[^\w.-]/gu, "_")}.json`, JSON.stringify({ model: m, spentUsd: spent }, null, 1));
   const result = await runBakeoff({ onModel, golden, prices, models, repeat: Number(v.repeat), maxUsd: Number(v["max-usd"]), passagesFor, chatFor });
-  mkdirSync(v["raw-dir"], { recursive: true });
-  writeFileSync(`${v["raw-dir"]}/law-retrieval-${result.measuredOn}.json`, JSON.stringify(result, null, 1));
+  mkdirSync(rawDir, { recursive: true });
+  writeFileSync(`${rawDir}/law-retrieval-${result.measuredOn}.json`, JSON.stringify(result, null, 1));
   for (const m of result.models) for (const r of m.runs) delete r.text;
-  writeFileSync(v.out, JSON.stringify(result, null, 2) + "\n");
+  writeFileSync(outFile, JSON.stringify(result, null, 2) + "\n");
   console.log(JSON.stringify({ decision: result.decision, spentUsd: result.spentUsd, stoppedAtCap: result.stoppedAtCap }, null, 1));
 }
 

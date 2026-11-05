@@ -4,7 +4,7 @@
   runpod-guard.py status            pods, uptime, GPU use, $/h  (needs AI_GPU_RUNPOD_API_KEY in the env)
   runpod-guard.py once              one pass: end the pods the rule below condemns
   runpod-guard.py loop [seconds]    `once` every 60 s (or the given interval) until interrupted
-  runpod-guard.py decide FILE       the rule alone, on a JSON fixture (tests): prints the pods to end
+  runpod-guard.py decide < FILE     the rule alone, on a JSON fixture read from stdin (tests): prints the pods to end
   runpod-guard.py count             prints « pods: N running » (billing pods) and exits 3 when N > 0
   runpod-guard.py list [prefix]     one line per live pod: id status $/h gpu name
   runpod-guard.py create FILE       POST /v2/pods with the JSON body in FILE; prints « id cost gpu »
@@ -226,7 +226,7 @@ CLIENT = {"body": cmd_body, "count": cmd_count, "list": cmd_list, "create": cmd_
 def main(argv):
     cmd = argv[1] if len(argv) > 1 else "status"
     if cmd == "decide":
-        fixture = json.load(open(argv[2]))
+        fixture = json.load(sys.stdin)
         stop, _ = decide(fixture["pods"], fixture.get("idle_since", {}), fixture["now"])
         print(json.dumps(stop))
         return 0
