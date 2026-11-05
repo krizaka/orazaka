@@ -38,3 +38,22 @@ test("forwards each path to the engine that owns it, and says so when an engine 
   router.close(); speech.close();
   delete env.MEDIA_SPEECH_URL; delete env.MEDIA_IMAGE_URL;
 });
+
+test("only a path on the router is forwarded, always to its engine, never to a host the request names", async () => {
+  const { upstreamFor } = await import("../mac-engines-router.mjs");
+  const env = { MEDIA_SPEECH_URL: "http://127.0.0.1:8085", MEDIA_IMAGE_URL: "http://127.0.0.1:8087" };
+  assert.deepEqual(upstreamFor("/v1/audio/speech?x=1", { host: "relay", accept: "*/*" }, env), {
+    host: "127.0.0.1", port: "8085", path: "/v1/audio/speech?x=1", headers: { accept: "*/*", host: "127.0.0.1:8085" },
+  });
+  for (const url of ["http://evil.example/v1/images", "//evil.example/v1", "evil.example", "/\\evil.example", undefined]) {
+    assert.equal(upstreamFor(url, {}, env), null, String(url));
+  }
+});
+
+test("hop-by-hop headers and a __proto__ header are never forwarded", async () => {
+  const { upstreamFor } = await import("../mac-engines-router.mjs");
+  const headers = JSON.parse('{"connection":"close","transfer-encoding":"chunked","__proto__":{"polluted":true},"x-ok":"1"}');
+  const out = upstreamFor("/v1/images", headers, {});
+  assert.deepEqual(Object.keys(out.headers).sort(), ["host", "x-ok"]);
+  assert.equal({}.polluted, undefined);
+});
