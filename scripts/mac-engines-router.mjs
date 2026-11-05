@@ -18,11 +18,38 @@ export function target(path, env = process.env) {
   return /^\/v1\/audio\//.test(path) ? speech : image;
 }
 
+// Hop-by-hop headers are the router's own business, never forwarded to an engine.
+const HOP_BY_HOP = new Set(["connection", "keep-alive", "proxy-authorization", "proxy-connection", "te", "trailer", "transfer-encoding", "upgrade"]);
+
+/**
+ * The upstream request for one incoming request, or null when it is not a plain path on this router: only an origin-form
+ * path (`/v1/...`) is forwarded, always to the engine that owns it, never to a host named by the request.
+ */
+export function upstreamFor(rawUrl, headers, env = process.env) {
+  if (typeof rawUrl !== "string" || !rawUrl.startsWith("/") || rawUrl.startsWith("//") || rawUrl.includes("\\")) return null;
+  const [pathname] = rawUrl.split("?", 1);
+  const base = new URL(target(pathname, env));
+  const forwarded = Object.fromEntries(
+    Object.entries(headers ?? {}).filter(([name]) => !HOP_BY_HOP.has(name) && name !== "host" && name !== "__proto__"),
+  );
+  return {
+    host: base.hostname,
+    port: base.port,
+    path: rawUrl,
+    headers: { ...forwarded, host: base.host },
+  };
+}
+
 export function serve(port = Number(process.env.MEDIA_ROUTER_PORT ?? 8086), host = "127.0.0.1") {
   const server = http.createServer((req, res) => {
-    const base = new URL(target(req.url ?? "/"));
+    const options = upstreamFor(req.url, req.headers);
+    if (!options) {
+      res.writeHead(400, { "content-type": "application/json" });
+      res.end(JSON.stringify({ error: "a path on this router is expected" }));
+      return;
+    }
     const upstream = http.request(
-      { host: base.hostname, port: base.port, path: req.url, method: req.method, headers: { ...req.headers, host: base.host } },
+      { ...options, method: req.method },
       (answer) => {
         res.writeHead(answer.statusCode ?? 502, answer.headers);
         answer.pipe(res);

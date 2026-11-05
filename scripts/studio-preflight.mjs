@@ -15,15 +15,14 @@
  * serves it: the ref is read from GitHub and refused before any pod.
  */
 import { execFileSync } from "node:child_process";
-
-const BASE = process.env.ORAZAKA_EDGE_URL ?? "https://dev.orazaka.com/edge";
+import { edgeBase, edgeUrl, idSegment, oneLine } from "./lib/edge-url.mjs";
 
 /** @returns {{ok: boolean, reason: string}} the verdict on one Studio answer. */
 export function judge(status, body) {
   const message = typeof body === "string" ? body : (body?.message ?? JSON.stringify(body ?? ""));
   if (status >= 200 && status < 300) return { ok: true, reason: "the Studio accepts the run" };
   if (status === 400 && /is not running \(its engine could not be reached\)/.test(message)) return { ok: true, reason: "the model is in the catalogue; only its engine is down (a pod fixes that)" };
-  return { ok: false, reason: `the Studio would refuse (${status}): ${message}`.slice(0, 400) };
+  return { ok: false, reason: oneLine(`the Studio would refuse (${status}): ${message}`).slice(0, 400) };
 }
 
 /**
@@ -49,7 +48,7 @@ function workerModelsAt(ref) {
 }
 
 async function call(method, path, body, token) {
-  const res = await fetch(BASE + path, {
+  const res = await fetch(edgeUrl(edgeBase(), path), {
     signal: AbortSignal.timeout(60_000),
     method,
     headers: { Accept: "application/json", ...(body ? { "Content-Type": "application/json" } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) },
@@ -81,7 +80,7 @@ async function main() {
   if (login.status !== 200 || !login.body?.token) throw new Error(`login answered ${login.status}`);
   const token = login.body.token;
   const answer = await call("POST", "/api/v1/studios/image-generation/runs", { inputs: { prompt: "preflight", size: arg("size", "1024x1024"), model: arg("model") } }, token);
-  if (answer.status >= 200 && answer.status < 300 && answer.body?.id) await call("POST", `/api/v1/studios/runs/${answer.body.id}/cancel`, undefined, token).catch(() => {});
+  if (answer.status >= 200 && answer.status < 300 && answer.body?.id) await call("POST", `/api/v1/studios/runs/${idSegment(answer.body.id)}/cancel`, undefined, token).catch(() => {});
   if (process.argv.includes("--require-engine")) {
     const state = engineState(answer.status, answer.body);
     console.log(`preflight: engine ${state}`);
