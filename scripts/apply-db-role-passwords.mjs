@@ -31,6 +31,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { byText } from "./lib/source-scan.mjs";
 
 const ROOT = process.argv[2] ?? process.cwd();
 const initdb = join(ROOT, "infra", "initdb");
@@ -44,7 +45,7 @@ function contexts() {
       found.add(match[1].toUpperCase());
     }
   }
-  return [...found].sort();
+  return [...found].sort(byText);
 }
 
 /**

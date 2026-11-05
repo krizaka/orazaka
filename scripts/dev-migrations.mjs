@@ -22,6 +22,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { devSecrets, envFileFromArgs } from "./lib/dev-secrets.mjs";
 import { judge, probesOf } from "./lib/migration-probes.mjs";
+import { byText } from "./lib/source-scan.mjs";
 
 const HERE = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const LEDGER_DB = "orazaka_db";
@@ -42,7 +43,7 @@ export function migrationFiles(root, manifest = JSON.parse(readFileSync(join(roo
     if (!existsSync(abs)) continue;
     for (const f of readdirSync(abs).filter((n) => n.endsWith(".sql"))) out.push(join(rel, f));
   }
-  return out.sort();
+  return out.sort(byText);
 }
 
 /** The databases a migration file switches to with `\c <db>` (in order, once each); a file without any belongs to its own database. */

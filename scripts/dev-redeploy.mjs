@@ -15,6 +15,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { byText } from "./lib/source-scan.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const APP = "orazaka-dev";
@@ -30,7 +31,7 @@ export function decide({ deployments, heads }) {
   const last = deployments.find((d) => /manual/i.test(d.cause) && d.phase !== "ERROR" && d.phase !== "CANCELED");
   if (!last) return { redeploy: true, reason: "no manual deployment on record", newer: Object.keys(heads) };
   const since = Date.parse(last.created_at);
-  const newer = Object.entries(heads).filter(([, at]) => Date.parse(at) > since).map(([repo]) => repo).sort();
+  const newer = Object.entries(heads).filter(([, at]) => Date.parse(at) > since).map(([repo]) => repo).sort(byText);
   return newer.length
     ? { redeploy: true, reason: `${newer.join(", ")} moved after the last rebuild (${last.created_at})`, newer }
     : { redeploy: false, reason: "core is up to date", newer: [] };
