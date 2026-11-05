@@ -185,6 +185,23 @@ jobs:
         with:
           fetch-depth: 0 # blame and new-code detection need the history
           persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "22"
+      # The coverage Sonar shows is the workspace scripts' own tests (the sources this project analyses), never the test files
+      # themselves: lcov for sonar.javascript.lcov.reportPaths (sonar-project.properties). The Java and Python modules report
+      # their coverage in their own repositories' projects.
+      - name: Script tests with coverage
+        timeout-minutes: 10
+        env:
+          SONAR_TOKEN: "" # the tests never see the scan's token
+        run: |
+          mkdir -p coverage
+          node --test --test-timeout=120000 --test-force-exit --experimental-test-coverage \
+            --test-coverage-exclude='scripts/test/**' \
+            --test-reporter=dot --test-reporter-destination=stdout \
+            --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \
+            'scripts/test/*.test.mjs'
       - uses: krizaka/.github/actions/sonar-scan@78dc5cbc0f0e0cf684a7e89d0d736893134e80a2 # main
         with:
           token: ${{ secrets.SONAR_TOKEN }}
