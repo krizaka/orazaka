@@ -13,13 +13,14 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { cinemaDataset, filmRecord, stepMeasures } from "./lib/cinema-measure.mjs";
+import { toolPath } from "./lib/tool-path.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // Several batches (one per production session, each with its GPU and rate): every film keeps its own.
 const batchFiles = process.argv.slice(2).map((f) => resolve(f));
 if (!batchFiles.length) throw new Error("usage: node scripts/cinema-measure.mjs <batch.json> [<batch.json> …]");
 const probe = (file) => {
-  const out = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "json", file], { encoding: "utf8" }));
+  const out = JSON.parse(execFileSync(toolPath("ffprobe"), ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "json", file], { encoding: "utf8" }));
   return { width: out.streams[0].width, height: out.streams[0].height, duration: Number(out.format.duration) };
 };
 const batches = batchFiles.map((file) => ({ base: dirname(file), ...JSON.parse(readFileSync(file, "utf8")) }));

@@ -16,6 +16,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { edgeBase, edgeUrl, idSegment, oneLine } from "./lib/edge-url.mjs";
+import { toolPath } from "./lib/tool-path.mjs";
 
 /** @returns {{ok: boolean, reason: string}} the verdict on one Studio answer. */
 export function judge(status, body) {
@@ -43,8 +44,8 @@ export function workerListsModel(yaml, model) {
 
 /** models.yaml of the worker at one commit, read with the app credential (never printed). */
 function workerModelsAt(ref) {
-  const credential = process.env.GH_TOKEN ?? execFileSync("python3", [`${process.env.HOME}/.krizaka-worktrees/tools/gh-app-token.py`, "agents"], { encoding: "utf8" }).trim();
-  return execFileSync("gh", ["api", `repos/krizaka/orazaka-worker-media/contents/models.yaml?ref=${ref}`, "-H", "Accept: application/vnd.github.raw"], { encoding: "utf8", env: { ...process.env, GH_TOKEN: credential } });
+  const credential = process.env.GH_TOKEN ?? execFileSync(toolPath("python3"), [`${process.env.HOME}/.krizaka-worktrees/tools/gh-app-token.py`, "agents"], { encoding: "utf8" }).trim();
+  return execFileSync(toolPath("gh"), ["api", `repos/krizaka/orazaka-worker-media/contents/models.yaml?ref=${ref}`, "-H", "Accept: application/vnd.github.raw"], { encoding: "utf8", env: { ...process.env, GH_TOKEN: credential } });
 }
 
 async function call(method, path, body, token) {

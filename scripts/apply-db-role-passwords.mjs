@@ -32,8 +32,10 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { byText } from "./lib/source-scan.mjs";
+import { composeRoot } from "./lib/compose-root.mjs";
+import { toolPath } from "./lib/tool-path.mjs";
 
-const ROOT = process.argv[2] ?? process.cwd();
+const ROOT = composeRoot(process.argv[2] ?? process.cwd());
 const initdb = join(ROOT, "infra", "initdb");
 
 /** Every context whose role the seed creates without a password. */
@@ -81,7 +83,7 @@ function waitForRoles(expected) {
   for (let attempt = 0; attempt < 60; attempt += 1) {
     try {
       const out = execFileSync(
-        "docker",
+        toolPath("docker"),
         [...compose, "exec", "-T", "db-vector", "psql", "-U", superuser, "-d", "postgres", "-tAc",
           `SELECT count(*) FROM pg_roles WHERE rolname LIKE 'orazaka\\_%'`],
         { cwd: ROOT, stdio: ["pipe", "pipe", "pipe"] },
@@ -90,7 +92,7 @@ function waitForRoles(expected) {
     } catch {
       /* the container is not ready to answer yet */
     }
-    execFileSync("sleep", ["2"]);
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000); // 2 s, without spawning a program
   }
   return false;
 }
@@ -127,7 +129,7 @@ for (const ctx of wanted) {
   // "could authenticate", and identity-service still died with `password authentication failed` —
   // a step that says it worked while leaving the thing it configures broken.
   execFileSync(
-    "docker",
+    toolPath("docker"),
     [...compose, "exec", "-T", "db-vector", "psql", "-U", superuser, "-d", "postgres",
       "-v", "ON_ERROR_STOP=1", "-v", `pw=${process.env[`${ctx}_DB_PASSWORD`]}`],
     { cwd: ROOT, input: `ALTER ROLE ${role} PASSWORD :'pw';\n`, stdio: ["pipe", "pipe", "inherit"] },

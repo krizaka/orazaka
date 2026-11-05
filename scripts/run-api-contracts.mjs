@@ -29,6 +29,7 @@ import { spawn } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { byText } from "./lib/source-scan.mjs";
+import { toolPath } from "./lib/tool-path.mjs";
 
 /** A result line httpyac prints for an assertion that ran. */
 const REPORTED = /^\s*(✓|✖)\s/;
@@ -77,7 +78,7 @@ const suite = declared(directory);
 const output = [];
 
 const child = spawn(
-  "npx",
+  toolPath("npx"),
   ["httpyac", "send", `${directory}/**/*.http`, ...httpyacArgs],
   { stdio: ["inherit", "pipe", "inherit"], env: process.env },
 );

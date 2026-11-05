@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import { devSecrets, envFileFromArgs } from "./lib/dev-secrets.mjs";
 import { judge, probesOf } from "./lib/migration-probes.mjs";
 import { byText } from "./lib/source-scan.mjs";
+import { toolPathOrNull } from "./lib/tool-path.mjs";
 
 const HERE = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const LEDGER_DB = "orazaka_db";
@@ -78,7 +79,8 @@ export function datedBefore(files, date) {
 
 function psqlBinary() {
   if (process.env.PSQL) return process.env.PSQL;
-  if (spawnSync("psql", ["--version"]).status === 0) return "psql";
+  const onDisk = toolPathOrNull("psql");
+  if (onDisk) return onDisk;
   const cellar = "/opt/homebrew/Cellar/libpq";
   if (existsSync(cellar)) {
     const v = readdirSync(cellar).sort().pop();

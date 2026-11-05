@@ -32,6 +32,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { devSecrets, envFileFromArgs, readEnvFile } from "./lib/dev-secrets.mjs";
 import { pendingOnDev } from "./dev-migrations.mjs";
+import { toolPath, toolPathOrNull } from "./lib/tool-path.mjs";
 
 export { readEnvFile };
 
@@ -91,7 +92,7 @@ export function writeEnvKeys(file, values) {
 }
 
 function doctl(args, input) {
-  return execFileSync("doctl", args, { input, encoding: "utf8", stdio: ["pipe", "pipe", "inherit"] });
+  return execFileSync(toolPath("doctl"), args, { input, encoding: "utf8", stdio: ["pipe", "pipe", "inherit"] });
 }
 
 function appId(name) {
@@ -101,7 +102,8 @@ function appId(name) {
 
 function psqlBinary() {
   if (process.env.PSQL) return process.env.PSQL;
-  if (spawnSync("psql", ["--version"]).status === 0) return "psql";
+  const onDisk = toolPathOrNull("psql");
+  if (onDisk) return onDisk;
   const cellar = "/opt/homebrew/Cellar/libpq";
   if (existsSync(cellar)) {
     const v = readdirSync(cellar).sort().pop();
@@ -325,7 +327,7 @@ export function password() {
 }
 
 function bcrypt(secret) {
-  const r = spawnSync("htpasswd", ["-niB", "-C", "10", "u"], { input: secret, encoding: "utf8" });
+  const r = spawnSync(toolPath("htpasswd"), ["-niB", "-C", "10", "u"], { input: secret, encoding: "utf8" });
   if (r.status !== 0) throw new Error("htpasswd (apache2-utils) is required for bcrypt");
   return r.stdout.trim().split(":")[1];
 }
@@ -416,7 +418,7 @@ function bcryptMatches(secret, hash) {
   try {
     const file = join(dir, "h");
     writeFileSync(file, `u:${hash}\n`, { mode: 0o600 });
-    return spawnSync("htpasswd", ["-vi", file, "u"], { input: secret, encoding: "utf8" }).status === 0;
+    return spawnSync(toolPath("htpasswd"), ["-vi", file, "u"], { input: secret, encoding: "utf8" }).status === 0;
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -621,7 +623,7 @@ function ensureTls() {
   mkdirSync(BROKER_DIR, { recursive: true, mode: 0o700 });
   const f = (n) => join(BROKER_DIR, n);
   if (existsSync(f("server.pem"))) return;
-  const ossl = (args) => execFileSync("openssl", args, { stdio: ["ignore", "ignore", "inherit"] });
+  const ossl = (args) => execFileSync(toolPath("openssl"), args, { stdio: ["ignore", "ignore", "inherit"] });
   ossl(["req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:P-256", "-nodes", "-days", "3650",
     "-subj", "/CN=Orazaka dev broker CA", ...CA_EXTENSIONS.flatMap((e) => ["-addext", e]),
     "-keyout", f("ca.key"), "-out", f("ca.pem")]);
@@ -630,7 +632,7 @@ function ensureTls() {
   writeFileSync(f("san.ext"), serverCertExtensions(BROKER.host));
   ossl(["x509", "-req", "-in", f("server.csr"), "-CA", f("ca.pem"), "-CAkey", f("ca.key"), "-CAcreateserial",
     "-days", "825", "-extfile", f("san.ext"), "-out", f("server.pem")]);
-  execFileSync("chmod", ["600", f("ca.key"), f("server.key")]);
+  for (const key of [f("ca.key"), f("server.key")]) chmodSync(key, 0o600);
 }
 
 function ensureEnv(env, key, make) {
@@ -699,7 +701,7 @@ if not rr.get("records"):
     r=pb.call("dns/create/orazaka.com",{"name":sys.argv[2],"type":"A","content":sys.argv[3],"ttl":"600"})
 rr=pb.call(f"dns/retrieveByNameType/orazaka.com/A/{sys.argv[2]}")
 print("dns:",[x["content"] for x in rr.get("records",[])])`;
-  const r = spawnSync("python3", ["-c", py, helper, name, ip], { encoding: "utf8" });
+  const r = spawnSync(toolPath("python3"), ["-c", py, helper, name, ip], { encoding: "utf8" });
   console.log(`broker: ${name}.orazaka.com ${r.stdout.trim() || r.stderr.trim().split("\n").pop()}`);
 }
 
