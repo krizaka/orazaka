@@ -28,6 +28,7 @@
 import { spawn } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { byText } from "./lib/source-scan.mjs";
 
 /** A result line httpyac prints for an assertion that ran. */
 const REPORTED = /^\s*(✓|✖)\s/;
@@ -114,7 +115,7 @@ child.on("close", (code) => {
         `and no error, so the difference is assertions that did not run and did not say so ` +
         `(ADR-069 §0.3). Declared per file:`,
     );
-    for (const [file, count] of [...byFile].sort()) {
+    for (const [file, count] of [...byFile].sort(([a], [b]) => byText(a, b))) {
       console.error(`  ${count.toString().padStart(3)}  ${file}`);
     }
     console.error(

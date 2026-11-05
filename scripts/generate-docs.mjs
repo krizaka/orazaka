@@ -34,6 +34,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSy
 import { join, basename, relative } from "node:path";
 import { buildModels, catalogue, manifestLicences, readmeLicences } from "./lib/model-registry.mjs";
 import { walk } from "./lib/walk.mjs";
+import { byNumber, byText, requestMatcherRules, servicePortOf } from "./lib/source-scan.mjs";
 import { mdCell, stripTags, xmlDecode } from "./lib/doc-text.mjs";
 import { packsSection } from "./lib/pack-blocks.mjs";
 import { mdMeasuredRuns } from "./lib/measured-runs.mjs";
@@ -213,8 +214,7 @@ function pomDependencies(pom) {
 /** The HTTP port a Spring Boot service listens on: server.port, or Spring's default 8080. */
 function servicePort(dir) {
   const yml = read(join(dir, "src/main/resources/application.yml")) || read(join(dir, "src/main/resources/application.yaml"));
-  const m = yml.match(/^server:\s*\n(?:[ \t]+.*\n)*?[ \t]+port:\s*(?:\$\{[\w.-]+:)?(\d+)/m);
-  return m ? Number(m[1]) : 8080;
+  return servicePortOf(yml) ?? 8080;
 }
 
 /**
@@ -337,7 +337,7 @@ function extractArchitecture() {
     for (const f of sources) {
       for (const m of read(f).matchAll(/localhost:(\d{4,5})/g)) if (byPort.has(Number(m[1]))) ports.add(Number(m[1]));
     }
-    for (const port of [...ports].sort()) addFlow({ from: c.id, to: byPort.get(port), kind: "http", via: `localhost:${port}` });
+    for (const port of [...ports].sort(byNumber)) addFlow({ from: c.id, to: byPort.get(port), kind: "http", via: `localhost:${port}` });
   }
   // 2. Route tables (the edge): `- path-prefix: X` + `target: ${VAR:http://localhost:PORT}`.
   for (const s of jvmServices) {
@@ -893,13 +893,7 @@ function accessRules(serviceDir) {
       }
       rules.push({ pattern: "/internal/v1/**", label: "SERVICE", httpMethod: null });
     }
-    for (const m of code.matchAll(
-      /requestMatchers\(\s*(?:HttpMethod\.(\w+)\s*,\s*)?((?:"[^"]*"\s*,?\s*)+)\)\s*\.\s*(permitAll|authenticated|hasAuthority|hasAnyAuthority)\(([^)]*)\)/g,
-    )) {
-      const httpMethod = m[1] ?? null;
-      const patterns = [...m[2].matchAll(/"([^"]*)"/g)].map((x) => x[1]);
-      const verb = m[3];
-      const args = [...m[4].matchAll(/"([^"]*)"|(\b[A-Z_]{2,}\b)/g)].map((x) => x[1] ?? x[2]);
+    for (const { httpMethod, patterns, verb, args } of requestMatcherRules(code)) {
       const label =
         verb === "permitAll"
           ? "public"
@@ -1348,7 +1342,7 @@ function extractAdrs() {
   for (const f of walk(ROOT, (p) => (p.endsWith(".java") || p.endsWith(".md")) && !p.includes("/_generated/"))) {
     for (const m of read(f).matchAll(/ADR-(\d{3})/g)) cited.add(m[0]);
   }
-  return [...cited].sort().map((id) => ({ id, ...(fileById.get(id) ?? { file: null, title: null }) }));
+  return [...cited].sort(byText).map((id) => ({ id, ...(fileById.get(id) ?? { file: null, title: null }) }));
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -2392,7 +2386,6 @@ function parseYaml(text) {
   const value = (v, ownIndent) => {
     if (/^[>|][-+]?$/.test(v)) {
       const folded = v[0] === ">";
-      const keep = v.endsWith("+");
       const chomp = v.endsWith("-");
       const body = [];
       let blockIndent = null;
@@ -2403,7 +2396,7 @@ function parseYaml(text) {
       }
       while (body.length && !body.at(-1).trim()) body.pop();
       const textOut = folded ? body.join("\n").replace(/([^\n])\n(?=[^\n])/g, "$1 ") : body.join("\n");
-      return chomp ? textOut : textOut + (keep ? "\n" : "\n");
+      return chomp ? textOut : `${textOut}\n`; // clip and keep alike: the trailing blank lines were dropped above
     }
     if (v.startsWith("[") || v.startsWith("{")) {
       let source = v;
