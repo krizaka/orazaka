@@ -1,7 +1,7 @@
 // Orazaka load suite (ADR-083). One file, four scenarios, thresholds tied to the SLO table.
 //
 //   k6 run -e PROFILE=smoke  -e BASE_URL=http://localhost:8088 tests/load/orazaka.js
-//   k6 run -e PROFILE=dev    -e BASE_URL=https://dev.orazaka.com/edge ...   (a few RPS, off-peak, announced)
+//   k6 run -e PROFILE=dev    -e BASE_URL=https://www.orazaka.com/edge ...   (a few RPS, off-peak, announced)
 //   k6 run -e PROFILE=load   -e BASE_URL=http://localhost:8088 ...          (a local stack only)
 //
 // PROFILE sets the arrival rates; SCENARIOS=sync,run,login (comma list) narrows what runs.

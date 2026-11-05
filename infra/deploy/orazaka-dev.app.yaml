@@ -1,4 +1,4 @@
-# Orazaka dev — dev.orazaka.com (DigitalOcean App Platform, project `orazaka`). docs/DEPLOY_DEV.md.
+# Orazaka dev — www.orazaka.com (DigitalOcean App Platform, project `orazaka`). docs/DEPLOY_DEV.md.
 # Apply with `node scripts/dev-deploy.mjs apply orazaka-dev`: every double-underscored placeholder is filled from the local
 # secrets file (never committed) and sent as a SECRET. Databases: the shared cluster `krizaka-dev-pg`
 # (trusted source: this app), one database and one role per context.
@@ -10,9 +10,7 @@ domains:
     type: PRIMARY
   - domain: orazaka.com
     type: ALIAS
-  # The development address: pages go to www (308); the BFF/auth, /.well-known and /edge keep serving (APP_DEV_HOST, noindex).
-  - domain: dev.orazaka.com
-    type: ALIAS
+  # dev.orazaka.com was removed on 2026-11-05 (krizaka-internal#2600): every caller uses www.
   # The operator console is served by this same `web` component on `admin.orazaka.com` (krizaka/orazaka-web-admin#31: the
   # proxy of orazaka-web-client reads the Host): an ALIAS domain of this app, cut over on 2026-10-21 (docs/DEPLOY_DEV.md § Admin console).
   - domain: admin.orazaka.com
@@ -74,7 +72,6 @@ services:
       - { key: ROUTER_URL, scope: RUN_TIME, value: "http://core:8088" }
       - { key: NEXTAUTH_URL, scope: RUN_TIME, value: "https://www.orazaka.com" }
       - { key: APP_PUBLIC_URL, scope: RUN_TIME, value: "https://www.orazaka.com" }
-      - { key: APP_DEV_HOST, scope: RUN_TIME, value: "dev.orazaka.com" }
       # Universal links / App Links (orazaka-web-client app-links.json): served only when set, empty = 404, never a placeholder.
       - { key: APP_IOS_TEAM_ID, scope: RUN_TIME, value: "__APP_IOS_TEAM_ID__" }
       - { key: APP_ANDROID_CERT_SHA256, scope: RUN_TIME, value: "__APP_ANDROID_CERT_SHA256__" }
@@ -149,7 +146,7 @@ services:
       - { key: AUTOMATION_INTERNAL_URL, scope: RUN_TIME, value: "http://localhost:8091" }
       - { key: STUDIO_INTERNAL_URL, scope: RUN_TIME, value: "http://localhost:8096" }
       # The address a sender is shown for a webhook trigger: the edge as the Internet reaches it.
-      - { key: APP_PUBLIC_EDGE_URL, scope: RUN_TIME, value: "https://dev.orazaka.com/edge" }
+      - { key: APP_PUBLIC_EDGE_URL, scope: RUN_TIME, value: "https://www.orazaka.com/edge" }
       # Broker: RabbitMQ on the orazaka-broker-dev Droplet, TLS only, VPC only (`dev-deploy.mjs broker`).
       # The GPU workers reach the same broker over the VPC with their own, narrower user.
       - { key: RABBITMQ_HOST, scope: RUN_TIME, value: broker-dev.orazaka.com }
@@ -180,7 +177,7 @@ services:
       # Sign-in open, sign-up closed — the backend refuses a registration too (403).
       - { key: AUTH_SIGNUP_ENABLED, scope: RUN_TIME, value: "false" }
       - { key: EMAIL_VERIFICATION_ENABLED, scope: RUN_TIME, value: "false" }
-      - { key: CORS_ALLOWED_ORIGINS, scope: RUN_TIME, value: "https://www.orazaka.com,https://dev.orazaka.com,https://admin.orazaka.com" }
+      - { key: CORS_ALLOWED_ORIGINS, scope: RUN_TIME, value: "https://www.orazaka.com,https://admin.orazaka.com" }
       - { key: ORAZAKA_PACKS_SOURCES, scope: RUN_TIME, value: /app/orazaka-packs }
       # Billing runs as the sixth JVM of this container (billing :8095, reached through the edge at /api/v1/billing).
       # Enforcement stays DRY_RUN (a billing_runtime_config row): it meters, it never blocks chat.

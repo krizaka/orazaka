@@ -1,5 +1,5 @@
 # ==============================================================================
-# Orazaka dev runtime — the JVM services of dev.orazaka.com (and the document-validation worker) in ONE image (docs/DEPLOY_DEV.md)
+# Orazaka dev runtime — the JVM services of www.orazaka.com (and the document-validation worker) in ONE image (docs/DEPLOY_DEV.md)
 # ------------------------------------------------------------------------------
 # Built by DigitalOcean App Platform from this repository (dockerfile_path: infra/deploy/Dockerfile,
 # context: the repository root). The platform is one repository per component, so the image clones

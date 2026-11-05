@@ -85,20 +85,20 @@ test("the relay exposes LocalAI's port to the app as well as allowing it", () =>
   assert.match(spec, /internal_ports: \[8085, 8086, 8188, 11434\]/);
 });
 
-test("www.orazaka.com is the public address; dev keeps /edge and the BFF; the apex answers 308 with www (epic krizaka/.github#119)", () => {
+test("www.orazaka.com is the public address; www serves /edge and the BFF; the apex answers 308 with www (epic krizaka/.github#119)", () => {
   const spec = readFileSync(new URL("../../infra/deploy/orazaka-dev.app.yaml", import.meta.url), "utf8").replace(/^\s*#.*$/gm, "");
   assert.match(spec, /- domain: www\.orazaka\.com\n\s+type: PRIMARY/);
   assert.match(spec, /- domain: orazaka\.com\n\s+type: ALIAS/);
-  assert.match(spec, /- domain: dev\.orazaka\.com\n\s+type: ALIAS/);
+  assert.doesNotMatch(spec, /domain: dev\.orazaka\.com/, "dev.orazaka.com was removed on 2026-11-05 (krizaka-internal#2600)");
   assert.match(spec, /- domain: admin\.orazaka\.com\n\s+type: ALIAS/, "the console alias stays");
   const rules = spec.slice(spec.indexOf("ingress:"));
   assert.match(rules, /exact: orazaka\.com[\s\S]*?authority: www\.orazaka\.com[\s\S]*?redirect_code: 308/);
   assert.match(rules, /name: core\s+match:\s+path:\s+prefix: \/edge/, "the engine's API is host-agnostic");
   assert.match(spec, /key: NEXTAUTH_URL, scope: RUN_TIME, value: "https:\/\/www\.orazaka\.com"/);
-  assert.match(spec, /key: APP_DEV_HOST, scope: RUN_TIME, value: "dev\.orazaka\.com"/);
+  assert.doesNotMatch(spec, /APP_DEV_HOST/, "no dev host to redirect any more");
   assert.match(spec, /key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on"/, "www is indexed");
   const cors = /key: CORS_ALLOWED_ORIGINS[^\n]*value: "([^"]+)"/.exec(spec)?.[1].split(",");
-  for (const origin of ["https://www.orazaka.com", "https://dev.orazaka.com", "https://admin.orazaka.com"]) assert.ok(cors?.includes(origin), origin);
+  for (const origin of ["https://www.orazaka.com", "https://admin.orazaka.com"]) assert.ok(cors?.includes(origin), origin);
 });
 
 test("password: long, mixed, different each time", () => {
@@ -497,7 +497,7 @@ test("automations (ADR-084): the service is the eighth JVM of the core, with its
   assert.match(dev, /key: AUTOMATION_PORT, scope: RUN_TIME, value: "8091"/);
   assert.match(dev, /key: AUTOMATION_INTERNAL_URL, scope: RUN_TIME, value: "http:\/\/localhost:8091"/, "the edge routes /api/v1/automations and /hooks/ to it");
   assert.match(dev, /key: STUDIO_INTERNAL_URL, scope: RUN_TIME, value: "http:\/\/localhost:8096"/, "it starts Studio runs over the Studio service's REST surface");
-  assert.match(dev, /key: APP_PUBLIC_EDGE_URL, scope: RUN_TIME, value: "https:\/\/dev\.orazaka\.com\/edge"/, "the address a sender is shown");
+  assert.match(dev, /key: APP_PUBLIC_EDGE_URL, scope: RUN_TIME, value: "https:\/\/www\.orazaka\.com\/edge"/, "the address a sender is shown");
   const docker = readFileSync(new URL("../../infra/deploy/Dockerfile", import.meta.url), "utf8");
   assert.match(docker, /orazaka-apps\/services\/orazaka-automation-service \\/);
   assert.match(docker, /\/out\/automation\.jar/);

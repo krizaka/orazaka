@@ -5,7 +5,7 @@
   "index": "on",
   "criteria": {
     "site.healthy": {
-      "evidence": "https://dev.orazaka.com/api/healthz",
+      "evidence": "https://www.orazaka.com/api/healthz",
       "checked": "2026-10-19"
     },
     "site.signup-closed": {
@@ -28,7 +28,7 @@
       "note": "Engine runs 478005a2-64d1-4f7c-b533-3b8091941f17 (image-generation), af9651df-5dba-4792-be9f-2aa6928ffc9e (image-analysis), ed4a8460-b199-4fe2-85a3-eea47a5c3620 (video-generation), chat request 78403f44-b8cb-4c48-aa54-96fbc1ef1e29."
     },
     "ui.krizaka-ui": {
-      "evidence": "https://dev.orazaka.com/",
+      "evidence": "https://www.orazaka.com/",
       "checked": "2026-10-19"
     },
     "ui.themes-devices": {
@@ -52,7 +52,7 @@
       "note": "Phone entries (four tabs at the thumb, the web journey in the web words); test src/__tests__/nav-shape.test.tsx in orazaka-mobile-client; captures: the 2026-10-12 simulator/emulator screens of docs/MOBILE.md and the Android clip (fresh simulator captures wait for a simulator build)."
     },
     "mobile.app-links": {
-      "evidence": "https://dev.orazaka.com/.well-known/apple-app-site-association",
+      "evidence": "https://www.orazaka.com/.well-known/apple-app-site-association",
       "checked": "2026-10-20",
       "note": "2026-10-20: node scripts/check-app-links.mjs --live https://dev.orazaka.com (orazaka-web-client) = ok: AASA and assetlinks.json served 200 application/json, bundle id and package com.krizaka.orazaka, Apple CDN and Google Digital Asset Links agree; CI runs check-app-links (web: npm run validate; mobile: scripts/app-links.test.mjs)."
     },

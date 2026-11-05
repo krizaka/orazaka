@@ -31,7 +31,7 @@ describe("formatting", () => {
     expect(formatSize(5 * 1024 ** 2)).toBe("5.0 MB");
   });
   it("hostOf", () => {
-    expect(hostOf("https://dev.orazaka.com")).toBe("dev.orazaka.com");
+    expect(hostOf("https://www.orazaka.com")).toBe("www.orazaka.com");
     expect(hostOf("nonsense")).toBe("nonsense");
   });
 });

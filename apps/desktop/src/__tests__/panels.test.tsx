@@ -14,7 +14,7 @@ import { FilesPanel } from "../components/FilesPanel";
 import { StackPanel } from "../components/StackPanel";
 
 const base: Snapshot = {
-  settings: { mode: "remote", remoteUrl: "https://dev.orazaka.com", workspaceDir: "/w", watched: [], locale: "en" },
+  settings: { mode: "remote", remoteUrl: "https://www.orazaka.com", workspaceDir: "/w", watched: [], locale: "en" },
   roots: [],
   sidecar: true,
   autostart: false,

@@ -31,7 +31,7 @@ The Mac app is an unsigned test build, still in testing: it is not distributed, 
 
 ## On a Linux server (1.0)
 
-1. Run `curl -fsSL https://dev.orazaka.com/install.sh | sh` (or `npx orazaka install --server`). It checks the server, verifies every image signature, writes every secret to `/etc/orazaka`, and starts a systemd service.
+1. Run `curl -fsSL https://www.orazaka.com/install.sh | sh` (or `npx orazaka install --server`). It checks the server, verifies every image signature, writes every secret to `/etc/orazaka`, and starts a systemd service.
 2. Open `https://<server>` from your network.
 3. Create the administrator account.
 

@@ -6,20 +6,20 @@ import { edgeBase, edgeUrl, idSegment, oneLine } from "../lib/edge-url.mjs";
 const base = edgeBase({});
 
 test("the default edge, an https one from the environment, and a local http one are accepted", () => {
-  assert.equal(base.href, "https://dev.orazaka.com/edge");
+  assert.equal(base.href, "https://www.orazaka.com/edge");
   assert.equal(edgeBase({ ORAZAKA_EDGE_URL: "https://www.orazaka.com/edge/" }).href, "https://www.orazaka.com/edge");
   assert.equal(edgeBase({ ORAZAKA_EDGE_URL: "http://localhost:8080" }).href, "http://localhost:8080");
 });
 
 test("an edge that is not https (or local http) is refused", () => {
-  for (const url of ["http://dev.orazaka.com/edge", "file:///etc/passwd", "ftp://x", "not a url", "https://user:pw@dev.orazaka.com"]) {
+  for (const url of ["http://www.orazaka.com/edge", "file:///etc/passwd", "ftp://x", "not a url", "https://user:pw@www.orazaka.com"]) {
     assert.throws(() => edgeBase({ ORAZAKA_EDGE_URL: url }), /edge/, url);
   }
 });
 
 test("a path is joined under the edge's own path", () => {
-  assert.equal(edgeUrl(base, "/api/v1/studios/runs/42"), "https://dev.orazaka.com/edge/api/v1/studios/runs/42");
-  assert.equal(edgeUrl(base, "/api/v1/media/x?download=1"), "https://dev.orazaka.com/edge/api/v1/media/x?download=1");
+  assert.equal(edgeUrl(base, "/api/v1/studios/runs/42"), "https://www.orazaka.com/edge/api/v1/studios/runs/42");
+  assert.equal(edgeUrl(base, "/api/v1/media/x?download=1"), "https://www.orazaka.com/edge/api/v1/media/x?download=1");
 });
 
 test("a path that would leave the edge is refused", () => {

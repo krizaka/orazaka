@@ -1,6 +1,6 @@
-# The GPU relay of dev.orazaka.com (docs/DEPLOY_DEV.md § GPU) — a chisel server behind App Platform's TLS.
+# The GPU relay of www.orazaka.com (docs/DEPLOY_DEV.md § GPU) — a chisel server behind App Platform's TLS.
 #
-# The GPU droplet (or the Mac's worker) dials OUT to https://dev.orazaka.com/gpu-relay and, through one
+# The GPU droplet (or the Mac's worker) dials OUT to https://www.orazaka.com/gpu-relay and, through one
 # authenticated WebSocket, gets exactly five things and nothing else (the allow-list in entrypoint.sh):
 #   forward  broker-dev.orazaka.com:5671   the TLS broker (VPC), for the media worker's queue — TLS end to end
 #   forward  core:8090       the job service, for the worker registry and the output hand-over

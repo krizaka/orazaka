@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub const DEFAULT_REMOTE: &str = "https://dev.orazaka.com";
+pub const DEFAULT_REMOTE: &str = "https://www.orazaka.com";
 pub const LOCAL_WORKSPACE_URL: &str = "http://localhost:3000";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -96,15 +96,15 @@ mod tests {
     #[test]
     fn remote_must_be_https_or_loopback_and_is_reduced_to_its_origin() {
         assert_eq!(
-            normalize_remote("https://dev.orazaka.com/some/path?x=1").unwrap(),
-            "https://dev.orazaka.com"
+            normalize_remote("https://www.orazaka.com/some/path?x=1").unwrap(),
+            "https://www.orazaka.com"
         );
         assert_eq!(
             normalize_remote("http://localhost:3000/").unwrap(),
             "http://localhost:3000"
         );
-        assert!(normalize_remote("http://dev.orazaka.com").is_err());
-        assert!(normalize_remote("https://user:pw@dev.orazaka.com").is_err());
+        assert!(normalize_remote("http://www.orazaka.com").is_err());
+        assert!(normalize_remote("https://user:pw@www.orazaka.com").is_err());
         assert!(normalize_remote("file:///etc/passwd").is_err());
         assert!(normalize_remote("javascript:alert(1)").is_err());
         assert!(normalize_remote("nonsense").is_err());
@@ -112,12 +112,12 @@ mod tests {
 
     #[test]
     fn navigation_guard_compares_origins() {
-        let ok = Url::parse("https://dev.orazaka.com/login").unwrap();
+        let ok = Url::parse("https://www.orazaka.com/login").unwrap();
         let other = Url::parse("https://evil.example/").unwrap();
-        let lookalike = Url::parse("https://dev.orazaka.com.evil.example/").unwrap();
-        assert!(same_origin("https://dev.orazaka.com", &ok));
-        assert!(!same_origin("https://dev.orazaka.com", &other));
-        assert!(!same_origin("https://dev.orazaka.com", &lookalike));
+        let lookalike = Url::parse("https://www.orazaka.com.evil.example/").unwrap();
+        assert!(same_origin("https://www.orazaka.com", &ok));
+        assert!(!same_origin("https://www.orazaka.com", &other));
+        assert!(!same_origin("https://www.orazaka.com", &lookalike));
     }
 
     #[test]

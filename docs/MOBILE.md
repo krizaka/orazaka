@@ -13,7 +13,7 @@ come from the server, it says so.
 | :--- | :--- |
 | iOS simulator (iOS 27) | ✅ builds and runs against the local stack — sign-in, Studios, chat, jobs, connectors, profile |
 | Android emulator (Android 16) | ✅ development build runs against the local stack — sign-in, Studios, jobs, profile |
-| iPhone / store builds | ✅ EAS project `orazaka-mobile` (EAS-managed credentials); iOS builds ship to an internal TestFlight group (App Store Connect record `com.krizaka.orazaka`), never submitted for review; Android: a preview APK (internal distribution). Every profile of `eas.json` points at `https://dev.orazaka.com/edge` |
+| iPhone / store builds | ✅ EAS project `orazaka-mobile` (EAS-managed credentials); iOS builds ship to an internal TestFlight group (App Store Connect record `com.krizaka.orazaka`), never submitted for review; Android: a preview APK (internal distribution). Every profile of `eas.json` points at `https://www.orazaka.com/edge` |
 | Expo SDK | ⚠️ 53 — the move to SDK 57 (the other Krizaka apps) is planned; two stopgaps below keep 53 building and launching on Xcode 27 / iOS 27 |
 
 ---

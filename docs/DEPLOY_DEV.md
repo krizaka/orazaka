@@ -1,4 +1,4 @@
-# Orazaka in dev — dev.orazaka.com and admin.orazaka.com
+# Orazaka in dev — www.orazaka.com and admin.orazaka.com
 
 The development environment runs on DigitalOcean App Platform, project `orazaka`, Toronto, as cheaply as the platform
 allows (decision 2026-10-14: everything Orazaka in dev ≤ $80/month; a GPU never stays on). Sign-in is open; sign-up is
@@ -8,13 +8,13 @@ closed everywhere — the fronts hide it and the users service answers **403** (
 
 | App (DO) | Component | What | Size | $/month |
 |---|---|---|---|---|
-| `orazaka-dev` | `web` | `krizaka/orazaka-web-client` (Next.js + BFF), `dev.orazaka.com/` | `apps-s-1vcpu-0.5gb` | 5 |
-| `orazaka-dev` | `core` | one image, seven JVMs and the document-validation worker (below), public only as `dev.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
+| `orazaka-dev` | `web` | `krizaka/orazaka-web-client` (Next.js + BFF), `www.orazaka.com/` | `apps-s-1vcpu-0.5gb` | 5 |
+| `orazaka-dev` | `core` | one image, seven JVMs and the document-validation worker (below), public only as `www.orazaka.com/edge` | `basic-s` (2 GB) | 20 |
 | Droplet | `orazaka-broker-dev` | RabbitMQ 4.2, **TLS only** (5671), bound to its private IP, cloud firewall: VPC `10.118.0.0/20` only | `s-1vcpu-512mb-10gb` | 4 |
-| `orazaka-dev` | `web` (same component) | the operator console, `admin.orazaka.com` = an alias of `dev.orazaka.com`, served by host routing (§ Admin console), BFF → `http://core:8088` | — | 0 |
+| `orazaka-dev` | `web` (same component) | the operator console, `admin.orazaka.com` = an alias of `www.orazaka.com`, served by host routing (§ Admin console), BFF → `http://core:8088` | — | 0 |
 | — | databases | the shared cluster `krizaka-dev-pg` (PostgreSQL 18, project `krizaka`, docs/DEV_DATABASE.md) | — | (15, shared) |
 | — | chat | DigitalOcean serverless inference, `mistral-3-14B`, per token | — | ≈ 0 at test volume |
-| `orazaka-dev` | `gpu-relay` | chisel server, `dev.orazaka.com/gpu-relay` — the GPU host dials out to it (§ GPU) | `apps-s-1vcpu-0.5gb` | 5 |
+| `orazaka-dev` | `gpu-relay` | chisel server, `www.orazaka.com/gpu-relay` — the GPU host dials out to it (§ GPU) | `apps-s-1vcpu-0.5gb` | 5 |
 | — | images, 9:16 video | an hourly GPU droplet, only while started (`scripts/gpu-dev.sh`) | `small` / `big` | 0.76 / 1.57 **per hour** |
 | — | model weights | Volume `orazaka-gpu-models-<region>`, 80 GB, kept between droplets | — | 8 |
 
@@ -137,7 +137,7 @@ node scripts/dev-deploy.mjs service-account yomizaka \
 - the operator's grants in `orazaka_studio_db` (`studio_entitlement_grant`, krizaka/orazaka-studio#9; incremental script
   `infra/migrations/2026-10-14-studio-entitlement-grant.sql`): the PAID Studios open for that account only, with a reason;
 - `AI_PROVIDER=orazaka`, `AI_API_URL`, `AI_API_KEY` written to `--out` (mode 600) — never printed. The product stores the
-  key as a DO **SECRET** and calls `https://dev.orazaka.com/edge` with `Authorization: Bearer oz_…`; the edge exchanges
+  key as a DO **SECRET** and calls `https://www.orazaka.com/edge` with `Authorization: Bearer oz_…`; the edge exchanges
   it for a JWT (`ApiKeyExchangeFilter`). Re-running rotates the key.
 
 A key can be **scoped**: `--scopes ai:embed` makes the key usable for `POST /api/v1/embeddings` and nothing else (the
@@ -181,7 +181,7 @@ answers it (krizaka/orazaka-web-admin#31, -5 $/month). The console's code lives 
 request under the internal `/console` prefix; on any other host `/console/**` is a 404. Nothing is shared with the public
 site: the session cookie (`orazaka-admin.session-token`), its signing key (`AUTH_CONSOLE_SECRET`, filled from
 `NEXTAUTH_SECRET_ADMIN`) and the sign-in flag (`AUTH_CONSOLE_LOGIN_ENABLED`). `AUTH_TRUST_HOST=true` makes next-auth build
-the console's callback URLs from the Host it was asked on (`NEXTAUTH_URL` stays `https://dev.orazaka.com`).
+the console's callback URLs from the Host it was asked on (`NEXTAUTH_URL` stays `https://www.orazaka.com`).
 `/api/healthz` answers on both hosts, before any gate.
 
 Cut-over (the old app serves the live console until step 3):
@@ -194,7 +194,7 @@ Cut-over (the old app serves the live console until step 3):
 3. DNS: `admin.orazaka.com` CNAME → the `orazaka-dev` default ingress (`doctl apps get <id> --format DefaultIngress`),
    unchanged if it already points there.
 4. Check from an allowed address: `/login` signs a `ROLE_ADMIN` in; from any other address `https://admin.orazaka.com/`
-   answers 403; `https://dev.orazaka.com/console` answers 404; `https://dev.orazaka.com/api/healthz` 200.
+   answers 403; `https://www.orazaka.com/console` answers 404; `https://www.orazaka.com/api/healthz` 200.
 
 ## Deploy
 
@@ -312,7 +312,7 @@ scripts/gpu-dev.sh cost                  # every session (ledger in ~/Documents/
 ```
 
 **How it connects — nothing is exposed.** The droplet opens no port (SSH from the caller's IP only). A chisel client
-on it dials **out** to `https://dev.orazaka.com/gpu-relay` (App Platform's TLS, a 256-bit credential
+on it dials **out** to `https://www.orazaka.com/gpu-relay` (App Platform's TLS, a 256-bit credential
 `AI_GPU_RELAY_PASSWORD`) and may open exactly five remotes — the relay's allow-list: `broker-dev.orazaka.com:5671` (the TLS broker of the VPC, as the narrow `gpu-worker` user, verified end to end against the dev CA),
 `core:8090` (the job service: worker registry and output hand-over), and back inside the app `gpu-relay:8085` (LocalAI: Whisper and Piper, the `localai` provider), `gpu-relay:8086`
 (sd-server), `gpu-relay:8188` (the video pipeline) and `gpu-relay:11434` (Ollama: `qwen2.5:7b` for the Studios'
@@ -348,7 +348,7 @@ panel — else the doctl token. Containers cannot read the droplet's metadata (a
 
 ### The sovereign smoke — do our own engines still generate?
 
-`scripts/gpu-dev.sh smoke` starts the `small` GPU, runs `scripts/gpu-smoke.mjs` against dev.orazaka.com as the test user
+`scripts/gpu-dev.sh smoke` starts the `small` GPU, runs `scripts/gpu-smoke.mjs` against www.orazaka.com as the test user
 — a chat Studio on Ollama, an image on sd-server (FLUX.2 [klein]), a 1 s 9:16 clip on the media worker (Wan 2.1 1.3B) —
 asserts each (run SUCCEEDED, output non-empty, latency, the model our job reported) and **destroys the droplet whatever
 happens** (trap on exit, interrupt and error). TTS, transcription and RAG are reported `SKIPPED` with their reason until
@@ -359,7 +359,7 @@ warm Volume costs ≈ $0.20 (the first one also builds the image and fetches the
 
 ### Brand-level clips: Wan 2.2 A14B from an image, then SeedVR2 to 1080p/4K
 
-For a clip that is shown on our sites (the "Prompt → Image → Video" strip of dev.orazaka.com): the `hero` profile (80 GB card), the
+For a clip that is shown on our sites (the "Prompt → Image → Video" strip of www.orazaka.com): the `hero` profile (80 GB card), the
 Studio `video-generation` with `model: wan2.2-t2v-a14b` **and an `image`** — the worker then loads the family's image-to-video
 checkpoint (`Wan-AI/Wan2.2-I2V-A14B-Diffusers`, 106 GB, pinned in the worker's `models.yaml`), 1280×720, 81 frames at 16 fps, about 20 minutes
 a clip on an H100. The checkpoint is **not** on the network volume (35 GB free): fetch it to the pod's container disk
@@ -412,7 +412,7 @@ env by `scripts/gpu-dev.sh mac` — never printed, never in a repository. Select
 
 ## The core journey on dev (Dev preview `journey.core`, `journey.ai-via-orazaka`)
 
-`node scripts/journey-dev.mjs --out <dir>` replays what Orazaka is for, on https://dev.orazaka.com/edge as the demo persona
+`node scripts/journey-dev.mjs --out <dir>` replays what Orazaka is for, on https://www.orazaka.com/edge as the demo persona
 Eric (credentials from the environment, read with `secret.sh`, never printed): sign in → ask the chat → make an image with
 the `image-generation` Studio → have the picture read by `image-analysis` →
 make a hosted clip with `video-generation`. Every step goes through the public API (no SQL, no direct model call) and records

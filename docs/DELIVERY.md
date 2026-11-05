@@ -95,7 +95,7 @@ signature, the checksums and SBOMs. An **offline** variant adds `images.tar.zst`
 image pinned in the manifest) and the model kit.
 
 **Install, one command:** `npx orazaka install --server` on a machine with Node 22, or
-`curl -fsSL https://dev.orazaka.com/install.sh | sh` — a thin bootstrap that downloads the server
+`curl -fsSL https://www.orazaka.com/install.sh | sh` — a thin bootstrap that downloads the server
 tarball, checks its SHA-256 against the signed manifest and hands over to the CLI; every step of the
 installation is the CLI's (ERR-125), the script only fetches it. Offline: `sudo ./orazaka install
 --server` from the unpacked tarball. It:
@@ -304,4 +304,4 @@ Each step is an issue of the epic, with its acceptance criteria. Steps marked **
     scan gate) checked by `orazaka doctor`. `SECURITY.md` is written (this document's PR); the defaults and
     their checks are the issue.
 18. "Run Orazaka on your own infrastructure" guide ([`SELF_HOSTING.md`](SELF_HOSTING.md)) in the README,
-    published on dev.orazaka.com/docs.
+    published on www.orazaka.com/docs.
