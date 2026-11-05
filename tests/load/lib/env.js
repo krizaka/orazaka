@@ -1,6 +1,6 @@
 // Everything the suite needs comes from the environment; nothing is printed, nothing is committed.
 //
-//   BASE_URL                 the edge: http://localhost:8088 (local), https://dev.orazaka.com/edge (dev)
+//   BASE_URL                 the edge: http://localhost:8088 (local), https://www.orazaka.com/edge (dev)
 //   ORAZAKA_USER_EMAIL / ORAZAKA_USER_PASSWORD
 //                            sign in as a person (tests the auth path, then uses the JWT)
 //   USE_API_KEY=1            after signing in, mint an oz_ service key and call with it, which is how

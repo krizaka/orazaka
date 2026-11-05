@@ -20,7 +20,7 @@
 Sources: the landing and docs issues of `orazaka-web-client` (#72, #74, #75, #85, #88, #89, #90), the pack catalogue work
 (`orazaka-packs#16`), the locomotive decision (Orazaka for Québec firms and SMEs, Yomizaka as the showcase).
 
-## 2. The public site — dev.orazaka.com
+## 2. The public site — www.orazaka.com
 
 ### Before (2026-10-16)
 
@@ -166,7 +166,7 @@ them), the Mac band (the Mac tab and /desktop). Rationale: progressive disclosur
 once, briefly, and links to the page that goes deeper (Nielsen Norman Group, *Progressive Disclosure*, 2006);
 a story arc in the visitor's order beats a catalogue (Krug, *Don't Make Me Think*, 2014).
 
-Honest media: the Web steps are recorded on dev.orazaka.com with the QA account (`scripts/record-web-steps.mjs`), the
+Honest media: the Web steps are recorded on www.orazaka.com with the QA account (`scripts/record-web-steps.mjs`), the
 phone steps are the existing simulator recordings; the **Mac** shows its one real capture until a recording exists
 (recording the app needs macOS Screen Recording permission on the machine that films it).
 

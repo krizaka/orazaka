@@ -102,7 +102,7 @@ mod tests {
     fn loopback_may_be_http_anything_else_must_be_https() {
         assert!(OpenAiCompatible::validate_base_url("http://localhost:11434/v1").is_ok());
         assert!(OpenAiCompatible::validate_base_url("http://127.0.0.1:8080/v1").is_ok());
-        assert!(OpenAiCompatible::validate_base_url("https://dev.orazaka.com/v1").is_ok());
+        assert!(OpenAiCompatible::validate_base_url("https://www.orazaka.com/v1").is_ok());
         assert!(OpenAiCompatible::validate_base_url("http://192.168.1.20:11434/v1").is_err());
         assert!(OpenAiCompatible::validate_base_url("file:///etc/passwd").is_err());
     }

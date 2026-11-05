@@ -10,16 +10,16 @@
 
 **The AI that never leaves home.**
 
-**[Orazaka](https://dev.orazaka.com)** is the source-available sovereign AI platform (Apache-2.0 after two years) by [Krizaka](https://www.krizaka.com) (Montréal) — chat, documents, images, video and agents on your own machines — and this is the **workspace** that assembles it. Website: [dev.orazaka.com](https://dev.orazaka.com).
+**[Orazaka](https://www.orazaka.com)** is the source-available sovereign AI platform (Apache-2.0 after two years) by [Krizaka](https://www.krizaka.com) (Montréal) — chat, documents, images, video and agents on your own machines — and this is the **workspace** that assembles it. Website: [www.orazaka.com](https://www.orazaka.com).
 
 [![CI](https://github.com/krizaka/orazaka/actions/workflows/ci.yml/badge.svg)](https://github.com/krizaka/orazaka/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/krizaka/orazaka/badge)](https://scorecard.dev/viewer/?uri=github.com/krizaka/orazaka)
 [![License: FSL-1.1-ALv2](https://img.shields.io/badge/license-FSL--1.1--ALv2-blue.svg)](LICENSE)
 [![Orazaka](https://img.shields.io/badge/part%20of-Orazaka-f67e23)](https://github.com/krizaka/orazaka#repositories)
-[![Website](https://img.shields.io/badge/site-dev.orazaka.com-f67e23)](https://dev.orazaka.com)
+[![Website](https://img.shields.io/badge/site-dev.orazaka.com-f67e23)](https://www.orazaka.com)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=krizaka_orazaka&metric=coverage)](https://sonarcloud.io/summary/new_code?id=krizaka_orazaka)
 
-[Website](https://dev.orazaka.com) · [Documentation](https://dev.orazaka.com/docs) · [Krizaka](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
+[Website](https://www.orazaka.com) · [Documentation](https://www.orazaka.com/docs) · [Krizaka](https://www.krizaka.com) · [Krizaka on GitHub](https://github.com/krizaka)
 
 </div>
 <!-- /krizaka-header -->
