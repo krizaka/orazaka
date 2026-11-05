@@ -15,6 +15,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { basename, dirname, join, resolve } from "node:path";
+import { toolPath } from "./lib/tool-path.mjs";
 
 const BASE = process.env.ORAZAKA_EDGE_URL ?? "https://dev.orazaka.com/edge";
 const arg = (name, fallback) => {
@@ -88,7 +89,7 @@ export const gpuCostUsd = (seconds, ratePerHour) => Math.round((seconds / 3600) 
 /** The last frame of a clip, as the PNG the next run starts from. */
 export function lastFrame(video, png) {
   if (!existsSync(video)) throw new Error(`${video} is not there: the clip to continue from has not been made`);
-  execFileSync("ffmpeg", ["-v", "error", "-y", "-sseof", "-0.2", "-i", video, "-update", "1", "-frames:v", "1", png]);
+  execFileSync(toolPath("ffmpeg"), ["-v", "error", "-y", "-sseof", "-0.2", "-i", video, "-update", "1", "-frames:v", "1", png]);
   return png;
 }
 

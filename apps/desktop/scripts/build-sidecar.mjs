@@ -22,7 +22,8 @@ if (existsSync(marker) && readFileSync(marker, "utf8").trim() === `${version}@no
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 writeFileSync(join(out, "package.json"), JSON.stringify({ name: "orazaka-desktop-cli", private: true, dependencies: { "@krizaka/orazaka-cli": version } }));
-execFileSync("npm", ["install", "--omit=dev", "--no-audit", "--no-fund", "--prefix", out], { stdio: "inherit" });
+// npm beside the running node, never one found through PATH.
+execFileSync(join(dirname(process.execPath), "npm"), ["install", "--omit=dev", "--no-audit", "--no-fund", "--prefix", out], { stdio: "inherit" });
 // Slim the bundle: sources, build trees, type declarations and source maps are not needed to run.
 for (const rel of ["node_modules/better-sqlite3/deps", "node_modules/better-sqlite3/src", "node_modules/better-sqlite3/build/Release/obj", "node_modules/better-sqlite3/build/Release/.deps"]) {
   rmSync(join(out, rel), { recursive: true, force: true });

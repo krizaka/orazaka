@@ -23,6 +23,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { toolPath } from "./lib/tool-path.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MANIFEST = JSON.parse(readFileSync(join(ROOT, "orazaka.workspace.json"), "utf8"));
@@ -102,7 +103,7 @@ function clone(args) {
     // A repository may name a `ref` (a branch) while its change and the workspace's must land together
     // (a lock that follows a migration). Once the branch is merged and deleted, the default branch is cloned.
     if (r.ref) {
-      const taken = spawnSync("git", ["clone", ...shallow, "--branch", r.ref, url, target], { stdio: "inherit" });
+      const taken = spawnSync(toolPath("git"), ["clone", ...shallow, "--branch", r.ref, url, target], { stdio: "inherit" });
       if (taken.status === 0) continue;
       console.warn(`· ${r.name}: branch ${r.ref} is gone, cloning the default branch`);
     }
