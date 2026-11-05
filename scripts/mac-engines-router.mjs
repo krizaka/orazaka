@@ -27,16 +27,15 @@ const HOP_BY_HOP = new Set(["connection", "keep-alive", "proxy-authorization", "
  */
 export function upstreamFor(rawUrl, headers, env = process.env) {
   if (typeof rawUrl !== "string" || !rawUrl.startsWith("/") || rawUrl.startsWith("//") || rawUrl.includes("\\")) return null;
-  const parsed = new URL(rawUrl, "http://router.invalid");
-  if (parsed.origin !== "http://router.invalid") return null;
-  const base = new URL(target(parsed.pathname, env));
+  const [pathname] = rawUrl.split("?", 1);
+  const base = new URL(target(pathname, env));
   const forwarded = Object.fromEntries(
     Object.entries(headers ?? {}).filter(([name]) => !HOP_BY_HOP.has(name) && name !== "host" && name !== "__proto__"),
   );
   return {
     host: base.hostname,
     port: base.port,
-    path: parsed.pathname + parsed.search,
+    path: rawUrl,
     headers: { ...forwarded, host: base.host },
   };
 }

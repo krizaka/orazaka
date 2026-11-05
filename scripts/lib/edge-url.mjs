@@ -19,7 +19,8 @@ export function edgeBase(env = process.env) {
   if ((url.protocol !== "https:" && !local) || userInfo || url.search || url.hash) {
     throw new Error("ORAZAKA_EDGE_URL must be an https edge URL (or http on localhost)");
   }
-  const pathname = url.pathname.replace(/\/+$/, "");
+  let pathname = url.pathname;
+  while (pathname.endsWith("/")) pathname = pathname.slice(0, -1);
   return Object.freeze({ origin: url.origin, pathname, href: url.origin + pathname });
 }
 
