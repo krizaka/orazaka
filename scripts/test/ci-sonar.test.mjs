@@ -27,6 +27,18 @@ test("the Sonar job is not gated by an event condition that would skip merge_gro
   assert.doesNotMatch(sonarJob, /if:.*pull_request/);
 });
 
+// Coverage is measured, not assumed (krizaka-internal#2436): the Sonar job runs the script tests with lcov before the scan, the
+// test files are not counted as covered code, and the properties point the scan at that report.
+test("the Sonar job writes the scripts' lcov report before the scan, and the scan reads it", () => {
+  const tests = sonarJob.indexOf("--experimental-test-coverage");
+  assert.ok(tests > 0, "the Sonar job runs the tests with coverage");
+  assert.ok(tests < sonarJob.indexOf("actions/sonar-scan@"), "the coverage is written before the scan");
+  assert.match(sonarJob, /--test-coverage-exclude='scripts\/test\/\*\*'/);
+  assert.match(sonarJob, /--test-reporter-destination=coverage\/lcov\.info/);
+  const p = readFileSync(new URL("../../sonar-project.properties", import.meta.url), "utf8");
+  assert.match(p, /^sonar\.javascript\.lcov\.reportPaths=coverage\/lcov\.info$/m);
+});
+
 test("sonar-project.properties names the project", () => {
   assert.ok(existsSync(new URL("../../sonar-project.properties", import.meta.url)));
   const p = readFileSync(new URL("../../sonar-project.properties", import.meta.url), "utf8");
