@@ -15,9 +15,11 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { edgeBase, edgeUrl, idSegment } from "./lib/edge-url.mjs";
 import { chatText, edgeRequestId, isProven, readableReport, runFacts } from "./lib/journey.mjs";
 
-const BASE = process.env.ORAZAKA_EDGE_URL ?? "https://dev.orazaka.com/edge";
+const EDGE = edgeBase();
+const BASE = EDGE.href;
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
   return i > 0 ? process.argv[i + 1] : fallback;
@@ -29,7 +31,7 @@ const say = (line) => process.stdout.write(`${line}\n`);
 
 let token;
 async function call(method, path, body, { raw, stream, form } = {}) {
-  const res = await fetch(BASE + path, {
+  const res = await fetch(edgeUrl(EDGE, path), {
     signal: AbortSignal.timeout(stream ? 240_000 : 90_000),
     method,
     headers: {
@@ -47,12 +49,12 @@ async function call(method, path, body, { raw, stream, form } = {}) {
 
 /** A Studio run, followed to its end; the run is the engine's trace (its steps carry the job ids). */
 async function studio(key, inputs, { timeoutMs = 900_000 } = {}) {
-  const started = await call("POST", `/api/v1/studios/${key}/runs`, { inputs });
+  const started = await call("POST", `/api/v1/studios/${idSegment(key)}/runs`, { inputs });
   const startedAt = Date.now();
   let run = started.data;
   while (ACTIVE.has(run.status) && Date.now() - startedAt < timeoutMs) {
     await new Promise((r) => setTimeout(r, 5000));
-    run = (await call("GET", `/api/v1/studios/runs/${started.data.id}`).catch(() => ({ data: run }))).data;
+    run = (await call("GET", `/api/v1/studios/runs/${idSegment(started.data.id)}`).catch(() => ({ data: run }))).data;
   }
   return { run, requestId: started.requestId };
 }
@@ -94,7 +96,7 @@ async function main() {
 
   await step("chat", async () => {
     const session = await call("POST", "/api/v1/chat/sessions", {});
-    const r = await call("POST", `/api/v1/chat/stream/${session.data.id}`, { prompt: "En une phrase : pourquoi garder ses données chez soi quand on utilise l'IA ?" }, { stream: true });
+    const r = await call("POST", `/api/v1/chat/stream/${idSegment(session.data.id)}`, { prompt: "En une phrase : pourquoi garder ses données chez soi quand on utilise l'IA ?" }, { stream: true });
     const text = chatText(r.data).trim();
     if (text.length < 20) throw new Error(`the chat answered ${text.length} characters`);
     return { requestId: r.requestId, note: `answer: « ${text.slice(0, 140)} »`, sessionId: session.data.id };
