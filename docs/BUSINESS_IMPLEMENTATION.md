@@ -141,7 +141,7 @@ public class CinePulseController {
 mvn clean install -pl krizaka/krizaka-build/krizaka-users/krizaka-users-core
 
 # 2. Compile gateway API with dependencies
-mvn clean compile -pl orazaka-apps/services/sovkora-conversation-service -am
+mvn clean compile -pl orazaka-apps/services/orazaka-conversation-service -am
 
 # 3. Build CLI executable
 npm run build --prefix orazaka-apps/ui/orazaka-cli

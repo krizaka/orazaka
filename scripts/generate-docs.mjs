@@ -770,7 +770,7 @@ function extractMessaging(reactor, extra) {
 
 /** UseCase catalog from business/usecases. */
 function extractUseCases() {
-  const dir = sourceDir("sovkora-libs/sovkora-engine/sovkora-business", "business/usecases");
+  const dir = sourceDir("orazaka-libs/orazaka-ai-engine/sovkora-business", "business/usecases");
   return javaFiles(dir)
     .filter((f) => /implements\s+UseCase\b/.test(read(f)))
     .map((f) => {
@@ -799,7 +799,7 @@ function extractUseCases() {
  * that is where the registry reads it from (ADR-051).
  */
 function coreInterceptorKeys() {
-  const src = read(sourceFile("sovkora-libs/sovkora-engine/sovkora-core", "PipelineRegistry.java"));
+  const src = read(sourceFile("orazaka-libs/orazaka-ai-engine/sovkora-core", "PipelineRegistry.java"));
   const block = /CORE_INTERCEPTOR_KEYS\s*=\s*List\.of\(([\s\S]*?)\);/.exec(src);
   return block ? [...block[1].matchAll(/"(\w+)"/g)].map((m) => m[1]) : [];
 }
@@ -830,7 +830,7 @@ function classSummary(src, name) {
 
 /** Interceptor registry: classes + concern package + core rank or DB order. */
 function extractInterceptors(pipeline) {
-  const dir = sourceDir("sovkora-libs/sovkora-engine/sovkora-interceptors", "sovkora/interceptor");
+  const dir = sourceDir("orazaka-libs/orazaka-ai-engine/sovkora-interceptors", "sovkora/interceptor");
   const orderByName = new Map(pipeline.map((p) => [p.interceptor.toLowerCase(), p]));
   const core = coreInterceptorKeys();
   return javaFiles(dir)
@@ -1012,7 +1012,7 @@ function extractApi() {
   // Every deployable service of the workspace: a `*-service` module or the edge, whichever
   // repository holds it (a domain repository nests its service beside its contract and client).
   const services = [...MODULES.entries()]
-    .filter(([id]) => id.endsWith("-service") || id === "sovkora-edge-service")
+    .filter(([id]) => id.endsWith("-service") || id === "orazaka-edge")
     .map(([id, dir]) => ({ service: id, root: dir }))
     .sort((a, b) => a.service.localeCompare(b.service));
   const rows = [];
@@ -1169,7 +1169,7 @@ function extractCliJourney(commands) {
  * whoever writes the rule.
  */
 function extractGovernance() {
-  const libDir = join(ROOT, "sovkora-libs/sovkora-build/sovkora-test-support/src/main/java");
+  const libDir = join(ROOT, "orazaka-libs/sovkora-build/sovkora-test-support/src/main/java");
   if (!existsSync(libDir)) return [];
 
   // One entry per RULE, keyed by holder + name — not one per method. A rule offered as a no-arg
@@ -1207,7 +1207,7 @@ function extractGovernance() {
   // class that holds it, rather than by matching a bare method name anywhere in the file. Two
   // holders may legitimately offer the same method name, and a name that appears in a comment is
   // not a call.
-  for (const root of ["orazaka-apps", "sovkora-libs"]) {
+  for (const root of ["orazaka-apps", "orazaka-libs"]) {
     const dir = join(ROOT, root);
     if (!existsSync(dir)) continue;
     for (const f of walk(dir, (x) => x.endsWith("Test.java") || x.endsWith("IT.java"))) {
@@ -2037,7 +2037,7 @@ function extractTools() {
   });
 
   // How the pipeline picks tools for a turn: ToolInterceptor in orazaka-interceptors.
-  const interceptorFile = walk(join(ROOT, "sovkora-libs"), (p) => basename(p) === "ToolInterceptor.java" && p.includes("/src/main/"))[0];
+  const interceptorFile = walk(join(ROOT, "orazaka-libs"), (p) => basename(p) === "ToolInterceptor.java" && p.includes("/src/main/"))[0];
   const interceptor = interceptorFile ? read(interceptorFile) : "";
   const skippedModels = [...(interceptor.match(/modelLower\.contains[\s\S]*?\)\s*\{/)?.[0] ?? "").matchAll(/contains\("([^"]+)"\)/g)].map((m) => m[1]);
   const demands = [...interceptor.matchAll(/"(\w+)"\.equals\(toolName\)\s*&&\s*(\w+)\(/g)].map((m) => {
@@ -2192,7 +2192,7 @@ function extractJobs(arch) {
     const key = s.match(/String handlerKey\(\)\s*\{\s*return\s+"([^"]+)"/)?.[1];
     if (key) executors.push({ key, type: basename(f, ".java"), repo: repoOfFile(f), summary: typeInfo(s, basename(f, ".java"))?.summary ?? "" });
   }
-  const contract = walk(join(ROOT, "sovkora-libs"), (p) => basename(p) === "JobExecutor.java" && p.includes("/src/main/"))[0];
+  const contract = walk(join(ROOT, "orazaka-libs"), (p) => basename(p) === "JobExecutor.java" && p.includes("/src/main/"))[0];
   const listener = walk(join(ROOT, "orazaka-apps"), (p) => basename(p) === "JobListener.java" && p.includes("/src/main/"))[0];
 
   const auto = REPOSITORIES.find((r) => r.name === "orazaka-automation-service");

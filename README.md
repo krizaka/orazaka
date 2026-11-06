@@ -185,7 +185,7 @@ orazaka/                               ← this repository
 ├── infra/        docker-compose, initdb (reset), migrations
 ├── docs/         architecture, ADRs, generated references
 ├── orazaka-end2end/                   hermetic E2E
-├── sovkora-libs/                      ← cloned: orazaka-build, orazaka-contracts, orazaka-ai-engine
+├── orazaka-libs/                      ← cloned: orazaka-build, orazaka-contracts, orazaka-ai-engine
 ├── krizaka/                           ← cloned: krizaka-build (with the platform kit), krizaka-users, krizaka-billing (both inside krizaka-build)
 ├── orazaka-apps/services/             ← cloned: orazaka-studio, conversation, job, knowledge, automation, edge
 ├── orazaka-apps/workers/              ← cloned: orazaka-worker-media

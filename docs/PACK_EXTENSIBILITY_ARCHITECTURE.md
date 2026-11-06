@@ -309,7 +309,7 @@ the Python worker's `COMPOSE_FEATURE_KEY` comparison are pack knowledge inside c
 
 | Rule | Enforcement |
 |:---|:---|
-| **P1** — no pack, studio or capability key as a literal in core code | ✅ **[PACK-002]** `PackPurityRules`, run by every `<Module>GovernanceTest`. Scans `sovkora-libs/**`, `orazaka-apps/services/**`, `orazaka-apps/workers/**` for `orazaka\.(doc\|studio)\.` and the known pack keys; `orazaka-packs/**` and `infra/initdb/**` are outside the scanned roots |
+| **P1** — no pack, studio or capability key as a literal in core code | ✅ **[PACK-002]** `PackPurityRules`, run by every `<Module>GovernanceTest`. Scans `orazaka-libs/**`, `orazaka-apps/services/**`, `orazaka-apps/workers/**` for `orazaka\.(doc\|studio)\.` and the known pack keys; `orazaka-packs/**` and `infra/initdb/**` are outside the scanned roots |
 | **P2** — no `if (packKey == …)` / `switch (featureKey)` in core | ✅ **[PACK-003]** same rule, extended to conditionals — **including through a constant declared in the same file**, which is the shape both violations actually took |
 | **P3** — core seeds contain reference data only; pack content ships with the pack | `PackCoherenceRules` extended: a `studio` row in `80-studio.sql` whose `pack_key` names a non-reference pack fails the build |
 | **P4** — a worker declares its bindings; it never names a capability | `worker.yaml` schema check in the worker's own CI-equivalent local gate |
@@ -491,18 +491,18 @@ own §3.2 migration. Failsafe is now bound in the parent, `verify` included.
 ```
 # Phase A
 MODIFY  infra/initdb/30-jobs-config.sql          (+ routing_key, worker_family, billable_unit + backfill)
-CREATE  sovkora-libs/sovkora-contracts/sovkora-jobs-api/**            (Tier-1: CapabilityRouting, JobCommand — audit #17)
-MODIFY  orazaka-apps/services/sovkora-studio-service/sovkora-studio-service/.../AmqpStepExecutionAdapter.java   (− routingKeyFor)
+CREATE  orazaka-libs/orazaka-contracts/sovkora-jobs-api/**            (Tier-1: CapabilityRouting, JobCommand — audit #17)
+MODIFY  orazaka-apps/services/orazaka-studio/sovkora-studio-service/.../AmqpStepExecutionAdapter.java   (− routingKeyFor)
 MODIFY  .../application/service/BlueprintPublishService.java  (+ capability resolution check)
 
 # Phase B
-MODIFY  sovkora-libs/sovkora-build/sovkora-test-support/.../architecture/GovernanceRules.java   (+ P1/P2)
-CREATE  sovkora-libs/sovkora-build/sovkora-test-support/.../architecture/PackPurityRules.java
+MODIFY  orazaka-libs/sovkora-build/sovkora-test-support/.../architecture/GovernanceRules.java   (+ P1/P2)
+CREATE  orazaka-libs/sovkora-build/sovkora-test-support/.../architecture/PackPurityRules.java
 MODIFY  <all> <Module>GovernanceTest.java
 
 # Phase C
-MODIFY  orazaka-apps/services/sovkora-job-service/.../JobExecutionStrategy.java  (un-seal → JobExecutor)
-CREATE  orazaka-apps/services/sovkora-job-service/src/main/resources/META-INF/spring/…AutoConfiguration.imports
+MODIFY  orazaka-apps/services/orazaka-job-service/.../JobExecutionStrategy.java  (un-seal → JobExecutor)
+CREATE  orazaka-apps/services/orazaka-job-service/src/main/resources/META-INF/spring/…AutoConfiguration.imports
 CREATE  infra/initdb/30-jobs-config.sql          (+ worker_registry + heartbeat)
 CREATE  docs/WORKER_PROTOCOL.md
 MODIFY  orazaka-apps/workers/orazaka-worker-media/app/{consumer,main}.py  (+ worker.yaml, − COMPOSE_FEATURE_KEY)
@@ -510,13 +510,13 @@ MODIFY  orazaka-apps/workers/orazaka-worker-media/app/{consumer,main}.py  (+ wor
 # Phase D — done (ADR-039)
 CREATE  orazaka-packs/{README.md, pack.schema.json}
 CREATE  orazaka-packs/{realestate-studio,trade-showcase,outbound-prospection}/**
-CREATE  orazaka-apps/services/sovkora-studio-service/sovkora-studio-api/.../model/PackBundle.java + 8 records
+CREATE  orazaka-apps/services/orazaka-studio/sovkora-studio-api/.../model/PackBundle.java + 8 records
 CREATE  krizaka/krizaka-billing/krizaka-billing-api/.../{PackProvision,EntitlementGrant,PackProvisioningClient}
-CREATE  sovkora-libs/sovkora-contracts/sovkora-jobs-api/.../{CapabilityDeclaration,CapabilityRegistrationClient}
+CREATE  orazaka-libs/orazaka-contracts/sovkora-jobs-api/.../{CapabilityDeclaration,CapabilityRegistrationClient}
 CREATE  krizaka/krizaka-billing/krizaka-billing-client/.../{Http,NoOp}PackProvisioningClient.java
-CREATE  orazaka-apps/services/sovkora-studio-service/sovkora-studio-service/.../application/service/PackInstallerService.java
-CREATE  orazaka-apps/services/sovkora-studio-service/sovkora-studio-service/.../{PackInstallRepository,JdbcPackInstallRepositoryAdapter,PackBundleController}
-CREATE  orazaka-apps/services/sovkora-job-service/.../application/service/CapabilityRegistryService.java
+CREATE  orazaka-apps/services/orazaka-studio/sovkora-studio-service/.../application/service/PackInstallerService.java
+CREATE  orazaka-apps/services/orazaka-studio/sovkora-studio-service/.../{PackInstallRepository,JdbcPackInstallRepositoryAdapter,PackBundleController}
+CREATE  orazaka-apps/services/orazaka-job-service/.../application/service/CapabilityRegistryService.java
 CREATE  krizaka/krizaka-billing/krizaka-billing-service/.../rest/PackProvisioningController.java
 CREATE  orazaka-apps/ui/orazaka-cli/src/{commands/pack.command.ts,services/pack.{api,bundle}.ts}
 MODIFY  infra/initdb/80-studio.sql               (− 288 lines of catalogue content, → bundles)

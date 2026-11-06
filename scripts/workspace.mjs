@@ -24,6 +24,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { toolPath } from "./lib/tool-path.mjs";
+import { linkAliases } from "./lib/workspace-aliases.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MANIFEST = JSON.parse(readFileSync(join(ROOT, "orazaka.workspace.json"), "utf8"));
@@ -109,6 +110,7 @@ function clone(args) {
     }
     run("git", ["clone", ...shallow, url, target]);
   }
+  for (const path of linkAliases(ROOT, MANIFEST.aliases)) console.log(`↪ ${path} (alias of the layout, see orazaka.workspace.json)`);
 }
 
 function status() {
