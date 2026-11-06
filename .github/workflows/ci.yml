@@ -26,11 +26,11 @@ jobs:
   # tests replay, the workspace manifest or this workflow change — and always on the nightly, dispatch and on every
   # other event (krizaka/.github changes.yml fails open). The docs freshness gate and the workspace script tests always run.
   maven-changes:
-    uses: krizaka/.github/.github/workflows/changes.yml@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+    uses: krizaka/.github/.github/workflows/changes.yml@a888de63a6049d329d7a8522c8d50af62a0f6350 # main
     with:
       relevant: '^(pom\.xml|\.mvn/|mvnw(\.cmd)?$|orazaka-end2end/|infra/(initdb|migrations|users|brokers-infra|docker-compose)|orazaka\.workspace\.json|scripts/workspace\.mjs|\.github/workflows/ci\.yml$)'
   ui-changes:
-    uses: krizaka/.github/.github/workflows/changes.yml@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+    uses: krizaka/.github/.github/workflows/changes.yml@a888de63a6049d329d7a8522c8d50af62a0f6350 # main
     with:
       relevant: '^(orazaka-apps/ui/|orazaka\.workspace\.json|scripts/workspace\.mjs|\.github/workflows/ci\.yml$)'
 
@@ -60,7 +60,7 @@ jobs:
           cache: maven
 
       # A Krizaka release waits for a human to press Publish on Central; development builds resolve it from GitHub Packages.
-      - uses: krizaka/.github/actions/maven-github-packages@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+      - uses: krizaka/.github/actions/maven-github-packages@a888de63a6049d329d7a8522c8d50af62a0f6350 # main
         if: ${{ needs.maven-changes.outputs.code != 'false' }}
         with:
           token: ${{ github.token }}
@@ -202,7 +202,7 @@ jobs:
             --test-reporter=dot --test-reporter-destination=stdout \
             --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \
             'scripts/test/*.test.mjs'
-      - uses: krizaka/.github/actions/sonar-scan@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+      - uses: krizaka/.github/actions/sonar-scan@a888de63a6049d329d7a8522c8d50af62a0f6350 # main
         with:
           token: ${{ secrets.SONAR_TOKEN }}
           args: -Dsonar.qualitygate.wait=true
@@ -223,7 +223,7 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           echo "CI failed on main at ${SHA:0:7}: ${RUN_URL}" > "$RUNNER_TEMP/body.md"
-      - uses: krizaka/.github/actions/alert-issue@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+      - uses: krizaka/.github/actions/alert-issue@a888de63a6049d329d7a8522c8d50af62a0f6350 # main
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
