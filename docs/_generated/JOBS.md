@@ -46,7 +46,7 @@ One capability's execution, in process.
 | Handler key | Executor | Repository | Summary |
 |:---|:---|:---|:---|
 | `audio.analyze` | `AudioAnalysisStrategy` | `orazaka-job-service` | Executes audio transcription/analysis jobs by delegating to the `AudioPreProcessor`. |
-| `check.external` | `ExternalCheckStrategy` | `orazaka-job-service` | Runs the engine's external checks as job steps (orazaka-packs#138): the capabilities `orazaka.core.checks.courtrecords`, `.credit` and `.identity`, whose rows all name the handler `check.external`. |
+| `check.external` | `ExternalCheckStrategy` | `orazaka-job-service` | Runs the engine's external checks as job steps (sovkora-packs#138): the capabilities `orazaka.core.checks.courtrecords`, `.credit` and `.identity`, whose rows all name the handler `check.external`. |
 | `image.analyze` | `VisionAnalysisStrategy` | `orazaka-job-service` | Executes vision/image analysis jobs using the AI chat client with vision models. |
 | `image.generate` | `ImageGenerationStrategy` | `orazaka-job-service` | Executes image generation jobs via the AI client's image endpoint. |
 | `research.grounded` | `GroundedResearchStrategy` | `orazaka-job-service` | Runs grounded research as a job step (ADR-087 slice 5): the capability `orazaka.core.research.grounded`, whose row names the handler `research.grounded`. |
@@ -71,7 +71,7 @@ Service-to-service (`SERVICE` token): how a pack registers a capability and a wo
 | Method | Path | Access | Summary |
 |:---|:---|:---|:---|
 | GET | `/api/v1/jobs` | authenticated | Retrieves a paginated list of jobs for the authenticated user (or all jobs for admins). |
-| DELETE | `/api/v1/jobs/{id}` | ADMIN + USER | Deletes a finished job's result: files out of every store, row marked deleted (orazaka-web-client#86). |
+| DELETE | `/api/v1/jobs/{id}` | ADMIN + USER | Deletes a finished job's result: files out of every store, row marked deleted (sovkora-web#86). |
 | GET | `/api/v1/jobs/{id}` | ADMIN + USER | Fetches the single, atomic state of a specific job. |
 | POST | `/api/v1/jobs/{id}/progress` | ADMIN + USER | Updates progress of a running job and broadcasts it to connected users. |
 | POST | `/api/v1/jobs/{jobId}/approve` | ADMIN + USER | Approves a pending automation job and dispatches its payload to the execution queue. |
@@ -95,7 +95,7 @@ the service's `application.yml` or environment.
 | `orazaka-automation-service` | `SweepTicker.tick` | every 15s (`orazaka.automation-service.scheduler.interval`) | The clock of the automation service: every interval it runs one sweep (schedule slots, queued runs, lost events, retention). |
 | `orazaka-conversation-service` | `JobReconciliationService.reconcileScheduled` | every 60 s (`orazaka.jobs.reconcile-interval-ms`) | Recovers jobs whose result was written to disk but whose terminal status update never reached the database (e.g. |
 | `orazaka-conversation-service` | `JobStreamService.sendHeartbeats` | every 15 s | Service managing client Server-Sent Events (SSE) connections for real-time job lifecycle updates. |
-| `orazaka-conversation-service` | `ProtectedConversationSweeper.sweep` | cron `0 45 3 * * *` (`orazaka.router.regulated-retention.cron`) | Ages out the conversation memory of regulated packs, daily: the 30 days the consent statement states, counted from the conversation's last turn (orazaka#301). |
+| `orazaka-conversation-service` | `ProtectedConversationSweeper.sweep` | cron `0 45 3 * * *` (`orazaka.router.regulated-retention.cron`) | Ages out the conversation memory of regulated packs, daily: the 30 days the consent statement states, counted from the conversation's last turn (sovkora#301). |
 | `orazaka-job-service` | `JobRetentionSweeper.sweep` | every 60 s (`orazaka.jobs.retention-sweep-interval`) | Purges expired jobs, then deletes any purged job's directory that came back. |
 | `orazaka-job-service` | `JobRetentionSweeper.sweepUploads` | every 3600 s (`orazaka.jobs.upload-retention-interval`) | Deletes uploads older than the ordinary retention window; hourly, listing is not free. |
 | `orazaka-job-service` | `WorkerHeartbeatSweeper.markStaleWorkers` | every 30 s (`orazaka.jobs.worker-sweeper-interval`) | Marks workers that have stopped heartbeating as `STALE`. |
@@ -106,7 +106,7 @@ the service's `application.yml` or environment.
 | `orazaka-studio` | `PackBootstrap.install` | every 30 s (`orazaka.studio-service.packs.bootstrap-interval`) | Installs the packs this deployment ships, so a fresh environment has Studios (ADR-068, `#45`). |
 | `orazaka-studio` | `RetentionSweeper.purge` | cron `0 30 3 * * *` (`orazaka.studio-service.retention.cron`) | Purges what the retention window says may no longer be kept (ADR-034 §14, GDPR / Loi 25). |
 | `orazaka-studio` | `RunSweeper.sweep` | every 60 s (`orazaka.studio-service.sweeper.interval`) | Closes runs whose steps stopped reporting, and releases their holds. |
-| `orazaka-studio` | `WebhookSweeper.sweep` | every 10 s (`orazaka.studio-service.webhooks.interval`) | Queues and sends the webhooks of finished runs (orazaka#189 slice B). |
+| `orazaka-studio` | `WebhookSweeper.sweep` | every 10 s (`orazaka.studio-service.webhooks.interval`) | Queues and sends the webhooks of finished runs (sovkora#189 slice B). |
 
 ## Automation
 

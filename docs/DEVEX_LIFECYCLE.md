@@ -92,7 +92,7 @@ flowchart TB
 
 | IDE | Scope | Why |
 | :--- | :--- | :--- |
-| **IntelliJ IDEA** | Java/Maven backend: `orazaka-router`, `orazaka-libs/*`, Java workers | multi-module Maven support, Spring, JVM debugging, ArchUnit |
+| **IntelliJ IDEA** | Java/Maven backend: `orazaka-router`, `sovkora-libs/*`, Java workers | multi-module Maven support, Spring, JVM debugging, ArchUnit |
 | **VSCode** | TS frontends (`orazaka-ui/*`), `worker-media` (Python), infra scripts | Next/Expo, ESLint, Pyright, integrated terminal for the CLI |
 
 Both share the repo; **the `orazaka` CLI is the neutral orchestrator** both call. To commit so both IDEs are *turnkey*:

@@ -1,11 +1,11 @@
 -- ─────────────────────────────────────────────────────────────────────────────
--- AUTOMATIONS ON DEV (orazaka#195/#196, ADR-079 + ADR-084): the model of orazaka-automation-service on an existing
+-- AUTOMATIONS ON DEV (sovkora#195/#196, ADR-079 + ADR-084): the model of orazaka-automation-service on an existing
 -- orazaka_automation_db, plus triggers, the webhook ledger, cloud runs and rule set v2. The same statements as the
 -- service's infra/initdb/50-automation.sql from « THE AUTOMATION MODEL » on (a test keeps the two identical when the
 -- service is in the workspace). Idempotent: safe to re-apply. Applied by `node scripts/dev-deploy.mjs automations`.
 -- ─────────────────────────────────────────────────────────────────────────────
 -- ─────────────────────────────────────────────────────────────────────────────
--- THE AUTOMATION MODEL (ADR-079, slice 2 foundation; orazaka#195)
+-- THE AUTOMATION MODEL (ADR-079, slice 2 foundation; sovkora#195)
 -- An automation is trigger + recipe + policy; a run is a job with a trace; a side effect needs a grant or an approval;
 -- everything that happens is an append-only, hash-chained audit event. Enums are Postgres enums, the words of the
 -- limits are rows (`automation_settings`), never constants. user_id / tenant columns are OPAQUE ActorIds — no FK into the
@@ -38,7 +38,7 @@ INSERT INTO automation_settings (version, rules, active) VALUES (1, '{
   "catchUp": "ONCE"
 }'::jsonb, TRUE) ON CONFLICT (version) DO NOTHING;
 
--- Rule set v2 (orazaka#195, ADR-084): the limits of the cloud automation API. v1's keys are kept, the new ones added;
+-- Rule set v2 (sovkora#195, ADR-084): the limits of the cloud automation API. v1's keys are kept, the new ones added;
 -- exactly one version is active. Code clamps every value to hard bounds and falls back to a default when a key is absent.
 INSERT INTO automation_settings (version, rules, active)
 SELECT 2, rules || '{
@@ -209,7 +209,7 @@ DROP TRIGGER IF EXISTS trg_audit_event_immutable ON audit_event;
 CREATE TRIGGER trg_audit_event_immutable BEFORE UPDATE OR DELETE ON audit_event FOR EACH ROW EXECUTE FUNCTION audit_event_immutable();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- TRIGGERS (ADR-084; orazaka#195, #196). A webhook trigger's secret is stored SEALED under the master keyring
+-- TRIGGERS (ADR-084; sovkora#195, #196). A webhook trigger's secret is stored SEALED under the master keyring
 -- (v1.<keyId>.<wrapped>.<nonce>.<ciphertext>), never in clear; `secret_hint` is its last four characters, and the previous
 -- secret keeps verifying until `previous_secret_until` (rotation without losing a call). A schedule trigger keeps its slot
 -- in `spec` ({"time":"08:00","zone":"America/Toronto","days":["MON",…]}) and its next slot in `next_fire_at`.

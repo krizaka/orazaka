@@ -13,7 +13,7 @@
         <groupId>com.krizaka.sovkora</groupId>
         <artifactId>sovkora-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>orazaka-libs/orazaka-build/sovkora-parent/pom.xml</relativePath>
+        <relativePath>sovkora-libs/sovkora-build/sovkora-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>sovkora-workspace</artifactId>
@@ -56,15 +56,15 @@
 
     <modules>
         <module>krizaka/krizaka-build</module>
-        <module>orazaka-libs/orazaka-build</module>
-        <module>orazaka-libs/orazaka-contracts</module>
-        <module>orazaka-apps/services/orazaka-studio</module>
-        <module>orazaka-libs/orazaka-ai-engine</module>
-        <module>orazaka-apps/services/orazaka-conversation-service</module>
-        <module>orazaka-apps/services/orazaka-job-service</module>
-        <module>orazaka-apps/services/orazaka-knowledge-service</module>
-        <module>orazaka-apps/services/orazaka-automation-service</module>
-        <module>orazaka-apps/services/orazaka-edge</module>
+        <module>sovkora-libs/sovkora-build</module>
+        <module>sovkora-libs/sovkora-contracts</module>
+        <module>orazaka-apps/services/sovkora-studio-service</module>
+        <module>sovkora-libs/sovkora-engine</module>
+        <module>orazaka-apps/services/sovkora-conversation-service</module>
+        <module>orazaka-apps/services/sovkora-job-service</module>
+        <module>orazaka-apps/services/sovkora-knowledge-service</module>
+        <module>orazaka-apps/services/sovkora-automation-service</module>
+        <module>orazaka-apps/services/sovkora-edge-service</module>
         <module>orazaka-end2end</module>
     </modules>
 

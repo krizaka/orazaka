@@ -3,11 +3,11 @@ import { test } from "node:test";
 import { modulesOf, plan } from "../ci-plan.mjs";
 
 const modules = modulesOf(`<modules><module>krizaka/krizaka-build</module><module>orazaka-end2end</module>
-<module>orazaka-apps/services/orazaka-edge</module><module>orazaka-apps/services/orazaka-edge-x</module></modules>`);
+<module>orazaka-apps/services/sovkora-edge-service</module><module>orazaka-apps/services/sovkora-edge-service-x</module></modules>`);
 
 test("modules are read from the root pom, longest first", () => {
   assert.equal(modules.length, 4);
-  assert.ok(modules.indexOf("orazaka-apps/services/orazaka-edge-x") < modules.indexOf("orazaka-apps/services/orazaka-edge"));
+  assert.ok(modules.indexOf("orazaka-apps/services/sovkora-edge-service-x") < modules.indexOf("orazaka-apps/services/sovkora-edge-service"));
 });
 
 test("everything but a pull request runs the full reactor", () => {
@@ -19,16 +19,16 @@ test("everything but a pull request runs the full reactor", () => {
 test("a pull request builds the changed modules and their dependents", () => {
   const p = plan({
     event: "pull_request",
-    files: ["orazaka-end2end/src/A.java", "orazaka-apps/services/orazaka-edge/x/B.java"],
+    files: ["orazaka-end2end/src/A.java", "orazaka-apps/services/sovkora-edge-service/x/B.java"],
     modules,
   });
   assert.equal(p.mode, "changed");
-  assert.equal(p.pl, "orazaka-apps/services/orazaka-edge,orazaka-end2end");
+  assert.equal(p.pl, "orazaka-apps/services/sovkora-edge-service,orazaka-end2end");
 });
 
 test("a sibling directory with the same prefix is not the module", () => {
-  const p = plan({ event: "pull_request", files: ["orazaka-apps/services/orazaka-edge-x/A.java"], modules });
-  assert.equal(p.pl, "orazaka-apps/services/orazaka-edge-x");
+  const p = plan({ event: "pull_request", files: ["orazaka-apps/services/sovkora-edge-service-x/A.java"], modules });
+  assert.equal(p.pl, "orazaka-apps/services/sovkora-edge-service-x");
 });
 
 test("what every module shares, or an unknown change set, fails open to full", () => {
