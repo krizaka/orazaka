@@ -2,7 +2,7 @@
   "$comment": "Orazaka workspace manifest — the single list of repositories that make up the platform, in build order. Read by scripts/workspace.mjs, the orazaka CLI and CI.",
   "org": "krizaka",
   "version": "1.0.0-SNAPSHOT",
-  "umbrella": "orazaka",
+  "umbrella": "sovkora",
   "repositories": [
     {
       "name": "krizaka-build",

@@ -1,4 +1,4 @@
-package com.krizaka.orazaka.e2e;
+package com.krizaka.sovkora.e2e;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;

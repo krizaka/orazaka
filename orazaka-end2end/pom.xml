@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.krizaka.orazaka</groupId>
-        <artifactId>orazaka-parent</artifactId>
+        <groupId>com.krizaka.sovkora</groupId>
+        <artifactId>sovkora-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../orazaka-libs/orazaka-build/orazaka-parent/pom.xml</relativePath>
+        <relativePath>../orazaka-libs/orazaka-build/sovkora-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>orazaka-end2end</artifactId>
-    <name>orazaka-end2end</name>
+    <artifactId>sovkora-end2end</artifactId>
+    <name>sovkora-end2end</name>
     <description>Hermetic E2E Testing Module — Java/Web Router API validation only.
         Playwright Java, HTTPyac, CLI Validation (ADR-040).
         Mobile client testing is explicitly OUT OF SCOPE for the JVM lifecycle —
@@ -32,16 +32,16 @@
          ==================================================================== -->
     <dependencies>
         <dependency>
-            <groupId>com.krizaka.orazaka</groupId>
-            <artifactId>orazaka-conversation-service</artifactId>
+            <groupId>com.krizaka.sovkora</groupId>
+            <artifactId>sovkora-conversation-service</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
         <!-- ArchUnit Monorepo Scan: pull all internal modules onto the test classpath -->
         <dependency>
-            <groupId>com.krizaka.orazaka</groupId>
-            <artifactId>orazaka-core</artifactId>
+            <groupId>com.krizaka.sovkora</groupId>
+            <artifactId>sovkora-core</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -51,14 +51,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.krizaka.orazaka</groupId>
-            <artifactId>orazaka-business</artifactId>
+            <groupId>com.krizaka.sovkora</groupId>
+            <artifactId>sovkora-business</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.krizaka.orazaka</groupId>
-            <artifactId>orazaka-persistence-app</artifactId>
+            <groupId>com.krizaka.sovkora</groupId>
+            <artifactId>sovkora-persistence-app</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

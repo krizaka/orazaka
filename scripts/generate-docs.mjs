@@ -228,13 +228,13 @@ const ROLES = [
   { id: "application", title: "Application", rule: "the orchestration, pipeline and capability libraries around the core (AGENTS.md §2: business, interceptors, tools)" },
   { id: "domain", title: "Domain core", rule: "a `*-core` module — the centre of its hexagon, depending on no outer layer" },
   { id: "contract", title: "Contracts", rule: "a Tier-1 `*-api` module — pure interfaces and records" },
-  { id: "platform", title: "Krizaka platform kit", rule: "a module of krizaka-platform-kit — the cross-cutting code with one author (ADR-073), starters included" },
+  { id: "platform", title: "Krizaka service kit", rule: "a module of krizaka-service-kit — the cross-cutting code with one author (ADR-073), starters included" },
 ];
 const APPLICATION_LIBRARIES = ["orazaka-business", "orazaka-interceptors", "orazaka-tools"];
 
 function roleOf(m) {
   if (/SpringApplication\.run\(/.test(javaFiles(join(m.dir, "src/main/java")).map(read).join("\n"))) return "service";
-  if (m.path.split("/").includes("krizaka-platform-kit")) return "platform";
+  if (m.path.split("/").includes("krizaka-service-kit")) return "platform";
   if (m.id.endsWith("-api")) return "contract";
   if (m.id.endsWith("-core")) return "domain";
   if (APPLICATION_LIBRARIES.includes(m.id)) return "application";
@@ -442,8 +442,8 @@ const BUILDING_BLOCK_ROLES = [
   { id: "adapter", title: "Adapters", rule: "a `*-client` or `*-persistence` module: typed HTTP client, JPA adapter" },
   { id: "domain", title: "Domain core", rule: "a `*-core` module" },
   { id: "contract", title: "Contracts", rule: "a `*-api` module — interfaces, records, events" },
-  { id: "starter", title: "Starters", rule: "a module of krizaka-platform-kit/starters — one dependency that switches a module on" },
-  { id: "platform", title: "Platform kit", rule: "a library module of krizaka-platform-kit" },
+  { id: "starter", title: "Starters", rule: "a module of krizaka-service-kit/starters — one dependency that switches a module on" },
+  { id: "platform", title: "Platform kit", rule: "a library module of krizaka-service-kit" },
   { id: "build", title: "Build", rule: "a module of krizaka-build: the parent POM, the BOM, the test kit" },
 ];
 
@@ -494,7 +494,7 @@ function extractBuildingBlocks() {
   if (!known.size) throw new Error("generate-docs: no Krizaka artifact found — clone the krizaka/* repositories of orazaka.workspace.json");
 
   const roleOf = (a) => {
-    if (a.path.split("/").includes("krizaka-platform-kit")) return a.path.split("/").includes("starters") ? "starter" : "platform";
+    if (a.path.split("/").includes("krizaka-service-kit")) return a.path.split("/").includes("starters") ? "starter" : "platform";
     if (a.repository.name === "krizaka-build") return "build";
     if (/SpringApplication\.run\(/.test(javaFiles(join(a.dir, "src/main/java")).map(read).join("\n"))) return "service";
     if (a.id.endsWith("-api")) return "contract";
@@ -719,7 +719,7 @@ function extractMessaging(reactor, extra) {
   }
 
   // The retry policy of the kit's listener container (krizaka.messaging.retry), defaults read from code.
-  const retrySrc = read(sourceFile("krizaka/krizaka-build/krizaka-platform-kit/krizaka-messaging", "ConsumerRetryProperties.java"));
+  const retrySrc = read(sourceFile("krizaka/krizaka-build/krizaka-service-kit/krizaka-messaging", "ConsumerRetryProperties.java"));
   const retry = {
     maxAttempts: Number(retrySrc.match(/maxAttempts\s*=\s*maxAttempts\s*==\s*null\s*\?\s*(\d+)/)?.[1]),
     initialMs: Number(retrySrc.match(/initial\s*=\s*initial\s*==\s*null\s*\?\s*Duration\.ofMillis\((\d+)\)/)?.[1]),
@@ -884,7 +884,7 @@ function accessRules(serviceDir) {
     const code = read(f).replace(/^\s*(\/\/|\*|\/\*).*$/gm, "");
     // krizaka-security's SecurityBaseline.apply(http, serviceRules) declares the shared rules
     // first and `anyRequest().authenticated()` last, around the service's own: the same order
-    // Spring Security will evaluate them in (krizaka/krizaka-build/krizaka-platform-kit, ADR-073).
+    // Spring Security will evaluate them in (krizaka/krizaka-build/krizaka-service-kit, ADR-073).
     const baseline = code.includes("SecurityBaseline.apply(");
     if (baseline) {
       rules.push({ pattern: "/**", label: "public", httpMethod: "OPTIONS" });
