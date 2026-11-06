@@ -1,6 +1,6 @@
 # The Mac app filmed by its journey (krizaka-internal#230): the journey of apps/desktop runs on a macOS runner against a debug build
 # with the embedded WebDriver; the frames of the window (WebDriver screenshots, no screen recording, no permission) are collapsed and
-# joined by the shared tooling of krizaka-tauri-kit (film/) into the artifact `showcase-mac`. The Download page's own workflow
+# joined by the shared tooling of krizaka-desktop (film/) into the artifact `showcase-mac`. The Download page's own workflow
 # (krizaka/orazaka-web-client download-videos.yml) calls this one, then the org's app-videos workflow transcodes, uploads to Bunny and
 # opens the PR on its content/app-videos.json: one manifest, one page. Never required; no credential at all (the model is a stand-in
 # on loopback); no pull_request trigger, so nothing here runs on a PR.
@@ -27,7 +27,7 @@ jobs:
           persist-credentials: false
           repository: krizaka/sovkora
           ref: main
-      - uses: krizaka/krizaka-tauri-kit/.github/actions/film@8ecaad06d45019ddc9612f615bcc0f3c12bd5203 # feat/film-tooling (krizaka-tauri-kit#21): re-pin to the merged commit
+      - uses: krizaka/krizaka-desktop/.github/actions/film@8ecaad06d45019ddc9612f615bcc0f3c12bd5203 # feat/film-tooling (krizaka-desktop#21): re-pin to the merged commit
         id: film
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:

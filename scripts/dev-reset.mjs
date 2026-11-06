@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /**
+ * MANUAL TOOL (ADR-026), run by a person. Owner: sovkora lane. Listed in README.md « Manual tools ».
  * « Reset dev data » in one command (krizaka/.github docs/plans/2026-11-02-db-migration-plan.md § R, krizaka-internal#2255).
  *
  *   node scripts/dev-reset.mjs <orazaka|yomizaka|akinaza|all> --target <local|dev> [--dry-run] [--yes] [--no-deploy] [--log <file>]

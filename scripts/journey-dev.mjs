@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /**
+ * MANUAL TOOL (ADR-026), run by a person. Owner: sovkora lane. Listed in README.md « Manual tools ».
  * The core journey of Orazaka on the real dev backend (Dev preview `journey.core` + `journey.ai-via-orazaka`, orazaka#178):
  * a demo persona signs in, asks the chat, makes an image through the `image-generation` Studio, has it read by
  * `image-analysis`, and turns the idea into a short clip with `video-generation` — every step through the public edge

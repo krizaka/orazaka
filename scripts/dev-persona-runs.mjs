@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /**
+ * MANUAL TOOL (ADR-026), run by a person before a recording. Owner: sovkora lane. Listed in README.md « Manual tools ».
  * Puts a little real work on the shelf of a dev persona, so the jobs list of a recording is not empty.
  *
  *   node scripts/dev-persona-runs.mjs [mira|eric]
