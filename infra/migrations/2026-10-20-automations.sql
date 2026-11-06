@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS tool_grant (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tool_grant_active ON tool_grant (automation_id, server_key, tool, scope) WHERE revoked_at IS NULL;
 
--- A run is an ordinary Orazaka job (job_id, feature key automation.<recipe>) with a trace of steps.
+-- A run is an ordinary Sovkora job (job_id, feature key automation.<recipe>) with a trace of steps.
 CREATE TABLE IF NOT EXISTS automation_run (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     automation_id UUID NOT NULL REFERENCES automation(id) ON DELETE CASCADE,
