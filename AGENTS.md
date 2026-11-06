@@ -83,7 +83,7 @@ Every component is its **own GitHub repository** so that any Krizaka application
 - Versions move together: every Orazaka repository is at the platform version of `orazaka-parent` (the Orazaka BOM); every Krizaka repository at the version of `krizaka-bom` (`krizaka.version` in `orazaka-parent`).
 - **Cross-cutting code has one author** (ADR-073): the security baseline, session JWT, service tokens, message dedup and the outbox relay come from `krizaka-platform-kit`; `[KIT-001]`…`[KIT-004]` fail on a local copy. A Krizaka repository never depends on an Orazaka one.
 
-### Physical layout — `krizaka/` (building blocks) · `orazaka-libs/` (import) · `orazaka-apps/` (run)
+### Physical layout — `krizaka/` (building blocks) · `sovkora-libs/` (import) · `orazaka-apps/` (run)
 
 `krizaka/` holds the Krizaka repositories the platform is built on, cloned like every other repository; they are not
 Orazaka's and follow their own `AGENTS.md`.
@@ -99,7 +99,7 @@ same change. No `-SNAPSHOT` is involved: each repository carries a release versi
 
 The workspace places repositories on **one axis: you *run* apps, you *import* libs.** A lib is `packaging jar`, has no entrypoint, and exists only compiled into an app; an app has a `main()` + a port and is deployed. Nothing else distinguishes the two roots.
 
-- **`orazaka-libs/`** — imported, never run: `orazaka-build`, `orazaka-contracts`, `orazaka-ai-engine`.
+- **`sovkora-libs/`** — imported, never run: `orazaka-build`, `orazaka-contracts`, `orazaka-ai-engine`.
 - **`orazaka-apps/`** — run: `services/` (JVM deployables and the domain repositories that host one), `workers/` (native/polyglot async executors, e.g. the Python `orazaka-worker-media`), `ui/` (the npm workspace root, owned by this repository, over the cloned UI repositories).
 - These directories are **clone targets**: ignored by this repository's git, each subdirectory is its own repository.
 
@@ -107,7 +107,7 @@ The workspace places repositories on **one axis: you *run* apps, you *import* li
 
 ### Sharing tiers — what may cross a bounded-context boundary
 
-`orazaka-libs/` holds **three tiers with different sharing rules**. A deployable service may depend on Tier-1 + Tier-2 + **its own** Tier-3 — **never another context's Tier-3**. Build-enforced by `<Module>GovernanceTest` **[SEAM-002]**.
+`sovkora-libs/` holds **three tiers with different sharing rules**. A deployable service may depend on Tier-1 + Tier-2 + **its own** Tier-3 — **never another context's Tier-3**. Build-enforced by `<Module>GovernanceTest` **[SEAM-002]**.
 
 | Tier | Content | Sharing rule |
 |:---|:---|:---|
@@ -115,14 +115,14 @@ The workspace places repositories on **one axis: you *run* apps, you *import* li
 | **2 — Platform SDK** | `core` (AiClient, provider mesh, agent), `interceptors`, `tools`, `test-support` | shared with **SDK discipline** — stable, backward-compatible, changes rarely |
 | **3 — Owned domain** | `business`, `identity`, `persistence` | owned by **one** service (or one service-family); each owns its schema + DB |
 
-**Exemplar**: every service depends on `krizaka-users-api` (Tier-1 contract), never on `krizaka-users-core` (Tier-3 impl, owned by `krizaka-users-service`). An `orazaka-libs/` that **shrinks** as domain code migrates into its owning service is healthy; one that **grows** is a distributed monolith forming — treat that as the primary health gauge.
+**Exemplar**: every service depends on `krizaka-users-api` (Tier-1 contract), never on `krizaka-users-core` (Tier-3 impl, owned by `krizaka-users-service`). An `sovkora-libs/` that **shrinks** as domain code migrates into its owning service is healthy; one that **grows** is a distributed monolith forming — treat that as the primary health gauge.
 
 ---
 
 ## 3. Naming conventions
 
 - Module: `orazaka-<bounded-context>`. Package: `com.krizaka.orazaka.<module>.{domain,application,infrastructure}`.
-- **Folder taxonomy — the `orazaka-` prefix is for artifacts, not organizational folders.** Two roots: `orazaka-libs/` (imported) and `orazaka-apps/` (run) — see §2. The **group folders** inside them are **bare** (`orazaka-libs/orazaka-contracts/`, `orazaka-apps/{services,workers,ui}/`) because they namespace nothing publishable; only Maven modules / npm packs carry the `orazaka-` prefix (`orazaka-apps/services/orazaka-edge`, `krizaka/krizaka-build/krizaka-users/krizaka-users-api`). Never nest the prefix on a container (no `orazaka-apps/orazaka-services/`).
+- **Folder taxonomy — the `orazaka-` prefix is for artifacts, not organizational folders.** Two roots: `sovkora-libs/` (imported) and `orazaka-apps/` (run) — see §2. The **group folders** inside them are **bare** (`sovkora-libs/sovkora-contracts/`, `orazaka-apps/{services,workers,ui}/`) because they namespace nothing publishable; only Maven modules / npm packs carry the `orazaka-` prefix (`orazaka-apps/services/orazaka-edge`, `krizaka/krizaka-build/krizaka-users/krizaka-users-api`). Never nest the prefix on a container (no `orazaka-apps/orazaka-services/`).
 - **Zero `Orazaka` prefix** on classes **[ERR-104]** (`Engine`, not `OrazakaEngine`).
 - Suffixes: `*Service` (interface) / `*ServiceImpl` (package-private), `*Interceptor`, `*Resolver`, `*Controller`, `*Mapper` (final, static, package-private), `*Repository`, `*Config`, `*Properties`, `*Adapter`.
 - **Controllers are resource-oriented [ERR-128]**: name a controller `<Resource>Controller` after the noun it manages (`FeatureController`, `JobController`), **never** after an actor or flow — no `Admin*`, no `Bootstrap*`. Access control is a security concern (method-level `@PreAuthorize` + SecurityConfig URL rules), not the class name. One controller per resource with a single `@RequestMapping("/api/v1/<resource>")` base; split only by genuine sub-resource (`<Resource><SubResource>Controller`, e.g. `MediaGenerationController` vs `MediaAnalysisController`). Do not scatter one resource across several controllers.
@@ -272,7 +272,7 @@ All clients live under `orazaka-apps/ui/` — one repository each, linked by the
 - **CI runs them on every pull request** (each repository's `component.yml` job, the workspace's full reactor) and must
   be green before merge. A test is never skipped, `@Disabled`, weakened or deleted to get there.
 - **Pyramid**: unit (per module) → integration (**Testcontainers**, `AbstractContainerIntegrationTest`, singleton per JVM, ports via `@DynamicPropertySource`) → **hermetic E2E** (`orazaka-end2end`).
-- **ArchUnit**: `GovernanceTest` validates the ring rules on **every build**. Pre-commit: `./mvnw test -pl orazaka-libs/orazaka-ai-engine/sovkora-core -Dtest=GovernanceTest`.
+- **ArchUnit**: `GovernanceTest` validates the ring rules on **every build**. Pre-commit: `./mvnw test -pl sovkora-libs/sovkora-engine/sovkora-core -Dtest=GovernanceTest`.
 - In the local phase, **hermetic E2E is the quality gate** (no staging/prod). `orazaka test e2e`.
 - Detail: [`.agent/rules/testing_standards.md`](.agent/rules/testing_standards.md).
 

@@ -51,7 +51,7 @@
     {
       "name": "orazaka-build",
       "url": "https://github.com/krizaka/orazaka-build",
-      "path": "orazaka-libs/sovkora-build",
+      "path": "sovkora-libs/sovkora-build",
       "kind": "maven",
       "layer": "foundation",
       "description": "Parent POM (Spring Boot / Spring AI BOMs, plugin management, Orazaka BOM) and the shared governance test kit (ArchUnit rules, Testcontainers base) for every Orazaka JVM repository.",
@@ -62,7 +62,7 @@
     {
       "name": "orazaka-contracts",
       "url": "https://github.com/krizaka/orazaka-contracts",
-      "path": "orazaka-libs/orazaka-contracts",
+      "path": "sovkora-libs/sovkora-contracts",
       "kind": "maven",
       "layer": "foundation",
       "description": "Tier-1 platform contracts shared by every Orazaka service: the job plane (jobs-api) and the application-persistence ports (persistence-app-api). Pure interfaces and records, zero implementation.",
@@ -85,7 +85,7 @@
     {
       "name": "orazaka-ai-engine",
       "url": "https://github.com/krizaka/orazaka-ai-engine",
-      "path": "orazaka-libs/orazaka-ai-engine",
+      "path": "sovkora-libs/sovkora-engine",
       "kind": "maven",
       "layer": "ai",
       "description": "The Orazaka cognitive SDK: AiClient & provider mesh (core), the interceptor pipeline, tools (MCP · RAG · sandbox), use-case orchestration (business), application persistence and asset encryption.",
@@ -414,7 +414,7 @@
     },
     {
       "id": "sovkora-adapter-spring-ai",
-      "path": "orazaka-libs/orazaka-ai-engine/sovkora-adapter-spring-ai",
+      "path": "sovkora-libs/sovkora-engine/sovkora-adapter-spring-ai",
       "repository": "orazaka-ai-engine",
       "owner": "orazaka",
       "role": "adapter",
@@ -429,7 +429,7 @@
     },
     {
       "id": "sovkora-architecture",
-      "path": "orazaka-libs/orazaka-ai-engine/sovkora-architecture",
+      "path": "sovkora-libs/sovkora-engine/sovkora-architecture",
       "repository": "orazaka-ai-engine",
       "owner": "orazaka",
       "role": "adapter",
@@ -444,7 +444,7 @@
     },
     {
       "id": "sovkora-assets",
-      "path": "orazaka-libs/orazaka-ai-engine/sovkora-assets",
+      "path": "sovkora-libs/sovkora-engine/sovkora-assets",
       "repository": "orazaka-ai-engine",
       "owner": "orazaka",
       "role": "adapter",
@@ -459,7 +459,7 @@
     },
     {
       "id": "sovkora-crypto",
-      "path": "orazaka-libs/orazaka-contracts/sovkora-crypto",
+      "path": "sovkora-libs/sovkora-contracts/sovkora-crypto",
       "repository": "orazaka-contracts",
       "owner": "orazaka",
       "role": "adapter",
@@ -474,7 +474,7 @@
     },
     {
       "id": "sovkora-persistence-app",
-      "path": "orazaka-libs/orazaka-ai-engine/sovkora-persistence-app",
+      "path": "sovkora-libs/sovkora-engine/sovkora-persistence-app",
       "repository": "orazaka-ai-engine",
       "owner": "orazaka",
       "role": "adapter",
@@ -489,7 +489,7 @@
     },
     {
       "id": "sovkora-persistence-bridge",
-      "path": "orazaka-libs/orazaka-ai-engine/sovkora-persistence-bridge",
+      "path": "sovkora-libs/sovkora-engine/sovkora-persistence-bridge",
       "repository": "orazaka-ai-engine",
       "owner": "orazaka",
       "role": "adapter",
@@ -504,7 +504,7 @@
     },
     {
       "id": "sovkora-rewrite-style",
-      "path": "orazaka-libs/sovkora-build/sovkora-rewrite-style",
+      "path": "sovkora-libs/sovkora-build/sovkora-rewrite-style",
       "repository": "orazaka-build",
       "owner": "orazaka",
       "role": "adapter",
@@ -624,7 +624,7 @@
     },
     {
       "id": "sovkora-business",
-      "path": "orazaka-libs/orazaka-ai-engine/sovkora-business",
+      "path": "sovkora-libs/sovkora-engine/sovkora-business",
       "repository": "orazaka-ai-engine",
       "owner": "orazaka",
       "role": "application",
@@ -639,7 +639,7 @@
     },
     {
       "id": "sovkora-interceptors",
-      "path": "orazaka-libs/orazaka-ai-engine/sovkora-interceptors",
+      "path": "sovkora-libs/sovkora-engine/sovkora-interceptors",
       "repository": "orazaka-ai-engine",
       "owner": "orazaka",
       "role": "application",
@@ -654,7 +654,7 @@
     },
     {
       "id": "sovkora-tools",
-      "path": "orazaka-libs/orazaka-ai-engine/sovkora-tools",
+      "path": "sovkora-libs/sovkora-engine/sovkora-tools",
       "repository": "orazaka-ai-engine",
       "owner": "orazaka",
       "role": "application",
@@ -669,7 +669,7 @@
     },
     {
       "id": "sovkora-core",
-      "path": "orazaka-libs/orazaka-ai-engine/sovkora-core",
+      "path": "sovkora-libs/sovkora-engine/sovkora-core",
       "repository": "orazaka-ai-engine",
       "owner": "orazaka",
       "role": "domain",
@@ -795,7 +795,7 @@
     },
     {
       "id": "sovkora-jobs-api",
-      "path": "orazaka-libs/orazaka-contracts/sovkora-jobs-api",
+      "path": "sovkora-libs/sovkora-contracts/sovkora-jobs-api",
       "repository": "orazaka-contracts",
       "owner": "orazaka",
       "role": "contract",
@@ -810,7 +810,7 @@
     },
     {
       "id": "sovkora-persistence-app-api",
-      "path": "orazaka-libs/orazaka-contracts/sovkora-persistence-app-api",
+      "path": "sovkora-libs/sovkora-contracts/sovkora-persistence-app-api",
       "repository": "orazaka-contracts",
       "owner": "orazaka",
       "role": "contract",

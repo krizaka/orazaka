@@ -140,7 +140,7 @@ MODIFY  .../adapter/rest/StudioInstallationController.java
 
 MODIFY  <ui>  the marketplace: a TOOLKIT band that reads "included", never an Install button
 
-MODIFY  orazaka-libs/sovkora-build/sovkora-test-support/.../architecture/PackCoherenceRules.java
+MODIFY  sovkora-libs/sovkora-build/sovkora-test-support/.../architecture/PackCoherenceRules.java
           [PACK-001] extended: seeded kind must satisfy the same invariant the CHECK does
 CREATE  docs/adr/ADR-0NN-pack-kind-and-derived-installation.md
 MODIFY  docs/PACK_CATALOGUE_ARCHITECTURE.md, docs/UNIFIED_PACK_SURFACE.md §5   (M1 row → done)

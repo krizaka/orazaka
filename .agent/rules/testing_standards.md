@@ -10,7 +10,7 @@
 
 ## §2 ArchUnit (mandatory gate)
 - `GovernanceTest` validates the ring rules on every build.
-- Pre-commit: `./mvnw test -pl orazaka-libs/orazaka-ai-engine/sovkora-core -Dtest=GovernanceTest`.
+- Pre-commit: `./mvnw test -pl sovkora-libs/sovkora-engine/sovkora-core -Dtest=GovernanceTest`.
 - Any hexagonal boundary violation (forbidden imports, `.md` in `core/resources/prompts`, etc.) must fail this test.
 
 ## §3 Discipline

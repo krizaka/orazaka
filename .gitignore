@@ -190,10 +190,10 @@ result/
 # list in orazaka.workspace.json, cloned by: node scripts/workspace.mjs clone)
 # ─────────────────────────────────────────────────────────────────────
 /krizaka/
-/orazaka-libs/sovkora-build/
-/orazaka-libs/orazaka-contracts/
+/sovkora-libs/sovkora-build/
+/sovkora-libs/sovkora-contracts/
 /orazaka-apps/services/orazaka-studio/
-/orazaka-libs/orazaka-ai-engine/
+/sovkora-libs/sovkora-engine/
 /orazaka-apps/services/orazaka-conversation-service/
 /orazaka-apps/services/orazaka-job-service/
 /orazaka-apps/services/orazaka-knowledge-service/
@@ -206,4 +206,3 @@ result/
 /orazaka-apps/ui/orazaka-cli/
 /orazaka-packs/
 /orazaka-apps/ui/node_modules/
-/sovkora-libs

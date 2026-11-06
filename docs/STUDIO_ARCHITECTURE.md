@@ -91,7 +91,7 @@ A new **Tier-3 owned domain** service, per AGENTS.md §2 and the ADR-032 phasing
 orazaka-apps/services/orazaka-studio/sovkora-studio-api/     ← Tier-1: interfaces + DTOs, zero impl deps
 orazaka-apps/services/orazaka-studio/sovkora-studio-client/            ← Tier-2 SDK: HTTP/NoOp adapters for the Tier-1 ports
 orazaka-apps/services/orazaka-studio/sovkora-studio-service/  ← :8096, owns orazaka_studio_db AND the DAG interpreter
-orazaka-libs/orazaka-ai-engine/sovkora-business/                 ← + usecases/studio/StudioRunUseCase (port-only)
+sovkora-libs/sovkora-engine/sovkora-business/                 ← + usecases/studio/StudioRunUseCase (port-only)
 ```
 
 **Why a service and not a pack in `conversation-service`.** Three independent reasons, any one of
@@ -577,7 +577,7 @@ input; a scripting engine there is a sandbox-escape surface that no amount of re
 
 ### 6.3 Prompt storage
 
-Long prompts live in markdown under `orazaka-libs/orazaka-ai-engine/sovkora-business/src/main/resources/prompts/studio/`
+Long prompts live in markdown under `sovkora-libs/sovkora-engine/sovkora-business/src/main/resources/prompts/studio/`
 and are referenced by `promptRef` — the mechanism `MarkdownPromptResolver` already implements. The
 blueprint JSON stays reviewable; prompts stay diffable.
 
@@ -959,7 +959,7 @@ Per AGENTS.md §9 — pyramid, hermetic, no staging.
 - One mirroring test file per top-level type (ERR-103).
 
 **Architecture** — `StudioServiceGovernanceTest` reusing the shared `GovernanceRules`
-(`orazaka-libs/sovkora-build/sovkora-test-support/…/architecture/`): package/kind rules [ERR-130], service naming
+(`sovkora-libs/sovkora-build/sovkora-test-support/…/architecture/`): package/kind rules [ERR-130], service naming
 [ERR-129], controller naming [ERR-128], no `Orazaka` prefix [ERR-104], Tier-3 isolation [SEAM-002].
 `SqlBoundaryRules` must see `80-studio.sql` — **no cross-context FK** [SEAM-001].
 
@@ -1084,9 +1084,9 @@ orazaka-apps/services/orazaka-studio/sovkora-studio-api/pom.xml
       Blueprint,BlueprintStatus,BlueprintStep,StepKind,ErrorPolicy,BlueprintOutput,
       Installation,InstallationStatus,Run,RunStatus,RunStep,RunScope,StepDispatch}.java
   src/main/java/com/orazaka/studio/domain/port/{StudioCatalogClient,StudioRunClient}.java
-orazaka-libs/orazaka-ai-engine/sovkora-business/.../api/Capability.java                        (edit: + STUDIO)
-orazaka-libs/orazaka-ai-engine/sovkora-business/.../api/Payload.java                           (edit: + StudioPayload)
-orazaka-libs/orazaka-ai-engine/sovkora-business/.../api/StudioPayload.java                     (new)
+sovkora-libs/sovkora-engine/sovkora-business/.../api/Capability.java                        (edit: + STUDIO)
+sovkora-libs/sovkora-engine/sovkora-business/.../api/Payload.java                           (edit: + StudioPayload)
+sovkora-libs/sovkora-engine/sovkora-business/.../api/StudioPayload.java                     (new)
 ```
 
 **Phase 1–2 — service, catalogue, installation**
@@ -1111,9 +1111,9 @@ orazaka-apps/services/orazaka-edge/src/main/resources/application.yml        (ed
 **Phase 3–4 — engine, run, media**
 ```
 orazaka-apps/services/orazaka-studio/sovkora-studio-client/**                                        (Tier-2 SDK for the Tier-1 ports)
-orazaka-libs/orazaka-ai-engine/sovkora-business/.../usecases/studio/StudioRunUseCase.java      (depends on the PORT only)
+sovkora-libs/sovkora-engine/sovkora-business/.../usecases/studio/StudioRunUseCase.java      (depends on the PORT only)
 orazaka-apps/services/orazaka-studio/sovkora-studio-service/.../domain/port/{BlueprintRepository,StepExecutionClient}.java
-orazaka-libs/orazaka-ai-engine/sovkora-business/src/main/resources/prompts/studio/*.md
+sovkora-libs/sovkora-engine/sovkora-business/src/main/resources/prompts/studio/*.md
 orazaka-apps/services/orazaka-studio/sovkora-studio-service/
   .../application/service/{StudioRunService,RunSagaService,CreditReservationService}.java
   .../infrastructure/adapter/rest/StudioRunController.java
@@ -1122,7 +1122,7 @@ orazaka-apps/services/orazaka-studio/sovkora-studio-service/
   .../infrastructure/adapter/schedule/{RunSweeper,RetentionSweeper}.java
 infra/initdb/30-jobs-config.sql                                              (edit: media.compose capability row)
 orazaka-apps/workers/orazaka-worker-media/app/{consumer.py,encoder.py}       (edit: compose branch)
-orazaka-libs/orazaka-ai-engine/sovkora-interceptors/.../interceptor/enrichment/BrandContextInterceptor.java
+sovkora-libs/sovkora-engine/sovkora-interceptors/.../interceptor/enrichment/BrandContextInterceptor.java
 infra/initdb/60-governance.sql                                               (edit: activation predicate)
 ```
 

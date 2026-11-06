@@ -176,7 +176,7 @@ p95 passes.
 1. `./mvnw -q verify` green for the modules you touched. The harness must actually **execute** —
    `*IT` matches failsafe, not surefire (see the root `pom.xml` comment at ~line 481). A benchmark
    that silently never ran is precisely the class of defect this project keeps finding.
-2. `git status` shows **no change under `src/main`, `infra/`, or `orazaka-libs/*/src/main`.** Prove
+2. `git status` shows **no change under `src/main`, `infra/`, or `sovkora-libs/*/src/main`.** Prove
    it by pasting the output.
 3. The report contains the **raw sample values**, not only summary statistics. Someone must be able
    to recompute your percentiles.

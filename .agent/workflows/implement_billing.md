@@ -253,8 +253,8 @@ Six things that are easy to get wrong — 4–6 were found the hard way on the f
 # 3. The architecture rules and the data seam rule both still hold. SEAM-001 is NOT in core's
 #    GovernanceTest — SqlBoundaryRules is exercised by SqlBoundaryTest in persistence, and that
 #    is the one that actually reads 70-billing.sql. Run both.
-./mvnw -q -pl orazaka-libs/orazaka-ai-engine/sovkora-core -Dtest=GovernanceTest test
-./mvnw -q -pl orazaka-libs/orazaka-ai-engine/sovkora-persistence-app -Dtest=SqlBoundaryTest test
+./mvnw -q -pl sovkora-libs/sovkora-engine/sovkora-core -Dtest=GovernanceTest test
+./mvnw -q -pl sovkora-libs/sovkora-engine/sovkora-persistence-app -Dtest=SqlBoundaryTest test
 
 # 4. The default local loop is UNCHANGED — must start exactly the usual containers,
 #    no Lago (this is the profiles: [billing] regression check)

@@ -22,7 +22,7 @@ Prior context: [`docs/PACK_CATALOGUE_ARCHITECTURE.md`](../../docs/PACK_CATALOGUE
      `routingKeyFor` substring chain you are deleting, and everything else in that class you are not
    - `infra/initdb/30-jobs-config.sql` — `orazaka_capabilities` and every seeded row
    - `krizaka/krizaka-billing/krizaka-billing-api/` — the Tier-1 module shape to mirror
-   - `orazaka-libs/sovkora-build/sovkora-test-support/.../architecture/{GovernanceRules,SourceFileScanner}.java`
+   - `sovkora-libs/sovkora-build/sovkora-test-support/.../architecture/{GovernanceRules,SourceFileScanner}.java`
      — the scanner you will reuse, never re-write
    **Mirror these. Do not invent a new structure.**
 
@@ -40,7 +40,7 @@ them means committing a red build.
 the `orazaka-packs/` layout (G), `regulatory_class` behaviour (I). If A+B are green and you have
 budget left, **stop and report**.
 
-> **One deliberate exception.** Phase A creates the Tier-1 module `orazaka-libs/orazaka-contracts/sovkora-jobs-api`
+> **One deliberate exception.** Phase A creates the Tier-1 module `sovkora-libs/sovkora-contracts/sovkora-jobs-api`
 > and moves `JobCommand` into it (production-readiness audit finding #17 — a wire contract currently
 > duplicated between conversation-service and job-service). Phase C needs that module anyway, and
 > creating it twice is worse than creating it once. Move `JobCommand`; do **not** touch
@@ -71,7 +71,7 @@ MODIFY  infra/initdb/30-jobs-config.sql
           + billable_unit VARCHAR(30)
           + backfill for the six seeded rows (see §4.1 — copy from the code you delete)
           + CHECK (routing_key LIKE 'job.%')
-CREATE  orazaka-libs/orazaka-contracts/sovkora-jobs-api/pom.xml
+CREATE  sovkora-libs/sovkora-contracts/sovkora-jobs-api/pom.xml
 CREATE  .../src/main/java/com/orazaka/jobs/domain/model/CapabilityRoute.java
 CREATE  .../domain/model/JobCommand.java                    (moved — audit #17)
 CREATE  .../domain/exception/UnroutableCapabilityException.java
@@ -79,9 +79,9 @@ CREATE  .../domain/port/CapabilityRoutingClient.java
 CREATE  .../src/test/java/.../{CapabilityRoute,JobCommand}Test.java
 MODIFY  pom.xml                                             (+ module, next to orazaka-studio-api)
 
-CREATE  orazaka-libs/orazaka-ai-engine/sovkora-persistence-app/.../CapabilityRoutingAdapter.java   (reads the rows)
-MODIFY  orazaka-libs/orazaka-contracts/sovkora-persistence-app-api/.../CapabilityDto.java (+ the 3 fields)
-MODIFY  orazaka-libs/orazaka-ai-engine/sovkora-persistence-app/.../<the capability entity + mapper>
+CREATE  sovkora-libs/sovkora-engine/sovkora-persistence-app/.../CapabilityRoutingAdapter.java   (reads the rows)
+MODIFY  sovkora-libs/sovkora-contracts/sovkora-persistence-app-api/.../CapabilityDto.java (+ the 3 fields)
+MODIFY  sovkora-libs/sovkora-engine/sovkora-persistence-app/.../<the capability entity + mapper>
 
 # CORRECTION (applied in phase A): the studio service owns orazaka_studio_db and may not read
 # another context's table (SEAM-001/002), so it CANNOT inject the persistence adapter above.
@@ -103,8 +103,8 @@ MODIFY  orazaka-apps/services/orazaka-job-service/.../<JobCommand users>        
 DELETE  orazaka-apps/services/orazaka-{conversation,job}-service/.../amqp/dto/JobCommand.java
 
 # ── phase B: purity ────────────────────────────────────────────────────────
-CREATE  orazaka-libs/sovkora-build/sovkora-test-support/.../architecture/PackPurityRules.java
-MODIFY  orazaka-libs/sovkora-build/sovkora-test-support/.../architecture/GovernanceRules.java   (expose P1/P2)
+CREATE  sovkora-libs/sovkora-build/sovkora-test-support/.../architecture/PackPurityRules.java
+MODIFY  sovkora-libs/sovkora-build/sovkora-test-support/.../architecture/GovernanceRules.java   (expose P1/P2)
 MODIFY  <every service + interceptors + business> <Module>GovernanceTest.java
 MODIFY  orazaka-apps/workers/orazaka-worker-media/app/consumer.py   (− COMPOSE_FEATURE_KEY branch)
 MODIFY  orazaka-apps/workers/orazaka-worker-media/test_main.py
@@ -171,7 +171,7 @@ at publish, in the console, in front of the person who can act — not at 2 a.m.
 
 - **P1** — no literal matching `orazaka\.(core|studio)\.[a-z.]+` (a capability key) and no known pack
   or studio key (`realestate-reels`, `trade-showcase`, `outbound-prospection`, `realestate-studio`,
-  `document-validation`, `wellbeing`, `prospection`) in production sources under `orazaka-libs/**`,
+  `document-validation`, `wellbeing`, `prospection`) in production sources under `sovkora-libs/**`,
   `orazaka-apps/services/**`, `orazaka-apps/workers/**`.
 - **P2** — no conditional (`if`, `switch`, `contains`, `startsWith`, `equals`) on those identifiers.
 - **Allowlist**: `infra/initdb/**`, `orazaka-packs/**` (does not exist yet — allow it now so phase D
@@ -196,7 +196,7 @@ an unexpected hit means either the rule is too broad or the coupling is deeper t
 
 # 2. Every governance suite, including the new PackPurityRules wiring
 ./mvnw -q test -Dtest='*GovernanceTest'
-./mvnw -q -pl orazaka-libs/orazaka-ai-engine/sovkora-persistence-app -Dtest=SqlBoundaryTest test
+./mvnw -q -pl sovkora-libs/sovkora-engine/sovkora-persistence-app -Dtest=SqlBoundaryTest test
 
 # 3. The stack comes up on the migrated capability table
 orazaka stop --purge && orazaka start && orazaka dev
