@@ -23,14 +23,17 @@ export function reportFiles(dir, found = []) {
 }
 
 /**
- * allowed: [{ component, class, reason }] - a justified skip. Returns the totals and the offenders (skipped, not allowed).
- * A class on the allow-list that no longer skips is also reported as stale, so the list only shrinks.
+ * allowed: [{ component, class, formerClass?, reason }] - a justified skip. Returns the totals and the offenders (skipped,
+ * not allowed). A class on the allow-list that no longer skips is also reported as stale, so the list only shrinks.
+ * formerClass is the class's name before a rename (krizaka-internal#2684): the component's main and its rename PR each
+ * read this one list, so it must accept both names for the window. Remove the field when the rename has landed.
  */
+const names = (a) => [a.class, a.formerClass].filter(Boolean);
 export function judge(component, reports, allowed = [], noIntegrationTests = []) {
   const exempt = noIntegrationTests.find((e) => e.component === component);
   const mine = allowed.filter((a) => a.component === component);
-  const offenders = reports.filter((r) => r.skipped > 0 && !mine.some((a) => a.class === r.name));
-  const stale = mine.filter((a) => !reports.some((r) => r.name === a.class && r.skipped > 0));
+  const offenders = reports.filter((r) => r.skipped > 0 && !mine.some((a) => names(a).includes(r.name)));
+  const stale = mine.filter((a) => !reports.some((r) => names(a).includes(r.name) && r.skipped > 0));
   return {
     classes: reports.length,
     tests: reports.reduce((sum, r) => sum + r.tests, 0),
