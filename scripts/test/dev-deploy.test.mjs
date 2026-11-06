@@ -654,3 +654,14 @@ test("seedSql without a hash leaves the stored password alone (update and confli
   assert.doesNotMatch(keep.split("ON CONFLICT (username)")[1].split(";")[0], /password_hash/, "nor does the username conflict branch");
   assert.match(seedSql([{ ...personaAccount(), hash: "$2y$10$h" }]), /UPDATE users SET password_hash = '\$2y\$10\$h'/);
 });
+
+test("orazaka-dev: DigitalOcean alerts the team on a failed deployment or domain, memory and restarts (the same as krizaka-com)", () => {
+  const text = spec("orazaka-dev");
+  assert.match(text, /^alerts:\n  - rule: DEPLOYMENT_FAILED\n  - rule: DOMAIN_FAILED\n/m);
+  const services = text.split(/^services:\n/m)[1].split(/^ {2}- name: /m).slice(1);
+  assert.deepEqual(services.map((s) => s.split("\n")[0]).sort(), ["core", "gpu-relay", "web"]);
+  for (const service of services) {
+    assert.match(service, /^ {4}alerts:\n {6}- rule: MEM_UTILIZATION\n {8}operator: GREATER_THAN\n {8}value: 85\n/m, service.split("\n")[0]);
+    assert.match(service, /- rule: RESTART_COUNT\n {8}operator: GREATER_THAN\n {8}value: 2\n/, service.split("\n")[0]);
+  }
+});

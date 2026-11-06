@@ -4,6 +4,10 @@
 # (trusted source: this app), one database and one role per context.
 name: orazaka-dev
 region: tor
+# Alerts as krizaka-com's (observability minimum, krizaka-internal#2631): DigitalOcean mails the team owners.
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
 domains:
   # The public address (epic krizaka/.github#119): www is primary and indexed; the apex answers 308 with www (ingress below).
   - domain: www.orazaka.com
@@ -62,6 +66,15 @@ services:
     http_port: 8080
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
+    alerts:
+      - rule: MEM_UTILIZATION
+        operator: GREATER_THAN
+        value: 85
+        window: FIVE_MINUTES
+      - rule: RESTART_COUNT
+        operator: GREATER_THAN
+        value: 2
+        window: FIVE_MINUTES
     envs:
       # www is indexed (krizaka-com AGENTS 2.4): robots allows, sitemap, no noindex; dev. and admin. are closed by host (orazaka-web-client src/core/config/indexing.ts). The live spec drifted to "off" once because this file said so.
       - { key: APP_SEARCH_INDEXING, scope: RUN_AND_BUILD_TIME, value: "on" }
@@ -100,6 +113,15 @@ services:
     internal_ports: [8090]
     instance_count: 1
     instance_size_slug: basic-s
+    alerts:
+      - rule: MEM_UTILIZATION
+        operator: GREATER_THAN
+        value: 85
+        window: FIVE_MINUTES
+      - rule: RESTART_COUNT
+        operator: GREATER_THAN
+        value: 2
+        window: FIVE_MINUTES
     health_check:
       http_path: /actuator/health
       initial_delay_seconds: 240
@@ -229,6 +251,15 @@ services:
     internal_ports: [8085, 8086, 8188, 11434]
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
+    alerts:
+      - rule: MEM_UTILIZATION
+        operator: GREATER_THAN
+        value: 85
+        window: FIVE_MINUTES
+      - rule: RESTART_COUNT
+        operator: GREATER_THAN
+        value: 2
+        window: FIVE_MINUTES
     health_check:
       http_path: /health
     envs:
