@@ -108,7 +108,7 @@ jobs:
           ABUSE_RATE_LIMIT_MODE=enforce ABUSE_RATE_LIMIT_DEFAULT_RPM=6000 \
           TRACING_SAMPLING_PROBABILITY=0 EDGE_LOG=edge.log \
           java -Xmx256m -XX:+UseSerialGC -jar "$EDGE_JAR" > edge.out 2>&1 &
-          for i in $(seq 1 60); do
+          for _ in $(seq 1 60); do
             curl -fs http://127.0.0.1:8089/actuator/health > /dev/null && exit 0
             sleep 2
           done
