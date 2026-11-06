@@ -49,7 +49,7 @@ jobs:
   changes:
     permissions:
       contents: read
-    uses: krizaka/.github/.github/workflows/changes.yml@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+    uses: krizaka/.github/.github/workflows/changes.yml@b5dbc5992cfb1907fb7c17c129946e0bdec267ec # main
     with:
       ignore: ${{ inputs.ignore }}
 
@@ -62,13 +62,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
-      - uses: krizaka/.github/actions/dup-check@79f6ff6292edefebc59fc968dbc2c203da81c3ea # v1.5.0
+      - uses: krizaka/.github/actions/dup-check@b5dbc5992cfb1907fb7c17c129946e0bdec267ec # main
 
   # A change no build reads (dependabot.yml, licence, changesets) skips `verify`, yet the required « SonarCloud Code Analysis » is posted
   # by the SonarCloud app only when a scan runs: without it the PR is BLOCKED for ever (the train: « required check never ran »,
@@ -83,12 +83,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0  # blame and new-code detection need the history
           persist-credentials: false
       - name: SonarCloud, light analysis
-        uses: krizaka/.github/actions/sonar-scan@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+        uses: krizaka/.github/actions/sonar-scan@b5dbc5992cfb1907fb7c17c129946e0bdec267ec # main
         with:
           token: ${{ secrets.SONAR_TOKEN }}
           args: -Dsonar.projectVersion=ci-${{ github.run_number }} -Dsonar.qualitygate.wait=true -Dsonar.java.binaries=.
@@ -104,14 +104,14 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Check out the Orazaka workspace
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: krizaka/sovkora
           path: workspace
           persist-credentials: false
 
       - name: Check out ${{ inputs.component }} at the commit under test
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: incoming
           fetch-depth: ${{ inputs.sonar && 0 || 1 }}   # the analysis blames and diffs against the base branch
@@ -130,7 +130,7 @@ jobs:
         working-directory: workspace
         run: node scripts/workspace.mjs clone --depth 1
 
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: "21"
@@ -140,17 +140,17 @@ jobs:
           server-password: GITHUB_TOKEN
 
       # A Krizaka release waits for a human to press Publish on Central; development builds resolve it from GitHub Packages.
-      - uses: krizaka/.github/actions/maven-github-packages@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+      - uses: krizaka/.github/actions/maven-github-packages@b5dbc5992cfb1907fb7c17c129946e0bdec267ec # main
         with:
           token: ${{ github.token }}
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
           registry-url: https://registry.npmjs.org
           scope: "@krizaka"
 
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
 
@@ -174,7 +174,7 @@ jobs:
 
       - name: SonarCloud — analysis with the coverage of the verification
         if: ${{ inputs.sonar }}
-        uses: krizaka/.github/actions/sonar-scan@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+        uses: krizaka/.github/actions/sonar-scan@b5dbc5992cfb1907fb7c17c129946e0bdec267ec # main
         with:
           token: ${{ secrets.SONAR_TOKEN }}
           project-base-dir: ${{ steps.where.outputs.dir }}

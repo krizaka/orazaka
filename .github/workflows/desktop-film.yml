@@ -27,7 +27,7 @@ jobs:
           persist-credentials: false
           repository: krizaka/sovkora
           ref: main
-      - uses: krizaka/krizaka-desktop/.github/actions/film@8ecaad06d45019ddc9612f615bcc0f3c12bd5203 # feat/film-tooling (krizaka-desktop#21): re-pin to the merged commit
+      - uses: krizaka/krizaka-desktop/.github/actions/film@fb4645cc9f08cd197b347f58678f0487636b6eb8 # main
         id: film
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -37,7 +37,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: apps/desktop/src-tauri
       - name: Build the app with its test driver
