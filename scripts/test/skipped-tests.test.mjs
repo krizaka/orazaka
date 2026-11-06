@@ -42,3 +42,14 @@ test("a component with no integration test fails unless it is declared, and a de
   assert.equal(judge("orazaka-packs", [], [], declared).nothingRan, true);
   assert.equal(judge("orazaka-contracts", [readReport(xml("a.FooIT", 1, 0))], [], declared).staleExemption?.component, "orazaka-contracts");
 });
+
+test("krizaka-internal#2684: during a rename the entry accepts the class by its former and its new name, never stale while either skips", () => {
+  const allowed = [{ component: "orazaka-ai-engine", class: "new.LiveIT", formerClass: "old.LiveIT", reason: "needs Ollama" }];
+  for (const name of ["old.LiveIT", "new.LiveIT"]) {
+    const verdict = judge("orazaka-ai-engine", [readReport(xml(name, 2, 2))], allowed);
+    assert.equal(verdict.offenders.length, 0);
+    assert.equal(verdict.stale.length, 0);
+  }
+  assert.equal(judge("orazaka-ai-engine", [readReport(xml("old.LiveIT", 2, 0))], allowed).stale.length, 1);
+  assert.equal(judge("orazaka-ai-engine", [readReport(xml("other.LiveIT", 2, 2))], allowed).offenders.length, 1);
+});
