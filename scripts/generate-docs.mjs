@@ -884,7 +884,7 @@ function accessRules(serviceDir) {
     const code = read(f).replace(/^\s*(\/\/|\*|\/\*).*$/gm, "");
     // krizaka-security's SecurityBaseline.apply(http, serviceRules) declares the shared rules
     // first and `anyRequest().authenticated()` last, around the service's own: the same order
-    // Spring Security will evaluate them in (krizaka/krizaka-platform-kit, ADR-073).
+    // Spring Security will evaluate them in (krizaka/krizaka-build/krizaka-platform-kit, ADR-073).
     const baseline = code.includes("SecurityBaseline.apply(");
     if (baseline) {
       rules.push({ pattern: "/**", label: "public", httpMethod: "OPTIONS" });
