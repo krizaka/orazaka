@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.krizaka.orazaka</groupId>
-        <artifactId>orazaka-parent</artifactId>
+        <groupId>com.krizaka.sovkora</groupId>
+        <artifactId>sovkora-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../orazaka-libs/orazaka-build/orazaka-parent/pom.xml</relativePath>
+        <relativePath>../sovkora-libs/sovkora-build/sovkora-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>orazaka-end2end</artifactId>
-    <name>orazaka-end2end</name>
+    <artifactId>sovkora-end2end</artifactId>
+    <name>sovkora-end2end</name>
     <description>Hermetic E2E Testing Module — Java/Web Router API validation only.
         Playwright Java, HTTPyac, CLI Validation (ADR-040).
         Mobile client testing is explicitly OUT OF SCOPE for the JVM lifecycle —
@@ -32,16 +32,16 @@
          ==================================================================== -->
     <dependencies>
         <dependency>
-            <groupId>com.krizaka.orazaka</groupId>
-            <artifactId>orazaka-conversation-service</artifactId>
+            <groupId>com.krizaka.sovkora</groupId>
+            <artifactId>sovkora-conversation-service</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
         <!-- ArchUnit Monorepo Scan: pull all internal modules onto the test classpath -->
         <dependency>
-            <groupId>com.krizaka.orazaka</groupId>
-            <artifactId>orazaka-core</artifactId>
+            <groupId>com.krizaka.sovkora</groupId>
+            <artifactId>sovkora-core</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -51,14 +51,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.krizaka.orazaka</groupId>
-            <artifactId>orazaka-business</artifactId>
+            <groupId>com.krizaka.sovkora</groupId>
+            <artifactId>sovkora-business</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.krizaka.orazaka</groupId>
-            <artifactId>orazaka-persistence-app</artifactId>
+            <groupId>com.krizaka.sovkora</groupId>
+            <artifactId>sovkora-persistence-app</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -437,7 +437,7 @@
                                              router crash on startup ("Could not resolve placeholder
                                              'spring.ai.ollama.base-url'"). REDIS_URL + datasource + port are pinned AFTER
                                              the source so the e2e infra (local containers) always wins over .env. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; export REDIS_URL=redis://localhost:6379 RATE_LIMIT_ENABLED=true &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-conversation-service/target/orazaka-conversation-service-${project.version}.jar --spring.datasource.url=jdbc:postgresql://localhost:${POSTGRES_PORT}/${DB_NAME} --spring.datasource.username=${DB_USERNAME} --spring.datasource.password=${DB_PASSWORD} --server.port=${PORT}</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; export REDIS_URL=redis://localhost:6379 RATE_LIMIT_ENABLED=true &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-conversation-service/target/sovkora-conversation-service-${project.version}.jar --spring.datasource.url=jdbc:postgresql://localhost:${POSTGRES_PORT}/${DB_NAME} --spring.datasource.username=${DB_USERNAME} --spring.datasource.password=${DB_PASSWORD} --server.port=${PORT}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -460,7 +460,7 @@
                                              at startup — the AmqpContractIT topology assertions need it in the
                                              constellation. Same .env sourcing strategy as the router; the port is
                                              pinned after the source. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-automation-service/target/orazaka-automation-service-${project.version}.jar --server.port=8082</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-automation-service/target/sovkora-automation-service-${project.version}.jar --server.port=8082</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -551,7 +551,7 @@
                                              is the sole consumer of orazaka.jobs.media/text; it executes,
                                              writes orazaka_jobs, and emits job.{id}.done|error which the
                                              router's JobEventListener relays to SSE. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-job-service/target/orazaka-job-service-${project.version}.jar</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-job-service/target/sovkora-job-service-${project.version}.jar</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -573,7 +573,7 @@
                                         <!-- Phase 4: knowledge service owns orazaka.jobs.rag (AmqpContractIT
                                              topology assertion) and serves the core's RAG retrieve/source-search
                                              HTTP port. Same .env sourcing as the other JVM services. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-knowledge-service/target/orazaka-knowledge-service-${project.version}.jar</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-knowledge-service/target/sovkora-knowledge-service-${project.version}.jar</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -624,7 +624,7 @@
                                              /api/v1/studios surface the edge routes to. It must start BEFORE
                                              the edge, like every other backend, or StudioLifecycleIT's first
                                              call races the route table. Same .env sourcing as its siblings. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-studio/orazaka-studio-service/target/orazaka-studio-service-${project.version}.jar</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-studio/sovkora-studio-service/target/sovkora-studio-service-${project.version}.jar</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -649,7 +649,7 @@
                                              ROUTER_URL, which the .env now points at the edge (:8088);
                                              the edge proxies to the router (:8080). Rollback = revert
                                              ROUTER_URL. -->
-                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-edge/target/orazaka-edge-${project.version}.jar</argument>
+                                        <argument>set -a &amp;&amp; . ${maven.multiModuleProjectDirectory}/.env &amp;&amp; set +a &amp;&amp; exec java -jar ${maven.multiModuleProjectDirectory}/orazaka-apps/services/orazaka-edge/target/sovkora-edge-${project.version}.jar</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -719,7 +719,7 @@
                                             <arg value="orazaka-apps/services/orazaka-knowledge-service=http://localhost:8084" />
                                             <arg value="krizaka/krizaka-build/krizaka-billing/krizaka-billing-service=http://localhost:8095" />
                                             <arg value="orazaka-apps/services/orazaka-job-service=http://localhost:8090" />
-                                            <arg value="orazaka-apps/services/orazaka-studio/orazaka-studio-service=http://localhost:8096" />
+                                            <arg value="orazaka-apps/services/orazaka-studio/sovkora-studio-service=http://localhost:8096" />
                                             <arg value="orazaka-apps/services/orazaka-edge=http://localhost:8089" />
                                             <arg value="krizaka/krizaka-build/krizaka-platform-kit/krizaka-notifications-service=http://localhost:8097" />
                                         </exec>

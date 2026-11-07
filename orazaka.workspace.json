@@ -2,7 +2,7 @@
   "$comment": "Orazaka workspace manifest — the single list of repositories that make up the platform, in build order. Read by scripts/workspace.mjs, the orazaka CLI and CI.",
   "org": "krizaka",
   "version": "1.0.0-SNAPSHOT",
-  "umbrella": "orazaka",
+  "umbrella": "sovkora",
   "repositories": [
     {
       "name": "krizaka-build",
@@ -14,7 +14,7 @@
     },
     {
       "name": "orazaka-build",
-      "path": "orazaka-libs/orazaka-build",
+      "path": "sovkora-libs/sovkora-build",
       "kind": "maven",
       "layer": "foundation",
       "description": "Parent POM (Spring Boot / Spring AI BOMs, plugin management, Orazaka BOM) and the shared governance test kit (ArchUnit rules, Testcontainers base) for every Orazaka JVM repository.",
@@ -24,7 +24,7 @@
     },
     {
       "name": "orazaka-contracts",
-      "path": "orazaka-libs/orazaka-contracts",
+      "path": "sovkora-libs/sovkora-contracts",
       "kind": "maven",
       "layer": "foundation",
       "description": "Tier-1 platform contracts shared by every Orazaka service: the job plane (jobs-api) and the application-persistence ports (persistence-app-api). Pure interfaces and records, zero implementation.",
@@ -48,7 +48,7 @@
     },
     {
       "name": "orazaka-ai-engine",
-      "path": "orazaka-libs/orazaka-ai-engine",
+      "path": "sovkora-libs/sovkora-engine",
       "kind": "maven",
       "layer": "ai",
       "description": "The Orazaka cognitive SDK: AiClient & provider mesh (core), the interceptor pipeline, tools (MCP · RAG · sandbox), use-case orchestration (business), application persistence and asset encryption.",

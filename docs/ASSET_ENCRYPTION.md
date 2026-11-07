@@ -10,7 +10,7 @@ order: 8
 The asset store is written by **three processes in two languages**: the conversation service
 (uploads and serving), the job service (step inputs and outputs), and the Python media worker. This
 is the format all three speak. It has two implementations —
-`orazaka-libs/orazaka-ai-engine/orazaka-assets/…/EnvelopeCodec.java` and
+`sovkora-libs/sovkora-engine/sovkora-assets/…/EnvelopeCodec.java` and
 `orazaka-apps/workers/orazaka-worker-media/app/envelope.py` — and they are pinned to each other by
 a fixture test: Java writes `target/interop/java-written.bin`, Python opens it and writes its own,
 and Java opens that. Neither side can drift without the other going red.
@@ -82,7 +82,7 @@ it, and says so rather than degrading to plaintext.
 ## Operations
 
 ```bash
-CP="orazaka-libs/orazaka-ai-engine/orazaka-assets/target/classes:$(ls ~/.m2/repository/org/slf4j/slf4j-api/*/slf4j-api-*.jar | tail -1)"
+CP="sovkora-libs/sovkora-engine/sovkora-assets/target/classes:$(ls ~/.m2/repository/org/slf4j/slf4j-api/*/slf4j-api-*.jar | tail -1)"
 TOOL=com.krizaka.orazaka.assets.infrastructure.tool.AssetEncryptionTool
 
 java -cp "$CP" $TOOL keygen  ~/.orazaka/master.key k1              # create, or rotate: keygen … k2

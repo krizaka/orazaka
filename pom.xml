@@ -4,23 +4,23 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- The Orazaka workspace reactor. Each module below is the root of its own repository
+    <!-- The Sovkora workspace reactor. Each module below is the root of its own repository
          (cloned by `node scripts/workspace.mjs clone`, listed in orazaka.workspace.json), so one
          `./mvnw install` builds and tests the whole platform from source — cross-repository
          changes are verified together, and the cross-repository governance rules see every
-         repository. The build conventions live in orazaka-parent (krizaka/orazaka-build). -->
+         repository. The build conventions live in sovkora-parent (krizaka/sovkora-build). -->
     <parent>
-        <groupId>com.krizaka.orazaka</groupId>
-        <artifactId>orazaka-parent</artifactId>
+        <groupId>com.krizaka.sovkora</groupId>
+        <artifactId>sovkora-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>orazaka-libs/orazaka-build/orazaka-parent/pom.xml</relativePath>
+        <relativePath>sovkora-libs/sovkora-build/sovkora-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>orazaka-workspace</artifactId>
+    <artifactId>sovkora-workspace</artifactId>
     <packaging>pom</packaging>
-    <name>orazaka-workspace</name>
-    <description>Orazaka platform workspace — reactor over every Orazaka repository</description>
-    <url>https://github.com/krizaka/orazaka</url>
+    <name>sovkora-workspace</name>
+    <description>Sovkora platform workspace — reactor over every Sovkora repository</description>
+    <url>https://github.com/krizaka/sovkora</url>
     <licenses>
         <license>
             <name>FSL-1.1-ALv2</name>
@@ -56,10 +56,10 @@
 
     <modules>
         <module>krizaka/krizaka-build</module>
-        <module>orazaka-libs/orazaka-build</module>
-        <module>orazaka-libs/orazaka-contracts</module>
+        <module>sovkora-libs/sovkora-build</module>
+        <module>sovkora-libs/sovkora-contracts</module>
         <module>orazaka-apps/services/orazaka-studio</module>
-        <module>orazaka-libs/orazaka-ai-engine</module>
+        <module>sovkora-libs/sovkora-engine</module>
         <module>orazaka-apps/services/orazaka-conversation-service</module>
         <module>orazaka-apps/services/orazaka-job-service</module>
         <module>orazaka-apps/services/orazaka-knowledge-service</module>

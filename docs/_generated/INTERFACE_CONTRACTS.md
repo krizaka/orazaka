@@ -8,7 +8,7 @@ generated: true
 
 # Interface Contracts (generated)
 
-## `orazaka-core`
+## `sovkora-core`
 
 **Inbound ports**
 
@@ -116,7 +116,7 @@ generated: true
 - `UserRepositoryPort`
 - `VerificationTokenRepositoryPort`
 
-## `orazaka-persistence-app-api`
+## `sovkora-persistence-app-api`
 
 **Inbound ports**
 

@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          repository: krizaka/orazaka
+          repository: krizaka/sovkora
           ref: main
       - uses: krizaka/krizaka-desktop/.github/actions/film@4ee517f7fee30ec9bd39f04494268028de41cd37 # main
         id: film

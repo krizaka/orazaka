@@ -1,4 +1,4 @@
-package com.krizaka.orazaka.e2e;
+package com.krizaka.sovkora.e2e;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

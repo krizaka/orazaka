@@ -21,14 +21,14 @@ workflow deliberately corrects the design document and says so.**
 2. Load `.agent/rules/testing_standards.md`, `messaging_standards.md`.
 3. Read `docs/UNIFIED_PACK_SURFACE.md` §1, §4, §5 in full.
 4. Read, **before writing anything**:
-   - `orazaka-apps/services/orazaka-studio/orazaka-studio-service/…/application/service/RunSagaService.java` —
+   - `orazaka-apps/services/orazaka-studio/sovkora-studio-service/…/application/service/RunSagaService.java` —
      specifically `advance` (line ~292), `advanceLater` (~658), and every `jdbcTemplate` call on the
      path from run creation to first dispatch
-   - `orazaka-apps/services/orazaka-studio/orazaka-studio-service/…/adapter/rest/StudioRunController.java` —
+   - `orazaka-apps/services/orazaka-studio/sovkora-studio-service/…/adapter/rest/StudioRunController.java` —
      `POST /installations/{installationId}/runs` is door 2's entry
    - `orazaka-apps/services/orazaka-conversation-service/…/adapter/rest/MediaGenerationController.java`
      — `POST /api/v1/media/generation/{image,speech,video}` is door 1's entry
-   - `orazaka-apps/services/orazaka-studio/orazaka-studio-service/src/test/java/…/StudioRunLifecycleIT.java` —
+   - `orazaka-apps/services/orazaka-studio/sovkora-studio-service/src/test/java/…/StudioRunLifecycleIT.java` —
      **this is the harness you extend. Do not build a second one.**
 
 ## §1 Scope of THIS run — M0 only
@@ -131,12 +131,12 @@ everything else, and it must be the headline of the report.
 
 ```
 # ── the measurement harness (test scope only) ──────────────────────────────
-CREATE  orazaka-apps/services/orazaka-studio/orazaka-studio-service/src/test/java/.../RunOverheadMeasurementIT.java
+CREATE  orazaka-apps/services/orazaka-studio/sovkora-studio-service/src/test/java/.../RunOverheadMeasurementIT.java
           segments A and B, both doors, ≥30 samples against a neutralised executor (§4.1)
           + ≥10 samples against the real path (§4.2)
 CREATE  <test scope> a statement-counting DataSource/JdbcTemplate decorator      (§4.3)
           — reuse an existing test utility if one exists; search before creating
-MODIFY  orazaka-apps/services/orazaka-studio/orazaka-studio-service/src/test/java/.../StudioRunLifecycleIT.java
+MODIFY  orazaka-apps/services/orazaka-studio/sovkora-studio-service/src/test/java/.../StudioRunLifecycleIT.java
           only if its fixtures must be extracted to be shared. Prefer extracting to a
           test fixture class over duplicating, and do not change what it asserts.
 
@@ -176,7 +176,7 @@ p95 passes.
 1. `./mvnw -q verify` green for the modules you touched. The harness must actually **execute** —
    `*IT` matches failsafe, not surefire (see the root `pom.xml` comment at ~line 481). A benchmark
    that silently never ran is precisely the class of defect this project keeps finding.
-2. `git status` shows **no change under `src/main`, `infra/`, or `orazaka-libs/*/src/main`.** Prove
+2. `git status` shows **no change under `src/main`, `infra/`, or `sovkora-libs/*/src/main`.** Prove
    it by pasting the output.
 3. The report contains the **raw sample values**, not only summary statistics. Someone must be able
    to recompute your percentiles.
