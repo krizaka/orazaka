@@ -1,0 +1,281 @@
+// Sovkora's containers, current and target (ADR-027). Sources: docs/DEPLOY_DEV.md (what runs in dev), docs/VISION_ARCHITECTURE.md,
+// docs/_generated/architecture.json (routes and message flows), apps/desktop/README.md, the repositories' manifests, and the ADRs
+// cited on each planned element. The system itself, the views and the facts (versions, tags, dependencies) are generated.
+model {
+  extend sovkora {
+
+    // ---- What people use
+    web = app 'Web app and console' {
+      description 'The customer site (chat, Studios) and the operator console on the admin host, with its server routes (BFF).'
+      technology 'Next.js 16, TypeScript'
+      metadata {
+        repo 'sovkora-web'
+      }
+    }
+    mobile = mobile 'Mobile app' {
+      description 'Chat and Studios on the phone.'
+      technology 'Expo 57, React Native'
+      metadata {
+        repo 'sovkora-mobile'
+      }
+    }
+    desktop = mobile 'Sovkora for Mac' {
+      description 'Installer and control panel; gives Sovkora access to the folders the user picks, and runs local automations (ADR-079).'
+      technology 'Tauri 2, Rust, @krizaka/ui'
+      metadata {
+        repo 'sovkora'
+        path 'apps/desktop'
+        adr 'sovkora ADR-079'
+      }
+    }
+    cli = container 'CLI' {
+      description 'Clone, install, start and develop the platform from a terminal, with an offline queue.'
+      technology 'Node, commander, SQLite'
+      metadata {
+        repo 'sovkora-cli'
+      }
+    }
+
+    // ---- The services (one image, side by side, in dev)
+    edge = container 'Edge service' {
+      description 'The only public port: routes chat, sign-in, billing, Studios, automations and recommendations to the services.'
+      technology 'Java 21, Spring Boot 4, Spring MVC on virtual threads'
+      metadata {
+        repo 'sovkora-edge-service'
+      }
+    }
+    conversation = container 'Conversation service' {
+      description 'Chat with token streaming (SSE), models, bootstrap features; runs the turn pipeline in-process.'
+      technology 'Java 21, Spring Boot 4, Spring AI 2'
+      metadata {
+        repo 'sovkora-conversation-service'
+      }
+    }
+    job = container 'Job service' {
+      description 'Capability registry, the job lanes and the run saga; settles runs and hands work to the workers.'
+      technology 'Java 21, Spring Boot 4'
+      metadata {
+        repo 'sovkora-job-service'
+        adr 'sovkora ADR-068'
+      }
+    }
+    studio = container 'Studio service' {
+      description 'Studios, packs installed at boot, and runs.'
+      technology 'Java 21, Spring Boot 4'
+      metadata {
+        repo 'sovkora-studio-service'
+      }
+    }
+    knowledge = container 'Knowledge service' {
+      description 'The products recommender, on vectors.'
+      technology 'Java 21, Spring Boot 4, pgvector'
+      metadata {
+        repo 'sovkora-knowledge-service'
+      }
+    }
+    automation = container 'Automation service' {
+      description 'Cloud automations: signed webhooks and schedules that start Studio runs, and their history.'
+      technology 'Java 21, Spring Boot 4'
+      metadata {
+        repo 'sovkora-automation-service'
+        adr 'sovkora ADR-084'
+      }
+    }
+    users = container 'Users service' {
+      description 'Sign-in, tokens and profiles; a Krizaka Java building block run in the Sovkora core (sign-up closed in dev).'
+      technology 'Java 21, Spring Boot 4 (Krizaka Java)'
+    }
+    billing = container 'Billing service' {
+      description 'Plans, wallets, packs held and credit holds; a Krizaka Java building block run in the Sovkora core (meters, never blocks, in dev).'
+      technology 'Java 21, Spring Boot 4 (Krizaka Java)'
+    }
+
+    // ---- Workers and GPU
+    packs = container 'Packs and pack workers' {
+      description 'The reference packs and their manifest schema; the document-validation worker runs beside the services.'
+      technology 'Pack manifests, Python workers'
+      metadata {
+        repo 'sovkora-packs'
+      }
+    }
+    media = container 'Media worker' {
+      description 'Image and video generation and media composition; on the GPU host, and as the hosted-video consumer in the core.'
+      technology 'Python, Metal or CUDA'
+      metadata {
+        repo 'sovkora-worker-media'
+      }
+    }
+    relay = container 'GPU relay' {
+      description 'The tunnel server the GPU host dials out to; nothing on the GPU host is exposed.'
+      technology 'chisel'
+      metadata {
+        repo 'sovkora'
+        path 'infra/deploy/gpu-relay'
+      }
+    }
+    gpu = container 'GPU host, by the hour' {
+      description 'Runs the media worker and the local models (images, 9:16 video, speech, Studio text) only while started; guarded when idle.'
+      technology 'RunPod pod or GPU droplet; LocalAI, Ollama'
+      metadata {
+        adr 'sovkora ADR-077'
+      }
+    }
+
+    // ---- Data
+    db = datastore 'Databases' {
+      description 'One database and one role per context on the shared dev cluster.'
+      technology 'PostgreSQL 18, pgvector'
+    }
+    broker = queue 'Message broker' {
+      description 'The job, event and dead-letter exchanges; TLS only, private to the network.'
+      technology 'RabbitMQ 4.2'
+    }
+
+    // ---- Building blocks of the services
+    engine = library 'Engine' {
+      description 'The engine core: the turn pipeline, interceptors, business layer, tools and their adapters.'
+      technology 'Java 21, Spring AI 2'
+      metadata {
+        repo 'sovkora-engine'
+      }
+    }
+    contracts = library 'Contracts' {
+      description 'The job and persistence contracts and the asset cryptography shared by the services.'
+      technology 'Java 21'
+      metadata {
+        repo 'sovkora-contracts'
+      }
+    }
+    build = library 'Build and test support' {
+      description 'The parent POM, the rewrite style and the test support of every Sovkora JVM repository.'
+      technology 'Maven'
+      metadata {
+        repo 'sovkora-build'
+      }
+    }
+    workspace = container 'Workspace and delivery' {
+      description 'The list of repositories, the full-workspace CI, the dev image and deployment spec, and the end-to-end tests.'
+      technology 'Maven, Docker, App Platform spec'
+      metadata {
+        repo 'sovkora'
+      }
+    }
+    uikit = library 'UI kit' {
+      #retiring
+      description 'The design system and shared code of the three apps; folds into Krizaka UI, then the repository is archived.'
+      technology 'TypeScript, React'
+      link https://github.com/krizaka/.github/blob/main/docs/standards/repositories.md 'Registry: fold into krizaka-ui, then archive'
+      metadata {
+        repo 'sovkora-ui-kit'
+      }
+    }
+
+    // ---- Target
+    search = container 'Web search' {
+      #planned
+      description 'Self-hosted search for grounded answers that cite their sources; dev only until its hosting and limits are validated.'
+      technology 'SearXNG'
+      metadata {
+        adr 'sovkora ADR-087'
+      }
+    }
+    serverless = container 'Serverless GPU endpoint' {
+      #planned
+      description 'Media jobs at zero idle cost, triggered from the job lanes; adopted only if cheaper per clip than the guarded pod.'
+      technology 'RunPod serverless, the media worker image'
+      link https://github.com/krizaka/sovkora/blob/main/docs/adr/ADR-078-runpod-serverless-workers-at-zero-idle.md 'sovkora ADR-078 (serverless GPU)'
+      metadata {
+        adr 'sovkora ADR-078'
+      }
+    }
+  }
+
+  // ---- People and other systems
+  customer -> sovkora.web 'chats and runs Studios'
+  customer -> sovkora.mobile 'uses on the phone'
+  customer -> sovkora.desktop 'grants folders, runs automations'
+  founder -> sovkora.web 'operates the console'
+  contributor -> sovkora.cli 'installs, starts and tests the platform'
+  verikora -> sovkora.edge 'asks for AI through @krizaka/sovkora-client'
+
+  // ---- Clients to the edge
+  sovkora.web -> sovkora.edge 'server routes call the API'
+  sovkora.mobile -> sovkora.edge 'calls the API'
+  sovkora.desktop -> sovkora.cli 'runs it as a sidecar'
+  sovkora.cli -> sovkora.edge 'calls the local platform'
+
+  // ---- Edge routes
+  sovkora.edge -> sovkora.conversation 'routes chat'
+  sovkora.edge -> sovkora.users 'routes sign-in and user admin'
+  sovkora.edge -> sovkora.billing 'routes billing'
+  sovkora.edge -> sovkora.studio 'routes Studios'
+  sovkora.edge -> sovkora.knowledge 'routes recommendations'
+  sovkora.edge -> sovkora.automation 'routes automations and webhooks'
+
+  // ---- Between services
+  sovkora.conversation -> sovkora.engine 'runs the turn pipeline in-process'
+  sovkora.conversation -> sovkora.studio 'reads Studios'
+  sovkora.studio -> sovkora.broker 'publishes the run jobs through its outbox (the only producer of jobs)'
+  sovkora.job -> sovkora.broker 'drains the two job lanes, publishes job lifecycle and run settlements'
+  sovkora.job -> sovkora.studio 'reads Studios'
+  sovkora.conversation -> sovkora.broker 'relays job events over SSE, releases approved automation jobs'
+  sovkora.automation -> sovkora.broker 'dispatches agent jobs, publishes connector events'
+  sovkora.broker -> sovkora.billing 'delivers run settlements'
+  sovkora.packs -> sovkora.broker 'consumes validation jobs'
+  sovkora.media -> sovkora.broker 'consumes media jobs'
+  sovkora.conversation -> sovkora.billing 'holds and meters credits'
+  sovkora.job -> sovkora.billing 'settles credits'
+  sovkora.studio -> sovkora.billing 'checks entitlements'
+  sovkora.conversation -> sovkora.db 'reads and writes'
+  sovkora.job -> sovkora.db 'reads and writes'
+  sovkora.studio -> sovkora.db 'reads and writes'
+  sovkora.knowledge -> sovkora.db 'stores vectors'
+  sovkora.automation -> sovkora.db 'reads and writes'
+  sovkora.users -> sovkora.db 'reads and writes'
+  sovkora.billing -> sovkora.db 'reads and writes'
+
+  // ---- Models and GPU
+  sovkora.conversation -> models 'chat completions (serverless inference)'
+  sovkora.conversation -> sovkora.relay 'calls the local models on the GPU host (images, speech, Studio text)'
+  sovkora.gpu -> sovkora.relay 'dials out; reaches the broker and the job service through it'
+  sovkora.media -> sovkora.gpu 'runs on'
+  sovkora.workspace -> cloud 'deploys the dev app'
+
+  // ---- Target relationships
+  sovkora.engine -> sovkora.search 'searches and fetches sources for grounded answers' {
+    #planned
+    metadata {
+      adr 'sovkora ADR-087'
+    }
+  }
+  sovkora.job -> sovkora.serverless 'triggers media jobs at zero idle' {
+    #planned
+    metadata {
+      adr 'sovkora ADR-078'
+    }
+  }
+  sovkora.desktop -> github 'reads an issue, pushes a branch, opens the pull request (the user approves each write)' {
+    #planned
+    metadata {
+      adr 'sovkora ADR-093'
+    }
+  }
+  sovkora.broker -> sovkora.users 'delivers operator audit events to the one audit read model' {
+    #planned
+    metadata {
+      adr 'sovkora ADR-085'
+    }
+  }
+  customer -> sovkora.web 'uses www.sovkora.com in production' {
+    #planned
+    metadata {
+      issue 'krizaka-internal#2136'
+    }
+  }
+  verikora -> sovkora.edge 'calls the production API, a key per product' {
+    #planned
+    metadata {
+      issue 'krizaka-internal#2132'
+    }
+  }
+}
