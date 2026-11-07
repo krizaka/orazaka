@@ -177,6 +177,16 @@ The engine looking things up, reading the source and citing it, instead of answe
 
 The compliance checks built from the law, on top of it — identify the document, read the dated articles, propose rules, promote them to dated rulesets: ADR-089 (proposed, not built yet).
 
+## Manual tools
+
+Scripts a person runs by hand (ADR-026: nothing runs unlisted). Each opens with a header saying why, what, how and who owns it.
+
+| Script | What it does | Doc |
+| :-- | :-- | :-- |
+| `scripts/journey-dev.mjs` | replays the core journey (chat, image, analysis, clip) on the dev edge as the demo persona | [docs/DEPLOY_DEV.md](docs/DEPLOY_DEV.md) |
+| `scripts/dev-persona-runs.mjs` | puts a few real Studio runs on a dev persona's shelf before a recording | its header |
+| `scripts/dev-reset.mjs` | clears and re-seeds a product's DEV databases | [docs/DEV_DATABASE.md](docs/DEV_DATABASE.md) |
+
 ## Workspace layout
 
 ```
