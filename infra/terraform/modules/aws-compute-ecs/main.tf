@@ -69,8 +69,8 @@ resource "aws_ecs_task_definition" "frontend" {
 # ECS Services setup templates
 resource "null_resource" "ecs_services" {
   triggers = {
-    cluster_id   = aws_ecs_cluster.main.id
-    backend_task = aws_ecs_task_definition.backend.arn
+    cluster_id    = aws_ecs_cluster.main.id
+    backend_task  = aws_ecs_task_definition.backend.arn
     frontend_task = aws_ecs_task_definition.frontend.arn
   }
 }

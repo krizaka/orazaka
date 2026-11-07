@@ -169,6 +169,24 @@ jobs:
   # The required « SonarCloud Code Analysis » is posted by the SonarCloud app once this scan has run. The app's automatic analysis
   # never sees a merge queue SHA, so the scan runs on every event the required checks run on, merge_group included
   # (krizaka-internal#2000). The Java and Python sources are analysed by the CI of their own repositories.
+  # The formatter the pre-push hook runs (krizaka-agents tools/fmt.py, krizaka-internal#2813): CI refuses the same files.
+  infra-format:
+    name: OpenTofu format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: latest
+          tofu_wrapper: false
+      - name: tofu fmt -check
+        run: tofu fmt -check -recursive infra
+
   sonar:
     name: SonarCloud
     runs-on: ubuntu-latest

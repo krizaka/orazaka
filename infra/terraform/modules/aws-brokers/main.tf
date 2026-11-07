@@ -8,15 +8,15 @@ resource "aws_db_subnet_group" "db_subnets" {
 }
 
 resource "aws_db_instance" "postgres" {
-  allocated_storage      = 20
-  engine                 = "postgres"
-  engine_version         = "15"
-  instance_class         = "db.t4g.micro"
-  db_name                = var.db_name
-  username               = var.db_username
-  password               = var.db_password
-  db_subnet_group_name   = aws_db_subnet_group.db_subnets.name
-  skip_final_snapshot    = true
+  allocated_storage    = 20
+  engine               = "postgres"
+  engine_version       = "15"
+  instance_class       = "db.t4g.micro"
+  db_name              = var.db_name
+  username             = var.db_username
+  password             = var.db_password
+  db_subnet_group_name = aws_db_subnet_group.db_subnets.name
+  skip_final_snapshot  = true
 }
 
 resource "aws_elasticache_subnet_group" "redis_subnets" {
