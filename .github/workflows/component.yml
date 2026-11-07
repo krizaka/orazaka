@@ -9,7 +9,7 @@
 # On a v* tag the component is published (AGENTS.md §0): Maven artifacts to GitHub Packages
 # (maven.pkg.github.com/krizaka/<repository>), @krizaka/* npm packages to npmjs with provenance
 # (trusted publishing: the calling workflow grants id-token: write).
-name: component
+name: Component CI
 
 on:
   workflow_call:

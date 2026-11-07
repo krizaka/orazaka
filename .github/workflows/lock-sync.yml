@@ -2,7 +2,7 @@
 # component repository raises a floor (@krizaka/ui ^3.40.0) and this lock still resolves the old version, `npm ci` fails and
 # every pull request of the workspace goes red (scripts/test/ui-lock-floors.test.mjs says so). Every few hours this clones the
 # components at their default branches, regenerates the lock with npm 11 and opens (or updates) the pull request `chore/ui-lock-sync`.
-name: lock-sync
+name: UI lock sync
 
 on:
   schedule:

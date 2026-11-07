@@ -5,7 +5,7 @@
 #
 # A pull request opened with the default GITHUB_TOKEN does not start the workflows that are required on main, so the
 # PR does not start CI by itself: the last step dispatches CI on the branch (workflow_dispatch), whose checks land on the PR head commit. No extra token.
-name: docs-sync
+name: Docs sync
 
 on:
   schedule:

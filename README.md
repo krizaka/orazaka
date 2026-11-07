@@ -227,6 +227,30 @@ Cloned directories are ignored by this repository's git; each is its own reposit
      https://maven.pkg.github.com/krizaka/orazaka-build -->
 ```
 
+<!-- krizaka:workflows:start -->
+## Workflows
+
+What runs in the Actions tab of this repository.
+
+- **CI** (`ci.yml`): Lint, tests and build of the repository. Runs on push, on every pull request, in the merge queue, on demand, on a schedule.
+- **Component CI** (`component.yml`): The shared pipeline that verifies one component inside the workspace. Runs called by other workflows.
+- **Dependabot auto-merge** (`dependabot-automerge.yml`): Auto-merges safe Dependabot updates. Runs on every pull request.
+- **Desktop film** (`desktop-film.yml`): Films the Mac app journey on a macOS runner. Runs called by other workflows, on demand.
+- **Desktop** (`desktop.yml`): Builds and checks the Mac app; a desktop tag builds the release. Runs on every pull request, on push, on demand.
+- **Dev image build** (`dev-image-build.yml`): Checks the dev images still build (no push). Runs on every pull request, on a schedule, on demand.
+- **Dev persona smoke** (`dev-persona-smoke.yml`): Signs in as the demo personas on dev after a redeploy. Runs after another workflow, on a schedule, on demand.
+- **Dev redeploy** (`dev-redeploy.yml`): Redeploys the dev stack. Runs on a schedule, on demand.
+- **Docs regenerate** (`docs-regen.yml`): Regenerates the generated docs on a PR. Runs on every pull request.
+- **Docs sync** (`docs-sync.yml`): Opens a PR when the generated docs drift from the workspace. Runs on a schedule, on demand.
+- **GPU smoke (sovereign)** (`gpu-smoke.yml`): Smoke-tests the GPU worker. Runs on a schedule, on demand.
+- **Language guards** (`lang-guards.yml`): Rust guards: rustfmt, clippy, cargo-deny, tests. Runs on every pull request, in the merge queue, on push.
+- **Load smoke test** (`load-smoke.yml`): Load test of the edge with k6. Runs called by other workflows, on every pull request, on a schedule, on demand.
+- **UI lock sync** (`lock-sync.yml`): Opens a PR that regenerates the UI lock file. Runs on a schedule, on demand.
+- **Merge resolution** (`merge-resolution.yml`): Fails a PR that drops what main added without a deletion-explained line. Runs on every pull request.
+- **Scorecard** (`scorecard.yml`): OpenSSF Scorecard of the repository. Runs when branch rules change, on a schedule, on demand.
+- **Security scan** (`security.yml`): Secret scan (gitleaks) and workflow scan (zizmor); both are required checks. Runs on every pull request, in the merge queue, on push.
+<!-- krizaka:workflows:end -->
+
 ## License
 
 [FSL-1.1-ALv2](LICENSE) (Functional Source License, Apache-2.0 future licence) © Technologies Krizaka Inc. — read,
