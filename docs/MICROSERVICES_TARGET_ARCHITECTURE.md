@@ -319,4 +319,4 @@ Les frontières suivent les bounded contexts déjà latents dans l'arborescence 
 
 ---
 
-*Proposal drafted 2026-07-14. Next step if adopted: promote the preamble triggers + Phase 0 scope into an ADR (`docs/adr/ADR-032-microservices-strangler-plan.md`).*
+*Proposal drafted 2026-07-14. Next step if adopted: promote the preamble triggers + Phase 0 scope into an ADR (`ADR-032 (internal)`).*

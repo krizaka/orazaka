@@ -3,7 +3,7 @@
 A 30 to 60-second film, vertical (9:16: Reels, TikTok, Shorts) or wide (16:9), from a brief: **script → character
 references → keyframes → shots → cut → voice-over → sound**. Every step is an ordinary Studio run — metered, checked by
 the content policy, listed in your run history — and the estimate is shown before anything runs
-([ADR-080](adr/ADR-080-cinematic-shorts.md)).
+(ADR-080).
 
 ## Make one
 

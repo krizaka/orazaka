@@ -159,7 +159,7 @@ runId=…` in the core's logs (user, model, counts — never a text or a vector)
 ## Recommendations — a product's feed, served by Orazaka (ADR-078)
 
 The knowledge service serves the products' recommender (ADR-078); decision:
-[ADR-078](https://github.com/krizaka/orazaka-packs/blob/main/docs/adr/ADR-078-recommendations.md)). A product feeds it
+ADR-078). A product feeds it
 with its service key — events, eligible items, erasures (scope `reco:sync`) — and reads its feeds (scope `reco:read`):
 `POST /api/v1/recommendations/{events,items,erasures}`, `GET /api/v1/recommendations/{for-you,similar,insights}`. Users
 are the product's pseudonyms; titles are embedded (on the caller's own session, through `/api/v1/embeddings`) and never

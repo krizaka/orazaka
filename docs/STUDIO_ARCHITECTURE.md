@@ -18,7 +18,7 @@ order: 7
 > interceptors and pricing.
 >
 > Normative rules: [`AGENTS.md`](../AGENTS.md). Decision record:
-> [`ADR-034`](adr/ADR-034-studio-marketplace.md). Depends on: ADR-027 (DB-driven config),
+> `ADR-034`. Depends on: ADR-027 (DB-driven config),
 > ADR-032 (service decomposition), ADR-033 (credit metering).
 
 ---
@@ -632,7 +632,7 @@ sequenceDiagram
 > (`AGENT`, unit `CALL`, and `quantityFor(CALL)` is a hardcoded `1`), and every later step found it
 > closed. **A `realestate-reels` run reserved 480 credits and was debited 5.**
 >
-> [ADR-041](adr/ADR-041-run-settlement.md) closed it. `StepDispatch.holdId` is removed, so a step
+> ADR-041 closed it. `StepDispatch.holdId` is removed, so a step
 > cannot settle the run by accident; each step's measurements are stored on its `studio_run_step`
 > row in the same statement that marks it terminal; and the saga settles **once** at the run's
 > terminal transition through `settleAggregate`, which prices every step against **its own**
@@ -1138,15 +1138,15 @@ orazaka-apps/ui/orazaka-web-client/src/services/studio.api.ts
 orazaka-apps/ui/orazaka-web-client/src/console/features/studio/**                     (Studio Builder)
 orazaka-apps/ui/orazaka-cli/src/commands/studio.command.ts
 orazaka-end2end/src/test/java/.../StudioLifecycleE2ETest.java
-docs/adr/ADR-034-studio-marketplace.md                                       (new)
+ADR-034 (internal)                                       (new)
 ```
 
 ---
 
 ## Related documentation
 
-- [Governance contract](../AGENTS.md) · [ADR-034](adr/ADR-034-studio-marketplace.md)
-- [Billing architecture](BILLING_ARCHITECTURE.md) · [ADR-033](adr/ADR-033-credit-metering-and-billing.md)
-- [Microservices target architecture](MICROSERVICES_TARGET_ARCHITECTURE.md) · [ADR-032](adr/ADR-032-microservices-decomposition-strangler-fig.md)
+- [Governance contract](../AGENTS.md) · ADR-034
+- [Billing architecture](BILLING_ARCHITECTURE.md) · ADR-033
+- [Microservices target architecture](MICROSERVICES_TARGET_ARCHITECTURE.md) · ADR-032
 - [Vision architecture](VISION_ARCHITECTURE.md) · [Interfaces](INTERFACES.md) · [Business playbook](BUSINESS_IMPLEMENTATION.md)
 - [Automation & Local Agent Protocol](AUTOMATION.md) · [UI reference](UI_REFERENCE.md) · [Glossary](GLOSSARY.md)

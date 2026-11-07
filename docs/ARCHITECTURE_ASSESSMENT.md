@@ -409,6 +409,6 @@ Elles sont formulées pour être confiées telles quelles.
 
 ## Documents liés
 
-- [Contrat de gouvernance](../AGENTS.md) · [ADR-035 — authentification inter-services](adr/ADR-035-service-to-service-authentication.md)
+- [Contrat de gouvernance](../AGENTS.md) · ADR-035 — authentification inter-services
 - [Audit de production](PRODUCTION_READINESS_AUDIT.md) — *contient trois erreurs factuelles corrigées en §2.1, §2.3 et §2.5 ; relire chaque prescription contre le code*
 - [Registre de gouvernance généré](_generated/GOVERNANCE.md) · [Référence d'API générée](_generated/API_REFERENCE.md)

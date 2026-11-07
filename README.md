@@ -173,9 +173,9 @@ delivery log.
 
 ## Grounded research (proposed)
 
-The engine looking things up, reading the source and citing it, instead of answering from memory: [ADR-087](docs/adr/ADR-087-grounded-research.md) and its [design](docs/design/grounded-research.md) (proposed, not built yet).
+The engine looking things up, reading the source and citing it, instead of answering from memory: ADR-087 and its [design](docs/design/grounded-research.md) (proposed, not built yet).
 
-The compliance checks built from the law, on top of it — identify the document, read the dated articles, propose rules, promote them to dated rulesets: [ADR-089](docs/adr/ADR-089-rules-from-the-law.md) (proposed, not built yet).
+The compliance checks built from the law, on top of it — identify the document, read the dated articles, propose rules, promote them to dated rulesets: ADR-089 (proposed, not built yet).
 
 ## Workspace layout
 
@@ -232,5 +232,5 @@ Cloned directories are ignored by this repository's git; each is its own reposit
 [FSL-1.1-ALv2](LICENSE) (Functional Source License, Apache-2.0 future licence) © Technologies Krizaka Inc. — read,
 run, modify and self-host it for any purpose except offering a competing service; each version becomes Apache-2.0 two
 years after its release. Commits before the licence change remain [Apache-2.0](LICENSE-APACHE) — see [NOTICE](NOTICE)
-and [ADR-012](https://github.com/krizaka/.github/blob/main/docs/adr/ADR-012-licensing-libraries-open-products-fair-source.md).
+and ADR-012.
 The Krizaka names and birds are not licensed: [trademark policy](https://github.com/krizaka/.github/blob/main/TRADEMARKS.md).

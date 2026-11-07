@@ -1,6 +1,6 @@
 # Orazaka load suite
 
-The proof of [ADR-083](../../docs/adr/ADR-083-client-connectivity-and-capacity.md): k6 scenarios with thresholds tied to the SLO table (`lib/slo.js`).
+The proof of ADR-083: k6 scenarios with thresholds tied to the SLO table (`lib/slo.js`).
 
 ```bash
 brew install k6                                   # or the pinned release used by .github/workflows/load-smoke.yml

@@ -3,7 +3,7 @@
 #
 # It measures the edge and its contract (rate limit, Idempotency-Key, stream relay, key exchange path)
 # at a few hundred requests a minute: seconds, no database, no Docker. The heavier, real-stack run is
-# local (docs/adr/ADR-083, "Proof by load tests"). Called by orazaka-edge on a pull request that
+# local (krizaka-internal docs/adr/sovkora/ADR-083, "Proof by load tests"). Called by orazaka-edge on a pull request that
 # touches the edge; also weekly here, on the workspace's main, to catch drift in an upstream.
 name: load-smoke
 

@@ -167,4 +167,3 @@ UI theme accents are resolved from the database (`theme` category in `orazaka_mo
 - [Developer Onboarding Guide](101.md)
 - [Architecture Reference](_generated/ARCHITECTURE.md)
 - [API Reference](_generated/API_REFERENCE.md)
-- [ADR Indexes](_generated/ADRS.md)
