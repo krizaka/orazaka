@@ -5,7 +5,7 @@ description: BILLING & CREDITS — PHASED IMPLEMENTATION (tranche 1 = foundation
 # Workflow: Implement the Billing & Entitlements context
 
 Design intent: [`docs/BILLING_ARCHITECTURE.md`](../../docs/BILLING_ARCHITECTURE.md).
-Decision record: [`docs/adr/ADR-033-credit-metering-and-billing.md`](../../docs/adr/ADR-033-credit-metering-and-billing.md).
+Decision record: [krizaka-internal docs/adr/sovkora/ADR-033-credit-metering-and-billing.md](https://github.com/krizaka/krizaka-internal/blob/main/docs/adr/sovkora/ADR-033-credit-metering-and-billing.md).
 **That design document is normative for *what* and *why*. This workflow is normative for *how* and
 *in what order*. Where they disagree, the design document wins and this file is corrected.**
 

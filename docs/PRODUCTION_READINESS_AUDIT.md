@@ -521,7 +521,7 @@ Stated plainly, because an audit that hides its own gaps is worse than none.
 ## Related documentation
 
 - [Governance contract](../AGENTS.md) · [Vision architecture](VISION_ARCHITECTURE.md)
-- [Billing architecture](BILLING_ARCHITECTURE.md) · [ADR-033](adr/ADR-033-credit-metering-and-billing.md)
-- [Studio architecture](STUDIO_ARCHITECTURE.md) · [ADR-034](adr/ADR-034-studio-marketplace.md)
-- [Microservices target architecture](MICROSERVICES_TARGET_ARCHITECTURE.md) · [ADR-032](adr/ADR-032-microservices-decomposition-strangler-fig.md)
+- [Billing architecture](BILLING_ARCHITECTURE.md) · ADR-033
+- [Studio architecture](STUDIO_ARCHITECTURE.md) · ADR-034
+- [Microservices target architecture](MICROSERVICES_TARGET_ARCHITECTURE.md) · ADR-032
 - [Security standards](../.agent/rules/security_standards.md) · [Testing standards](../.agent/rules/testing_standards.md)

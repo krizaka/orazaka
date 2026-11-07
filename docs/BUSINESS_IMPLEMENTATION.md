@@ -197,5 +197,4 @@ npx orazaka video "An animated camera flythrough of a futuristic neon city" --du
 ## Related Documentation
 - [Developer Onboarding Guide](101.md)
 - [Architecture Reference](_generated/ARCHITECTURE.md)
-- [ADR Indexes Log](_generated/ADRS.md)
 - [Automation & Workers](AUTOMATION.md)

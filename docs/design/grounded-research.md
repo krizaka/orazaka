@@ -6,7 +6,7 @@ category: Design
 
 # Design — Grounded research (ADR-087)
 
-The decision and its reasons are in [ADR-087](../adr/ADR-087-grounded-research.md). This page says how it is built.
+The decision and its reasons are in ADR-087. This page says how it is built.
 Anything marked **TO VALIDATE** stays disabled until it is checked.
 
 ## Architecture

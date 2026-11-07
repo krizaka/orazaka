@@ -97,4 +97,3 @@ One engine serves every modality. `AbstractEngine` is **sealed** and permits a s
 ## Related Documentation
 - [Developer Onboarding Guide](101.md)
 - [Architecture Reference](_generated/ARCHITECTURE.md)
-- [ADR Index Log](_generated/ADRS.md)

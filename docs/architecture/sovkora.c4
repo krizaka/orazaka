@@ -183,7 +183,7 @@ model {
       #planned
       description 'Media jobs at zero idle cost, triggered from the job lanes; adopted only if cheaper per clip than the guarded pod.'
       technology 'RunPod serverless, the media worker image'
-      link https://github.com/krizaka/sovkora/blob/main/docs/adr/ADR-078-runpod-serverless-workers-at-zero-idle.md 'sovkora ADR-078 (serverless GPU)'
+      link https://github.com/krizaka/krizaka-internal/blob/main/docs/adr/sovkora/ADR-078-runpod-serverless-workers-at-zero-idle.md 'sovkora ADR-078 (serverless GPU)'
       metadata {
         adr 'sovkora ADR-078'
       }

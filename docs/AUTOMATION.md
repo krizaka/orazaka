@@ -6,7 +6,7 @@ order: 8
 ---
 # Automations & local agents
 
-> Architecture: [ADR-079](adr/ADR-079-automations-and-local-agents.md). What runs today is **slice 1**: scheduled
+> Architecture: ADR-079. What runs today is **slice 1**: scheduled
 > automations in the Mac app, local only. The next slices are listed at the end.
 
 [![Eric creates "Morning PDF summaries", the run reads three PDFs with qwen2.5:7b on his Mac, asks before writing, he approves always for the folder, then opens the trace, the audit log and a note (55 s, 1080p)](https://krizaka-assets.b-cdn.net/site/products/orazaka/tour/automations-morning-pdfs.7f512010dc.jpg)](https://krizaka-assets.b-cdn.net/site/products/orazaka/tour/automations-morning-pdfs.bd4e5ce3f0.mp4)
@@ -78,7 +78,7 @@ The connector stubs of `orazaka-automation-service` (Jira, Slack, WhatsApp, Mess
 pilot needs one.
 
 ## Related Documentation
-- [ADR-079 — Automations and local agents](adr/ADR-079-automations-and-local-agents.md)
+- ADR-079 — Automations and local agents
 - [Orazaka Desktop](../apps/desktop/README.md)
 - [Content policy](CONTENT_POLICY.md)
 - [CLI Reference](_generated/CLI.md)

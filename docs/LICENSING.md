@@ -12,7 +12,7 @@ order: 2
 self-host it for any purpose except a Competing Use (offering it to others as a commercial service that substitutes for
 Orazaka), and each version becomes Apache-2.0 two years after its release. Every earlier commit remains Apache-2.0
 ([`LICENSE-APACHE`](../LICENSE-APACHE)). The organisation decision is
-[ADR-012](https://github.com/krizaka/.github/blob/main/docs/adr/ADR-012-licensing-libraries-open-products-fair-source.md);
+ADR-012;
 it updates ADR-049 on the licence of the engine and keeps its boundary between public and private repositories.
 
 The pieces an integrator needs stay Apache-2.0 in their own repositories: `orazaka-packs` (the pack format and reference
@@ -44,7 +44,7 @@ ORAZAKA_PACKS_SOURCES=orazaka-packs,/srv/packs,registry:https://registry.orazaka
 
 If a cloud pack ever requires a change inside this repository, the split has failed and that is a
 bug in the SPI, not a packaging decision. Phase G found four such changes and fixed them; they are
-listed in [ADR-049](adr/ADR-049-open-core-split.md).
+listed in ADR-049.
 
 ## Two things a reader mistakes
 

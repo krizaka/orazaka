@@ -1,6 +1,6 @@
 # Sovkora's architecture, as code
 
-[ADR-027](https://github.com/krizaka/.github/blob/main/docs/adr/ADR-027-architecture-as-code.md) (krizaka/.github) makes each
+ADR-027 (krizaka/.github) makes each
 system's C1 and C2, current and target, a model in its home repository. This folder is Sovkora's.
 
 ## Written by hand, here

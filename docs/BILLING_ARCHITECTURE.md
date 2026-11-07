@@ -11,7 +11,7 @@ order: 6
 > consumption of that capability is measured, how it is debited from a credit balance, and how that
 > balance is replenished (subscription grant, à-la-carte top-up).
 > **Normative contract**: [`AGENTS.md`](../AGENTS.md). Nothing here overrides it.
-> **Decision record**: [`docs/adr/ADR-033-credit-metering-and-billing.md`](adr/ADR-033-credit-metering-and-billing.md).
+> **Decision record**: ADR-033 (internal).
 > **Status**: design accepted, implementation phased (§16). Phases 0–3 are **100% local** and
 > shippable today; phase 4 (payment service provider) is **gated behind the exit from the local
 > phase** — AGENTS.md §0 forbids remote secrets and cloud dependencies for now.
@@ -79,7 +79,7 @@ This separation is what makes packs métier possible later without touching the 
 ## 4. Bounded context & service placement
 
 A new context, a new owned database, a new deployable — following exactly the seam doctrine of
-[ADR-032](adr/ADR-032-microservices-decomposition-strangler-fig.md).
+ADR-032.
 
 ```
 krizaka/krizaka-billing/krizaka-billing-api/     Tier-1 · ports + DTOs, zero impl deps
@@ -1273,10 +1273,10 @@ product leaves the laptop.
 ## 18. Relationship to existing documents
 
 * [`AGENTS.md`](../AGENTS.md) §0 (local phase), §4 (config vs data), §5 (own DB, no cross-context FK), §6 (broker doctrine), §7 (interceptor short-circuit) — all upheld; §0 is the reason phase 4 is gated.
-* [`ADR-027`](adr/ADR-027-db-driven-configuration.md) / [`ADR-031`](adr/ADR-031-config-governance-spring-vanilla-db-dynamic.md) — the pricebook and plan catalogue are *domain data in the DB*, exactly the pattern those ADRs mandate.
-* [`ADR-032`](adr/ADR-032-microservices-decomposition-strangler-fig.md) — the billing service follows the same extraction doctrine: own database, own role, contract-copy, edge route.
+* `ADR-027` / `ADR-031` — the pricebook and plan catalogue are *domain data in the DB*, exactly the pattern those ADRs mandate.
+* `ADR-032` — the billing service follows the same extraction doctrine: own database, own role, contract-copy, edge route.
 * [`MASTER_FEATURES.md`](MASTER_FEATURES.md) — this document is the design for **BIZ-02** (integrated billing) and the prerequisite for **BIZ-03** (organisations).
-* [`ADR-033`](adr/ADR-033-credit-metering-and-billing.md) — the decision record for the choices argued here.
+* `ADR-033` — the decision record for the choices argued here.
 * [`.agent/workflows/implement_billing.md`](../.agent/workflows/implement_billing.md) — the **executable** workflow derived from this design (file manifest, verbatim SQL, exact contract signatures, acceptance gates). This document says *why*; that one says *do this*.
 
 ---

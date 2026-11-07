@@ -6,7 +6,7 @@ description: PACK SPI — PHASED IMPLEMENTATION (phases A+B = routing as data, a
 
 Design intent: [`docs/PACK_EXTENSIBILITY_ARCHITECTURE.md`](../../docs/PACK_EXTENSIBILITY_ARCHITECTURE.md).
 Prior context: [`docs/PACK_CATALOGUE_ARCHITECTURE.md`](../../docs/PACK_CATALOGUE_ARCHITECTURE.md),
-[ADR-036](../../docs/adr/ADR-036-pack-catalogue-and-regulatory-class.md).
+[ADR-036](https://github.com/krizaka/krizaka-internal/blob/main/docs/adr/sovkora/ADR-036-pack-catalogue-and-regulatory-class.md).
 **The design document is normative for *what* and *why*. This workflow is normative for *how* and
 *in what order*. Where they disagree, the design document wins and this file is corrected.**
 
@@ -110,7 +110,7 @@ MODIFY  orazaka-apps/workers/orazaka-worker-media/app/consumer.py   (− COMPOSE
 MODIFY  orazaka-apps/workers/orazaka-worker-media/test_main.py
 
 # ── record ─────────────────────────────────────────────────────────────────
-CREATE  docs/adr/ADR-037-pack-spi-and-open-core.md
+CREATE  krizaka-internal docs/adr/sovkora/ADR-037-pack-spi-and-open-core.md
 ```
 
 ## §4 The work, specified
@@ -250,7 +250,7 @@ open and the rule is decorative.
 
 1. Run the `.agent/workflows/review_architect.md` gate.
 2. `initdb` and interfaces changed ⇒ run `.agent/workflows/sync_documentation.md`.
-3. Write **`docs/adr/ADR-037-pack-spi-and-open-core.md`**: routing as data and why a fallback is
+3. Write **`krizaka-internal docs/adr/sovkora/ADR-037-pack-spi-and-open-core.md`**: routing as data and why a fallback is
    forbidden; `orazaka-jobs-api` as the Tier-1 home of the job wire contract (absorbing audit #17);
    the purity rules and what they cost; and — stated now even though it lands in phases C–G — the
    decision that **the worker SPI is the AMQP contract, not a Java interface**, with the two-repository

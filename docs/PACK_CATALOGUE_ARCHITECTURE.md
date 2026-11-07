@@ -368,11 +368,11 @@ have today and changes nothing.
 > interceptor reading a declaration, no consent flow and no reviewed crisis model.
 >
 > What stays with `REGULATED` and is **not implemented**: versioned consent, the crisis
-> `SafetyInterceptor`, and the minors gate. [ADR-051](adr/ADR-051-sensitive-controls.md) implements
+> `SafetyInterceptor`, and the minors gate. ADR-051 implements
 > the four and says so; §6.2's table above still describes `REGULATED` in full.
 >
 > **Amended (2026-09-10) — REGULATED is implemented, with one half of one row missing.**
-> [ADR-055](adr/ADR-055-regulated-controls-and-the-wellbeing-pack.md) ships versioned consent
+> ADR-055 ships versioned consent
 > (blocking, `451` with the statement) and the non-bypassable `SafetyInterceptor` (first in the
 > chain, `isAiDependent() = false`, fixed reviewed response with a sourced regional resource).
 >
@@ -445,7 +445,7 @@ CREATE  .../interceptor/validation/ScopeGuardInterceptor.java
 MODIFY  infra/initdb/60-governance.sql        (+ activation predicates for REGULATED packs)
 MODIFY  infra/initdb/80-studio.sql            (+ consent_version, data_class, pack_run_audit + its trigger)
 MODIFY  .../application/service/{StudioInstallationService,BlueprintPublishService}.java
-CREATE  docs/adr/ADR-036-pack-catalogue-and-regulatory-class.md
+CREATE  ADR-036 (internal)
 
 # UI
 MODIFY  orazaka-apps/ui/orazaka-web-client/src/features/billing/components/PackMarketplace.tsx  (group by category)
@@ -457,7 +457,7 @@ MODIFY  orazaka-apps/ui/orazaka-ui-kit/orazaka-shared/src/schemas/pack.ts
 
 ## Related documentation
 
-- [Studio architecture](STUDIO_ARCHITECTURE.md) · [ADR-034](adr/ADR-034-studio-marketplace.md)
-- [Billing architecture](BILLING_ARCHITECTURE.md) · [ADR-033](adr/ADR-033-credit-metering-and-billing.md)
+- [Studio architecture](STUDIO_ARCHITECTURE.md) · ADR-034
+- [Billing architecture](BILLING_ARCHITECTURE.md) · ADR-033
 - [Production readiness audit](PRODUCTION_READINESS_AUDIT.md) — finding #13 gates phase 7
 - [Governance contract](../AGENTS.md) · [Security standards](../.agent/rules/security_standards.md)

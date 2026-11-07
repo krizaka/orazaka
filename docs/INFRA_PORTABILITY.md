@@ -10,7 +10,7 @@ order: 22
 > Study ORAZAKA-INFRA-STUDY, 2026-10-21. Documentation only: no code, no paid resource. Two watchwords from the
 > founder: (1) **portability, optimised for on-premises (local)**; (2) **cost in the cloud, with minimal latency and the
 > smoothest experience**. Every number marked *(est.)* is an estimate to be replaced by a measurement; the others come
-> from [ADR-078](adr/ADR-078-runpod-serverless-workers-at-zero-idle.md) and `docs/measurements/`.
+> from ADR-078 and `docs/measurements/`.
 
 ## 1. How Orazaka runs today (read from the code)
 

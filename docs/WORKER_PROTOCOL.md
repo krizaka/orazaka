@@ -231,7 +231,7 @@ arbitrary worker, which is phase H's problem when the first third-party worker a
 
 ## Related documentation
 
-- [ADR-038](adr/ADR-038-worker-spi-and-registration.md) — this protocol's decision record
-- [ADR-037](adr/ADR-037-pack-spi-and-open-core.md) — routing as data; why the AMQP contract is the SPI
+- ADR-038 — this protocol's decision record
+- ADR-037 — routing as data; why the AMQP contract is the SPI
 - [Pack extensibility architecture](PACK_EXTENSIBILITY_ARCHITECTURE.md) §2.2, §3.3, §3.4
 - [Messaging standards](../.agent/rules/messaging_standards.md) · [Governance contract](../AGENTS.md) §6

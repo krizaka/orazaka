@@ -2,7 +2,7 @@
 /**
  * Generates the code-derived documentation set under docs/_generated/ — the single source for
  * everything that describes *what the code is* (never hand-edited). Curated design docs
- * (AGENTS.md, VISION_ARCHITECTURE.md, INTERFACES.md, DEVEX_LIFECYCLE.md, adr/, guides) stay
+ * (AGENTS.md, VISION_ARCHITECTURE.md, INTERFACES.md, DEVEX_LIFECYCLE.md, guides) stay
  * hand-authored; this generator owns only docs/_generated/.
  *
  * Produces, by scanning the repo:
@@ -20,7 +20,6 @@
  *   - PACKS.md            reference packs, manifest fields, the pack authors' guide (orazaka-packs)
  *   - ADMIN.md            the SecOps console and every ADMIN-only endpoint
  *   - MODELS.md           AI model catalog (from infra/initdb seed)
- *   - ADRS.md             ADR ledger (files + code citations)
  *   - REPOSITORIES.md     repository map (from orazaka.workspace.json)
  *
  * Output is deterministic (no timestamps) so `--check` is a pure staleness diff.
@@ -1325,26 +1324,6 @@ function extractModels() {
     .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 }
 
-/** ADR ledger: dedup ADR-NNN citations across code + the adr/ source files. */
-function extractAdrs() {
-  const adrDir = join(ROOT, "docs", "adr");
-  const fileById = new Map();
-  if (existsSync(adrDir)) {
-    for (const n of readdirSync(adrDir).filter((x) => x.endsWith(".md"))) {
-      const id = n.match(/ADR-(\d{3})/)?.[0];
-      if (id) {
-        const title = read(join(adrDir, n)).match(/^#\s+(.+)$/m)?.[1]?.trim() ?? n;
-        fileById.set(id, { file: `adr/${n}`, title });
-      }
-    }
-  }
-  const cited = new Set();
-  for (const f of walk(ROOT, (p) => (p.endsWith(".java") || p.endsWith(".md")) && !p.includes("/_generated/"))) {
-    for (const m of read(f).matchAll(/ADR-(\d{3})/g)) cited.add(m[0]);
-  }
-  return [...cited].sort(byText).map((id) => ({ id, ...(fileById.get(id) ?? { file: null, title: null }) }));
-}
-
 // ════════════════════════════════════════════════════════════════════════════
 // MARKDOWN BUILDERS
 // ════════════════════════════════════════════════════════════════════════════
@@ -1719,13 +1698,6 @@ const mdModels = (models, rows) => {
   table("Optional: served by a provider", provider);
   const hidden = rows.filter((r) => r.status === "internal");
   lines.push("", "## In the catalogue, not published", "", `${hidden.length} rows are aliases, runtime variants or test fixtures of the models above (\`status = 'internal'\`): ${hidden.map((r) => `\`${r.name}\``).join(", ")}.`);
-  return lines.join("\n") + "\n";
-};
-
-const mdAdrs = (rows) => {
-  const lines = [frontmatter("ADR Ledger", "Architecture Decision Records cited across the codebase.", "Architecture", 9)];
-  lines.push("| ADR | Title | Source file |", "|:---|:---|:---|");
-  for (const r of rows) lines.push(`| ${r.id} | ${r.title ?? "_(cited in code, no dedicated file)_"} | ${r.file ? `\`${r.file}\`` : "—"} |`);
   return lines.join("\n") + "\n";
 };
 
@@ -2782,7 +2754,6 @@ const outputs = {
   "MEASURED_RUNS.md": frontmatter("Measured runs", "Time, cost and every parameter of the video and image runs Orazaka made, per model and provider — generated from the run records.", "Models", 9) + mdMeasuredRuns(JSON.parse(read(join(ROOT, "docs/measurements/runs.json")))) +
     (existsSync(join(ROOT, "docs/measurements/cinema.json")) ? `\n${mdCinema(JSON.parse(read(join(ROOT, "docs/measurements/cinema.json")))).join("\n")}` : "") +
     (existsSync(join(ROOT, "docs/measurements/law-bakeoff.json")) ? `\n${mdLawBakeoff(JSON.parse(read(join(ROOT, "docs/measurements/law-bakeoff.json"))))}` : ""),
-  "ADRS.md": mdAdrs(extractAdrs()),
 };
 
 if (CHECK) {

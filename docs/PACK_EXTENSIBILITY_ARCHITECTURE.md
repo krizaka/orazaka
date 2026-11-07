@@ -17,8 +17,8 @@ order: 9
 > them with evidence. Opening them is the whole of phase A, and it is small.
 >
 > Prerequisite reading: [`PACK_CATALOGUE_ARCHITECTURE.md`](PACK_CATALOGUE_ARCHITECTURE.md),
-> [`STUDIO_ARCHITECTURE.md`](STUDIO_ARCHITECTURE.md), [ADR-034](adr/ADR-034-studio-marketplace.md),
-> [ADR-036](adr/ADR-036-pack-catalogue-and-regulatory-class.md).
+> [`STUDIO_ARCHITECTURE.md`](STUDIO_ARCHITECTURE.md), ADR-034,
+> ADR-036.
 
 ---
 
@@ -407,7 +407,7 @@ pack installing from a manifest on the existing engine.
 
 ### 6.1 ✅ CLOSED — Studio runs are effectively unbilled
 
-**Status:** closed 2026-08-31 by [ADR-041](adr/ADR-041-run-settlement.md) · **Raised:** 2026-08-31
+**Status:** closed 2026-08-31 by ADR-041 · **Raised:** 2026-08-31
 (phase D preliminaries) · **Was blocking:** phase E.
 
 **Measured outcome: a `realestate-reels` run reserved 480 credits and was debited 5. It now reserves
@@ -425,7 +425,7 @@ the heaviest accelerator step in a `realestate-reels` run and it is currently th
 not be charged even if everything else worked.
 
 **2 — a run settles once, for 5 credits, whatever it did.** Found while correcting
-[STUDIO_ARCHITECTURE §7.1](STUDIO_ARCHITECTURE.md) and [ADR-034 §4](adr/ADR-034-studio-marketplace.md),
+[STUDIO_ARCHITECTURE §7.1](STUDIO_ARCHITECTURE.md) and ADR-034 §4,
 both of which described a `settleMeasured` over the sum of a run's steps that no code performs. There
 is one hold per run (`StudioRunService:114`) and no per-step hold: `RunSagaService` passes
 `run.holdId()` into every `StepDispatch`, so each step's outcome event carries the *run's* hold. The
@@ -458,7 +458,7 @@ it would have changed nothing a user is charged.
 the compose trap one size up — chat and vision are the two most frequent step kinds, and the phase-E
 pack is chat-only, so shipping it would have made the whole pack free.
 
-Closed the same day by [ADR-041's amendment](adr/ADR-041-run-settlement.md#amendment-2026-08-31--chat-and-vision-now-measure-and-the-gate-that-hid-it):
+Closed the same day by ADR-041's amendment:
 `TokenUsage` now crosses the `AiClient` port (it already existed, and the synchronous path already
 used it — the asynchronous one simply could not reach it), and **vision is priced per model in
 `KILOTOKEN`, not `IMAGE_STEP`** — an analysis is a VLM completion and has no denoising steps for
@@ -470,7 +470,7 @@ real tokens, against 0 before.
 | # | Gap | Why it is not closed here |
 |:--:|:---|:---|
 | a | **Image generation** reports nothing priceable | `ImageResponse` carries no dimensions or steps; closing it means plumbing them out of the provider — the chat fix's shape, on another port. Outside the chat-and-vision scope |
-| b | ✅ **Vision cannot run inside a Studio at all** | **Closed** by [ADR-042](adr/ADR-042-studio-asset-resolution.md): the job service resolves `assetId` → `filePath` at receipt, scoped to the acting user's own directory. Measured: `trade-showcase` now reaches SUCCEEDED on four steps out of four, debiting 3 credits, with vision billing 787 and 744 tokens |
+| b | ✅ **Vision cannot run inside a Studio at all** | **Closed** by ADR-042: the job service resolves `assetId` → `filePath` at receipt, scoped to the acting user's own directory. Measured: `trade-showcase` now reaches SUCCEEDED on four steps out of four, debiting 3 credits, with vision billing 787 and 744 tokens |
 | c | **Blueprint estimates are ~5× conservative** | `trade-showcase` reserves 100 for a run that fully metered would cost 10–25. Over-reserving is the safe direction; recalibration belongs with the phase-0 pricebook pass |
 
 **A fourth item, found by closing (b).** The seeded vision default `llama3.2-vision:latest` does not
@@ -525,17 +525,17 @@ MODIFY  infra/initdb/70-billing.sql              (− billing_pack seed, → bun
 # Phases E–J
 CREATE  orazaka-packs/{prospection,document-validation,wellbeing}/**
 CREATE  orazaka-apps/workers/orazaka-worker-docs/**
-CREATE  docs/adr/ADR-037-pack-spi-and-open-core.md
+CREATE  ADR-037 (internal)
 ```
 
 ---
 
 ## Related documentation
 
-- [Pack catalogue architecture](PACK_CATALOGUE_ARCHITECTURE.md) · [ADR-036](adr/ADR-036-pack-catalogue-and-regulatory-class.md)
-- [Studio architecture](STUDIO_ARCHITECTURE.md) · [ADR-034](adr/ADR-034-studio-marketplace.md)
-- [ADR-037](adr/ADR-037-pack-spi-and-open-core.md) — phases A and B: routing as data, the purity rules, and the AMQP worker contract
-- [ADR-038](adr/ADR-038-worker-spi-and-registration.md) · [Worker protocol](WORKER_PROTOCOL.md) — phase C: the un-sealed SPI, worker registration, and the wire spec
-- [ADR-039](adr/ADR-039-pack-bundle-and-installer.md) · [Pack bundles](../orazaka-packs/README.md) — phase D: the manifest, its schema, and the compensated three-context install
+- [Pack catalogue architecture](PACK_CATALOGUE_ARCHITECTURE.md) · ADR-036
+- [Studio architecture](STUDIO_ARCHITECTURE.md) · ADR-034
+- ADR-037 — phases A and B: routing as data, the purity rules, and the AMQP worker contract
+- ADR-038 · [Worker protocol](WORKER_PROTOCOL.md) — phase C: the un-sealed SPI, worker registration, and the wire spec
+- ADR-039 · [Pack bundles](../orazaka-packs/README.md) — phase D: the manifest, its schema, and the compensated three-context install
 - [Production readiness audit](PRODUCTION_READINESS_AUDIT.md) — #13 gates phase J, #17 was absorbed by phase A
 - [Governance contract](../AGENTS.md) · [Messaging standards](../.agent/rules/messaging_standards.md)
