@@ -40,19 +40,19 @@ jobs:
       - name: Check out the Orazaka workspace
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: krizaka/orazaka
+          repository: krizaka/sovkora
           path: workspace
           persist-credentials: false
 
       - name: Check out ${{ inputs.component }} at the commit under test
-        if: github.repository != 'krizaka/orazaka'
+        if: github.repository != 'krizaka/sovkora'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: incoming
           persist-credentials: false
 
       - name: Place the edge at its workspace path
-        if: github.repository != 'krizaka/orazaka'
+        if: github.repository != 'krizaka/sovkora'
         working-directory: workspace
         run: |
           target=$(node -e "const m=require('./orazaka.workspace.json');console.log(m.repositories.find(x=>x.name==='orazaka-edge').path)")
@@ -108,7 +108,7 @@ jobs:
           ABUSE_RATE_LIMIT_MODE=enforce ABUSE_RATE_LIMIT_DEFAULT_RPM=6000 \
           TRACING_SAMPLING_PROBABILITY=0 EDGE_LOG=edge.log \
           java -Xmx256m -XX:+UseSerialGC -jar "$EDGE_JAR" > edge.out 2>&1 &
-          for i in $(seq 1 60); do
+          for _ in $(seq 1 60); do
             curl -fs http://127.0.0.1:8089/actuator/health > /dev/null && exit 0
             sleep 2
           done

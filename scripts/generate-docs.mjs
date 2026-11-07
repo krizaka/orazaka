@@ -228,13 +228,13 @@ const ROLES = [
   { id: "application", title: "Application", rule: "the orchestration, pipeline and capability libraries around the core (AGENTS.md §2: business, interceptors, tools)" },
   { id: "domain", title: "Domain core", rule: "a `*-core` module — the centre of its hexagon, depending on no outer layer" },
   { id: "contract", title: "Contracts", rule: "a Tier-1 `*-api` module — pure interfaces and records" },
-  { id: "platform", title: "Krizaka platform kit", rule: "a module of krizaka-platform-kit — the cross-cutting code with one author (ADR-073), starters included" },
+  { id: "platform", title: "Krizaka service kit", rule: "a module of krizaka-service-kit — the cross-cutting code with one author (ADR-073), starters included" },
 ];
-const APPLICATION_LIBRARIES = ["orazaka-business", "orazaka-interceptors", "orazaka-tools"];
+const APPLICATION_LIBRARIES = ["sovkora-business", "sovkora-interceptors", "sovkora-tools"];
 
 function roleOf(m) {
   if (/SpringApplication\.run\(/.test(javaFiles(join(m.dir, "src/main/java")).map(read).join("\n"))) return "service";
-  if (m.path.split("/").includes("krizaka-platform-kit")) return "platform";
+  if (m.path.split("/").includes("krizaka-service-kit")) return "platform";
   if (m.id.endsWith("-api")) return "contract";
   if (m.id.endsWith("-core")) return "domain";
   if (APPLICATION_LIBRARIES.includes(m.id)) return "application";
@@ -442,8 +442,8 @@ const BUILDING_BLOCK_ROLES = [
   { id: "adapter", title: "Adapters", rule: "a `*-client` or `*-persistence` module: typed HTTP client, JPA adapter" },
   { id: "domain", title: "Domain core", rule: "a `*-core` module" },
   { id: "contract", title: "Contracts", rule: "a `*-api` module — interfaces, records, events" },
-  { id: "starter", title: "Starters", rule: "a module of krizaka-platform-kit/starters — one dependency that switches a module on" },
-  { id: "platform", title: "Platform kit", rule: "a library module of krizaka-platform-kit" },
+  { id: "starter", title: "Starters", rule: "a module of krizaka-service-kit/starters — one dependency that switches a module on" },
+  { id: "platform", title: "Platform kit", rule: "a library module of krizaka-service-kit" },
   { id: "build", title: "Build", rule: "a module of krizaka-build: the parent POM, the BOM, the test kit" },
 ];
 
@@ -494,7 +494,7 @@ function extractBuildingBlocks() {
   if (!known.size) throw new Error("generate-docs: no Krizaka artifact found — clone the krizaka/* repositories of orazaka.workspace.json");
 
   const roleOf = (a) => {
-    if (a.path.split("/").includes("krizaka-platform-kit")) return a.path.split("/").includes("starters") ? "starter" : "platform";
+    if (a.path.split("/").includes("krizaka-service-kit")) return a.path.split("/").includes("starters") ? "starter" : "platform";
     if (a.repository.name === "krizaka-build") return "build";
     if (/SpringApplication\.run\(/.test(javaFiles(join(a.dir, "src/main/java")).map(read).join("\n"))) return "service";
     if (a.id.endsWith("-api")) return "contract";
@@ -719,7 +719,7 @@ function extractMessaging(reactor, extra) {
   }
 
   // The retry policy of the kit's listener container (krizaka.messaging.retry), defaults read from code.
-  const retrySrc = read(sourceFile("krizaka/krizaka-build/krizaka-platform-kit/krizaka-messaging", "ConsumerRetryProperties.java"));
+  const retrySrc = read(sourceFile("krizaka/krizaka-build/krizaka-service-kit/krizaka-messaging", "ConsumerRetryProperties.java"));
   const retry = {
     maxAttempts: Number(retrySrc.match(/maxAttempts\s*=\s*maxAttempts\s*==\s*null\s*\?\s*(\d+)/)?.[1]),
     initialMs: Number(retrySrc.match(/initial\s*=\s*initial\s*==\s*null\s*\?\s*Duration\.ofMillis\((\d+)\)/)?.[1]),
@@ -770,7 +770,7 @@ function extractMessaging(reactor, extra) {
 
 /** UseCase catalog from business/usecases. */
 function extractUseCases() {
-  const dir = sourceDir("orazaka-libs/orazaka-ai-engine/orazaka-business", "business/usecases");
+  const dir = sourceDir("sovkora-libs/sovkora-engine/sovkora-business", "business/usecases");
   return javaFiles(dir)
     .filter((f) => /implements\s+UseCase\b/.test(read(f)))
     .map((f) => {
@@ -799,7 +799,7 @@ function extractUseCases() {
  * that is where the registry reads it from (ADR-051).
  */
 function coreInterceptorKeys() {
-  const src = read(sourceFile("orazaka-libs/orazaka-ai-engine/orazaka-core", "PipelineRegistry.java"));
+  const src = read(sourceFile("sovkora-libs/sovkora-engine/sovkora-core", "PipelineRegistry.java"));
   const block = /CORE_INTERCEPTOR_KEYS\s*=\s*List\.of\(([\s\S]*?)\);/.exec(src);
   return block ? [...block[1].matchAll(/"(\w+)"/g)].map((m) => m[1]) : [];
 }
@@ -830,7 +830,7 @@ function classSummary(src, name) {
 
 /** Interceptor registry: classes + concern package + core rank or DB order. */
 function extractInterceptors(pipeline) {
-  const dir = sourceDir("orazaka-libs/orazaka-ai-engine/orazaka-interceptors", "orazaka/interceptor");
+  const dir = sourceDir("sovkora-libs/sovkora-engine/sovkora-interceptors", "sovkora/interceptor");
   const orderByName = new Map(pipeline.map((p) => [p.interceptor.toLowerCase(), p]));
   const core = coreInterceptorKeys();
   return javaFiles(dir)
@@ -862,7 +862,7 @@ function extractInterceptors(pipeline) {
 function hostedTier3Dirs(serviceRoot) {
   const pom = read(join(serviceRoot, "pom.xml"));
   const dirs = [];
-  for (const m of pom.matchAll(/<artifactId>(orazaka-(?:business|persistence[\w-]*)|krizaka-users-(?:core|persistence))<\/artifactId>/g)) {
+  for (const m of pom.matchAll(/<artifactId>(sovkora-(?:business|persistence[\w-]*)|krizaka-users-(?:core|persistence))<\/artifactId>/g)) {
     const moduleDir = MODULES.get(m[1]);
     const candidate = moduleDir && join(moduleDir, "src/main/java");
     if (candidate && existsSync(candidate) && !dirs.includes(candidate)) dirs.push(candidate);
@@ -884,7 +884,7 @@ function accessRules(serviceDir) {
     const code = read(f).replace(/^\s*(\/\/|\*|\/\*).*$/gm, "");
     // krizaka-security's SecurityBaseline.apply(http, serviceRules) declares the shared rules
     // first and `anyRequest().authenticated()` last, around the service's own: the same order
-    // Spring Security will evaluate them in (krizaka/krizaka-build/krizaka-platform-kit, ADR-073).
+    // Spring Security will evaluate them in (krizaka/krizaka-build/krizaka-service-kit, ADR-073).
     const baseline = code.includes("SecurityBaseline.apply(");
     if (baseline) {
       rules.push({ pattern: "/**", label: "public", httpMethod: "OPTIONS" });
@@ -1053,7 +1053,7 @@ function extractApi() {
           method,
           path,
           controller,
-          service: service.replace(/^orazaka-/, ""),
+          service: service.replace(/^sovkora-/, ""),
           access: withPreAuthorize(accessFor(rules, path, method), preAuthorizeAt(src, m.index) ?? classPreAuthorize),
           summary: summaryAbove(src, m.index),
         });
@@ -1169,7 +1169,7 @@ function extractCliJourney(commands) {
  * whoever writes the rule.
  */
 function extractGovernance() {
-  const libDir = join(ROOT, "orazaka-libs/orazaka-build/orazaka-test-support/src/main/java");
+  const libDir = join(ROOT, "sovkora-libs/sovkora-build/sovkora-test-support/src/main/java");
   if (!existsSync(libDir)) return [];
 
   // One entry per RULE, keyed by holder + name — not one per method. A rule offered as a no-arg
@@ -1207,7 +1207,7 @@ function extractGovernance() {
   // class that holds it, rather than by matching a bare method name anywhere in the file. Two
   // holders may legitimately offer the same method name, and a name that appears in a comment is
   // not a call.
-  for (const root of ["orazaka-apps", "orazaka-libs"]) {
+  for (const root of ["orazaka-apps", "sovkora-libs"]) {
     const dir = join(ROOT, root);
     if (!existsSync(dir)) continue;
     for (const f of walk(dir, (x) => x.endsWith("Test.java") || x.endsWith("IT.java"))) {
@@ -1853,7 +1853,7 @@ function tableColumns(sql, table) {
 // ── Business layer ──────────────────────────────────────────────────────────
 
 function extractBusiness() {
-  const moduleDir = MODULES.get("orazaka-business");
+  const moduleDir = MODULES.get("sovkora-business");
   if (!moduleDir) return null;
   const javaRoot = join(moduleDir, "src/main/java");
   const files = javaFiles(javaRoot);
@@ -2023,7 +2023,7 @@ const mdBusiness = (b) => {
 // ── Tools ───────────────────────────────────────────────────────────────────
 
 function extractTools() {
-  const moduleDir = MODULES.get("orazaka-tools");
+  const moduleDir = MODULES.get("sovkora-tools");
   if (!moduleDir) return null;
   const files = javaFiles(join(moduleDir, "src/main/java"));
   const byName = new Map(files.map((f) => [basename(f, ".java"), f]));
@@ -2037,7 +2037,7 @@ function extractTools() {
   });
 
   // How the pipeline picks tools for a turn: ToolInterceptor in orazaka-interceptors.
-  const interceptorFile = walk(join(ROOT, "orazaka-libs"), (p) => basename(p) === "ToolInterceptor.java" && p.includes("/src/main/"))[0];
+  const interceptorFile = walk(join(ROOT, "sovkora-libs"), (p) => basename(p) === "ToolInterceptor.java" && p.includes("/src/main/"))[0];
   const interceptor = interceptorFile ? read(interceptorFile) : "";
   const skippedModels = [...(interceptor.match(/modelLower\.contains[\s\S]*?\)\s*\{/)?.[0] ?? "").matchAll(/contains\("([^"]+)"\)/g)].map((m) => m[1]);
   const demands = [...interceptor.matchAll(/"(\w+)"\.equals\(toolName\)\s*&&\s*(\w+)\(/g)].map((m) => {
@@ -2192,7 +2192,7 @@ function extractJobs(arch) {
     const key = s.match(/String handlerKey\(\)\s*\{\s*return\s+"([^"]+)"/)?.[1];
     if (key) executors.push({ key, type: basename(f, ".java"), repo: repoOfFile(f), summary: typeInfo(s, basename(f, ".java"))?.summary ?? "" });
   }
-  const contract = walk(join(ROOT, "orazaka-libs"), (p) => basename(p) === "JobExecutor.java" && p.includes("/src/main/"))[0];
+  const contract = walk(join(ROOT, "sovkora-libs"), (p) => basename(p) === "JobExecutor.java" && p.includes("/src/main/"))[0];
   const listener = walk(join(ROOT, "orazaka-apps"), (p) => basename(p) === "JobListener.java" && p.includes("/src/main/"))[0];
 
   const auto = REPOSITORIES.find((r) => r.name === "orazaka-automation-service");
