@@ -1,4 +1,4 @@
-package com.krizaka.orazaka.e2e;
+package com.krizaka.sovkora.e2e;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

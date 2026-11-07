@@ -486,7 +486,7 @@ orazaka/
 │       ├── orazaka-cli/
 │       ├── orazaka-shared/
 │       └── orazaka-design-system/
-└── orazaka-libs/                 # IMPORTED, never run — grouped by sharing tier (§2)
+└── sovkora-libs/                 # IMPORTED, never run — grouped by sharing tier (§2)
     ├── contracts/                # Tier 1 — pure *-api contracts (semver, zero impl deps)
     │   ├── krizaka-users-api/ #   identity contract (domain.model / domain.exception)
     │   └── orazaka-persistence-app-api/  # persistence contract (inbound ports + DTOs, no JPA)
